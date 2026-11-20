@@ -1,1 +1,28 @@
-/* replaced in task 7 */
+:root {
+  --bg: #ffffff; --fg: #1d1d1b; --muted: #6b6a66; --line: #e4e2dc; --code: #f4f2ec; --accent: #2b5fa5;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #1c1c1a; --fg: #ecebe6; --muted: #9a988f; --line: #33322e; --code: #272724; --accent: #7fb0ea; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 system-ui, sans-serif; }
+main { max-width: 42rem; margin: 0 auto; padding: 2rem 1rem 6rem; }
+.teacher { font-family: Georgia, "Times New Roman", serif; font-size: 1.1rem; margin: 1.4rem 0 0.6rem; }
+.teacher p { margin: 0 0 0.7rem; }
+.teacher.aside, .teacher.recap { color: var(--muted); }
+code, pre { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.9rem; }
+pre { background: var(--code); border-radius: 8px; padding: 0.7rem 0.9rem; margin: 0.4rem 0; white-space: pre-wrap; word-break: break-word; }
+.learner { border-left: 3px solid var(--accent); }
+.output { color: var(--muted); }
+.label, .caption { font-size: 0.8rem; color: var(--muted); margin: 0.6rem 0 0.1rem; }
+table { border-collapse: collapse; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; margin: 0.3rem 0; display: block; overflow-x: auto; }
+th, td { text-align: left; padding: 0.2rem 0.9rem 0.2rem 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.total { font-size: 0.8rem; color: var(--muted); }
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 0.8rem; }
+.old { opacity: 0.7; }
+#input { margin-top: 1.4rem; }
+textarea { width: 100%; min-height: 6rem; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--fg); font: 0.95rem ui-monospace, Menlo, Consolas, monospace; resize: vertical; }
+textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+button { margin-top: 0.7rem; padding: 0.45rem 1.1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--code); color: var(--fg); font: inherit; cursor: pointer; }
+button:hover { border-color: var(--muted); }
+.hint { font-size: 0.85rem; color: var(--muted); margin: 0.4rem 0 0; min-height: 1.2rem; }
