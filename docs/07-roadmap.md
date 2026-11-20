@@ -30,6 +30,8 @@ The core loop, the editor, result-based checking for SQL, the correction ladder,
 
 Done when: the owner completes lesson 1 in the app.
 
+Built 20 Nov 2026. See `docs/superpowers/specs/2026-11-20-player-design.md`. All of lesson 1 plays through the API in `tests/test_play.py`. The owner completing it in the app is still to come.
+
 ## 5. Learn from the first use
 
 Read the miss log with the owner. Revise lesson 1. Settle O2, O3, O4 and O5 from what actually happened. Measure how long the sitting took, which gives the first real estimate of the course's size.
