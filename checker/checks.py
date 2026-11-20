@@ -1,4 +1,6 @@
+import re
 import sqlite3
+from difflib import SequenceMatcher
 
 from .data import run, same_rows
 
@@ -100,3 +102,24 @@ def check_new_limit(lessons):
         for n, s in enumerate(steps, 1)
         if len(s.get("new", [])) > 1
     ]
+
+
+def _tokens(sql):
+    return re.findall(r"'[^']*'|\w+|[^\s\w]", sql.lower())
+
+
+def _changed_runs(a, b):
+    """How many separate runs of tokens differ between two SQL sentences."""
+    ops = SequenceMatcher(None, _tokens(a), _tokens(b), autojunk=False).get_opcodes()
+    return sum(1 for tag, *_ in ops if tag != "equal")
+
+
+def check_shapes(lessons):
+    """Check 4: two consecutive typed steps must not differ in one place only."""
+    fails = []
+    for lesson, steps in lessons:
+        typed = [(n, s) for n, s in enumerate(steps, 1) if "model" in s]
+        for (n1, a), (n2, b) in zip(typed, typed[1:]):
+            if _changed_runs(a["model"], b["model"]) <= 1:
+                fails.append(f"FAIL {lesson} step {n2}: same shape as step {n1}; the answers differ in one place only")
+    return fails

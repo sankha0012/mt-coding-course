@@ -1,4 +1,4 @@
-from checker.checks import check_audit, check_narration, check_new_limit, check_sql
+from checker.checks import check_audit, check_narration, check_new_limit, check_shapes, check_sql
 
 
 def has(fails, text):
@@ -135,3 +135,38 @@ def test_at_most_one_new_thought_per_step(steps):
 def test_imports_do_not_count_towards_the_limit(steps):
     steps[2]["imports"] = ["compare-signs", "keep-rows"]
     assert check_new_limit([("t-01", steps)]) == []
+
+
+def shapes(steps):
+    return check_shapes([("t-01", steps)])
+
+
+def test_good_lesson_has_no_shape_repeat(steps):
+    assert shapes(steps) == []
+
+
+def test_answers_differing_in_one_place_repeat_a_shape(steps):
+    steps[3]["model"] = "SELECT COUNT(*) FROM orders"
+    assert has(shapes(steps), "FAIL t-01 step 4: same shape as step 2")
+
+
+def test_identical_answers_repeat_a_shape(steps):
+    steps[3]["model"] = steps[1]["model"]
+    assert has(shapes(steps), "step 4: same shape as step 2")
+
+
+def test_case_and_spacing_are_ignored(steps):
+    steps[3]["model"] = "select  count(*)  from restaurants"
+    assert has(shapes(steps), "step 4: same shape as step 2")
+
+
+def test_two_changes_are_not_a_repeat(steps):
+    steps[3]["model"] = "SELECT * FROM restaurants WHERE city = 'Curitiba'"
+    assert shapes(steps) == []
+
+
+def test_steps_without_a_model_are_skipped(steps):
+    steps.insert(2, {"kind": "aside", "text": "t"})
+    assert shapes(steps) == []
+    steps[4]["model"] = "SELECT COUNT(*) FROM orders"
+    assert has(shapes(steps), "step 5: same shape as step 2")
