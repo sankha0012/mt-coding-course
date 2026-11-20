@@ -1,0 +1,15 @@
+thoughts:
+  count-rows: "`SELECT COUNT(*)` asks how many rows."
+  from-table: The table being asked goes after `FROM`.
+  star: The star means everything. `SELECT *` shows the rows themselves.
+  table-out: A table goes in, a table comes out.
+  keep-rows: A yes-or-no question is asked of every row and only the yes rows go on. It is written `WHERE` and comes after the table.
+  compare-signs: "Import from maths: `>`, `<` and `=`."
+  text-quotes: A word we are looking for wears quotes. A bare word is read as a column's name.
+  summary-column: "A summary about a column wraps the column: `AVG(subtotal)`."
+  piles: "`GROUP BY` sorts the rows into piles by a column, and the summary is said of each pile."
+  one-row-per-pile: One row comes out per pile.
+  pile-name: The pile's name has to be asked for, or the numbers come out unlabelled.
+  commas: "Import from English: a comma between two things in a list."
+  summary-per-pile: What is said about each pile can be any summary, not only a count.
+  keep-before-piles: "After the table, the sentence runs in the order things happen: keep rows, then make piles."

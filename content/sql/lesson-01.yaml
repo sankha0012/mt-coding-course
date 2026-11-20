@@ -1,0 +1,489 @@
+lesson: sql-01
+title: From "how many?" to piles
+strand: sql
+stage: 1
+steps:
+  # 1
+  - kind: give
+    new: [count-rows]
+    text: |
+      Nearly everything you will be asked about data is a question about a table: how many, how much on average, which ones. We'll answer those from the first minute. There is a table called orders, with one row for every food delivery order. To ask how many rows it has, we say:
+
+      ```sql
+      SELECT COUNT(*) FROM orders
+      ```
+
+      Give me the count, from orders. Run it.
+    shows: ["SELECT COUNT(*) FROM orders"]
+    after_run: |
+      6,000 orders. SELECT is how SQL says "give me". Type the brackets and the star just as they are for now. They get their reason in a minute.
+    note: "The first thing the learner sees is an answer to a question. The star and brackets are used before they are explained (rule B3), and the promise is kept in steps 3 and 11."
+
+  # 2
+  - kind: ask
+    requires: [count-rows, from-table]
+    new: [from-table]
+    text: |
+      There is another table, called restaurants. How many restaurants are there? Stop and think it out before you type. Nothing here is timed.
+    model: SELECT COUNT(*) FROM restaurants
+    rows: 1
+    result: [[60]]
+    narration:
+      - "60. The table's name went after FROM and everything else stayed as it was."
+      - "The same question, asked of a different table. Whichever table you are asking goes after FROM. 60 restaurants."
+      - "60. FROM is where you say which table."
+    wrong:
+      - sql: SELECT COUNT(*) restaurants
+        ask: "One restaurant? Read yours aloud: give me the count... from where?"
+        why: "without FROM there is no table, and SQL quietly counts nothing in particular."
+      - sql: SELECT COUNT(restaurants)
+        ask: "In the first sentence, where did the table's name sit?"
+        why: "the brackets are not where the table goes."
+    walk:
+      - "Type again the sentence that counted the orders."
+      - "Which word in it says which table? Put restaurants there."
+    note: "First typed sentence, and the first rule of engagement, at the moment it matters. Only the table changes from step 1, on purpose: it fixes where the table goes. This is the one place where a one-slot change is wanted."
+
+  # 3
+  - kind: give
+    new: [star]
+    text: |
+      Before we count anything else, look at what you have been counting. In place of the count, put just a star:
+
+      ```sql
+      SELECT * FROM orders
+      ```
+
+      Run it.
+    shows: ["SELECT * FROM orders"]
+    after_run: |
+      There they are, one row per order. The star is how SQL writes "everything": every row, every column. That one just is. You had typed it already, inside COUNT(*), where it said: count everything, every row.
+
+      Look along the top. Subtotal, delivery_fee, status: we'll use those. A few cells are empty. Leave them for another day.
+    note: "The raw look borrowed from Opening A. It pays the debt on the star from step 1 and puts the column names in front of the learner before any prompt uses them. The app shows the first rows of the 6,000. The remark about empty cells is marked as something to set aside (rule D4)."
+
+  # 4
+  - kind: ask
+    requires: [star, from-table]
+    text: |
+      There is a third table, couriers: the people who carry the orders. Show me all of it.
+    model: SELECT * FROM couriers
+    rows: 200
+    narration:
+      - "Everything, from couriers. Each courier has a vehicle and a city."
+      - "200 couriers, three columns."
+      - ""
+    wrong:
+      - sql: SELECT COUNT(*) FROM couriers
+        ask: "That tells me how many there are. I asked to see them. What did we put in place of the count?"
+        why: "\"how many\" and \"show me\" are different requests, and each has its own word."
+    walk:
+      - "Type the sentence that showed all of orders."
+      - "Now the same for couriers."
+    note: "\"Show me\" replaces \"give me\". The star returns one step after it arrived. The vehicle column is seen here, five steps before it is needed."
+
+  # 5
+  - kind: give
+    new: [table-out]
+    text: |
+      Notice what every sentence so far has done. A table went in and a table came out. With the star, the whole table came out. With the count, a very small one came out: one row, one column. A table goes in, a table comes out. Everything in SQL is that.
+
+      That picture is the one thing worth holding on to. The rest, let go. Don't try to memorise anything and don't take notes. If something slips, it will come back, and making it come back is my job, not yours.
+    note: "The overarching idea, marked as essential. The second rule of engagement arrives beside it, just before the first real climb, and uses it: one picture to keep, everything else to release (rules A3 and A5)."
+
+  # 6
+  - kind: ask
+    new: [keep-rows]
+    imports: [compare-signs]
+    requires: [star, from-table, keep-rows, compare-signs]
+    text: |
+      Usually we don't want every row. To keep only some, we ask each row a question, and each row answers yes or no. Only the yes rows go on. The question is written with the signs you know from maths: >, < and =. For the big orders it reads `WHERE subtotal > 100`, and it comes straight after the table.
+
+      So: from orders, keeping the rows where the subtotal is above 100, show me everything.
+    model: SELECT * FROM orders WHERE subtotal > 100
+    rows: 632
+    narration:
+      - "Look down the subtotal column: every one is above 100. Each row was asked the question and only the yes rows came out."
+      - "6,000 rows went in, each one answered yes or no, and 632 came out."
+      - "The question went after the table, and the rows that answered no are gone."
+    wrong:
+      - sql: SELECT subtotal > 100 FROM orders
+        ask: "Every row gave its answer, written as 1 for yes and 0 for no. But all 6,000 rows are still here. Which word does the keeping?"
+        why: "the question alone only gets answered. WHERE is what drops the no rows."
+      - sql: SELECT * WHERE subtotal > 100 FROM orders
+        ask: "The question is asked of each row of a table. When SQL reaches your question, has it been told which table?"
+        why: "the table comes first because that is where the rows come from."
+      - sql: SELECT * FROM orders subtotal > 100
+        ask: "Which word opens the question?"
+    walk:
+      - "Show me everything from orders."
+      - "Now add the question after the table: WHERE, then the column, the sign, the number."
+    note: "The prompt is in thinking order: table, keep, then what to show. Keep-rows is introduced with the star and not with the count, so that the learner can see the surviving rows. This differs from Opening B, where it arrived inside a count. \"Comes straight after the table\" is chosen over \"goes at the end\", which would become false at step 21."
+
+  # 7
+  - kind: ask
+    requires: [count-rows, from-table, keep-rows, compare-signs]
+    text: |
+      How many orders had a delivery fee under 5?
+    thinking_order: "From orders, keeping the ones where the delivery fee is under 5, how many?"
+    model: SELECT COUNT(*) FROM orders WHERE delivery_fee < 5
+    rows: 1
+    result: [[3033]]
+    narration:
+      - "3,033. You kept the rows first and counted what was left, even though the count is written first."
+      - "From orders, keep the cheap deliveries, count them. That is the order it happens in."
+      - "3,033."
+    wrong:
+      - sql: SELECT COUNT(*) FROM orders WHERE delivery fee < 5
+        ask: "Look at the top of the orders table. How is that column's name written?"
+        why: "a column's name is one word, so the table joins it with an underscore."
+      - sql: SELECT COUNT(delivery_fee < 5) FROM orders
+        ask: "That counted every row. Where does the question go, so that rows are dropped before the counting?"
+        why: "keeping happens before summarising, and has its own place after the table."
+    walk:
+      - "How many orders are there?"
+      - "Keep only the rows where the delivery fee is under 5: add the question after the table."
+    note: "The wording drops to ordinary English, so the learner finds the thinking order alone. The narration starts to say that things happen in a different order from the one they are written in. That is the background for step 21."
+
+  # 8
+  - kind: classmate
+    new: [text-quotes]
+    text: |
+      The status column holds a word: delivered or cancelled. Davi wanted to know how many orders were cancelled, and wrote:
+
+      ```sql
+      SELECT COUNT(*) FROM orders WHERE status = cancelled
+      ```
+
+      SQL answered: no such column: cancelled. Davi, is cancelled a column in our table, or a word we are looking for? ... A word. SQL reads a bare word as the name of a column. A word we are looking for wears quotes:
+
+      ```sql
+      SELECT COUNT(*) FROM orders WHERE status = 'cancelled'
+      ```
+
+      Run it.
+    broken: SELECT COUNT(*) FROM orders WHERE status = cancelled
+    shows: ["SELECT COUNT(*) FROM orders WHERE status = 'cancelled'"]
+    after_run: |
+      399 orders were cancelled.
+    note: "Davi makes the mistake before the learner can (rule E6), and the database's own message supplies the real reason. This is also the first use of the equals sign, which arrived as an import in step 6."
+
+  # 9
+  - kind: ask
+    requires: [count-rows, from-table, keep-rows, compare-signs, text-quotes]
+    text: |
+      The couriers ride a bike, a moto or a carro. How many of them ride a bike?
+    model: SELECT COUNT(*) FROM couriers WHERE vehicle = 'bike'
+    rows: 1
+    result: [[73]]
+    narration:
+      - "73. Bike is a word you were looking for, so it wore quotes. Vehicle is a column's name, so it did not."
+      - "From couriers, keep the bikes, count them. 73."
+      - "73 on bikes."
+    wrong:
+      - sql: SELECT COUNT(*) FROM couriers WHERE vehicle = bike
+        ask: "Is bike a column in couriers, or a word we are looking for?"
+        why: "a bare word is read as a column's name."
+      - sql: SELECT COUNT(*) FROM couriers WHERE vehicle = 'Bike'
+        ask: "Zero. Look at how the table writes it. Is yours written the same way?"
+        why: "inside quotes it is data, and data is matched exactly. This is not taught as a thought in this lesson. It is only caught if it happens."
+      - sql: SELECT COUNT(*) FROM orders WHERE vehicle = 'bike'
+        ask: "Which table has the vehicle column?"
+    walk:
+      - "Show me all of couriers. Which column says what they ride?"
+      - "How many couriers are there?"
+      - "Keep only the rows where the vehicle is the word bike."
+    note: "The three words are spelled out in the prompt exactly as the table has them. The table and the question both change from Davi's sentence."
+
+  # 10
+  - kind: ask
+    requires: [star, from-table, keep-rows, compare-signs, text-quotes]
+    text: |
+      Back to the restaurants. Each one has a cuisine: pizza, japonesa, hamburguer and a few more. Show me the pizza places, the whole row for each.
+    model: SELECT * FROM restaurants WHERE cuisine = 'pizza'
+    rows: 8
+    narration:
+      - "Eight pizza places. While you are here, look at the city column: São Paulo, Curitiba. We'll come back to cities."
+      - "The star gave you whole rows and the question kept only the pizza ones."
+      - "Eight rows. Each restaurant sits in a city, and that will matter soon."
+    wrong:
+      - sql: SELECT COUNT(*) FROM restaurants WHERE cuisine = 'pizza'
+        ask: "Eight of them, yes. I asked to see them. What shows the rows themselves?"
+      - sql: SELECT * FROM restaurants WHERE cuisine = pizza
+        ask: "SQL went looking for a column called pizza. What tells it that pizza is a word?"
+    walk:
+      - "Show me everything from restaurants."
+      - "Keep only the rows where the cuisine is the word pizza."
+    note: "The last return of the star in this lesson. Its real job is to let the learner see the restaurants table and its city column six steps before piles need it (rule C4)."
+
+  # 11
+  - kind: ask
+    new: [summary-column]
+    requires: [from-table, summary-column]
+    text: |
+      Counting is one thing we can say about a set of rows. An average is another. The word is AVG. An average has to be the average of something, so the column goes inside its brackets: `AVG(subtotal)`. The count took a star there, because it counts whole rows.
+
+      From orders, the average subtotal?
+    model: SELECT AVG(subtotal) FROM orders
+    rows: 1
+    result: [[60.4]]
+    narration:
+      - "About 60.40. AVG sat where COUNT sat, with the column it is about inside the brackets."
+      - "Many rows in, one number out, as with the count. This time the number is about one column."
+      - "About 60.40: the average, of the subtotal, from orders."
+    wrong:
+      - sql: SELECT AVG(*) FROM orders
+        ask: "The average of what? Which column?"
+        why: "a count can be about whole rows, and an average cannot."
+      - sql: SELECT AVERAGE(subtotal) FROM orders
+        tell: "The word is shorter, AVG. That spelling just is."
+      - sql: SELECT AVG subtotal FROM orders
+        ask: "Where does the column go, so that AVG knows it is the one to average?"
+    walk:
+      - "How many orders are there?"
+      - "The same sentence, but in place of the count: AVG, with subtotal inside its brackets."
+    note: "This pays the second half of the debt from step 1: brackets hold what the summary is about. For the writer only: 25 orders have an empty subtotal and AVG skips them. Missing values are a later thought and nothing is said here."
+
+  # 12
+  - kind: ask
+    friction: true
+    requires: [from-table, summary-column, keep-rows, compare-signs]
+    text: |
+      This one I won't break down for you. What was the typical delivery fee on the big orders, the ones above 100?
+    model: SELECT AVG(delivery_fee) FROM orders WHERE subtotal > 100
+    rows: 1
+    result: [[5.32]]
+    narration:
+      - "5.32. Two different columns: one inside the question, to choose the rows, and another inside AVG, to say what the average is about."
+      - "From orders, keep the big ones, average their delivery fee. You found that order yourself."
+      - "Typical meant average, big meant above 100, and you did the translating."
+    wrong:
+      - sql: SELECT AVG(subtotal) FROM orders WHERE subtotal > 100
+        ask: "That is the average size of a big order. Which column did I ask the average of?"
+      - sql: SELECT AVG(delivery_fee) FROM orders WHERE delivery_fee > 100
+        ask: "No delivery fee is above 100, so no rows were left. What is it that is above 100?"
+    walk:
+      - "From orders, show me the rows where the subtotal is above 100."
+      - "Not the rows this time, one number about them: the average delivery fee."
+    note: "Deliberate friction (rule C9). \"Typical\" for average, \"big\" for above 100, and the column inside AVG is not the column in the question."
+
+  # 13
+  - kind: aside
+    text: |
+      Something that is only interesting, with nothing in it to keep. SQL was designed at IBM in the early 1970s, so that people who were not programmers could put questions to a database. Its first name was SEQUEL, for Structured English Query Language, which is why many people still say "sequel". That is where "give me the count, from orders" comes from: it was meant to read like a sentence. It is also why the sentence opens with what you want, even though, as you have noticed, things happen starting from the table.
+    note: "Relief after the climb of steps 11 and 12 and before the steepest part of the lesson (rule C8). A real origin, not a mnemonic. It quietly restates the thinking-order observation."
+
+  # 14
+  - kind: ask
+    requires: [from-table, summary-column, keep-rows, compare-signs, text-quotes]
+    text: |
+      On the delivered orders, what was the average subtotal?
+    thinking_order: "From orders, keeping the delivered ones, the average subtotal."
+    model: SELECT AVG(subtotal) FROM orders WHERE status = 'delivered'
+    rows: 1
+    result: [[60.43]]
+    narration:
+      - "60.43. Keep the delivered rows, then average what is left."
+      - "A word in quotes inside the question, a column inside AVG."
+      - ""
+    wrong:
+      - sql: SELECT AVG(subtotal) FROM orders WHERE status = delivered
+        ask: "Is delivered a column, or a word?"
+      - sql: SELECT COUNT(*) FROM orders WHERE status = 'delivered'
+        ask: "That is how many were delivered. What did I ask about them?"
+    walk:
+      - "From orders, the average subtotal."
+      - "Keep only the delivered rows first."
+    note: "An easy recombination, and a planted one. Step 21 is this sentence with piles added, so the hardest step of the lesson expands something the learner has already written."
+
+  # 15
+  - kind: give
+    new: [piles]
+    text: |
+      Now the idea you will use more than any other. Earlier you counted the couriers on bikes: 73. To know about the motos and the carros you could ask twice more, changing the word each time. Or you can ask once. Think of sorting the couriers into piles, one pile per vehicle, and counting each pile:
+
+      ```sql
+      SELECT COUNT(*) FROM couriers GROUP BY vehicle
+      ```
+
+      Run it.
+    shows: ["SELECT COUNT(*) FROM couriers GROUP BY vehicle"]
+    after_run: |
+      73, 17 and 110. There is your 73. GROUP BY vehicle says: group the rows by what is in their vehicle column. One sentence did the work of three.
+    note: "Marked as essential. Piles arrive as the answer to a need: the learner already has one of the three numbers and can see what it would cost to get the others. The numbers are unlabelled, and nothing is said about that yet."
+
+  # 16
+  - kind: ask
+    new: [one-row-per-pile]
+    requires: [count-rows, from-table, piles, one-row-per-pile]
+    text: |
+      The restaurants are spread over four cities. Count the restaurants in each city, the same way: one pile per city. Before you run it, decide how many rows will come back.
+    model: SELECT COUNT(*) FROM restaurants GROUP BY city
+    rows: 4
+    result: [[15], [6], [14], [25]]
+    accepts: ["SELECT city, COUNT(*) FROM restaurants GROUP BY city"]
+    narration:
+      - "Four cities, four piles, four rows. One row comes out per pile, however many rows went in."
+      - "60 rows went in and four came out: one for each pile."
+      - "One pile per city, so one row per city: four."
+    narration_ahead: "Four rows, one per pile. And you put the city in front so we can tell them apart. That is the next step, and you are already there."
+    wrong:
+      - sql: SELECT COUNT(*) FROM restaurants
+        ask: "That is all the restaurants in one pile. What makes the piles?"
+      - sql: SELECT COUNT(*) FROM restaurants GROUP city
+        ask: "Group the rows... by what? Two words make the piles."
+    walk:
+      - "How many restaurants are there?"
+      - "Sort them into piles by city before counting: add the piling part after the table."
+    note: "The new thought is exercised as a prediction, then confirmed by the result. The learner types the unlabelled form once, on purpose, and sees four anonymous numbers of their own making. Opening B gave this sentence instead of asking for it. See the questions for the owner."
+
+  # 17
+  - kind: ask
+    new: [pile-name]
+    imports: [commas]
+    requires: [count-rows, from-table, piles, one-row-per-pile, pile-name, commas]
+    any_column_order: true
+    text: |
+      Look at the two answers you have: 73, 17, 110 for the vehicles, and 15, 6, 14, 25 for the cities. Which city has the 25? We can't tell. We asked only for the count, so the count is all that came out.
+
+      So we ask for the pile's name as well, in front of the count, with a comma between them, as you would write a list in English. The vehicle, and how many couriers, for each vehicle?
+    model: SELECT vehicle, COUNT(*) FROM couriers GROUP BY vehicle
+    rows: 3
+    result: [["bike", 73], ["carro", 17], ["moto", 110]]
+    narration:
+      - "Now each number has its name beside it: bike 73, carro 17, moto 110. You asked for two things, the pile's name and the count, so two columns came out."
+      - "The name in front, the count beside it, one row per pile. Nothing comes out that you did not ask for, and that includes the name."
+      - "A table with two columns came out, because you asked for two things: the pile's name and its count."
+    wrong:
+      - sql: SELECT vehicle COUNT(*) FROM couriers GROUP BY vehicle
+        ask: "Two things in a list. What goes between them in English?"
+      - sql: SELECT vehicle FROM couriers GROUP BY vehicle
+        ask: "Now we have the names and have lost the numbers. How do we ask for both?"
+      - sql: SELECT vehicle, COUNT(*) FROM couriers
+        ask: "One row came back. How many piles did we want? What makes the piles?"
+        why: "this database answers without complaint, and the answer is nonsense. Most others refuse. Either way the piling part is missing."
+    walk:
+      - "Count the couriers in each vehicle pile, as the teacher did."
+      - "Now ask for the pile's name too: vehicle, then a comma, in front of the count."
+    note: "The tension from steps 15 and 16 resolves. \"Select the column you grouped by\" is never stated as a rule. It answers a need the learner has just felt twice."
+
+  # 18
+  - kind: ask
+    requires: [count-rows, from-table, piles, one-row-per-pile, pile-name, commas]
+    any_column_order: true
+    text: |
+      And the cities. How many restaurants per city?
+    model: SELECT city, COUNT(*) FROM restaurants GROUP BY city
+    rows: 4
+    result: [["Belo Horizonte", 15], ["Curitiba", 6], ["Rio de Janeiro", 14], ["São Paulo", 25]]
+    narration:
+      - "São Paulo has the 25. \"Per city\" was your signal: when a question says per, it wants piles."
+      - "One pile per city, its name in front, its count beside it."
+      - "There are the four numbers again, this time with their names."
+    wrong:
+      - sql: SELECT COUNT(*) FROM restaurants GROUP BY city
+        ask: "Which city is which?"
+    walk:
+      - "Sort the restaurants into piles by city and count each pile."
+      - "Put the pile's name in front."
+    note: "Relief after three new thoughts in a row. \"Per\" appears for the first time as the word that signals piles. The second open question, which city has the 25, is answered."
+
+  # 19
+  - kind: ask
+    new: [summary-per-pile]
+    requires: [from-table, summary-column, piles, one-row-per-pile, pile-name, commas, summary-per-pile]
+    any_column_order: true
+    text: |
+      Back to orders. What we say about each pile does not have to be a count. Any summary will do. Average subtotal by status.
+    model: SELECT status, AVG(subtotal) FROM orders GROUP BY status
+    rows: 2
+    result: [["cancelled", 59.99], ["delivered", 60.43]]
+    narration:
+      - "Two piles, cancelled and delivered, and an average for each. The average took the count's place and the piles stayed as they were."
+      - "\"By status\" is \"per status\": one pile per status. Then you say what you want to know about each pile, and this time it was an average."
+      - "Any summary can be said of a pile. Here, the average: cancelled orders and delivered ones both come to about 60."
+    wrong:
+      - sql: SELECT AVG(subtotal) FROM orders GROUP BY status
+        ask: "Which one is the cancelled orders?"
+      - sql: SELECT status, AVG(subtotal) FROM orders GROUP BY subtotal
+        ask: "How many piles did you expect? What are we piling by?"
+    walk:
+      - "From orders, the average subtotal."
+      - "Sort the orders into piles by status first, so that the average is said of each pile."
+      - "Put the pile's name in front."
+    note: "\"By\" joins \"per\". The summary changes as well as the table and the pile, so step 18 cannot be edited into this."
+
+  # 20
+  - kind: classmate
+    requires: [count-rows, from-table, piles, one-row-per-pile, pile-name, commas]
+    any_column_order: true
+    text: |
+      Ana was asked how many orders each restaurant got. She wrote:
+
+      ```sql
+      SELECT COUNT(*) FROM orders GROUP BY restaurant_id
+      ```
+
+      Sixty numbers came back: 107, 119, 114, 82 and on. Ana, which restaurant got the 119? ... She can't say. What should she have written?
+    shows: ["SELECT COUNT(*) FROM orders GROUP BY restaurant_id"]
+    model: SELECT restaurant_id, COUNT(*) FROM orders GROUP BY restaurant_id
+    rows: 60
+    narration:
+      - "Restaurant 2 got the 119. Each number has its restaurant beside it now."
+      - "Sixty piles, sixty rows, and each one named."
+      - "The pile's name in front, as before. In the orders table a restaurant is only a number, and that number is the pile."
+    walk:
+      - "What did we add when we could not tell which city had the 25?"
+      - "Do the same for Ana, with the column she piled by."
+    note: "Ana makes the slip the learner is most likely to make in step 21, one step before it (rule E6). It also shows restaurant_id as something to pile by, and \"each\" as a third word for piles after \"per\" and \"by\". The repair is a one-slot change to a sentence on screen. That is accepted here because the slot is the point."
+
+  # 21
+  - kind: ask
+    new: [keep-before-piles]
+    friction: true
+    requires: [from-table, summary-column, keep-rows, compare-signs, text-quotes, piles, one-row-per-pile, pile-name, commas, summary-per-pile, keep-before-piles]
+    any_column_order: true
+    text: |
+      The last one, and I won't break it down. For the delivered orders only, the average subtotal of each restaurant. Think about what happens first, keeping rows or making piles. Then write them in that order.
+    model: SELECT restaurant_id, AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id
+    rows: 60
+    narration:
+      - "That is the shape of a real interview question, and you built it by thinking: from orders, keep the delivered ones, pile them by restaurant, average each pile. After the table, the sentence runs in the order things happen."
+      - "Keep first, pile second, and that is the order you wrote them in. Only the first part, what you want out, is written ahead of its turn."
+      - "Sixty restaurants, one average each, over delivered orders only. After FROM, the order of the sentence is the order of events: keep, then pile."
+    wrong:
+      - sql: SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id WHERE status = 'delivered'
+        ask: "Which happens first: keeping rows, or making piles? Write them in that order."
+        why: "after the table, the sentence follows the order of events."
+      - sql: SELECT AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id
+        ask: "Which restaurant is the first number?"
+      - sql: SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id
+        ask: "Those averages include the cancelled orders. Where do we drop them?"
+    walk:
+      - "On the delivered orders, the average subtotal."
+      - "Now sort what is left into piles by restaurant: the piling goes after the keeping."
+      - "Put the pile's name in front."
+    note: "The surprise sentence. The learner is asked to work the clause order out, not told it (rule B4): a wrong guess produces an error, not a false belief, and the reason is real. The first rung of the walk is step 14 again. Open decision O2 asks whether this step is too big for a first sitting. It is better prepared here than in the ten-minute opening, and only a real attempt will settle it."
+
+  # 22
+  - kind: recap
+    text: |
+      Stop there. In one sitting you went from nothing to this: from a table, keep the rows you want, sort them into piles, and say something about each pile. A count or an average, one table or another. Most questions you will be asked about data are that sentence with different words in it.
+
+      You are not fast at it yet, and you are not meant to be. Speed is trained separately, later. For now the only aim is that you can think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and repeats, in other words, that the learner is not to revise."
+
+  # 23
+  - kind: cold-check
+    requires: [count-rows, from-table, keep-rows, compare-signs, text-quotes, piles, one-row-per-pile, pile-name, commas, keep-before-piles]
+    any_column_order: true
+    text: |
+      Counting only the couriers on bikes, how many are there in each city?
+    model: SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'bike' GROUP BY city
+    rows: 4
+    result: [["Belo Horizonte", 9], ["Curitiba", 13], ["Rio de Janeiro", 18], ["São Paulo", 33]]
+    after_run: |
+      That's the sitting. We pick up from here next time.
+    note: "Every thought of the lesson that an answer can show, on a combination of table, question and pile that was never practised. It is never scored (rule F1). What a miss tells the script: which of keeping, quotes, piles, the pile's name, or the order of keeping and piling was absent. Lesson 2 opens by rebuilding from that point."
