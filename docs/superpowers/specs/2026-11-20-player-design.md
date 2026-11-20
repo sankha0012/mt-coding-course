@@ -176,7 +176,7 @@ Before serving, it runs `checker.checks.check_all` on the lesson folder. If any 
 
 ## The screen: `web/`
 
-The schematic the owner saw. One column. Earlier items fade a little and scroll. The teacher is in the serif voice, code in mono. A `result` is a table of at most 20 rows, with "N rows in all" under it when `total` is larger. An `error` is plain text. A `compare` is two code boxes side by side. The editor is a plain `<textarea>` with no autocomplete and no spell check, and an empty answer is not sent. Run and Continue are ordinary buttons. Ctrl or Command with Enter runs the answer.
+The schematic the owner saw. One column. Earlier items fade a little and scroll. The teacher is in the serif voice, code in mono. A `result` is a table of at most 20 rows, with "N rows in all" under it when `total` is larger. An `error` is plain text. A `compare` is two code boxes side by side. The editor is a `<textarea>` with no autocomplete, no suggestions and no spell check, drawn over a layer that colours SQL words (decision C8). An empty answer is not sent. Run and Continue are ordinary buttons. Ctrl or Command with Enter runs the answer.
 
 Absent on purpose, by rules 5 and 6 and R17 to R20: a timer, score, streak, percentage, step counter, progress bar, notes, reference panel, glossary, multiple choice, red, and the word "wrong". There is no pause before typing (open decision O5): "stop and think" is only in the lesson text, and the first sitting decides what to add.
 

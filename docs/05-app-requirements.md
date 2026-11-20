@@ -21,7 +21,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 
 ### Answering
 
-- R5. A plain editor. No autocomplete and no suggestions, so that it behaves like an interview editor.
+- R5. A plain editor. No autocomplete and no suggestions, so that it behaves like an interview editor. SQL syntax colours are allowed, as in interview editors (decision C8).
 - R6. In Python, indent automatically after a line ending in a colon. Indentation cannot be forgiven by the checker, so the editor must make it easy.
 - R7. Make room for thinking before typing. One option is a short quiet moment before the editor accepts input, with the request to think it out. This needs trying with the learner before it is fixed.
 - R8. Show the result of the learner's code, as a table for SQL and pandas and as output for Python, so they see what they made.
