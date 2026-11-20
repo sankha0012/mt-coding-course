@@ -123,3 +123,54 @@ def check_shapes(lessons):
             if _changed_runs(a["model"], b["model"]) <= 1:
                 fails.append(f"FAIL {lesson} step {n2}: same shape as step {n1}; the answers differ in one place only")
     return fails
+
+
+def report_spacing(thoughts, lessons):
+    """Check 5: for each thought, where it is needed again after its introduction."""
+    flat = [(f"{lesson}:{n}", s) for lesson, steps in lessons for n, s in enumerate(steps, 1)]
+    intro, needed = {}, {}
+    for i, (_, s) in enumerate(flat):
+        for t in s.get("new", []) + s.get("imports", []):
+            intro.setdefault(t, i)
+        for t in s.get("requires", []):
+            needed.setdefault(t, []).append(i)
+    lines = []
+    for t in sorted(thoughts, key=lambda t: intro.get(t, len(flat))):
+        if t not in intro:
+            lines.append(f"{t}: never introduced")
+            continue
+        later = [j for j in needed.get(t, []) if j > intro[t]]
+        if not later:
+            lines.append(f"{t}: introduced {flat[intro[t]][0]}; never needed again")
+            continue
+        gaps = [b - a for a, b in zip([intro[t]] + later, later)]
+        lines.append(f"{t}: introduced {flat[intro[t]][0]}; needed at "
+                     f"{', '.join(flat[j][0] for j in later)}; gaps {', '.join(map(str, gaps))}")
+    return lines
+
+
+def report_load(lessons):
+    """Check 7: where new thoughts fall. Warn on three or more steps in a row."""
+    lines, warns = [], []
+    for lesson, steps in lessons:
+        new = [n for n, s in enumerate(steps, 1) if s.get("new")]
+        lines.append(f"{lesson}: new thoughts at steps {', '.join(map(str, new))} ({len(new)} in {len(steps)})")
+        streak = []
+        for n in new + [None]:
+            if streak and (n is None or n != streak[-1] + 1):
+                if len(streak) >= 3:
+                    warns.append(f"WARN {lesson} steps {streak[0]} to {streak[-1]}: "
+                                 f"a new thought in each of {len(streak)} steps in a row")
+                streak = []
+            if n is not None:
+                streak.append(n)
+    return lines, warns
+
+
+def check_all(conn, thoughts, lessons):
+    fails = []
+    for lesson, steps in lessons:
+        fails += check_sql(conn, lesson, steps) + check_narration(lesson, steps)
+    fails += check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
+    load, warns = report_load(lessons)
+    return fails, warns, report_spacing(thoughts, lessons), load

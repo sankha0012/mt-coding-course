@@ -1,4 +1,5 @@
-from checker.checks import check_audit, check_narration, check_new_limit, check_shapes, check_sql
+from checker.checks import (check_all, check_audit, check_narration, check_new_limit,
+                            check_shapes, check_sql, report_load, report_spacing)
 
 
 def has(fails, text):
@@ -170,3 +171,40 @@ def test_steps_without_a_model_are_skipped(steps):
     assert shapes(steps) == []
     steps[4]["model"] = "SELECT COUNT(*) FROM orders"
     assert has(shapes(steps), "step 5: same shape as step 2")
+
+
+def test_spacing_report_lists_returns_and_gaps(thoughts, steps):
+    lines = report_spacing(thoughts, [("t-01", steps)])
+    assert "star: introduced t-01:3; needed at t-01:4; gaps 1" in lines
+    assert "count-rows: introduced t-01:1; needed at t-01:2; gaps 1" in lines
+    assert "keep-rows: never introduced" in lines
+
+
+def test_spacing_report_says_when_a_thought_is_never_needed_again(thoughts, steps):
+    steps[3]["requires"] = ["from-table"]
+    lines = report_spacing(thoughts, [("t-01", steps)])
+    assert "star: introduced t-01:3; never needed again" in lines
+
+
+def test_load_report_warns_on_three_new_thoughts_in_a_row(steps):
+    lines, warns = report_load([("t-01", steps)])
+    assert lines == ["t-01: new thoughts at steps 1, 2, 3 (3 in 4)"]
+    assert warns == ["WARN t-01 steps 1 to 3: a new thought in each of 3 steps in a row"]
+
+
+def test_load_report_has_no_warning_when_relief_comes(steps):
+    steps[2].pop("new")
+    steps[2]["imports"] = ["star"]
+    _, warns = report_load([("t-01", steps)])
+    assert warns == []
+
+
+def test_check_all_returns_failures_warnings_and_reports(conn, thoughts, steps):
+    fails, warns, spacing, load = check_all(conn, thoughts, [("t-01", steps)])
+    assert fails == []
+    assert len(warns) == 1
+    assert spacing and load
+    steps[1]["narration"] = ["one"]
+    steps[3]["requires"] = ["keep-rows"]
+    fails, *_ = check_all(conn, thoughts, [("t-01", steps)])
+    assert has(fails, "step 2: needs at least two") and has(fails, "step 4: requires 'keep-rows'")
