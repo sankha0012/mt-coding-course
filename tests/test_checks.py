@@ -208,3 +208,21 @@ def test_check_all_returns_failures_warnings_and_reports(conn, thoughts, steps):
     steps[3]["requires"] = ["keep-rows"]
     fails, *_ = check_all(conn, thoughts, [("t-01", steps)])
     assert has(fails, "step 2: needs at least two") and has(fails, "step 4: requires 'keep-rows'")
+
+
+def test_changing_the_table_and_adding_a_clause_is_two_changes(steps):
+    steps[1]["model"] = "SELECT * FROM couriers"
+    steps[3]["model"] = "SELECT * FROM orders WHERE subtotal > 100"
+    assert shapes(steps) == []
+
+
+def test_adding_one_clause_is_a_repeat(steps):
+    steps[1]["model"] = "SELECT * FROM couriers"
+    steps[3]["model"] = "SELECT * FROM couriers WHERE vehicle = 'bike'"
+    assert has(shapes(steps), "step 4: same shape as step 2")
+
+
+def test_changing_two_things_inside_one_clause_is_one_change(steps):
+    steps[1]["model"] = "SELECT * FROM orders WHERE delivery_fee < 5"
+    steps[3]["model"] = "SELECT * FROM orders WHERE subtotal > 100"
+    assert has(shapes(steps), "step 4: same shape as step 2")

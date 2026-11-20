@@ -56,6 +56,7 @@ Steps are a list. A step's number is its position, counting from 1. Messages use
 |---|---|
 | `kind` | `give`, `ask`, `classmate`, `aside`, `recap` or `cold-check` |
 | `text` | Teacher's lines, Markdown. For a typed step this is the prompt. |
+| `after_run` | Optional. Teacher's lines shown after the learner has run a sentence in a `give` or `classmate` step. |
 | `new` | List of thought ids introduced here. Omit if none. |
 | `imports` | List of thought ids the learner already owns and the step names out loud. They count as introduced here but not towards the limit of one new thought. |
 | `requires` | List of thought ids the step's answer needs. Omit for steps with no `model`. |
@@ -118,7 +119,7 @@ Each check names the lesson and step in its message, for example `FAIL sql-01 st
 | 1b | Every `wrong` entry gives an error or a result that differs from the model's, under the step's comparison rules. | fail |
 | 2 | Audit. Every id in `new`, `imports` and `requires` exists in `thoughts.yaml`. Every `requires` id was introduced in an earlier step, in this lesson or an earlier one, or in this step. No thought is introduced twice. | fail |
 | 3 | At most one id in `new` per step. | fail |
-| 4 | No shape repeat. For each pair of consecutive typed steps, tokenise both models (case ignored, quoted text as one token) and compare them. If they differ in one contiguous run of tokens, the pair is a shape repeat. | fail |
+| 4 | No shape repeat. For each pair of consecutive typed steps, split both models into clauses (`SELECT`, `FROM`, `WHERE`, `GROUP BY` and the like; case and spacing ignored, quoted text as one token). A clause is a slot. If at most one clause differs, added or removed, the pair is a shape repeat. Changed on 20 Nov 2026 during the build: the first version compared runs of tokens, and wrongly treated "table changed and a `WHERE` added" as one change, because the two edits touch. | fail |
 | 5 | Spacing. For each thought, list the steps that require it after its introduction and the gaps between them. | report |
 | 6 | Every typed step except `cold-check` has at least two non-empty `narration` lines. | fail |
 | 7 | Load shape. List the steps that introduce a thought. Warn when three or more steps in a row do. | report, with warnings |

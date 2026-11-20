@@ -1,6 +1,5 @@
 import re
 import sqlite3
-from difflib import SequenceMatcher
 
 from .data import run, same_rows
 
@@ -108,19 +107,35 @@ def _tokens(sql):
     return re.findall(r"'[^']*'|\w+|[^\s\w]", sql.lower())
 
 
-def _changed_runs(a, b):
-    """How many separate runs of tokens differ between two SQL sentences."""
-    ops = SequenceMatcher(None, _tokens(a), _tokens(b), autojunk=False).get_opcodes()
-    return sum(1 for tag, *_ in ops if tag != "equal")
+_CLAUSES = {"select", "from", "where", "group", "having", "order", "limit", "join", "on", "union"}
+
+
+def _clauses(sql):
+    """Split a sentence into clauses, keyed by clause word and occurrence."""
+    out, seen, key = {}, {}, None
+    for t in _tokens(sql):
+        if t in _CLAUSES:
+            seen[t] = seen.get(t, 0) + 1
+            key = (t, seen[t])
+            out[key] = []
+        elif key:
+            out[key].append(t)
+    return out
+
+
+def _changed_clauses(a, b):
+    """How many clauses differ between two SQL sentences. A clause is a slot."""
+    ca, cb = _clauses(a), _clauses(b)
+    return sum(1 for k in ca.keys() | cb.keys() if ca.get(k) != cb.get(k))
 
 
 def check_shapes(lessons):
-    """Check 4: two consecutive typed steps must not differ in one place only."""
+    """Check 4: two consecutive typed steps must not differ in one slot only."""
     fails = []
     for lesson, steps in lessons:
         typed = [(n, s) for n, s in enumerate(steps, 1) if "model" in s]
         for (n1, a), (n2, b) in zip(typed, typed[1:]):
-            if _changed_runs(a["model"], b["model"]) <= 1:
+            if _changed_clauses(a["model"], b["model"]) <= 1:
                 fails.append(f"FAIL {lesson} step {n2}: same shape as step {n1}; the answers differ in one place only")
     return fails
 
