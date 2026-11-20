@@ -15,9 +15,9 @@ def _column_type(values):
     return str, "TEXT"
 
 
-def load_db(data_dir):
+def load_db(data_dir, check_same_thread=True):
     """Build an in-memory database from every CSV in data_dir. Empty cells become NULL."""
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(":memory:", check_same_thread=check_same_thread)
     for path in sorted(Path(data_dir).glob("*.csv")):
         with open(path, newline="", encoding="utf-8") as f:
             header, *body = csv.reader(f)

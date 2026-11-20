@@ -17,6 +17,30 @@ def _try(conn, sql):
         return None, str(e)
 
 
+def _model_problems(conn, step):
+    """Run a step's model answer. Return (rows, or None if it fails to run; list of problems)."""
+    rows, err = _try(conn, step["model"])
+    if err:
+        return None, [f"model answer does not run: {err}"]
+    problems = []
+    if not rows:
+        problems.append("model answer returns no rows")
+    if "rows" in step and len(rows) != step["rows"]:
+        problems.append(f"model answer returns {len(rows)} rows, expected {step['rows']}")
+    if "result" in step and not same_rows(rows, step["result"], ndigits=2, **_flags(step)):
+        problems.append(f"model result {rows[:4]} differs from expected result {step['result']}")
+    return rows, problems
+
+
+def _accept_problems(conn, step):
+    problems = []
+    for sql in step.get("accepts", []):
+        got, err = _try(conn, sql)
+        if err or not got:
+            problems.append(f"accepted answer does not run or returns no rows ({err or 'no rows'}): {sql}")
+    return problems
+
+
 def check_sql(conn, lesson, steps):
     """Checks 1 and 1b: every SQL sentence in the lesson runs, or fails, as the step says."""
     fails = []
@@ -33,20 +57,13 @@ def check_sql(conn, lesson, steps):
             fail(n, f"broken sentence runs without error: {s['broken']}")
         if "model" not in s:
             continue
-        rows, err = _try(conn, s["model"])
-        if err:
-            fail(n, f"model answer does not run: {err}")
+        rows, problems = _model_problems(conn, s)
+        for p in problems:
+            fail(n, p)
+        if rows is None:
             continue
-        if not rows:
-            fail(n, "model answer returns no rows")
-        if "rows" in s and len(rows) != s["rows"]:
-            fail(n, f"model answer returns {len(rows)} rows, expected {s['rows']}")
-        if "result" in s and not same_rows(rows, s["result"], ndigits=2, **_flags(s)):
-            fail(n, f"model result {rows[:4]} differs from expected result {s['result']}")
-        for sql in s.get("accepts", []):
-            got, err = _try(conn, sql)
-            if err or not got:
-                fail(n, f"accepted answer does not run or returns no rows ({err or 'no rows'}): {sql}")
+        for p in _accept_problems(conn, s):
+            fail(n, p)
         for w in s.get("wrong", []):
             if "ask" not in w and "tell" not in w:
                 fail(n, f"wrong answer needs ask or tell: {w.get('sql')}")
@@ -67,6 +84,40 @@ def check_narration(lesson, steps):
             lines = [x for x in s.get("narration", []) if x.strip()]
             if len(lines) < 2:
                 fails.append(f"FAIL {lesson} step {n}: needs at least two non-empty narration lines, has {len(lines)}")
+    return fails
+
+
+def check_returns(conn, lesson, steps):
+    """Check 8: a return sentence runs, differs from its step, and has narration."""
+    fails = []
+    for n, s in enumerate(steps, 1):
+        r = s.get("return")
+        if r is None:
+            continue
+
+        def fail(msg, n=n):
+            fails.append(f"FAIL {lesson} step {n}: return: {msg}")
+
+        if s.get("kind") == "cold-check":
+            fail("is not allowed on a cold check")
+            continue
+        if "model" not in r:
+            fail("has no model")
+            continue
+        rows, problems = _model_problems(conn, r)
+        for p in problems + _accept_problems(conn, r):
+            fail(p)
+        if rows is not None:
+            if _tokens(r["model"]) == _tokens(s["model"]):
+                fail("model is the same sentence as the step's")
+            else:
+                original, err = _try(conn, s["model"])
+                flags = {k: r.get(k, False) or s.get(k, False) for k in ("ordered", "any_column_order")}
+                if err is None and same_rows(rows, original, **flags):
+                    fail("gives the same result as the step's answer")
+        lines = [x for x in r.get("narration", []) if x.strip()]
+        if len(lines) < 2:
+            fail(f"needs at least two non-empty narration lines, has {len(lines)}")
     return fails
 
 
@@ -185,7 +236,8 @@ def report_load(lessons):
 def check_all(conn, thoughts, lessons):
     fails = []
     for lesson, steps in lessons:
-        fails += check_sql(conn, lesson, steps) + check_narration(lesson, steps)
+        fails += (check_sql(conn, lesson, steps) + check_narration(lesson, steps)
+                  + check_returns(conn, lesson, steps))
     fails += check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
     load, warns = report_load(lessons)
     return fails, warns, report_spacing(thoughts, lessons), load

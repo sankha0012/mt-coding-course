@@ -42,6 +42,15 @@ steps:
     walk:
       - "Type again the sentence that counted the orders."
       - "Which word in it says which table? Put restaurants there."
+    return:
+      text: "The couriers table holds one row for every courier. How many couriers do we have?"
+      model: "SELECT COUNT(*) FROM couriers"
+      rows: 1
+      result: [[200]]
+      narration:
+        - "200. A count again, and this time the table's name that went after FROM was couriers."
+        - "200 couriers: how many, from which table."
+      note: "Return for step 2. Early in the lesson almost nothing is taught, so only the table can change."
     note: "First typed sentence, and the first rule of engagement, at the moment it matters. Only the table changes from step 1, on purpose: it fixes where the table goes. This is the one place where a one-slot change is wanted."
 
   # 3
@@ -80,6 +89,14 @@ steps:
     walk:
       - "Type the sentence that showed all of orders."
       - "Now the same for couriers."
+    return:
+      text: "Now I'd like to see the restaurants themselves. Every row, every column."
+      model: "SELECT * FROM restaurants"
+      rows: 60
+      narration:
+        - "Everything, from restaurants: a name, a city and a cuisine on every row."
+        - "The star again, this time in front of restaurants."
+      note: "Return for step 4. Early step: only the table can change."
     note: "\"Show me\" replaces \"give me\". The star returns one step after it arrived. The vehicle column is seen here, five steps before it is needed."
 
   # 5
@@ -118,6 +135,15 @@ steps:
     walk:
       - "Show me everything from orders."
       - "Now add the question after the table: WHERE, then the column, the sign, the number."
+    return:
+      text: "The promised_minutes column says how long each delivery was promised for. Show me every order that was promised in under 40 minutes."
+      model: "SELECT * FROM orders WHERE promised_minutes < 40"
+      rows: 2019
+      narration:
+        - "Look down the promised_minutes column: every one is 30. Each row was asked the question and only the yes rows came out."
+        - "6,000 rows went in, each answered yes or no, and 2,019 came out."
+        - "From orders, keep the quick promises, show everything. That is the order it happens in."
+      note: "Return for step 6. Numbers only, because text and quotes do not arrive until step 8."
     note: "The prompt is in thinking order: table, keep, then what to show. Keep-rows is introduced with the star and not with the count, so that the learner can see the surviving rows. This differs from Opening B, where it arrived inside a count. \"Comes straight after the table\" is chosen over \"goes at the end\", which would become false at step 21."
 
   # 7
@@ -143,6 +169,16 @@ steps:
     walk:
       - "How many orders are there?"
       - "Keep only the rows where the delivery fee is under 5: add the question after the table."
+    return:
+      text: "How many orders came to more than 90?"
+      model: "SELECT COUNT(*) FROM orders WHERE subtotal > 90"
+      rows: 1
+      result: [[950]]
+      narration:
+        - "950. Keep the big orders, then count them."
+        - "From orders, keeping the ones above 90: 950."
+        - ""
+      note: "Return for step 7. Other column, other sign, other number."
     note: "The wording drops to ordinary English, so the learner finds the thinking order alone. The narration starts to say that things happen in a different order from the one they are written in. That is the background for step 21."
 
   # 8
@@ -193,6 +229,15 @@ steps:
       - "Show me all of couriers. Which column says what they ride?"
       - "How many couriers are there?"
       - "Keep only the rows where the vehicle is the word bike."
+    return:
+      text: "The restaurants sit in cities, Curitiba among them. How many restaurants are in Curitiba?"
+      model: "SELECT COUNT(*) FROM restaurants WHERE city = 'Curitiba'"
+      rows: 1
+      result: [[6]]
+      narration:
+        - "6. The city's name is a word we are looking for, so it sat in quotes."
+        - "From restaurants, keep the ones in Curitiba, count them: 6."
+      note: "Return for step 9. Other table, column and word."
     note: "The three words are spelled out in the prompt exactly as the table has them. The table and the question both change from Davi's sentence."
 
   # 10
@@ -214,6 +259,15 @@ steps:
     walk:
       - "Show me everything from restaurants."
       - "Keep only the rows where the cuisine is the word pizza."
+    return:
+      text: "Which couriers drive a carro? Show me the whole row for each."
+      model: "SELECT * FROM couriers WHERE vehicle = 'carro'"
+      rows: 17
+      narration:
+        - "Seventeen couriers drive a carro. The star gave you whole rows and the question kept only those."
+        - "Every row here says carro in the vehicle column."
+        - ""
+      note: "Return for step 10. Other table, column and word."
     note: "The last return of the star in this lesson. Its real job is to let the learner see the restaurants table and its city column six steps before piles need it (rule C4)."
 
   # 11
@@ -242,6 +296,15 @@ steps:
     walk:
       - "How many orders are there?"
       - "The same sentence, but in place of the count: AVG, with subtotal inside its brackets."
+    return:
+      text: "The promised_minutes column says how long each delivery was promised for. From orders, what was the average promise?"
+      model: "SELECT AVG(promised_minutes) FROM orders"
+      rows: 1
+      result: [[39.93]]
+      narration:
+        - "About 39.93 minutes. AVG, with the column it is about inside the brackets, from orders."
+        - "Many rows in, one number out: the average of promised_minutes."
+      note: "Return for step 11. Only orders has numbers worth averaging this early, so only the column changes."
     note: "This pays the second half of the debt from step 1: brackets hold what the summary is about. For the writer only: 25 orders have an empty subtotal and AVG skips them. Missing values are a later thought and nothing is said here."
 
   # 12
@@ -265,6 +328,16 @@ steps:
     walk:
       - "From orders, show me the rows where the subtotal is above 100."
       - "Not the rows this time, one number about them: the average delivery fee."
+    return:
+      text: "The actual_minutes column says how long a delivery really took. For the orders that were promised in 30 minutes, how long did delivery really take, on average?"
+      model: "SELECT AVG(actual_minutes) FROM orders WHERE promised_minutes = 30"
+      rows: 1
+      result: [[29.38]]
+      narration:
+        - "29.38 minutes. The column inside the question chose the rows, and the one inside AVG said what to average."
+        - "Keep the 30-minute promises, average their real time. You found that order yourself."
+        - "Promised 30, took about 29."
+      note: "Return for step 12. Not broken down, like the step. Cancelled orders have no actual time and AVG skips them."
     note: "Deliberate friction (rule C9). \"Typical\" for average, \"big\" for above 100, and the column inside AVG is not the column in the question."
 
   # 13
@@ -294,6 +367,16 @@ steps:
     walk:
       - "From orders, the average subtotal."
       - "Keep only the delivered rows first."
+    return:
+      text: "On the cancelled orders, what was the average delivery fee?"
+      model: "SELECT AVG(delivery_fee) FROM orders WHERE status = 'cancelled'"
+      rows: 1
+      result: [[5.37]]
+      narration:
+        - "5.37. Keep the cancelled rows, then average what is left."
+        - "Cancelled is the word, in quotes. Delivery_fee is the column AVG is about."
+        - ""
+      note: "Return for step 14. Other word and other column."
     note: "An easy recombination, and a planted one. Step 21 is this sentence with piles added, so the hardest step of the lesson expands something the learner has already written."
 
   # 15
@@ -335,6 +418,17 @@ steps:
     walk:
       - "How many restaurants are there?"
       - "Sort them into piles by city before counting: add the piling part after the table."
+    return:
+      text: "The couriers are spread over cities too. Count the couriers in each city, one pile per city. Before you run it, decide how many rows will come back."
+      model: "SELECT COUNT(*) FROM couriers GROUP BY city"
+      rows: 4
+      result: [[32], [30], [49], [89]]
+      accepts:
+        - "SELECT city, COUNT(*) FROM couriers GROUP BY city"
+      narration:
+        - "Four cities, four piles, four rows, however many couriers went in."
+        - "200 couriers went in and four rows came out: one for each pile."
+      note: "Return for step 16. A learner who also selects the city is ahead and is accepted."
     note: "The new thought is exercised as a prediction, then confirmed by the result. The learner types the unlabelled form once, on purpose, and sees four anonymous numbers of their own making. Opening B gave this sentence instead of asking for it. See the questions for the owner."
 
   # 17
@@ -365,6 +459,16 @@ steps:
     walk:
       - "Count the couriers in each vehicle pile, as the teacher did."
       - "Now ask for the pile's name too: vehicle, then a comma, in front of the count."
+    return:
+      text: "Now the restaurants again. For each cuisine, show the cuisine and how many restaurants serve it."
+      model: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine"
+      any_column_order: true
+      rows: 6
+      result: [["arabe", 8], ["brasileira", 11], ["hamburguer", 13], ["japonesa", 10], ["pizza", 8], ["saudavel", 10]]
+      narration:
+        - "Six cuisines, six piles, each with its name beside its count."
+        - "The name and the count, one row per pile: you asked for two things and two columns came out."
+      note: "Return for step 17. Other table and pile column, and 'for each' as the signal word."
     note: "The tension from steps 15 and 16 resolves. \"Select the column you grouped by\" is never stated as a rule. It answers a need the learner has just felt twice."
 
   # 18
@@ -386,6 +490,17 @@ steps:
     walk:
       - "Sort the restaurants into piles by city and count each pile."
       - "Put the pile's name in front."
+    return:
+      text: "For each status, how many orders?"
+      model: "SELECT status, COUNT(*) FROM orders GROUP BY status"
+      any_column_order: true
+      rows: 2
+      result: [["cancelled", 399], ["delivered", 5601]]
+      narration:
+        - "399 cancelled and 5,601 delivered. \"For each\" was your signal: it wants piles."
+        - "One pile per status, its name in front, its count beside it."
+        - ""
+      note: "Return for step 18."
     note: "Relief after three new thoughts in a row. \"Per\" appears for the first time as the word that signals piles. The second open question, which city has the 25, is answered."
 
   # 19
@@ -411,6 +526,16 @@ steps:
       - "From orders, the average subtotal."
       - "Sort the orders into piles by status first, so that the average is said of each pile."
       - "Put the pile's name in front."
+    return:
+      text: "The promised_minutes column holds 30, 40 or 50. For each promised time, what was the average subtotal?"
+      model: "SELECT promised_minutes, AVG(subtotal) FROM orders GROUP BY promised_minutes"
+      any_column_order: true
+      rows: 3
+      result: [[30, 60.34], [40, 60.07], [50, 60.8]]
+      narration:
+        - "Three piles, one per promised time, and an average for each. The average took the count's place and the piles stayed as they were."
+        - "Any summary can be said of a pile. Here, the average subtotal of each promise: all close to 60."
+      note: "Return for step 19. Other pile column, and the pile name is a number."
     note: "\"By\" joins \"per\". The summary changes as well as the table and the pile, so step 18 cannot be edited into this."
 
   # 20
@@ -435,6 +560,15 @@ steps:
     walk:
       - "What did we add when we could not tell which city had the 25?"
       - "Do the same for Ana, with the column she piled by."
+    return:
+      text: "The customer_id column says who placed each order. How many orders did each customer place? Show the customer beside each count."
+      model: "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id"
+      any_column_order: true
+      rows: 1475
+      narration:
+        - "1,475 customers, 1,475 rows, each one named."
+        - "The pile's name in front, as before. Here a customer is only a number, and that number is the pile."
+      note: "Return for step 20."
     note: "Ana makes the slip the learner is most likely to make in step 21, one step before it (rule E6). It also shows restaurant_id as something to pile by, and \"each\" as a third word for piles after \"per\" and \"by\". The repair is a one-slot change to a sentence on screen. That is accepted here because the slot is the point."
 
   # 21
@@ -463,6 +597,15 @@ steps:
       - "On the delivered orders, the average subtotal."
       - "Now sort what is left into piles by restaurant: the piling goes after the keeping."
       - "Put the pile's name in front."
+    return:
+      text: "Among the cancelled orders only, what was each restaurant's average delivery fee? Think about what happens first, keeping rows or making piles."
+      model: "SELECT restaurant_id, AVG(delivery_fee) FROM orders WHERE status = 'cancelled' GROUP BY restaurant_id"
+      any_column_order: true
+      rows: 60
+      narration:
+        - "Keep the cancelled ones, pile them by restaurant, average the fee of each pile. That is the order you wrote it in."
+        - "Sixty restaurants, one average each, over cancelled orders only. After FROM the sentence runs in the order things happen."
+      note: "Return for step 21. Not broken down, like the step."
     note: "The surprise sentence. The learner is asked to work the clause order out, not told it (rule B4): a wrong guess produces an error, not a false belief, and the reason is real. The first rung of the walk is step 14 again. Open decision O2 asks whether this step is too big for a first sitting. It is better prepared here than in the ten-minute opening, and only a real attempt will settle it."
 
   # 22

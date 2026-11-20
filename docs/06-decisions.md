@@ -13,6 +13,7 @@ What is settled, what is recommended but not yet confirmed by the owner, and wha
 | C5 | The course also teaches basic Python (lists, dicts and so on), so the learner can quickly write simple scripts. |
 | C6 | The coding round is a generic gate that comes before role placement. The target is therefore the full pass bar, and all three stages are in scope. |
 | C7 | This repository starts with documents only. No code until the work moves to Claude Code. |
+| C8 | The lesson screen has a colour palette (paper and teal, with a dark mode), and SQL words are coloured everywhere, including in the answer editor, as in most editors and interview platforms. Still no autocomplete and no suggestions. Decided 20 Nov 2026. Known effect: a mistyped keyword such as `FORM` does not take the keyword colour, which quietly signals a slip. |
 
 ## Confirmed by the owner (20 Nov 2026, first Claude Code session)
 

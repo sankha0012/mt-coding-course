@@ -4,7 +4,7 @@ A course that teaches SQL, basic Python and pandas to one learner by the Michel 
 
 ## State of the repository
 
-Design, one full lesson script (`content/sql/`), and a content checker. The checker is the only code. Run it with `uv run python -m checker content/sql` and the tests with `uv run pytest`. There is no player yet. Do not build one without the owner's go-ahead: `docs/07-roadmap.md` puts the player at milestone 4, after the owner has read the checked lesson, because the research is clear that the quality lives in the script and not in the question-and-answer mechanism.
+Design, one full lesson script (`content/sql/`), a content checker, and the first player. Run the checker with `uv run python -m checker content/sql`, the player with `uv run python -m player`, the miss report with `uv run python -m player.report`, and the tests with `uv run pytest`. The progress file is `progress/progress.db`: never delete, overwrite or reset it, and test against a scratch folder. The owner has not yet sat the lesson: do not revise lesson text before they have. The research is clear that the quality lives in the script and not in the question-and-answer mechanism.
 
 ## What must not be broken
 

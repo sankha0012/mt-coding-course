@@ -2,7 +2,7 @@
 
 A course that takes one person from "can read code but freezes on a blank page" to "passes the coding round of a Brazilian data science hiring process". It teaches SQL, basic Python and pandas with the Michel Thomas method as refined by Language Transfer's Thinking Method: the method carries the burden of remembering, the learner only thinks and produces.
 
-**Status (20 Nov 2026): design and the first lesson are done. The only code is the content checker.** SQL lesson 1 is in `content/sql/` and `uv run python -m checker content/sql` checks it. There is no player yet. The next step is to build the smallest player that can run lesson 1.
+**Status (20 Nov 2026): design, the first lesson, a content checker and the first player are built.** SQL lesson 1 is in `content/sql/`. `uv run python -m checker content/sql` checks it and `uv run python -m player` plays it at http://127.0.0.1:8770. The next step is for the owner to sit lesson 1 and read the miss log (milestone 5).
 
 ## Why this exists
 

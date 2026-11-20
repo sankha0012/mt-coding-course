@@ -1,9 +1,11 @@
+import random
 from pathlib import Path
 
 import pytest
 import yaml
 
 from checker.data import load_db
+from player.sql import open_database
 
 ROOT = Path(__file__).parent.parent
 
@@ -51,3 +53,71 @@ def write_strand(tmp_path, thoughts):
             encoding="utf-8")
         return tmp_path
     return write
+
+
+@pytest.fixture(scope="session")
+def play_db(data_dir):
+    return open_database(data_dir)
+
+
+@pytest.fixture
+def ui():
+    return {
+        "again": ["AGAIN-1", "AGAIN-2"],
+        "slip": ["SLIP-1", "SLIP-2"],
+        "walk_intro": ["WALK-1", "WALK-2"],
+        "show_answer": ["SHOW-1", "SHOW-2"],
+    }
+
+
+@pytest.fixture
+def play_steps():
+    """A small lesson that uses every kind of step. Indexes: 0 give, 1 typed with ladder and return,
+    2 aside, 3 recap, 4 typed without walk, 5 typed with return, 6 cold check."""
+    return [
+        {"kind": "give", "text": "Welcome.", "shows": ["SELECT COUNT(*) FROM orders"], "after_run": "6,000 orders."},
+        {"kind": "ask", "text": "How many restaurants?", "thinking_order": "From restaurants, how many?",
+         "model": "SELECT COUNT(*) FROM restaurants", "narration": ["N1", "N2", "N3"],
+         "wrong": [
+             {"sql": "SELECT COUNT(*) restaurants", "ask": "From where?", "why": "without from there is no table."},
+             {"sql": "SELECT COUNT(restaurants)", "tell": "Tell line."}],
+         "walk": ["Piece one.", "Piece two."],
+         "return": {"text": "How many couriers?", "model": "SELECT COUNT(*) FROM couriers",
+                    "narration": ["R1", "R2"]}},
+        {"kind": "aside", "text": "An aside."},
+        {"kind": "recap", "text": "A recap."},
+        {"kind": "ask", "text": "Show couriers.", "model": "SELECT * FROM couriers", "narration": ["A", "B"]},
+        {"kind": "ask", "text": "Count orders.", "model": "SELECT COUNT(*) FROM orders", "narration": ["C", "D"],
+         "return": {"text": "Count customers rows.", "model": "SELECT COUNT(*) FROM restaurants WHERE 1 = 1",
+                    "narration": ["R3", "R4"]}},
+        {"kind": "cold-check", "text": "Cold.", "model": "SELECT COUNT(*) FROM restaurants", "after_run": "Closing."},
+    ]
+
+
+@pytest.fixture
+def make_engine(play_db, ui, play_steps):
+    from player.engine import Engine  # imported here so conftest loads before the engine exists
+
+    def make(steps=None, seed=1):
+        return Engine(steps if steps is not None else play_steps, play_db, ui, random.Random(seed))
+    return make
+
+
+@pytest.fixture
+def reach():
+    """Play an engine up to the point where it waits for an answer to the given step (1-based) and
+    variant. Steps on the way are run, continued, and answered correctly with their model answer."""
+    def go(engine, step, variant="main", state=None):
+        st = state if state else engine.start()[0]
+        for _ in range(200):
+            p = engine.pending(st)
+            if p["mode"] == "answer" and p["step"] == step and p["variant"] == variant:
+                return st
+            if p["mode"] == "answer":
+                s = engine.steps[p["step"] - 1]
+                st, *_ = engine.answer(st, (s["return"] if p["variant"] == "return" else s)["model"])
+            else:
+                assert p["mode"] in ("run", "continue"), p
+                st, *_ = engine.advance(st)
+        raise AssertionError("never reached the step")
+    return go

@@ -1,8 +1,9 @@
 import sqlite3
+import threading
 
 import pytest
 
-from checker.data import run, same_rows
+from checker.data import load_db, run, same_rows
 
 
 def test_tables_load_with_expected_sizes(conn):
@@ -37,3 +38,12 @@ def test_floats_compare_after_rounding():
 def test_column_order_matters_unless_any_column_order():
     assert not same_rows([("a", 1)], [(1, "a")])
     assert same_rows([("a", 1)], [(1, "a")], any_column_order=True)
+
+
+def test_connection_can_be_used_from_another_thread(data_dir):
+    conn = load_db(data_dir, check_same_thread=False)
+    out = []
+    t = threading.Thread(target=lambda: out.append(run(conn, "SELECT COUNT(*) FROM couriers")))
+    t.start()
+    t.join()
+    assert out == [[(200,)]]
