@@ -295,3 +295,10 @@ def test_check_all_includes_the_return_checks(conn, thoughts, steps):
     with_return(steps, model="SELECT COUNT(*) FROM nowhere")
     fails, *_ = check_all(conn, thoughts, [("t-01", steps)])
     assert has(fails, "step 2: return: model answer does not run")
+
+
+def test_return_accepted_answers_must_run_and_return_rows(conn, steps):
+    with_return(steps, accepts=["SELECT * FROM nowhere"])
+    assert has(returns(conn, steps), "step 2: return: accepted answer")
+    with_return(steps, accepts=["SELECT COUNT(*) FROM couriers WHERE 1 = 1"])
+    assert returns(conn, steps) == []

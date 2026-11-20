@@ -32,6 +32,15 @@ def _model_problems(conn, step):
     return rows, problems
 
 
+def _accept_problems(conn, step):
+    problems = []
+    for sql in step.get("accepts", []):
+        got, err = _try(conn, sql)
+        if err or not got:
+            problems.append(f"accepted answer does not run or returns no rows ({err or 'no rows'}): {sql}")
+    return problems
+
+
 def check_sql(conn, lesson, steps):
     """Checks 1 and 1b: every SQL sentence in the lesson runs, or fails, as the step says."""
     fails = []
@@ -53,10 +62,8 @@ def check_sql(conn, lesson, steps):
             fail(n, p)
         if rows is None:
             continue
-        for sql in s.get("accepts", []):
-            got, err = _try(conn, sql)
-            if err or not got:
-                fail(n, f"accepted answer does not run or returns no rows ({err or 'no rows'}): {sql}")
+        for p in _accept_problems(conn, s):
+            fail(n, p)
         for w in s.get("wrong", []):
             if "ask" not in w and "tell" not in w:
                 fail(n, f"wrong answer needs ask or tell: {w.get('sql')}")
@@ -98,7 +105,7 @@ def check_returns(conn, lesson, steps):
             fail("has no model")
             continue
         rows, problems = _model_problems(conn, r)
-        for p in problems:
+        for p in problems + _accept_problems(conn, r):
             fail(p)
         if rows is not None:
             if _tokens(r["model"]) == _tokens(s["model"]):

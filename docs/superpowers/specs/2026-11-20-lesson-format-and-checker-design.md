@@ -100,6 +100,23 @@ wrong:
 
 `sql` is a full sentence. `ask` is the leading question for rung 2, `why` is the reason it matters, and `tell` is a plain statement used where there is nothing to ask. Each entry needs `ask` or `tell`.
 
+### Return sentences
+
+Added 20 Nov 2026. A typed step, except a cold check, may carry a `return` block. The player uses it when the step is missed (rule E4): the step comes back about three steps later, or before the cold check if fewer remain, in this different sentence.
+
+```yaml
+return:
+  text: The couriers table holds one row for every courier. How many couriers do we have?
+  model: SELECT COUNT(*) FROM couriers
+  rows: 1
+  result: [[200]]
+  narration: [..., ...]
+```
+
+A return has `text`, `model`, `narration`, and optionally `rows`, `result`, `ordered`, `any_column_order`, `accepts` and `note`, all as for a typed step. It has no `wrong` and no `walk`. The thoughts it needs are the step's own `requires`, so it has no `requires` of its own. A miss on a return gets one "again, thinking it through", then the answer to type.
+
+Authoring rules, not all checkable: the same thoughts as the step and none new; a different table, column or number, and different wording; only tables and columns the learner has met by that step, or that the return's text names; nothing that needs text and quotes before `text-quotes` arrives.
+
 ## How SQL is run
 
 A scratch in-memory SQLite database is built from `data/orders.csv`, `restaurants.csv` and `couriers.csv` each time the checker runs. The files are never modified.
@@ -123,6 +140,7 @@ Each check names the lesson and step in its message, for example `FAIL sql-01 st
 | 5 | Spacing. For each thought, list the steps that require it after its introduction and the gaps between them. | report |
 | 6 | Every typed step except `cold-check` has at least two non-empty `narration` lines. | fail |
 | 7 | Load shape. List the steps that introduce a thought. Warn when three or more steps in a row do. | report, with warnings |
+| 8 | Returns. Each `return` is on a step other than a cold check, has a `model` that runs and returns rows, matches its `rows` and `result`, has `accepts` that run, differs from the step's `model` (case and spacing ignored), gives a result different from the step's, and has at least two non-empty `narration` lines. | fail |
 
 Checks 5 and 7 print text and never fail the run. Lesson 1 has two runs of three new thoughts (steps 1 to 3 and 15 to 17) on purpose, so the warning is expected there and the writer reads it.
 
