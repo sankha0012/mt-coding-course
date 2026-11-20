@@ -1,4 +1,4 @@
-from checker.checks import check_narration, check_sql
+from checker.checks import check_audit, check_narration, check_new_limit, check_sql
 
 
 def has(fails, text):
@@ -84,3 +84,54 @@ def test_cold_check_needs_no_narration(steps):
     steps[3]["kind"] = "cold-check"
     del steps[3]["narration"]
     assert check_narration("t-01", steps) == []
+
+
+def audit(thoughts, steps):
+    return check_audit(thoughts, [("t-01", steps)])
+
+
+def test_good_lesson_passes_audit(thoughts, steps):
+    assert audit(thoughts, steps) == []
+
+
+def test_requiring_a_thought_never_introduced(thoughts, steps):
+    steps[3]["requires"] = ["star", "keep-rows"]
+    assert has(audit(thoughts, steps), "FAIL t-01 step 4: requires 'keep-rows', which no earlier step introduces")
+
+
+def test_requiring_a_thought_introduced_later(thoughts, steps):
+    steps[1]["requires"] = ["count-rows", "from-table", "star"]
+    assert has(audit(thoughts, steps), "step 2: requires 'star'")
+
+
+def test_unknown_thought_id(thoughts, steps):
+    steps[3]["requires"] = ["nonsense"]
+    assert has(audit(thoughts, steps), "step 4: unknown thought 'nonsense'")
+
+
+def test_thought_introduced_twice(thoughts, steps):
+    steps[2]["new"] = ["count-rows"]
+    assert has(audit(thoughts, steps), "step 3: thought 'count-rows' already introduced at t-01 step 1")
+
+
+def test_an_import_counts_as_introduced(thoughts, steps):
+    steps[0]["imports"] = ["compare-signs"]
+    steps[3]["requires"] = ["star", "compare-signs"]
+    assert audit(thoughts, steps) == []
+
+
+def test_a_thought_from_an_earlier_lesson_counts(thoughts, steps):
+    later = [{"kind": "ask", "requires": ["star"], "text": "t", "model": "SELECT * FROM couriers",
+              "narration": ["a", "b"]}]
+    assert check_audit(thoughts, [("t-01", steps), ("t-02", later)]) == []
+
+
+def test_at_most_one_new_thought_per_step(steps):
+    steps[2]["new"] = ["star", "keep-rows"]
+    assert has(check_new_limit([("t-01", steps)]),
+               "FAIL t-01 step 3: introduces 2 new thoughts (star, keep-rows), at most one allowed")
+
+
+def test_imports_do_not_count_towards_the_limit(steps):
+    steps[2]["imports"] = ["compare-signs", "keep-rows"]
+    assert check_new_limit([("t-01", steps)]) == []

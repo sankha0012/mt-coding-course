@@ -67,3 +67,36 @@ def check_narration(lesson, steps):
             if len(lines) < 2:
                 fails.append(f"FAIL {lesson} step {n}: needs at least two non-empty narration lines, has {len(lines)}")
     return fails
+
+
+def check_audit(thoughts, lessons):
+    """Check 2: every required thought was introduced earlier, and every id exists."""
+    fails, seen = [], {}
+    for lesson, steps in lessons:
+        for n, s in enumerate(steps, 1):
+            where = f"{lesson} step {n}"
+            here = {}
+            for t in s.get("new", []) + s.get("imports", []):
+                if t not in thoughts:
+                    fails.append(f"FAIL {where}: unknown thought '{t}'")
+                elif t in seen:
+                    fails.append(f"FAIL {where}: thought '{t}' already introduced at {seen[t]}")
+                else:
+                    here[t] = where
+            for t in s.get("requires", []):
+                if t not in thoughts:
+                    fails.append(f"FAIL {where}: unknown thought '{t}'")
+                elif t not in seen and t not in here:
+                    fails.append(f"FAIL {where}: requires '{t}', which no earlier step introduces")
+            seen.update(here)
+    return fails
+
+
+def check_new_limit(lessons):
+    """Check 3: at most one new thought per step. Imports do not count."""
+    return [
+        f"FAIL {lesson} step {n}: introduces {len(s['new'])} new thoughts ({', '.join(s['new'])}), at most one allowed"
+        for lesson, steps in lessons
+        for n, s in enumerate(steps, 1)
+        if len(s.get("new", [])) > 1
+    ]
