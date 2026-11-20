@@ -66,6 +66,13 @@ class Engine:
         def event(outcome):
             return {"step": step + 1, "variant": variant, "typed": text, "outcome": outcome, "misses": before}
 
+        if variant == "main" and self.steps[step].get("kind") == "cold-check":
+            items = [{"type": "learner", "sql": text}, res.item("Yours"),
+                     run_sql(self.conn, cur["model"]).item("Model")]
+            if cur.get("after_run"):
+                items.append(_teacher(cur["after_run"].strip()))
+            st["phase"] = "continue"
+            return st, items, [event("shown")]
         if self._correct(cur, res):
             outcome = self._on_correct(st, cur, step, variant, text, items)
             return st, items, [event(outcome)]
@@ -77,9 +84,22 @@ class Engine:
     def _enter(self, st, items):
         j = st["pos"]
         if j >= len(self.steps):
+            if st["queue"]:
+                return self._begin_return(st, items, st["queue"].pop(0)["step"])
             st["phase"] = "done"
             return
+        cold = self.steps[j].get("kind") == "cold-check"
+        due = [q for q in st["queue"] if q["due"] <= j or cold]
+        if due:
+            st["queue"].remove(due[0])
+            return self._begin_return(st, items, due[0]["step"])
         self._begin_step(st, items, j)
+
+    def _begin_return(self, st, items, i):
+        st["returned"].append(i)
+        st.update(playing={"step": i, "variant": "return"}, misses=0, rung=0, why=None)
+        items.append(_teacher(self.steps[i]["return"]["text"].strip()))
+        st["phase"] = "answer"
 
     def _begin_step(self, st, items, j):
         s = self.steps[j]
@@ -128,6 +148,10 @@ class Engine:
         else:
             self._narrate(st, cur, items)
             outcome = "correct"
+        queued = {q["step"] for q in st["queue"]}
+        if (variant == "main" and st["misses"] >= 1 and "return" in self.steps[step]
+                and step not in st["returned"] and step not in queued):
+            st["queue"].append({"step": step, "due": step + 3})
         st["phase"] = "continue"
         return outcome
 
