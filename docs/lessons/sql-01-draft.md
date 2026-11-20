@@ -606,9 +606,13 @@ Not part of the lesson. Things the draft found that the checker and player will 
 
 ## Questions for the owner
 
-1. **Step 16 has the learner type the unlabelled pile sentence.** Opening B gave it and went straight to the fix. Typing it makes the missing name something the learner runs into, but it is one production of a form they will not use again. Keep it, or give it as before?
-2. **Keep-rows arrives with the star (step 6), not with a count.** The learner sees the surviving rows. The cost is three "show me" sentences in the first ten steps of an opening whose point was that every sentence answers a question. Acceptable?
-3. **Step 20 asks the learner to repair Ana's sentence** and not only to read about it. Is that the right use of a classmate?
-4. **Narration convention.** In a step that introduces a thought, every narration line names it. Otherwise one line may be empty. Is that how you want it?
-5. **Twelve new thoughts in one sitting.** Opening B had eight in ten minutes, so the rate is about the same. If the sitting runs long, the natural place to cut it in two is after step 14.
-6. **O2 remains open:** whether step 21 is too big a stretch. This draft prepares it more than the opening did. Only your attempt will tell.
+Answered by the owner on 20 Nov 2026. All six: keep the draft as written.
+
+1. **Step 16 has the learner type the unlabelled pile sentence.** Kept typed. The missing name is something the learner runs into, not something they are shown.
+2. **Keep-rows arrives with the star (step 6), not with a count.** Accepted, including the three "show me" sentences in the first ten steps.
+3. **Step 20 asks the learner to repair Ana's sentence.** Kept. The learner produces the repair.
+4. **Narration convention.** Kept: in a step that introduces a thought every narration line names it, and elsewhere one line may be empty.
+5. **Twelve new thoughts in one sitting.** Stays one lesson. Time the real sitting in milestone 5 and split after step 14 only if it runs past twenty minutes.
+6. **O2 (is step 21 too big a stretch)** stays open. No bridging step added. Only the owner's attempt in milestone 5 will settle it.
+
+Still to come: the owner's read of the lesson as a whole ("says it reads right"), which is what closes milestone 2.
