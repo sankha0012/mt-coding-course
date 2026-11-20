@@ -124,3 +124,123 @@ def test_answering_when_not_waiting_is_an_error(make_engine):
     st, _, _ = e.start()
     with pytest.raises(ValueError):
         e.answer(st, "SELECT 1")
+
+
+def miss(e, st, text="SELECT 1"):
+    st, items, events = e.answer(st, text)
+    assert events[0]["outcome"] == "miss"
+    return st, items, events
+
+
+def test_first_miss_asks_again_and_adds_the_thinking_order_version(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, items, events = miss(e, st)
+    assert kinds(items) == ["learner", "result", "teacher", "teacher"]
+    assert items[2]["text"] in ("AGAIN-1", "AGAIN-2")
+    assert items[3]["text"] == "From restaurants, how many?"
+    assert events == [{"step": 2, "variant": "main", "typed": "SELECT 1", "outcome": "miss", "misses": 0}]
+    assert e.pending(st) == {"mode": "answer", "step": 2, "variant": "main"}
+
+
+def test_a_step_with_no_thinking_order_just_asks_again(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 5)
+    st, items, _ = miss(e, st)
+    assert kinds(items) == ["learner", "result", "teacher"]
+
+
+def test_second_miss_that_matches_a_known_wrong_answer_asks_its_question(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, items, events = miss(e, st, "SELECT COUNT(*) restaurants")
+    assert texts(items) == ["From where?"]
+    assert st["why"] == "without from there is no table."
+    assert events[0]["misses"] == 1
+
+
+def test_the_why_is_stated_after_the_learner_gets_it_right(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, _, _ = miss(e, st, "SELECT COUNT(*) restaurants")
+    st, items, events = e.answer(st, "SELECT COUNT(*) FROM restaurants")
+    assert texts(items)[0] == "Without from there is no table."
+    assert texts(items)[1] in ("N1", "N2", "N3")
+    assert events[0]["outcome"] == "correct" and events[0]["misses"] == 2
+
+
+def test_a_tell_is_said_when_there_is_no_question(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, items, _ = miss(e, st, "SELECT COUNT(restaurants)")
+    assert texts(items) == ["Tell line."]
+
+
+def test_a_known_wrong_answer_matches_by_result(make_engine, reach, play_steps):
+    play_steps[1]["wrong"] = [{"sql": "SELECT COUNT(*) FROM couriers", "ask": "Wrong table?"}]
+    e = make_engine(play_steps)
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, items, _ = miss(e, st, "SELECT COUNT(*) FROM couriers WHERE courier_id > 0")
+    assert texts(items) == ["Wrong table?"]
+
+
+def test_second_miss_that_matches_nothing_goes_to_the_walk(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, items, _ = miss(e, st, "SELECT 2")
+    assert texts(items)[0].startswith(("WALK-1", "WALK-2"))
+    assert "1. Piece one." in texts(items)[0] and "2. Piece two." in texts(items)[0]
+
+
+def test_a_miss_after_a_question_goes_to_the_walk(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, _, _ = miss(e, st, "SELECT COUNT(*) restaurants")
+    st, items, _ = miss(e, st)
+    assert "1. Piece one." in texts(items)[0]
+
+
+def test_a_miss_after_the_walk_shows_the_answer_to_type(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, _, _ = miss(e, st, "SELECT 2")
+    st, items, _ = miss(e, st)
+    assert texts(items)[0].startswith(("SHOW-1", "SHOW-2"))
+    assert "```sql\nSELECT COUNT(*) FROM restaurants\n```" in texts(items)[0]
+    st, items, events = miss(e, st)
+    assert "```sql" in texts(items)[0]
+    assert e.pending(st)["mode"] == "answer"
+
+
+def test_with_no_walk_the_ladder_goes_from_again_to_the_answer(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 5)
+    st, _, _ = miss(e, st)
+    st, items, _ = miss(e, st)
+    assert texts(items)[0].startswith(("SHOW-1", "SHOW-2"))
+
+
+def test_the_ladder_wording_changes_between_uses(make_engine, reach):
+    e = make_engine(seed=3)
+    st = reach(e, 5)
+    st, a, _ = miss(e, st)
+    st["rung"] = 0
+    st, b, _ = miss(e, st)
+    assert texts(a)[0] != texts(b)[0]
+
+
+def test_the_ladder_never_says_wrong(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    seen = []
+    for text in ["SELECT 1", "SELECT COUNT(*) restaurants", "SELECT 3", "SELECT 4"]:
+        st, items, _ = e.answer(st, text)
+        seen += texts(items)
+    assert not any("wrong" in t.lower() for t in seen)

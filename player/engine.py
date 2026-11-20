@@ -69,6 +69,7 @@ class Engine:
         if self._correct(cur, res):
             outcome = self._on_correct(st, cur, step, variant, text, items)
             return st, items, [event(outcome)]
+        self._on_miss(st, cur, text, res, items)
         return st, items, [event("miss")]
 
     # ---- moving through the lesson
@@ -144,3 +145,43 @@ class Engine:
         line = self.rng.choice([x for x in options if x != st["last_ui"].get(key)] or options)
         st["last_ui"][key] = line
         return line
+
+    # ---- the correction ladder
+
+    def _match_wrong(self, cur, text, res):
+        mine = normalise(text)
+        for w in cur.get("wrong", []):
+            if normalise(w["sql"]) == mine:
+                return w
+            if res.error is None:
+                want = self._rows(w["sql"])
+                if want is not None and same_rows(res.full, want, **self._flags(cur)):
+                    return w
+        return None
+
+    def _next_rung(self, st, cur, text, res):
+        r = st["rung"]
+        if r == 0:
+            return 1
+        if r == 1 and self._match_wrong(cur, text, res):
+            return 2
+        if r <= 2 and cur.get("walk"):
+            return 3
+        return 4
+
+    def _on_miss(self, st, cur, text, res, items):
+        st["misses"] += 1
+        rung = st["rung"] = self._next_rung(st, cur, text, res)
+        if rung == 1:
+            items.append(_teacher(self._pick(st, "again")))
+            if cur.get("thinking_order"):
+                items.append(_teacher(cur["thinking_order"]))
+        elif rung == 2:
+            w = self._match_wrong(cur, text, res)
+            items.append(_teacher(w.get("ask") or w["tell"]))
+            st["why"] = w.get("why")
+        elif rung == 3:
+            steps = "\n".join(f"{i}. {w}" for i, w in enumerate(cur["walk"], 1))
+            items.append(_teacher(f"{self._pick(st, 'walk_intro')}\n\n{steps}"))
+        else:
+            items.append(_teacher(f"{self._pick(st, 'show_answer')}\n\n```sql\n{cur['model']}\n```"))
