@@ -1,0 +1,61 @@
+restaurant_id,name,city,cuisine,signup_date
+1,Rest 01,Belo Horizonte,brasileira,2025-07-16
+2,Rest 02,São Paulo,saudavel,2024-04-01
+3,Rest 03,Curitiba,hamburguer,2024-10-25
+4,Rest 04,Rio de Janeiro,brasileira,2025-02-21
+5,Rest 05,São Paulo,arabe,2024-10-24
+6,Rest 06,Curitiba,hamburguer,2024-09-24
+7,Rest 07,Belo Horizonte,japonesa,2024-04-09
+8,Rest 08,Belo Horizonte,saudavel,2024-08-16
+9,Rest 09,São Paulo,hamburguer,2024-05-23
+10,Rest 10,Rio de Janeiro,hamburguer,2024-06-29
+11,Rest 11,São Paulo,hamburguer,2025-02-14
+12,Rest 12,Curitiba,hamburguer,2025-01-13
+13,Rest 13,Rio de Janeiro,japonesa,2024-12-30
+14,Rest 14,Belo Horizonte,hamburguer,2024-08-05
+15,Rest 15,São Paulo,saudavel,2025-07-29
+16,Rest 16,São Paulo,pizza,2024-02-22
+17,Rest 17,Rio de Janeiro,hamburguer,2024-07-24
+18,Rest 18,São Paulo,japonesa,2024-03-11
+19,Rest 19,Belo Horizonte,brasileira,2024-07-22
+20,Rest 20,Rio de Janeiro,brasileira,2025-07-31
+21,Rest 21,Belo Horizonte,arabe,2024-08-07
+22,Rest 22,São Paulo,pizza,2025-06-29
+23,Rest 23,Curitiba,pizza,2024-10-24
+24,Rest 24,Curitiba,brasileira,2025-02-23
+25,Rest 25,Belo Horizonte,arabe,2024-10-01
+26,Rest 26,São Paulo,arabe,2024-06-08
+27,Rest 27,Rio de Janeiro,japonesa,2025-04-03
+28,Rest 28,São Paulo,pizza,2025-08-04
+29,Rest 29,São Paulo,saudavel,2024-06-07
+30,Rest 30,Rio de Janeiro,japonesa,2025-04-12
+31,Rest 31,Belo Horizonte,arabe,2024-06-05
+32,Rest 32,Curitiba,pizza,2025-03-06
+33,Rest 33,São Paulo,arabe,2025-04-18
+34,Rest 34,São Paulo,pizza,2024-09-26
+35,Rest 35,Rio de Janeiro,brasileira,2025-03-18
+36,Rest 36,São Paulo,hamburguer,2024-06-12
+37,Rest 37,São Paulo,japonesa,2024-02-17
+38,Rest 38,Rio de Janeiro,hamburguer,2024-02-27
+39,Rest 39,São Paulo,hamburguer,2024-09-25
+40,Rest 40,Rio de Janeiro,saudavel,2025-06-25
+41,Rest 41,São Paulo,arabe,2024-03-17
+42,Rest 42,Belo Horizonte,hamburguer,2024-09-30
+43,Rest 43,Belo Horizonte,brasileira,2025-02-26
+44,Rest 44,São Paulo,brasileira,2024-05-01
+45,Rest 45,Belo Horizonte,brasileira,2025-03-08
+46,Rest 46,Belo Horizonte,saudavel,2024-07-02
+47,Rest 47,São Paulo,pizza,2025-04-30
+48,Rest 48,São Paulo,pizza,2024-12-13
+49,Rest 49,Rio de Janeiro,brasileira,2024-11-24
+50,Rest 50,São Paulo,japonesa,2024-04-16
+51,Rest 51,São Paulo,japonesa,2024-10-04
+52,Rest 52,São Paulo,japonesa,2025-05-28
+53,Rest 53,Belo Horizonte,saudavel,2024-01-12
+54,Rest 54,Rio de Janeiro,saudavel,2025-03-31
+55,Rest 55,Belo Horizonte,saudavel,2024-10-22
+56,Rest 56,Belo Horizonte,brasileira,2025-03-07
+57,Rest 57,Rio de Janeiro,saudavel,2025-02-01
+58,Rest 58,Rio de Janeiro,japonesa,2024-09-16
+59,Rest 59,São Paulo,arabe,2024-07-04
+60,Rest 60,São Paulo,hamburguer,2025-01-11
