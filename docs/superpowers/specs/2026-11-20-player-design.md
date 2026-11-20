@@ -151,7 +151,7 @@ CREATE TABLE IF NOT EXISTS events (
   typed TEXT, outcome TEXT, misses INTEGER);
 ```
 
-Each action is one transaction: the new state, the new items, and the events together. Opening the app resumes the most recent run with no `finished_at`, or creates one. "Sit this lesson again" creates a new run and leaves the old one.
+Each action is one transaction: the new state, the new items, and the events together. Opening the app shows the most recent run for the lesson, finished or not, and creates one only if there is none. "Sit this lesson again" creates a new run and leaves the old one.
 
 ## Web API: `app.py`
 
