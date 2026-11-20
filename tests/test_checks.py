@@ -1,5 +1,5 @@
 from checker.checks import (check_all, check_audit, check_narration, check_new_limit,
-                            check_shapes, check_sql, report_load, report_spacing)
+                            check_returns, check_shapes, check_sql, report_load, report_spacing)
 
 
 def has(fails, text):
@@ -226,3 +226,72 @@ def test_changing_two_things_inside_one_clause_is_one_change(steps):
     steps[1]["model"] = "SELECT * FROM orders WHERE delivery_fee < 5"
     steps[3]["model"] = "SELECT * FROM orders WHERE subtotal > 100"
     assert has(shapes(steps), "step 4: same shape as step 2")
+
+
+def with_return(steps, **changes):
+    """Give step 2 a valid return, then apply changes to it."""
+    steps[1]["return"] = {"text": "t", "model": "SELECT COUNT(*) FROM couriers", "rows": 1,
+                          "result": [[200]], "narration": ["a", "b"], **changes}
+    return steps
+
+
+def returns(conn, steps):
+    return check_returns(conn, "t-01", steps)
+
+
+def test_steps_without_a_return_pass(conn, steps):
+    assert returns(conn, steps) == []
+
+
+def test_valid_return_passes(conn, steps):
+    assert returns(conn, with_return(steps)) == []
+
+
+def test_return_that_does_not_run(conn, steps):
+    with_return(steps, model="SELECT COUNT(*) FROM nowhere")
+    assert has(returns(conn, steps), "FAIL t-01 step 2: return: model answer does not run")
+
+
+def test_return_with_no_rows(conn, steps):
+    with_return(steps, model="SELECT * FROM couriers WHERE city = 'Nowhere'")
+    del steps[1]["return"]["rows"], steps[1]["return"]["result"]
+    assert has(returns(conn, steps), "step 2: return: model answer returns no rows")
+
+
+def test_return_rows_and_result_must_match(conn, steps):
+    with_return(steps, rows=2)
+    assert has(returns(conn, steps), "step 2: return: model answer returns 1 rows, expected 2")
+    with_return(steps, result=[[201]])
+    assert has(returns(conn, steps), "step 2: return: model result")
+
+
+def test_return_without_a_model(conn, steps):
+    steps[1]["return"] = {"text": "t", "narration": ["a", "b"]}
+    assert has(returns(conn, steps), "step 2: return: has no model")
+
+
+def test_return_must_not_be_the_same_sentence(conn, steps):
+    with_return(steps, model="select  count(*)  from restaurants", rows=1, result=[[60]])
+    assert has(returns(conn, steps), "step 2: return: model is the same sentence as the step's")
+
+
+def test_return_must_not_give_the_same_result(conn, steps):
+    with_return(steps, model="SELECT COUNT(*) FROM restaurants WHERE 1 = 1", rows=1, result=[[60]])
+    assert has(returns(conn, steps), "step 2: return: gives the same result as the step's answer")
+
+
+def test_return_needs_two_narration_lines(conn, steps):
+    with_return(steps, narration=["only one", ""])
+    assert has(returns(conn, steps), "step 2: return: needs at least two non-empty narration lines, has 1")
+
+
+def test_cold_check_may_not_have_a_return(conn, steps):
+    steps[3]["kind"] = "cold-check"
+    steps[3]["return"] = {"text": "t", "model": "SELECT COUNT(*) FROM couriers", "narration": ["a", "b"]}
+    assert has(returns(conn, steps), "step 4: return: is not allowed on a cold check")
+
+
+def test_check_all_includes_the_return_checks(conn, thoughts, steps):
+    with_return(steps, model="SELECT COUNT(*) FROM nowhere")
+    fails, *_ = check_all(conn, thoughts, [("t-01", steps)])
+    assert has(fails, "step 2: return: model answer does not run")
