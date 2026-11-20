@@ -4,7 +4,7 @@ A course that teaches SQL, basic Python and pandas to one learner by the Michel 
 
 ## State of the repository
 
-Design only. No code exists. Do not start with the app. `docs/07-roadmap.md` puts a full lesson script, reviewed by the owner, before any player is built, because the research is clear that the quality lives in the script and not in the question-and-answer mechanism.
+Design, one full lesson script (`content/sql/`), and a content checker. The checker is the only code. Run it with `uv run python -m checker content/sql` and the tests with `uv run pytest`. There is no player yet. Do not build one without the owner's go-ahead: `docs/07-roadmap.md` puts the player at milestone 4, after the owner has read the checked lesson, because the research is clear that the quality lives in the script and not in the question-and-answer mechanism.
 
 ## What must not be broken
 
@@ -24,7 +24,7 @@ These come from `docs/02-pedagogy-rules.md`. A feature or a lesson that violates
 ## Working conventions
 
 - **Content and code stay apart.** Lessons are plain files. The app reads them.
-- **Every expected answer must run.** No lesson ships if its own model answers fail against the data in `data/`. Build this check early and run it after every content change.
+- **Every expected answer must run.** No lesson ships if its own model answers fail against the data in `data/`. The checker does this. Run it after every content change.
 - **Every prompt must pass the audit.** Each step lists the thoughts it requires, and a check confirms each was introduced in an earlier step. See `docs/04-script-format.md`.
 - **Write for the owner's review.** A lesson script is reviewed and approved in readable form before it is wired into the app.
 - **Verify before claiming.** Run the thing and read the output before saying it works.

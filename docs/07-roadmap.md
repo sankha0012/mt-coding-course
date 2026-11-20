@@ -22,6 +22,8 @@ Turn the approved lesson into the chosen plain-file format. Build the checker wi
 
 Done when: the checker passes on lesson 1 and fails, with a clear message, on a deliberately broken copy.
 
+Built 20 Nov 2026 as one YAML file per lesson plus a Python checker. See `docs/superpowers/specs/2026-11-20-lesson-format-and-checker-design.md`. Lesson 1 passes with two load warnings, both expected. Both gates are in `tests/test_gate.py`.
+
 ## 4. Build the smallest player that can run lesson 1
 
 The core loop, the editor, result-based checking for SQL, the correction ladder, narration, progress that survives a restart, and the miss log. Nothing for Python yet.
