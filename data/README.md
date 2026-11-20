@@ -12,7 +12,8 @@ Things worth knowing when writing lessons:
 
 - `status` is either `delivered` or `cancelled`.
 - `orders` has no city. City lives in `restaurants` and `couriers`, so any "per city" question about orders needs a join.
-- `coupon_code` is empty on most rows, and `courier_id` is empty on cancelled orders. Keep both out of early lessons.
+- `coupon_code` is empty on most rows, and `courier_id` and `actual_minutes` are empty on cancelled orders. Keep them out of early lessons.
+- `subtotal` is empty on 25 orders (23 delivered, 2 cancelled). Found on 20 Nov 2026 while checking lesson 1. Load empty cells as missing values, not as empty text, or averages and comparisons on `subtotal` come out wrong.
 - `created_at` is text in the form `2026-08-01 00:00:00`.
 
 The data was generated with a fixed random seed for the owner's earlier mock tests. The sibling repository `live-coding-gym` has a similar but different dataset in its `content/_shared` folder. Do not mix the two.
