@@ -24,6 +24,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - R5. A plain editor. No autocomplete and no suggestions, so that it behaves like an interview editor. SQL syntax colours are allowed, as in interview editors (decision C8).
 - R6. In Python, indent automatically after a line ending in a colon. Indentation cannot be forgiven by the checker, so the editor must make it easy.
 - R7. Make room for thinking before typing. One option is a short quiet moment before the editor accepts input, with the request to think it out. This needs trying with the learner before it is fixed.
+- R29. A collapsible "Try your own code" panel (decision C19) with SQL and Python tabs. It runs the learner's own code on the data of the step being played, read-only. It shows the result and keeps nothing. It is never judged and never logged, so it cannot change the miss log or the progress file. The core data cannot be changed from it: SQL is `SELECT` only, and Python runs in a folder of read-only links to private copies.
 - R8. Show the result of the learner's code, as a table for SQL and pandas and as output for Python, so they see what they made.
 
 ### Checking
