@@ -26,6 +26,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - R7. Make room for thinking before typing. One option is a short quiet moment before the editor accepts input, with the request to think it out. This needs trying with the learner before it is fixed.
 - R29. A collapsible "Try your own code" panel (decision C19) with SQL and Python tabs. It runs the learner's own code on the data of the step being played, read-only. It shows the result and keeps nothing. It is never judged and never logged, so it cannot change the miss log or the progress file. The core data cannot be changed from it: SQL is `SELECT` only, and Python runs in a folder of read-only links to private copies.
 - R30. An "Ask" tab beside the code editor (decision C22), with a menu to choose the answering service. A question opens a side thread in the transcript while the lesson waits. Only the learner ends it, with "Got it, back to the lesson", and the step is shown again with the learner's draft kept. The model never receives expected answers, a reply that solves the step is replaced, and the thread changes no lesson state, ladder or miss log.
+- R31. A Data tab beside Try in the right pane (decision C24) shows the tables of the waiting step: column names, row count and the first 10 rows. It shows data only, never lesson text, syntax or earlier answers. R18 stands.
 - R8. Show the result of the learner's code, as a table for SQL and pandas and as output for Python, so they see what they made.
 
 ### Checking
@@ -40,7 +41,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 
 - R14. The correction ladder: ask again thinking it through; then a leading question where one is known; then the step-by-step walk; then, as a last resort, pieces to arrange and finally the answer to copy.
 - R15. A missed step is brought back a few steps later inside a different sentence.
-- R16. Small slips do not trigger the ladder. Show the model answer beside the learner's and move on.
+- R16. Small slips do not trigger the ladder, and are not pointed out. The answer is accepted as correct (decision C23).
 
 ### What must be absent
 

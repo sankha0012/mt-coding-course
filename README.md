@@ -12,6 +12,10 @@ The owner already has the maths, statistics and ML. Companies are sending them i
 
 The Ask tab beside the code editor sends a question to Gemini or Groq, as you choose from its menu. The lesson waits, a side thread answers, and "Got it, back to the lesson" returns you to the step (decision C22). The model never sees a step's expected answer. To set it up, copy `.env.example` to `.env`, put in `GEMINI_API_KEY` and `GROQ_API_KEY` (and optionally `GEMINI_MODEL`, `GROQ_MODEL`), and restart the player. `.env` is git-ignored. Your questions are kept in `progress/progress.db`, and `uv run python -m player.report` lists the steps you asked about most.
 
+## Seeing the data
+
+The pane on the right has a Data tab. It shows the tables of the step you are on, with their columns and the first 10 rows, so you need not scroll up to find a column name.
+
 ## Read in this order
 
 | File | What it gives you |
