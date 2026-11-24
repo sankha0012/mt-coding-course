@@ -21,7 +21,7 @@ Closes with: the average subtotal of each restaurant, delivered orders only.
 
 Owed to later lessons: `star` has not returned since step 10. `summary-per-pile` and `keep-before-piles` have had one return each. SQL-2 pays these early.
 
-### SQL-2. Sort and cut
+### SQL-2. Sort and cut (written, `content/sql/lesson-02.yaml`)
 
 Assumes: SQL-1. Opens with: a cold check from SQL-1.
 
@@ -33,7 +33,8 @@ Assumes: SQL-1. Opens with: a cold check from SQL-1.
 | 4 | `sort` | `ORDER BY` sorts the table that comes out. It is written after the piles, because sorting happens after them. | Core |
 | 5 | `sort-direction` | `DESC` puts the biggest first. With nothing said, the smallest comes first. | Core |
 | 6 | `cut` | `LIMIT` keeps the first rows of what is left. It comes last, because it happens last. | Core |
-| 7 | `name-a-result` | `AS` gives a column that comes out a name of your own. | Core |
+| 7 | `sort-by-summary` | After piles, the sort can use a summary: `ORDER BY COUNT(*) DESC`. Added when the lesson was written: the closing sentence needs it. | Core |
+| 8 | `name-a-result` | `AS` gives a column that comes out a name of your own, and the sort can use that name. | Core |
 
 Closes with: the five restaurants with the most delivered orders.
 
@@ -45,6 +46,11 @@ GROUP BY restaurant_id ORDER BY COUNT(*) DESC LIMIT 5
 Result: restaurant 2 with 113, then 24 with 112, then 59 and 3 with 109, then 22 with 108.
 
 Note: `sort` and `cut` extend "after the table, the sentence runs in the order things happen" from SQL-1. No new rule is needed.
+
+As written: 25 steps, 15 typed, 13 returns, 8 new thoughts. It opens with a cold check from SQL-1 and closes with one on sorted, cut piles. `star` and `summary-per-pile`, which SQL-1 left owed, both return. Two limits found while writing:
+
+- **`AS` cannot be checked by result.** Column names are ignored in comparison, so a learner who forgets to name the count still gets the right rows. The step says so, and the narration names `AS` either way.
+- **Ties.** A step that is judged by row order uses a column with no ties, or compares a set. The one tie left, two restaurants sharing a signup date, is noted in step 13.
 
 ### SQL-3. Keep piles, and empty cells
 

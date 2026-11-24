@@ -13,3 +13,11 @@ thoughts:
   commas: "Import from English: a comma between two things in a list."
   summary-per-pile: What is said about each pile can be any summary, not only a count.
   keep-before-piles: "After the table, the sentence runs in the order things happen: keep rows, then make piles."
+  choose-columns: Name the columns you want, with commas, where the star was.
+  more-summaries: "`SUM`, `MAX` and `MIN` sit where `AVG` sits, with a column inside the brackets."
+  two-questions: "Two questions about a row are joined with `AND`, where both must say yes, or `OR`, where either may."
+  sort: "`ORDER BY` puts the table that comes out in order. It is written after the keeping and the piles, because sorting happens after them."
+  sort-direction: "`DESC` puts the biggest first. With nothing said, the smallest comes first."
+  cut: "`LIMIT` keeps the first rows of what is left. It comes last, because it happens last."
+  sort-by-summary: "The sort can use a summary: `ORDER BY COUNT(*) DESC` puts the piles in order of their size."
+  name-a-result: "`AS` gives a column that comes out a name of your own, and the sort can use that name."

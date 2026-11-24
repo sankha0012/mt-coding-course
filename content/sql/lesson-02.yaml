@@ -1,0 +1,616 @@
+lesson: sql-02
+title: Sort and cut
+strand: sql
+stage: 1
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles"]
+    any_column_order: true
+    text: "How many couriers ride a moto, in each city?"
+    model: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'moto' GROUP BY city"
+    rows: 4
+    result: [["Belo Horizonte", 19], ["Curitiba", 15], ["Rio de Janeiro", 28], ["São Paulo", 48]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from lesson 1 (requirement R4): keep rows, piles, the pile's name, and the order of keeping and piling, on a combination never practised. Never scored."
+
+  # 2
+  - kind: "ask"
+    requires: ["star", "from-table"]
+    text: "Let's start from the restaurants. Show me the whole table."
+    thinking_order: "From restaurants, everything."
+    model: "SELECT * FROM restaurants"
+    rows: 60
+    narration:
+      - "The whole table: 60 rows and every column. That is what the star does."
+      - "Everything, from restaurants. Each one has a name, a city, a cuisine and a signup date."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM restaurants"
+        ask: "That tells me how many there are. I asked to see them. What did we put in place of the count?"
+      - sql: "SELECT restaurants"
+        ask: "SELECT says what to show. Which word says from where?"
+    walk:
+      - "Type the sentence that showed all of couriers."
+      - "Now the same for restaurants."
+    return:
+      text: "Now the whole couriers table."
+      model: "SELECT * FROM couriers"
+      rows: 200
+      narration:
+        - "200 rows and every column: the courier's id, the vehicle and the city."
+        - "The star again, in front of couriers this time."
+      note: "Return for step 2. Early step: only the table can change."
+    note: "The star returns, which lesson 1 left owed (it was last asked at step 10). A one-slot answer in a lesson of one-slot openings is fine: the previous typed step is a cold check with four clauses."
+
+  # 3
+  - kind: "give"
+    new: ["choose-columns"]
+    text: |
+      So far the star has brought every column. Usually you want only a few. Where the star was, put the names of the columns you want, with commas between them, as you would list them in English:
+
+      ```sql
+      SELECT name, city FROM restaurants
+      ```
+
+      Run it.
+    shows: ["SELECT name, city FROM restaurants"]
+    after_run: "Two columns, and still all sixty rows. A table went in and a narrower table came out. The star meant every column, and a list of names means just those, in the order you wrote them."
+    note: "Choosing columns waited until lesson 2 on purpose: lesson 1 never needed it, because a count and a pile's name were enough."
+
+  # 4
+  - kind: "ask"
+    requires: ["choose-columns", "from-table", "commas"]
+    any_column_order: true
+    text: "The couriers table has a vehicle column and a city column. Show me just those two, for every courier."
+    thinking_order: "From couriers, the vehicle and the city."
+    model: "SELECT vehicle, city FROM couriers"
+    rows: 200
+    narration:
+      - "Two of the three columns, for all 200 couriers. You named them where the star was."
+      - "The vehicle and the city, from couriers: only what you asked for."
+      - ""
+    wrong:
+      - sql: "SELECT vehicle city FROM couriers"
+        ask: "Two things in a list. What goes between them in English?"
+        why: "without the comma SQL reads the second word as a name for the first column, and you get one column, not two."
+      - sql: "SELECT * FROM couriers"
+        ask: "That shows all three columns. Which two did I ask for?"
+      - sql: "SELECT vehicle, city FROM courier"
+        ask: "Look at the name of the table in the earlier sentences. Is it spelled the same way?"
+    walk:
+      - "Type the sentence that showed all of couriers."
+      - "Now replace the star with the two column names, with a comma between them."
+    return:
+      text: "The restaurants table has a name and a cuisine. Show me just those two."
+      model: "SELECT name, cuisine FROM restaurants"
+      any_column_order: true
+      rows: 60
+      narration:
+        - "The name and the cuisine of all 60 restaurants, and nothing else."
+        - "Two names where the star was, with a comma between them."
+      note: "Return for step 4."
+    note: "One new thing changes: the table, and what is chosen. The previous answer was a star, so this cannot be reached by editing it in one place."
+
+  # 5
+  - kind: "ask"
+    requires: ["choose-columns", "from-table", "keep-rows", "compare-signs", "text-quotes"]
+    text: "The names of the pizza restaurants."
+    thinking_order: "From restaurants, keeping the pizza ones, just the name."
+    model: "SELECT name FROM restaurants WHERE cuisine = 'pizza'"
+    rows: 8
+    narration:
+      - "Eight names. You kept the pizza rows and then showed one column of them. The word pizza wore quotes."
+      - "From restaurants, keep the pizza ones, show the name. That is the order it happens in, and the order you wrote it."
+      - "Just the eight names."
+    wrong:
+      - sql: "SELECT name FROM restaurants WHERE cuisine = pizza"
+        ask: "Is pizza a column in restaurants, or a word we are looking for?"
+        why: "a bare word is read as a column's name."
+      - sql: "SELECT name FROM restaurants"
+        ask: "That gave every restaurant. Where does the keeping go?"
+      - sql: "SELECT * FROM restaurants WHERE cuisine = 'pizza'"
+        ask: "Eight rows, yes, but every column. Which column did I ask for?"
+    walk:
+      - "Show me everything from restaurants, keeping only the pizza ones."
+      - "Now ask for just the name, in place of the star."
+    return:
+      text: "The ids of the couriers who ride a bike."
+      model: "SELECT courier_id FROM couriers WHERE vehicle = 'bike'"
+      rows: 73
+      narration:
+        - "73 ids. You kept the bikes and showed one column."
+        - "From couriers, keep the bike ones, show the id: the same movement on a different table."
+      note: "Return for step 5."
+    note: "Choosing columns meets keeping rows and quotes for the first time in one sentence, all of them already owned."
+
+  # 6
+  - kind: "give"
+    new: ["more-summaries"]
+    text: |
+      AVG is one of several. In the same place, with a column inside its brackets, SUM adds the column up, MAX finds the biggest value and MIN finds the smallest:
+
+      ```sql
+      SELECT SUM(subtotal) FROM orders
+      ```
+
+      Run it.
+    shows: ["SELECT SUM(subtotal) FROM orders"]
+    after_run: "All the subtotals added together: 360,885.35. Put MAX or MIN where SUM is and you would get the biggest or the smallest instead. They all take a column, as AVG does, and each gives back one number."
+    note: "Many rows become one number: the thought from lesson 1 step 11, with three more words."
+
+  # 7
+  - kind: "ask"
+    requires: ["from-table", "more-summaries", "summary-column"]
+    text: "What was the biggest subtotal of any order?"
+    thinking_order: "From orders, the biggest subtotal."
+    model: "SELECT MAX(subtotal) FROM orders"
+    rows: 1
+    result: [[281.15]]
+    narration:
+      - "281.15. MAX sat where AVG sat, with the column inside its brackets."
+      - "Many rows in, one number out: the biggest subtotal."
+      - "From orders, the biggest of the subtotals: 281.15."
+    wrong:
+      - sql: "SELECT MAXIMUM(subtotal) FROM orders"
+        tell: "The word is shorter, MAX. That spelling just is."
+      - sql: "SELECT MIN(subtotal) FROM orders"
+        ask: "That is the smallest one. Which end did I ask for?"
+      - sql: "SELECT subtotal FROM orders"
+        ask: "That gave all of them. Which word turns many rows into one number?"
+    walk:
+      - "From orders, the average subtotal."
+      - "Now change the summary from AVG to the one that finds the biggest."
+    return:
+      text: "The actual_minutes column says how long each delivery really took. What was the longest?"
+      model: "SELECT MAX(actual_minutes) FROM orders"
+      rows: 1
+      result: [[109.9]]
+      narration:
+        - "109.9 minutes. The column you wanted the biggest of went inside MAX."
+        - "One number about the whole column: the longest delivery."
+      note: "Return for step 7. Cancelled orders have no actual time and MAX skips them, as AVG does."
+    note: "'Biggest' is the word that picks the summary. Compare lesson 1 step 12, where 'typical' picked AVG."
+
+  # 8
+  - kind: "ask"
+    requires: ["from-table", "more-summaries", "summary-column", "keep-rows", "compare-signs", "text-quotes"]
+    text: "What did the cancelled orders add up to?"
+    thinking_order: "From orders, keeping the cancelled ones, the total of the subtotals."
+    model: "SELECT SUM(subtotal) FROM orders WHERE status = 'cancelled'"
+    rows: 1
+    result: [[23816.1]]
+    narration:
+      - "23,816.10. Keep the cancelled rows first, then add up what is left."
+      - "A word in quotes in the question, a column inside SUM."
+      - ""
+    wrong:
+      - sql: "SELECT SUM(subtotal) FROM orders"
+        ask: "That is every order added up. Which ones did I ask about?"
+      - sql: "SELECT SUM(subtotal) FROM orders WHERE status = cancelled"
+        ask: "Is cancelled a column, or a word we are looking for?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE status = 'cancelled'"
+        ask: "That is how many there are. I asked what they add up to. Which summary adds?"
+    walk:
+      - "From orders, the total of the subtotals."
+      - "Keep only the cancelled rows first."
+    return:
+      text: "What did the delivered orders add up to in delivery fees?"
+      model: "SELECT SUM(delivery_fee) FROM orders WHERE status = 'delivered'"
+      rows: 1
+      result: [[29136.18]]
+      narration:
+        - "29,136.18. Keep the delivered rows, then add up their delivery fees."
+        - "The word delivered wore quotes, and the column went inside SUM."
+      note: "Return for step 8."
+    note: "'Add up' is the word that picks SUM. A second summary word, used with a question, in one sentence."
+
+  # 9
+  - kind: "give"
+    new: ["two-questions"]
+    text: |
+      Sometimes a row has to pass two questions. Join them with AND, and a row stays only if both questions say yes for it:
+
+      ```sql
+      SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal > 100
+      ```
+
+      Run it.
+    shows: ["SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal > 100"]
+    after_run: "589 orders were delivered and came to more than 100. One question, then AND, then another, all straight after the table."
+    note: "Lesson 1 step 21 said the question comes straight after the table. Two questions still come straight after it, joined."
+
+  # 10
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "two-questions"]
+    text: "How many orders had a delivery fee of 0 and a subtotal above 100?"
+    thinking_order: "From orders, keeping the ones where the fee is 0 and the subtotal is above 100, how many?"
+    model: "SELECT COUNT(*) FROM orders WHERE delivery_fee = 0 AND subtotal > 100"
+    rows: 1
+    result: [[160]]
+    narration:
+      - "160. Both questions had to say yes, and AND joined them."
+      - "From orders, keep the ones that pass both questions, count them: 160."
+      - "160 orders passed both."
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE delivery_fee = 0, subtotal > 100"
+        ask: "In English you would say 'and'. What is SQL's word for both?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE delivery_fee = 0"
+        ask: "That is only the first question. How do we add the second?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE delivery_fee = 0 OR subtotal > 100"
+        ask: "Would a row have to pass both questions, or only one of them?"
+    walk:
+      - "From orders, how many had a delivery fee of 0?"
+      - "Now add the second question after the first, joined with the word for both."
+    return:
+      text: "The promised_minutes column holds 30, 40 or 50. How many orders were promised in 30 minutes and came to less than 20?"
+      model: "SELECT COUNT(*) FROM orders WHERE promised_minutes = 30 AND subtotal < 20"
+      rows: 1
+      result: [[101]]
+      narration:
+        - "101 orders. Two questions about each row, and a row stays only if both say yes."
+        - "AND joined the promise to the size of the order."
+      note: "Return for step 10."
+    note: "The OR slip is deliberate bait: step 11 is about it, and a learner who has just made it will see why."
+
+  # 11
+  - kind: "classmate"
+    requires: ["choose-columns", "from-table", "keep-rows", "compare-signs", "text-quotes", "two-questions"]
+    text: |
+      Davi wanted the names of the pizza restaurants and the japonesa ones together. He wrote:
+
+      ```sql
+      SELECT name FROM restaurants WHERE cuisine = 'pizza' AND cuisine = 'japonesa'
+      ```
+
+      Nothing came back. Davi, can one restaurant have two cuisines at once? ... No. AND keeps a row only if both questions say yes for that same row. He wants a row to stay if either one says yes. What should he have written?
+    model: "SELECT name FROM restaurants WHERE cuisine = 'pizza' OR cuisine = 'japonesa'"
+    rows: 18
+    shows: ["SELECT name FROM restaurants WHERE cuisine = 'pizza' AND cuisine = 'japonesa'"]
+    narration:
+      - "18 restaurants: the pizza ones and the japonesa ones together. OR keeps a row that passes either question."
+      - "Two questions again, and this time one yes is enough. The word between them decides."
+      - "AND wants both, OR wants either."
+    wrong:
+      - sql: "SELECT name FROM restaurants WHERE cuisine = 'pizza', 'japonesa'"
+        ask: "Each question needs its own column and sign. What joins two questions?"
+      - sql: "SELECT name FROM restaurants WHERE cuisine = 'pizza' OR 'japonesa'"
+        ask: "Read the second half on its own: 'japonesa'. Does that ask anything about a row?"
+        why: "a bare word is not a question. Each side of OR needs its own column, its sign and its value."
+    walk:
+      - "Davi's two questions are right. Look only at the word between them."
+      - "Which word keeps a row when either question says yes?"
+    return:
+      text: "Show me the ids of the couriers who ride a moto or a carro."
+      model: "SELECT courier_id FROM couriers WHERE vehicle = 'moto' OR vehicle = 'carro'"
+      rows: 127
+      narration:
+        - "127 couriers: the moto ones and the carro ones. Either question was enough."
+        - "OR between two questions, each with its own column and value."
+      note: "Return for step 11."
+    note: "Davi makes the slip before the learner can (rule E6). OR belongs to the same thought as AND, two questions joined, and is introduced here by contrast. The learner repairs the sentence, as with Ana in lesson 1."
+
+  # 12
+  - kind: "give"
+    new: ["sort"]
+    text: |
+      Rows come out in whatever order the table holds them. To choose the order, add ORDER BY and the name of a column, after the table:
+
+      ```sql
+      SELECT name, city FROM restaurants ORDER BY city
+      ```
+
+      Run it.
+    shows: ["SELECT name, city FROM restaurants ORDER BY city"]
+    after_run: "Sorted by city, A to Z. The sorting is done on the table that came out, which is why it sits at the end: the table is made first and put in order afterwards."
+    note: "The order of events again. Sorting happens last, so it is written last, apart from one more word that arrives in step 16."
+
+  # 13
+  - kind: "ask"
+    requires: ["choose-columns", "from-table", "commas", "sort"]
+    ordered: true
+    any_column_order: true
+    text: "Show each restaurant's name and signup date, the oldest signup first."
+    thinking_order: "From restaurants, the name and the signup date, in order of signup date."
+    model: "SELECT name, signup_date FROM restaurants ORDER BY signup_date"
+    rows: 60
+    narration:
+      - "Sixty rows, the oldest signup at the top. ORDER BY and the column put them in order."
+      - "The same table, the same two columns, in a new order: the sorting came last."
+      - ""
+    wrong:
+      - sql: "SELECT name, signup_date FROM restaurants"
+        ask: "All the rows are here, in the table's own order. Which words put them in order?"
+      - sql: "SELECT name, signup_date FROM restaurants ORDER signup_date"
+        ask: "ORDER on its own is not enough. What second word goes with it?"
+      - sql: "SELECT name, signup_date FROM restaurants ORDER BY name"
+        ask: "Sorted, but by which column?"
+    walk:
+      - "Show me the name and the signup date of each restaurant."
+      - "Now add the sorting after the table: ORDER BY, and the column to sort by."
+    return:
+      text: "Show each order's id and the time it was created, the lowest id first."
+      model: "SELECT order_id, created_at FROM orders ORDER BY order_id"
+      ordered: true
+      any_column_order: true
+      rows: 6000
+      narration:
+        - "6,000 rows, in order of id. The table was not in that order before."
+        - "ORDER BY and the column name, after the table, put them in order."
+      note: "Return for step 13. Order ids are all different, so there is no tie to worry about."
+    note: "Two restaurants share one signup date (24 October 2024), so the order of those two is the database's choice. The same sentence always gives the same order, which is all this step needs."
+
+  # 14
+  - kind: "give"
+    new: ["sort-direction"]
+    text: |
+      Sorting goes from the smallest to the biggest, or A to Z, unless you say otherwise. To turn it round, add DESC after the column:
+
+      ```sql
+      SELECT name, signup_date FROM restaurants ORDER BY signup_date DESC
+      ```
+
+      Run it.
+    shows: ["SELECT name, signup_date FROM restaurants ORDER BY signup_date DESC"]
+    after_run: "The newest signup comes first this time. Saying nothing means smallest first. DESC is short for descending, and it turns the order round."
+    note: "DESC has a real origin: 'descending'. No hook needed."
+
+  # 15
+  - kind: "ask"
+    requires: ["choose-columns", "from-table", "commas", "sort", "sort-direction"]
+    ordered: true
+    any_column_order: true
+    text: "Show each courier's id and city, the highest id first."
+    thinking_order: "From couriers, the id and the city, in order of id, the biggest first."
+    model: "SELECT courier_id, city FROM couriers ORDER BY courier_id DESC"
+    rows: 200
+    narration:
+      - "200 couriers, number 200 at the top. DESC turned the order round."
+      - "The sorting named the column, then the direction."
+      - ""
+    wrong:
+      - sql: "SELECT courier_id, city FROM couriers ORDER BY courier_id"
+        ask: "Sorted, but which end comes first?"
+      - sql: "SELECT courier_id, city FROM couriers ORDER BY DESC courier_id"
+        ask: "Which comes first in the sorting, the column or the direction?"
+      - sql: "SELECT courier_id, city FROM couriers"
+        ask: "All 200 rows, but the biggest id is not first. What puts them in order, and what turns it round?"
+    walk:
+      - "Show me the id and city of each courier."
+      - "Sort them by id."
+      - "Turn the order round, so the biggest id comes first."
+    return:
+      text: "Show each restaurant's id and name, the highest id first."
+      model: "SELECT restaurant_id, name FROM restaurants ORDER BY restaurant_id DESC"
+      ordered: true
+      any_column_order: true
+      rows: 60
+      narration:
+        - "60 restaurants, number 60 at the top."
+        - "A column to sort by, then DESC to put the biggest first."
+      note: "Return for step 15."
+    note: "Couriers already sit in id order, smallest first, so leaving the sorting out or leaving DESC out both show."
+
+  # 16
+  - kind: "give"
+    new: ["cut"]
+    text: |
+      To keep just the first few rows of what comes out, add LIMIT and a number, right at the end:
+
+      ```sql
+      SELECT name, signup_date FROM restaurants ORDER BY signup_date DESC LIMIT 3
+      ```
+
+      Run it.
+    shows: ["SELECT name, signup_date FROM restaurants ORDER BY signup_date DESC LIMIT 3"]
+    after_run: "The three newest restaurants. LIMIT cuts the table after it is sorted, which is why it comes last. Sort first, then cut: that is how you get a top three."
+    note: "Sort then cut: the order of events one more time."
+
+  # 17
+  - kind: "ask"
+    requires: ["choose-columns", "from-table", "commas", "sort", "sort-direction", "cut"]
+    ordered: true
+    any_column_order: true
+    text: "Show the id and subtotal of the five orders with the biggest subtotal."
+    thinking_order: "From orders, the id and the subtotal, the biggest subtotal first, the first five."
+    model: "SELECT order_id, subtotal FROM orders ORDER BY subtotal DESC LIMIT 5"
+    rows: 5
+    result: [[101347, 281.15], [105582, 233.44], [100169, 209.96], [105080, 201.3], [102460, 200.78]]
+    narration:
+      - "The five biggest orders, the biggest of all at the top. Sort the table, turn it round, cut it to five."
+      - "ORDER BY, DESC, LIMIT: three words, written in the order they happen."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, subtotal FROM orders ORDER BY subtotal DESC"
+        ask: "That sorted them all. Which word keeps only the first few?"
+      - sql: "SELECT order_id, subtotal FROM orders ORDER BY subtotal LIMIT 5"
+        ask: "Those are the five smallest. Which end do we want?"
+      - sql: "SELECT order_id, subtotal FROM orders LIMIT 5 ORDER BY subtotal DESC"
+        ask: "Which happens first, cutting or sorting? Write them in that order."
+        why: "the cut is made after the sort, so it is written after it."
+    walk:
+      - "Show me the id and subtotal of every order."
+      - "Sort them, the biggest subtotal first."
+      - "Cut it down to the first five."
+    return:
+      text: "The three longest deliveries: show their ids and how many minutes they took."
+      model: "SELECT order_id, actual_minutes FROM orders ORDER BY actual_minutes DESC LIMIT 3"
+      ordered: true
+      any_column_order: true
+      rows: 3
+      result: [[103690, 109.9], [105624, 108.7], [101406, 105.9]]
+      narration:
+        - "The three longest, 109.9 minutes at the top. Sort, turn it round, cut."
+        - "The same three words in the same order, with another column."
+      note: "Return for step 17. The top three minutes are all different, so there is no tie."
+    note: "The first sentence of the lesson that needs three of its new words together. Orders with an empty subtotal sort last when the biggest comes first, so they never show here."
+
+  # 18
+  - kind: "aside"
+    text: "Something that is only interesting, with nothing in it to keep. LIMIT is not spelled the same in every database. Some say TOP, and some say FETCH FIRST 3 ROWS ONLY. The thought is always the same: sort, then cut. That is why people look the spelling up and nobody minds. Here you will always have the spelling that works."
+    note: "Real, and aimed at the goal of the course (decision C9): the thought is core, the spelling is what everyone looks up. Relief after the first three-word sentence."
+
+  # 19
+  - kind: "give"
+    new: ["sort-by-summary"]
+    text: |
+      The sort can use a summary too. Once the piles are made and counted, the numbers are there to sort by:
+
+      ```sql
+      SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC
+      ```
+
+      Run it.
+    shows: ["SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC"]
+    after_run: "The cities by how many restaurants they have, the biggest first. The piles were made and counted first, and only then sorted. After the table, the sentence still runs in the order things happen: keep, pile, sort."
+    note: "Sorting by something that only exists after the piles is the real reason ORDER BY comes after GROUP BY."
+
+  # 20
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "Show each city with how many couriers it has, the biggest number first."
+    thinking_order: "From couriers, a pile per city, the city and the count, the biggest count first."
+    model: "SELECT city, COUNT(*) FROM couriers GROUP BY city ORDER BY COUNT(*) DESC"
+    rows: 4
+    result: [["São Paulo", 89], ["Rio de Janeiro", 49], ["Belo Horizonte", 32], ["Curitiba", 30]]
+    narration:
+      - "São Paulo has the most, with 89. You made the piles, counted them and sorted them by the count."
+      - "Four piles, each with its name and its size, the biggest first."
+      - ""
+    wrong:
+      - sql: "SELECT city, COUNT(*) FROM couriers GROUP BY city"
+        ask: "Four rows, in the alphabet's order. Which words put the biggest count first?"
+      - sql: "SELECT city, COUNT(*) FROM couriers GROUP BY city ORDER BY city DESC"
+        ask: "Sorted, but by what? We want the biggest count first."
+      - sql: "SELECT city, COUNT(*) FROM couriers GROUP BY city ORDER BY COUNT(*)"
+        ask: "Sorted by the count, but which end comes first?"
+      - sql: "SELECT city, COUNT(*) FROM couriers ORDER BY COUNT(*) DESC GROUP BY city"
+        ask: "Which happens first, making the piles or sorting them?"
+    walk:
+      - "From couriers, the city and how many couriers, for each city."
+      - "Now sort the piles by the count, the biggest first."
+    return:
+      text: "Show each status with how many orders it has, the biggest number first."
+      model: "SELECT status, COUNT(*) FROM orders GROUP BY status ORDER BY COUNT(*) DESC"
+      ordered: true
+      any_column_order: true
+      rows: 2
+      result: [["delivered", 5601], ["cancelled", 399]]
+      narration:
+        - "Delivered first, with 5,601, and cancelled after it. Piles, a count, a sort by the count."
+        - "The sorting used the summary, as before."
+      note: "Return for step 20."
+    note: "Lesson 1 steps 17 and 18, with a sort on the end."
+
+  # 21
+  - kind: "give"
+    new: ["name-a-result"]
+    text: |
+      A column that comes out can be given a name of your own, with AS right after it. And once it has a name, the sort can use that name:
+
+      ```sql
+      SELECT status, COUNT(*) AS how_many FROM orders GROUP BY status ORDER BY how_many DESC
+      ```
+
+      Run it.
+    shows: ["SELECT status, COUNT(*) AS how_many FROM orders GROUP BY status ORDER BY how_many DESC"]
+    after_run: "The count's heading is how_many now, and the sort used it. AS gives a name to something that comes out. The name is yours, so choose one that says what it is."
+    note: "'Give a thing a name, then do something with it', as in Python, which is still to come."
+
+  # 22
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary", "name-a-result"]
+    ordered: true
+    any_column_order: true
+    text: "Show each vehicle with how many couriers ride it, the count called n, the biggest first."
+    thinking_order: "From couriers, a pile per vehicle, the vehicle and the count called n, the biggest first."
+    model: "SELECT vehicle, COUNT(*) AS n FROM couriers GROUP BY vehicle ORDER BY n DESC"
+    rows: 3
+    result: [["moto", 110], ["bike", 73], ["carro", 17]]
+    narration:
+      - "Moto first, with 110. You named the count n and sorted by that name."
+      - "AS gave the count a name, and the sort used it."
+      - ""
+    wrong:
+      - sql: "SELECT vehicle, COUNT(*) AS n FROM couriers GROUP BY vehicle"
+        ask: "Three rows, in the alphabet's order. Which words put the biggest first?"
+      - sql: "SELECT vehicle, COUNT(*) AS n FROM couriers GROUP BY vehicle ORDER BY n"
+        ask: "Sorted by n, but which end comes first?"
+    walk:
+      - "From couriers, the vehicle and how many couriers, for each vehicle."
+      - "Give the count the name n, with AS."
+      - "Sort by n, the biggest first."
+    return:
+      text: "The promised_minutes column holds 30, 40 or 50. For each promised time, show how many orders, the count called orders_n, the biggest first."
+      model: "SELECT promised_minutes, COUNT(*) AS orders_n FROM orders GROUP BY promised_minutes ORDER BY orders_n DESC"
+      ordered: true
+      any_column_order: true
+      rows: 3
+      result: [[30, 2019], [40, 2003], [50, 1978]]
+      narration:
+        - "Thirty minutes first, with 2,019. The count has your name on it, and the sort used the name."
+        - "Piles by the promise, a named count, sorted by that name."
+      note: "Return for step 22."
+    note: "The comparison ignores column names, so a learner who forgets AS gets the right rows. The narration names AS either way. Showing the heading is the app's job, not the checker's."
+
+  # 23
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "sort", "sort-direction", "cut", "sort-by-summary", "summary-per-pile"]
+    friction: true
+    any_column_order: true
+    text: "The last one, and I won't break it down. The five restaurants with the most delivered orders, with how many each had."
+    model: "SELECT restaurant_id, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id ORDER BY COUNT(*) DESC LIMIT 5"
+    rows: 5
+    result: [[2, 113], [24, 112], [59, 109], [3, 109], [22, 108]]
+    narration:
+      - "That is a real interview question, and you built it by thinking: from orders, keep the delivered ones, pile them by restaurant, count each pile, sort by the count, cut to five. Every word in the order it happens."
+      - "Keep, pile, sort, cut: and you wrote them in that order. Restaurant 2 is first, with 113."
+      - "Five restaurants, each with its count, the busiest first. The sentence ran in the order of events."
+    wrong:
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id ORDER BY COUNT(*) DESC"
+        ask: "Every restaurant is here. Which word keeps only the first five?"
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id ORDER BY COUNT(*) LIMIT 5"
+        ask: "Those are the five with the fewest. Which end do we want?"
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders GROUP BY restaurant_id ORDER BY COUNT(*) DESC LIMIT 5"
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id LIMIT 5 ORDER BY COUNT(*) DESC"
+        ask: "Which happens first, cutting or sorting? Write them in that order."
+    walk:
+      - "On the delivered orders, how many for each restaurant?"
+      - "Sort the piles by the count, the biggest first."
+      - "Cut it to the first five."
+    return:
+      text: "Among the delivered orders, show the three restaurants with the biggest total of subtotals, with each total."
+      model: "SELECT restaurant_id, SUM(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id ORDER BY SUM(subtotal) DESC LIMIT 3"
+      any_column_order: true
+      rows: 3
+      result: [[24, 7245.43], [3, 6761.38], [16, 6749.46]]
+      narration:
+        - "Restaurant 24 first, with 7,245.43. Keep, pile, add up, sort, cut."
+        - "The same sentence as before, with a total in place of a count."
+      note: "Return for step 23. Uses SUM from this lesson, so it is not the closing sentence with another word changed."
+    note: "The surprise sentence, and pass-bar task 1's cousin. It is one more clause than any sentence in lesson 1, and every clause is one the learner has typed. Restaurants 59 and 3 are tied at 109, so the answer is compared as a set: forgetting the sort, the DESC or the cut each still shows."
+
+  # 24
+  - kind: "recap"
+    text: |
+      Stop there. Today you added a few things to the sentence you already had: choose the columns you want, say more about a pile than a count, ask two questions at once, then sort, cut and name what comes out. After the table, the sentence runs in the order things happen: keep, pile, sort, cut.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 25
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "The two cities with the most couriers, and how many each."
+    model: "SELECT city, COUNT(*) FROM couriers GROUP BY city ORDER BY COUNT(*) DESC LIMIT 2"
+    rows: 2
+    result: [["São Paulo", 89], ["Rio de Janeiro", 49]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: piles, a sort by the count, and a cut, on a combination never practised. Never scored (rule F1)."
