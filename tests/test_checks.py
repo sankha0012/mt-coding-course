@@ -1,5 +1,6 @@
 from checker.checks import (check_all, check_audit, check_narration, check_new_limit,
-                            check_returns, check_shapes, check_sql, report_load, report_spacing)
+                            check_returns, check_shape, check_shapes, check_sql, report_load,
+                            report_spacing)
 
 
 def has(fails, text):
@@ -302,3 +303,48 @@ def test_return_accepted_answers_must_run_and_return_rows(conn, steps):
     assert has(returns(conn, steps), "step 2: return: accepted answer")
     with_return(steps, accepts=["SELECT COUNT(*) FROM couriers WHERE 1 = 1"])
     assert returns(conn, steps) == []
+
+
+def graded(thoughts):
+    return {**thoughts,
+            "month": {"text": "cut a date down to its month", "grade": "shape"},
+            "rank": {"text": "tied rows share a number", "grade": "name-only"}}
+
+
+def test_a_step_needing_a_shape_thought_must_list_what_it_supplies(thoughts, steps):
+    steps[0]["imports"] = ["month"]
+    steps[3]["requires"] = ["star", "from-table", "month"]
+    assert has(check_shape(graded(thoughts), [("t-01", steps)]),
+               "FAIL t-01 step 4: requires the shape thought 'month', so it must list what it supplies")
+
+
+def test_what_a_step_supplies_must_be_in_its_text(thoughts, steps):
+    steps[0]["imports"] = ["month"]
+    steps[3].update(requires=["star", "from-table", "month"], supplies=["strftime('%Y-%m', created_at)"],
+                    text="Here it is: strftime('%Y-%m', created_at)")
+    assert check_shape(graded(thoughts), [("t-01", steps)]) == []
+    steps[3]["text"] = "No spelling here."
+    assert has(check_shape(graded(thoughts), [("t-01", steps)]),
+               "step 4: supplies \"strftime('%Y-%m', created_at)\" but its text does not contain it")
+
+
+def test_supplies_are_checked_on_any_step(thoughts, steps):
+    steps[1]["supplies"] = ["nonsense"]
+    assert has(check_shape(thoughts, [("t-01", steps)]), "step 2: supplies \"nonsense\"")
+
+
+def test_a_name_only_thought_is_never_asked(thoughts, steps):
+    steps[0]["imports"] = ["rank"]
+    steps[3]["requires"] = ["star", "from-table", "rank"]
+    assert has(check_shape(graded(thoughts), [("t-01", steps)]),
+               "step 4: requires the name-only thought 'rank', which is never asked")
+
+
+def test_plain_string_thoughts_are_core(thoughts, steps):
+    assert check_shape(thoughts, [("t-01", steps)]) == []
+
+
+def test_check_all_includes_the_shape_check(conn, thoughts, steps):
+    steps[1]["supplies"] = ["nonsense"]
+    fails, *_ = check_all(conn, thoughts, [("t-01", steps)])
+    assert has(fails, "step 2: supplies")

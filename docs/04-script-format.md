@@ -48,6 +48,12 @@ Every thought is core, shape or name only (decision C10, explained in `docs/01-s
 - A **shape** thought is asked for only in steps whose teacher's line carries the spelling. The line also says plainly that this is something people look up, for example: "This one you would look up. The thought is: cut a date down to its month. Here it is spelled `strftime('%Y-%m', created_at)`." A shape step lists the spellings it supplies, and the checker confirms each appears in the step's text. This is not a reference panel: the spelling arrives in the teacher's voice, at the moment it is needed.
 - A **name only** thought appears in one Aside and in no prompt.
 
+In `thoughts.yaml` a core thought is a plain string. A shape or name-only thought is written `{text: ..., grade: shape}` or `{text: ..., grade: name-only}`. A step that supplies spellings lists them in `supplies`, each exactly as it appears in the step's `text`. Check 9 enforces it: a step that requires a shape thought must have `supplies`, every `supplies` entry must appear in the step's text, and no step may require a name-only thought.
+
+## Several lessons
+
+A strand folder holds `lesson-01.yaml`, `lesson-02.yaml` and so on, played in filename order. A lesson opens with a cold check from an earlier lesson by starting with a step of kind `cold-check`. The audit lets it require any thought from any earlier lesson. When a lesson ends, the player offers the next one, or to sit the same lesson again.
+
 ## Cold sittings
 
 A cold sitting is a short lesson file made only of Cold check steps, drawn from every strand taught so far. It has no ladder, no narration and no score. Two exist, one after each pass (see `docs/03-curriculum.md`).

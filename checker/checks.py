@@ -238,6 +238,32 @@ def check_all(conn, thoughts, lessons):
     for lesson, steps in lessons:
         fails += (check_sql(conn, lesson, steps) + check_narration(lesson, steps)
                   + check_returns(conn, lesson, steps))
-    fails += check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
+    fails += (check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
+              + check_shape(thoughts, lessons))
     load, warns = report_load(lessons)
     return fails, warns, report_spacing(thoughts, lessons), load
+
+
+def _grade(thoughts, thought):
+    """A thought is core unless thoughts.yaml gives it a grade: {text: ..., grade: shape | name-only}."""
+    entry = thoughts.get(thought)
+    return entry.get("grade", "core") if isinstance(entry, dict) else "core"
+
+
+def check_shape(thoughts, lessons):
+    """Check 9: a shape thought is only asked in a step that supplies its spelling in its own text,
+    and a name-only thought is never asked."""
+    fails = []
+    for lesson, steps in lessons:
+        for n, s in enumerate(steps, 1):
+            where = f"FAIL {lesson} step {n}:"
+            for spelling in s.get("supplies", []):
+                if spelling not in s.get("text", ""):
+                    fails.append(f"{where} supplies \"{spelling}\" but its text does not contain it")
+            for t in s.get("requires", []):
+                grade = _grade(thoughts, t)
+                if grade == "name-only":
+                    fails.append(f"{where} requires the name-only thought '{t}', which is never asked")
+                elif grade == "shape" and not s.get("supplies"):
+                    fails.append(f"{where} requires the shape thought '{t}', so it must list what it supplies")
+    return fails

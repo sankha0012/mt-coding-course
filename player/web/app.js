@@ -142,6 +142,7 @@ function renderInput(pending) {
     sync();
     box.focus();
   } else if (pending.mode === 'done') {
+    if (pending.next) inputEl.appendChild(button('Next lesson', () => send('/api/run/new', { next: true })));
     inputEl.appendChild(button('Sit this lesson again', () => send('/api/run/new')));
   }
 }

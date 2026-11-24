@@ -22,26 +22,31 @@ class Conflict(Exception):
 
 
 class Player:
-    """Joins the engine, the database and the progress file."""
+    """Joins the engines, the database and the progress file. Plays the lessons of a folder in order."""
 
     def __init__(self, content_dir, data_dir, progress_dir, rng=None):
         content = Path(content_dir)
-        self.thoughts, lessons = load_strand(content)
-        self.lesson, self.steps = lessons[0]
+        self.thoughts, self.lessons = load_strand(content)
         ui = yaml.safe_load((content.parent / "ui.yaml").read_text(encoding="utf-8"))
-        self.engine = Engine(self.steps, open_database(data_dir), ui, rng or random.Random())
+        conn, rng = open_database(data_dir), rng or random.Random()
+        self.names = [name for name, _ in self.lessons]
+        self.engines = {name: Engine(steps, conn, ui, rng) for name, steps in self.lessons}
         self.store = Store(progress_dir)
         self.lock = threading.Lock()
 
     def _current(self):
-        return self.store.latest(self.lesson) or self._start()
+        """(run id, lesson name, state) of the newest run, starting the first lesson if there is none."""
+        return self.store.latest_any() or self._start(self.names[0])
 
-    def _start(self):
-        st, items, _ = self.engine.start()
-        return self.store.new_run(self.lesson, st, items, finished=st["phase"] == "done"), st
+    def _start(self, name):
+        st, items, _ = self.engines[name].start()
+        return self.store.new_run(name, st, items, finished=st["phase"] == "done"), name, st
 
-    def _view(self, run_id, st):
-        return {"run_id": run_id, "items": self.store.items(run_id), "pending": self.engine.pending(st)}
+    def _view(self, run_id, name, st):
+        pending = self.engines[name].pending(st)
+        if pending["mode"] == "done":
+            pending["next"] = self.names.index(name) + 1 < len(self.names)
+        return {"run_id": run_id, "lesson": name, "items": self.store.items(run_id), "pending": pending}
 
     def view(self):
         with self.lock:
@@ -49,31 +54,42 @@ class Player:
 
     def answer(self, text):
         with self.lock:
-            run_id, st = self._current()
+            run_id, name, st = self._current()
             if st["phase"] != "answer":
                 raise Conflict("not waiting for an answer")
-            st, items, events = self.engine.answer(st, text)
+            st, items, events = self.engines[name].answer(st, text)
             self.store.apply(run_id, st, items, events, finished=st["phase"] == "done")
-            return self._view(run_id, st)
+            return self._view(run_id, name, st)
 
     def next(self):
         with self.lock:
-            run_id, st = self._current()
+            run_id, name, st = self._current()
             if st["phase"] not in ("run", "continue"):
                 raise Conflict("nothing to continue")
-            st, items, events = self.engine.advance(st)
+            st, items, events = self.engines[name].advance(st)
             self.store.apply(run_id, st, items, events, finished=st["phase"] == "done")
-            return self._view(run_id, st)
+            return self._view(run_id, name, st)
 
-    def new_run(self):
+    def new_run(self, go_next=False):
+        """After a finished lesson: sit it again, or start the next one."""
         with self.lock:
-            if self._current()[1]["phase"] != "done":
+            _, name, st = self._current()
+            if st["phase"] != "done":
                 raise Conflict("the sitting is not over")
-            return self._view(*self._start())
+            if go_next:
+                i = self.names.index(name) + 1
+                if i >= len(self.names):
+                    raise Conflict("there is no next lesson")
+                name = self.names[i]
+            return self._view(*self._start(name))
 
 
 class Answer(BaseModel):
     sql: str
+
+
+class NewRun(BaseModel):
+    next: bool = False
 
 
 def make_app(content_dir, data_dir, progress_dir, rng=None):
@@ -99,8 +115,8 @@ def make_app(content_dir, data_dir, progress_dir, rng=None):
         return player.next()
 
     @app.post("/api/run/new")
-    def post_new():
-        return player.new_run()
+    def post_new(body: NewRun | None = None):
+        return player.new_run(go_next=bool(body and body.next))
 
     @app.get("/")
     def index():
