@@ -3,7 +3,7 @@ const inputEl = document.getElementById('input');
 let shown = 0;
 
 async function api(path, body) {
-  const options = path === '/api/run' ? {} : {
+  const options = (path === '/api/run' || path === '/api/providers') ? {} : {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) };
   const r = await fetch(path, options);
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -74,12 +74,12 @@ function lineNodes(text, lang) {
 
 function renderText(text, cls, lang) {
   const box = el('div', 'teacher' + (cls ? ' ' + cls : ''));
-  const parts = text.split(/```(\w+)\n([\s\S]*?)\n```/);
+  const parts = text.split(/```(\w*)\n([\s\S]*?)\n?```/);
   for (let i = 0; i < parts.length; i += 3) {
     parts[i].split(/\n\s*\n/).filter(p => p.trim()).forEach(p => {
       const para = el('p'); para.appendChild(lineNodes(p.trim(), lang)); box.appendChild(para);
     });
-    if (parts[i + 1]) box.appendChild(codeBlock(parts[i + 2], null, parts[i + 1]));
+    if (i + 2 < parts.length) box.appendChild(codeBlock(parts[i + 2], null, parts[i + 1] || lang));
   }
   return box;
 }
@@ -159,14 +159,104 @@ function makeEditor(initialLang) {
   return { wrap, box, sync, setLang: l => { lang = l; sync(); } };
 }
 
+// ---- side questions: a thread opens in the transcript, the lesson waits, the learner says when to go back
+
+const threads = [];       // each: { at: item count when it began, lang, messages, thinking, back, node }
+let lastTeacher = null;   // the prompt now waiting, for "Where we were"
+let providers = [];       // the question services that have a key, from the server
+const PROVIDER_NAMES = { gemini: 'Gemini', groq: 'Groq' };
+
+function threadNode(t) {
+  const box = el('div', 'side');
+  box.appendChild(el('div', 'label', 'Side question'));
+  t.messages.forEach(m => box.appendChild(m.role === 'user' ? el('p', 'you', m.text) : renderText(m.text, 'reply', t.lang)));
+  if (t.thinking) box.appendChild(el('p', 'hint', 'Thinking it over.'));
+  if (t.back && t.back.text) {
+    box.appendChild(el('div', 'label', 'Back to the lesson'));
+    box.appendChild(renderText('Where we were:\n\n' + t.back.text, 'reply', t.back.lang));
+  }
+  return box;
+}
+
+function makeAsk(lang) {
+  const pane = el('div', 'ask');
+  const self = { pane, box: el('textarea'), onBack: () => {} };
+  if (!providers.length) {
+    pane.appendChild(el('p', 'hint', 'No question service is set up. Put a key in the .env file and restart the player.'));
+    return self;
+  }
+  const box = self.box;
+  box.rows = 3;
+  box.placeholder = 'Ask the teacher about this step, or about SQL, Python, pandas or machine learning.';
+  ['autocomplete', 'autocapitalize', 'autocorrect'].forEach(a => box.setAttribute(a, 'off'));
+  box.setAttribute('spellcheck', 'false');
+  const menu = el('select', 'provider');
+  menu.setAttribute('aria-label', 'Which service answers');
+  providers.forEach(p => menu.appendChild(new Option(PROVIDER_NAMES[p] || p, p)));
+  const saved = keep.get('ask-provider');
+  if (providers.includes(saved)) menu.value = saved;
+  menu.addEventListener('change', () => keep.set('ask-provider', menu.value));
+  const hint = el('p', 'hint');
+  let thread = null;
+  const paint = () => {
+    const node = threadNode(thread);
+    if (thread.node) thread.node.replaceWith(node); else itemsEl.appendChild(node);
+    thread.node = node;
+    node.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  };
+  const ask = async () => {
+    const question = box.value.trim();
+    if (!question) { hint.textContent = 'Type a question first.'; return; }
+    if (!thread) { thread = { at: shown, lang, messages: [], thinking: false, back: null, node: null }; threads.push(thread); }
+    const earlier = thread.messages.map(m => ({ role: m.role, text: m.text }));
+    thread.messages.push({ role: 'user', text: question });
+    thread.thinking = true; box.value = ''; hint.textContent = ''; back.hidden = true;
+    paint();
+    try {
+      const r = await api('/api/ask', { question, thread: earlier, provider: menu.value });
+      thread.messages.push({ role: 'teacher', text: r.reply });
+    } catch (e) { hint.textContent = 'That did not go through.'; }
+    thread.thinking = false;
+    paint();
+    back.hidden = false;
+  };
+  const back = button('Got it, back to the lesson', () => {
+    thread.back = lastTeacher || { text: '' };
+    paint();
+    thread = null; back.hidden = true;
+    self.onBack();
+    inputEl.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  }, 'primary small');
+  back.hidden = true;
+  box.addEventListener('input', () => { hint.textContent = ''; });
+  box.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); ask(); } });
+  const row = el('div', 'ask-row');
+  row.append(button('Ask', ask, 'primary small'), menu, back);
+  pane.append(box, row, hint);
+  return self;
+}
+
 function renderInput(pending) {
   inputEl.replaceChildren();
   const lang = pending.lang || 'sql';
+  const codePane = el('div'), tabs = el('div', 'tabs'), ask = makeAsk(lang);
+  let focusCode = () => {};
+  const tab = {};
+  const show = which => {
+    codePane.hidden = which !== 'code'; ask.pane.hidden = which !== 'ask';
+    tab.code.classList.toggle('on', which === 'code'); tab.ask.classList.toggle('on', which === 'ask');
+    if (which === 'ask') ask.box.focus(); else focusCode();
+  };
+  tab.code = button('Code', () => show('code'), 'tab');
+  tab.ask = button('Ask', () => show('ask'), 'tab');
+  tabs.append(tab.code, tab.ask);
+  ask.onBack = () => show('code');
+
   if (pending.mode === 'continue') {
-    inputEl.appendChild(button('Continue', () => send('/api/next')));
+    codePane.appendChild(button('Continue', () => send('/api/next')));
   } else if (pending.mode === 'run') {
-    inputEl.appendChild(codeBlock(pending.sql, null, lang));
-    inputEl.appendChild(button('Run', () => send('/api/next')));
+    codePane.appendChild(codeBlock(pending.sql, null, lang));
+    codePane.appendChild(button('Run', () => send('/api/next')));
   } else if (pending.mode === 'answer') {
     const { wrap, box, sync } = makeEditor(lang);
     const hint = el('p', 'hint');
@@ -176,26 +266,30 @@ function renderInput(pending) {
     };
     box.addEventListener('input', () => { hint.textContent = ''; });
     box.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run(); } });
-    inputEl.append(wrap, button('Run', run), hint);
-    sync();
-    box.focus();
+    codePane.append(wrap, button('Run', run), hint);
+    focusCode = () => { sync(); box.focus(); };
   } else if (pending.mode === 'done') {
-    if (pending.next) inputEl.appendChild(button('Next lesson', () => send('/api/run/new', { next: true })));
-    inputEl.appendChild(button('Sit this lesson again', () => send('/api/run/new')));
+    if (pending.next) codePane.appendChild(button('Next lesson', () => send('/api/run/new', { next: true })));
+    codePane.appendChild(button('Sit this lesson again', () => send('/api/run/new')));
   }
+  inputEl.append(tabs, codePane, ask.pane);
+  show('code');
 }
 
 function render(view) {
-  if (view.items.length < shown) shown = 0;
+  if (view.items.length < shown) { shown = 0; threads.length = 0; }  // a new sitting starts clean
   itemsEl.replaceChildren();
-  const lastTeacher = view.items.map(i => i.type).lastIndexOf('teacher');
+  const lastTeacherAt = view.items.map(i => i.type).lastIndexOf('teacher');
   view.items.forEach((item, i) => {
     const node = renderItem(item);
-    if (i < lastTeacher) node.classList.add('old');
+    if (i < lastTeacherAt) node.classList.add('old');
     if (shown && i >= shown) node.classList.add('rise');
     itemsEl.appendChild(node);
+    threads.filter(t => t.at === i + 1).forEach(t => { t.thinking = false; t.node = threadNode(t); itemsEl.appendChild(t.node); });
   });
   shown = view.items.length;
+  const t = lastTeacherAt >= 0 ? view.items[lastTeacherAt] : null;
+  lastTeacher = t ? { text: t.text, lang: t.lang || 'sql' } : null;
   renderInput(view.pending);
   inputEl.scrollIntoView({ block: 'end', behavior: 'smooth' });
 }
@@ -287,4 +381,4 @@ function initPlay() {
 }
 
 initPlay();
-api('/api/run').then(render);
+Promise.all([api('/api/providers'), api('/api/run')]).then(([p, view]) => { providers = p.providers; render(view); });

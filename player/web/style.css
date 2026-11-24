@@ -4,6 +4,7 @@
   --warm-soft: rgba(181, 101, 29, 0.09); --head: #ece4d3; --stripe: rgba(120, 95, 60, 0.05);
   --kw: #1f6f68; --fn: #2f6f9f; --str: #b5651d; --num: #8a5a9e; --com: #a39a8c;
   --shadow: 0 1px 2px rgba(60, 40, 20, 0.05), 0 12px 32px rgba(60, 40, 20, 0.08);
+  --side: rgba(47, 111, 159, 0.08);
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -12,6 +13,7 @@
     --warm-soft: rgba(224, 160, 96, 0.1); --head: #302c24; --stripe: rgba(255, 240, 210, 0.03);
     --kw: #5cc2b6; --fn: #82b6e4; --str: #e0a060; --num: #c9a0dc; --com: #7c7468;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px rgba(0, 0, 0, 0.35);
+    --side: rgba(130, 182, 228, 0.1);
   }
 }
 * { box-sizing: border-box; }
@@ -98,3 +100,13 @@ button.tab { margin: 0; padding: 0.25rem 0.9rem; border: 1px solid var(--line); 
 button.tab.on { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
 button.primary.small { padding: 0.4rem 1.1rem; font-size: 0.9rem; }
 .play-out { margin-top: 0.6rem; }
+
+.side { margin: 1rem 0 1rem 1.2rem; padding: 0.4rem 1rem 0.5rem; background: var(--side); border-left: 3px solid var(--fn); border-radius: 4px 12px 12px 4px; }
+.side .you { margin: 0.6rem 0 0.2rem; font: 0.92rem/1.5 system-ui, sans-serif; color: var(--muted); white-space: pre-wrap; }
+.side .teacher.reply { margin: 0.3rem 0 0.4rem; font-size: 1.02rem; }
+.ask textarea { display: block; width: 100%; min-height: 5rem; padding: 0.7rem 0.9rem; font: 0.95rem/1.5 system-ui, sans-serif;
+  color: var(--ink); background: var(--card); border: 1px solid var(--line); border-radius: 12px; resize: vertical; outline: none; }
+.ask textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 4px var(--ring); }
+.ask-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.7rem; margin-top: 0.7rem; }
+.ask-row button.primary { margin-top: 0; }
+select.provider { font: 0.85rem system-ui, sans-serif; color: var(--muted); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 0.3rem 0.8rem; }
