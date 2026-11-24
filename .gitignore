@@ -5,3 +5,4 @@ __pycache__/
 progress/
 .claude/settings.local.json
 data/real/
+.env
