@@ -731,7 +731,7 @@ def unavailable(messages):
 
 def test_the_persona_lines_exist_and_have_no_em_dash():
     for key in ("ask_persona", "ask_unavailable", "ask_guarded"):
-        assert UI[key].strip() and "—" not in UI[key]
+        assert UI[key].strip() and "\u2014" not in UI[key]
 
 
 def test_a_question_gets_a_reply_and_is_kept(make):
