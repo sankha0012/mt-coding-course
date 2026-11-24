@@ -4,7 +4,7 @@ A course that teaches SQL, basic Python and pandas to one learner by the Michel 
 
 ## State of the repository
 
-Design, one full lesson script (`content/sql/`), a content checker, and the first player. Run the checker with `uv run python -m checker content/sql`, the player with `uv run python -m player`, the miss report with `uv run python -m player.report`, and the tests with `uv run pytest`. The progress file is `progress/progress.db`: never delete, overwrite or reset it, and test against a scratch folder. The owner has not yet sat the lesson: do not revise lesson text before they have. The goal is fluency, not mastery (`docs/01-scope.md`): about 27 lessons in two passes, planned in `docs/03-curriculum.md` and `docs/maps/`. The maps await the owner's approval. The research is clear that the quality lives in the script and not in the question-and-answer mechanism.
+Design, one full lesson script (`content/sql/`), a content checker, and the first player. Run the checker with `uv run python -m checker content/sql`, the player with `uv run python -m player`, the miss report with `uv run python -m player.report`, and the tests with `uv run pytest`. The progress file is `progress/progress.db`: never delete, overwrite or reset it, and test against a scratch folder. The owner has not yet sat the lesson: do not revise lesson text before they have. The goal is fluency, not mastery (`docs/01-scope.md`): about 27 lessons in two passes, planned in `docs/03-curriculum.md` and `docs/maps/`. The maps were approved on 24 Nov 2026 (decision C18). The research is clear that the quality lives in the script and not in the question-and-answer mechanism.
 
 ## What must not be broken
 

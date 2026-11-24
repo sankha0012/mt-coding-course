@@ -1,10 +1,12 @@
 # pandas and ML strand map
 
-Status: for the owner's approval, 24 Nov 2026. Revised the same day after the owner allowed synthetic and real data. Read `docs/maps/sql.md` first for how a map is laid out.
+Status: approved by the owner on 24 Nov 2026, with the answers recorded at the end. Read `docs/maps/sql.md` first for how a map is laid out.
 
 Eight lessons. PD-1 to PD-4 are the foundation in pass 1, after PY-6. PD-5 and ML-1 to ML-3 close pass 2, after PY-10.
 
 The strand's idea: **the same movements as SQL, written in thinking order, in Python.** Every lesson asks a question the learner has already answered in SQL, on the same data, and gets the same number. Nothing about the movements is new. Only the spelling is, and the spelling is Python the learner already owns: square brackets get from inside, quotes mean text, two equals signs ask.
+
+**Every script starts by reading its files.** From PD-1 on, each closing sentence and each cold prompt begins with its own `pd.read_csv(...)` lines, and the learner types them every time (the owner's decision, 24 Nov 2026). Reading is the first line of every real script, and it is the line a blank page most easily freezes on. It needs no thought of its own after PD-1. It simply returns in every lesson, spaced for free.
 
 Decisions carried over from the panorama, which keep things to remember down: a column is always written with brackets and quotes and never with a dot, single quotes everywhere, and no dictionary aggregation.
 
@@ -29,6 +31,7 @@ Assumes: SQL-1 to SQL-4, PY-1 to PY-6. Opens with: a cold check from PY-6.
 Closes with: the average subtotal of the delivered orders.
 
 ```python
+orders = pd.read_csv('orders.csv')
 orders[orders['status'] == 'delivered']['subtotal'].mean()
 ```
 
@@ -54,6 +57,7 @@ Assumes: PD-1.
 Closes with: the five restaurants with the most delivered orders.
 
 ```python
+orders = pd.read_csv('orders.csv')
 orders[orders['status'] == 'delivered'].groupby('restaurant_id').size().sort_values(ascending=False).head(5)
 ```
 
@@ -104,6 +108,7 @@ Assumes: PD-3.
 Closes with: is a delivery more often late when it rains? (pass-bar task 14)
 
 ```python
+orders = pd.read_csv('orders.csv')
 deliveries = pd.read_csv('deliveries.csv')
 joined = orders.merge(deliveries, on='order_id')
 joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
@@ -131,6 +136,7 @@ Assumes: SQL-6, SQL-7, PD-4. Opens with: a cold check from PY-10.
 Closes with: each customer's latest order.
 
 ```python
+orders = pd.read_csv('orders.csv')
 orders.sort_values('created_at').groupby('customer_id').tail(1)
 ```
 
@@ -154,6 +160,8 @@ Assumes: PD-5.
 Closes with: predict late deliveries and report a metric (pass-bar task 15).
 
 ```python
+orders = pd.read_csv('orders.csv')
+deliveries = pd.read_csv('deliveries.csv')
 data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
 X = data[['distance_km', 'rain', 'bag_size']]
 y = data['actual_minutes'] > data['promised_minutes']
@@ -179,12 +187,12 @@ Assumes: ML-1.
 | 4 | `pick-the-metric` | When one answer is rare, accuracy flatters. Say which metric you chose and why. | Core |
 | 5 | `read-and-criticise` | Reading someone else's pandas and finding what leaks. | Core |
 
-Closes with: from the raw tables to a metric, in one script, with missing distances filled from the training rows.
+Closes with: from the raw tables to a metric, in one script that reads its own files, with missing distances filled from the training rows, and a gradient boosting model in place of the plain one. The `GradientBoostingClassifier` import line is shape grade.
 
 What the data shows, each a line the teacher can use:
 
 - Adding `promised_minutes` lifts the AUC from 0.697 to 0.805. A long distance matters less when the promise was long.
-- A random forest on the same columns scores 0.755, below the plain model. A fancier model is not a better one.
+- Gradient boosting on the same columns scores 0.795, just below the plain model's 0.805. A fancier model is not a better one.
 - For "more than 15 minutes late", which is 7.3 percent of deliveries, the model's accuracy is 0.938. Answering "no" every time scores 0.926.
 
 Note: a classmate fills the missing distances with the median of the whole table before splitting. The learner is asked what the model has now seen. This is Nubank's code review round in small.
@@ -215,7 +223,7 @@ def cross_validate(model, X, y, k):
     return sum(scores) / len(scores)
 ```
 
-Result: with five folds on the four columns it returns 0.803. The five folds score between 0.789 and 0.827, so the learner sees why one split is not enough.
+Result: with five folds on the four columns, after the script has read and merged its two files, it returns 0.803. The five folds score between 0.789 and 0.827, so the learner sees why one split is not enough.
 
 Note: the capstone of the course. It has four new thoughts and uses a function, a loop, a running result, a yes-or-no column, the brackets that keep yes rows, and fit and predict. If the learner can write this, the course has done its job.
 
@@ -251,7 +259,7 @@ Downloaded on 24 Nov 2026 into `data/real/olist/`, which git ignores. What a fir
 - **Real data for the cold sittings.** The owner said yes to the Olist download. See the section above.
 - **Data for the ML lessons.** The owner allowed synthetic data. `data/deliveries.csv` now gives lateness something to be predicted by: distance, rain, and how many orders the courier carried. See `data/README.md` for how it was made.
 
-## Questions for the owner
+## Answered by the owner on 24 Nov 2026
 
-1. **Reading the file or finding it loaded.** `pd.read_csv` should be typed a few times, since every real script starts with it. After PD-1 the tables could simply be there, to save typing.
-2. **A random forest in ML-2.** Any second model shows that the shape does not change. A gradient boosting model would be closer to what credit teams use.
+1. **Reading the file.** Make the learner read it every time. Applied above and in every closing script.
+2. **The second model in ML-2.** Gradient boosting. Applied above.

@@ -46,6 +46,8 @@ The owner reads `docs/maps/sql.md`, `docs/maps/python.md` and `docs/maps/pandas-
 
 Done when: the three maps are approved.
 
+Done 24 Nov 2026 (decision C18).
+
 ## 7. The player plays a course
 
 More than one lesson: a course order across strands, "next lesson" at the end of a sitting, and an opening cold check drawn from an earlier lesson. The lesson format and the checker gain shape grade: a step lists the spellings it supplies, and the checker confirms each appears in the step's text.

@@ -1,6 +1,6 @@
 # SQL strand map
 
-Status: for the owner's approval, 24 Nov 2026. Revised the same day after the owner allowed synthetic data. A map says which thoughts each lesson introduces, in order, and the sentence the lesson builds to. It is not a script. Each lesson is written as YAML after this map is approved, and is then reviewed by sitting it (decision C13).
+Status: approved by the owner on 24 Nov 2026, with the answers recorded at the end. A map says which thoughts each lesson introduces, in order, and the sentence the lesson builds to. It is not a script. Each lesson is written as YAML after this map is approved, and is then reviewed by sitting it (decision C13).
 
 Nine lessons. SQL-1 exists. SQL-2 to SQL-4 finish the foundation in pass 1. SQL-5 to SQL-9 are the interview layer in pass 2, after the Python and pandas foundations.
 
@@ -231,7 +231,7 @@ Result: three months, August to October 2026. The change is empty for August, mi
 - **Size.** No lesson has more than seven new thoughts. SQL-1 has twelve and remains the largest.
 - **Pass bar.** Tasks 1 to 6 are all core: SQL-3, SQL-4, SQL-8, SQL-7, SQL-7 and SQL-9.
 
-## Questions for the owner
+## Answered on 24 Nov 2026
 
-1. **The threshold in SQL-3** is 100 delivered orders, which leaves 16 restaurants. The panorama used 110, which leaves only 2.
-2. **`short-names` in SQL-4.** Interview answers nearly always use `o` and `r`. Teaching them costs one thought and saves typing in every later lesson.
+1. **The threshold in SQL-3.** The owner left this to me and I chose 100 delivered orders, which leaves 16 restaurants. The reason is that a closing answer of two rows (at 110) shows too little of what `HAVING` does, and 16 rows shows that it keeps some piles and drops others.
+2. **`short-names` in SQL-4.** Taught, as a core thought. Interview answers nearly always write `o` and `r`.

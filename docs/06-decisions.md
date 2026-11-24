@@ -33,6 +33,7 @@ The goal was restated, and the rest of the lessons were planned from it.
 | O11 | The ML lessons use `data/deliveries.csv`, a synthetic table added on 24 Nov 2026. | Distance, rain and the courier's load predict lateness: an AUC of about 0.70, and 0.80 with the promised time. |
 | O12 | SQL-8 uses `data/coupons.csv`, a synthetic table with one coupon never used. | "Rows with no match" needs something unmatched. |
 | C17 | The two cold sittings use the Olist Brazilian e-commerce dataset, real data the learner has never seen. The lessons stay on the practice tables. The files live in `data/real/olist/` and stay out of git. | A cold sitting should test thinking, not reproduction, and a round hands you a table you have not seen. The licence is CC BY-NC-SA 4.0 and this repository is public. |
+| C18 | The three strand maps are approved. Answers: every pandas script reads its own files, typed every time. ML-2 swaps in gradient boosting. `lambda` is core and merging sorted lists stays shape grade. SQL-3 keeps its threshold of 100. Short table names are taught in SQL-4. | The owner's answers on 24 Nov 2026, with the SQL-3 threshold left to me. |
 
 ## Confirmed by the owner (20 Nov 2026, first Claude Code session)
 

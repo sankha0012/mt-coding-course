@@ -1,6 +1,6 @@
 # Python strand map
 
-Status: for the owner's approval, 24 Nov 2026. Read `docs/maps/sql.md` first for how a map is laid out.
+Status: approved by the owner on 24 Nov 2026, with the answers recorded at the end. Read `docs/maps/sql.md` first for how a map is laid out.
 
 Ten lessons. PY-1 to PY-6 are the foundation in pass 1, after SQL-4. PY-7 to PY-10 are the interview layer in pass 2, after SQL-9.
 
@@ -338,7 +338,7 @@ def merge(a, b):
 - **Size.** PY-1 has twelve thoughts, the same as SQL-1. PY-2 and PY-5 have nine. The rest have five to seven.
 - **Pass bar.** Tasks 7, 8, 9, 11 and 12 are core: PY-7, PY-6, PY-8, PY-9 and PY-10. Task 10 is shape grade in PY-10.
 
-## Questions for the owner
+## Answered by the owner on 24 Nov 2026
 
-1. **`lambda` as core.** It appears in almost every sorting answer in an interview, so it is typed from memory here. It could instead be shape grade, with a named function always acceptable.
-2. **Merging sorted lists stays shape grade**, as you chose. If a Nubank-style algorithm round comes up, it is the first thing to promote.
+1. **`lambda`** stays core, typed from memory in PY-7.
+2. **Merging sorted lists** stays shape grade. The teacher walks through it once, and it is not brought back cold.
