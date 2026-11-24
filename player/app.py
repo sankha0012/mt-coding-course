@@ -11,7 +11,7 @@ from pydantic import BaseModel
 
 from checker.lesson import load_content, ui_path
 
-from . import ai, llm
+from . import ai, llm, tables
 from .engine import Engine
 from .runner import Runner
 from .store import Store
@@ -39,6 +39,7 @@ class Player:
         self.engines = {name: Engine(steps, self.runner, ui, rng) for name, steps in self.lessons}
         self.store = Store(progress_dir)
         self.lock = threading.Lock()
+        self._tables = {}
 
     def _current(self):
         """(run id, lesson name, state) of the newest run, starting the first lesson if there is none."""
@@ -82,6 +83,16 @@ class Player:
             _, name, st = self._current()
             step = self.engines[name].steps[st["playing"]["step"]]
             return self.runner.play(lang, code, step.get("data", ""))
+
+    def data(self):
+        """The tables of the step now waiting, for the Data tab. Read only, not logged."""
+        with self.lock:
+            _, name, st = self._current()
+            step = self.engines[name].steps[st["playing"]["step"]]
+            key = (step.get("data", ""), Engine._lang(step) == "python")
+        if key not in self._tables:  # the lock is free while a big folder is read
+            self._tables[key] = tables.sample(self.runner.path(key[0]), ext=key[1])
+        return {"data": key[0], "tables": self._tables[key]}
 
     def _met(self, name, st):
         """Ids of the thoughts introduced up to the step now playing, in course order."""
@@ -183,6 +194,10 @@ def make_app(content_dir, data_dir, progress_dir, rng=None, chat=None, providers
         if not p.code.strip():
             raise HTTPException(400, "empty code")
         return player.play(p.lang, p.code)
+
+    @app.get("/api/data")
+    def get_data():
+        return player.data()
 
     @app.get("/api/providers")
     def get_providers():
