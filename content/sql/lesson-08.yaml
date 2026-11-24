@@ -12,7 +12,7 @@ steps:
   - kind: "cold-check"
     requires: ["top-n-per-pile", "number-inside-pile", "sort-direction", "compare-signs", "name-a-table", "name-a-result", "beside-comes-late", "from-table", "choose-columns", "commas"]
     any_column_order: true
-    text: "Each customer's second biggest order: the customer, the order id and the subtotal."
+    text: "Show each customer's second biggest order by subtotal: the customer, the order id and the subtotal."
     model: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn = 2"
     rows: 1370
     after_run: "That is where we stopped last time. On we go."
@@ -138,7 +138,7 @@ steps:
   # 7
   - kind: "ask"
     requires: ["keep-all-of-first", "empty-side", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
-    text: "Show the id, status and distance of every order, keeping every order. The distance is in deliveries."
+    text: "Show the id, status and distance_km of every order, keeping every order. The distance_km column is in deliveries."
     model: "SELECT o.order_id, o.status, d.distance_km FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id"
     rows: 6000
     narration:
@@ -265,7 +265,7 @@ steps:
   # 12
   - kind: "ask"
     requires: ["count-matches", "keep-all-of-first", "empty-side", "summaries-skip-empties", "count-rows", "piles", "one-row-per-pile", "pile-name", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
-    text: "For each order status, show how many orders there were and how many of them had a delivery. Keep every order."
+    text: "Show each order status with how many orders there were and how many of them had a delivery. Keep every order."
     model: "SELECT o.status, COUNT(*), COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.status"
     rows: 2
     result: [["cancelled", 399, 0], ["delivered", 5601, 5601]]
@@ -285,7 +285,7 @@ steps:
       - "Count all the rows of each pile."
       - "Add a second count that skips the rows with no delivery: a column from deliveries."
     return:
-      text: "For each promised time, show how many orders there were and how many of them had a delivery. Keep every order."
+      text: "Show each promised_minutes value with how many orders there were and how many of them had a delivery. Keep every order."
       model: "SELECT o.promised_minutes, COUNT(*), COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.promised_minutes"
       rows: 3
       result: [[30, 2019, 1902], [40, 2003, 1863], [50, 1978, 1836]]
@@ -381,7 +381,7 @@ steps:
       - "Join the orders to the coupons on the code."
       - "Keep the rows where the discount is above 10, and show the order ids."
     return:
-      text: "Show the ids of the orders that were delivered in the rain and came to more than 100."
+      text: "Show the ids of the orders whose delivery has rain = 1 and whose subtotal is above 100."
       model: "SELECT o.order_id FROM orders o JOIN deliveries d ON o.order_id = d.order_id WHERE d.rain = 1 AND o.subtotal > 100"
       rows: 126
       narration:
@@ -459,7 +459,7 @@ steps:
   - kind: "ask"
     requires: ["keep-the-empties", "keep-all-of-first", "empty-side", "empty-cells", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
     friction: true
-    text: "The last two, and I won't break them down. First: the coupons that nobody has used."
+    text: "The last two, and I won't break them down. First: show the codes of the coupons that nobody has used."
     model: "SELECT c.coupon_code FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code WHERE o.order_id IS NULL"
     rows: 1
     result: [["VOLTA15"]]
@@ -536,7 +536,7 @@ steps:
   - kind: "cold-check"
     requires: ["count-matches", "keep-all-of-first", "empty-side", "keep-piles", "piles", "one-row-per-pile", "pile-name", "compare-signs", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
     any_column_order: true
-    text: "The codes of the coupons that fewer than 100 orders used."
+    text: "Show the codes of the coupons that fewer than 100 orders used."
     model: "SELECT c.coupon_code FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code HAVING COUNT(o.order_id) < 100"
     rows: 1
     result: [["VOLTA15"]]

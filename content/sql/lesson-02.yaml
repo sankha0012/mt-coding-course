@@ -7,7 +7,7 @@ steps:
   - kind: "cold-check"
     requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles"]
     any_column_order: true
-    text: "How many couriers ride a moto, in each city?"
+    text: "Show each city with how many couriers ride a moto there."
     model: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'moto' GROUP BY city"
     rows: 4
     result: [["Belo Horizonte", 19], ["Curitiba", 15], ["Rio de Janeiro", 28], ["São Paulo", 48]]
@@ -95,7 +95,7 @@ steps:
   # 5
   - kind: "ask"
     requires: ["choose-columns", "from-table", "keep-rows", "compare-signs", "text-quotes"]
-    text: "The names of the pizza restaurants."
+    text: "Show the names of the pizza restaurants."
     thinking_order: "From restaurants, keeping the pizza ones, just the name."
     model: "SELECT name FROM restaurants WHERE cuisine = 'pizza'"
     rows: 8
@@ -115,7 +115,7 @@ steps:
       - "Show me everything from restaurants, keeping only the pizza ones."
       - "Now ask for just the name, in place of the star."
     return:
-      text: "The ids of the couriers who ride a bike."
+      text: "Show the ids of the couriers who ride a bike."
       model: "SELECT courier_id FROM couriers WHERE vehicle = 'bike'"
       rows: 73
       narration:
@@ -175,7 +175,7 @@ steps:
   # 8
   - kind: "ask"
     requires: ["from-table", "more-summaries", "summary-column", "keep-rows", "compare-signs", "text-quotes"]
-    text: "What did the cancelled orders add up to?"
+    text: "What was the total subtotal of the cancelled orders?"
     thinking_order: "From orders, keeping the cancelled ones, the total of the subtotals."
     model: "SELECT SUM(subtotal) FROM orders WHERE status = 'cancelled'"
     rows: 1
@@ -195,7 +195,7 @@ steps:
       - "From orders, the total of the subtotals."
       - "Keep only the cancelled rows first."
     return:
-      text: "What did the delivered orders add up to in delivery fees?"
+      text: "What was the total delivery_fee of the delivered orders?"
       model: "SELECT SUM(delivery_fee) FROM orders WHERE status = 'delivered'"
       rows: 1
       result: [[29136.18]]
@@ -223,7 +223,7 @@ steps:
   # 10
   - kind: "ask"
     requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "two-questions"]
-    text: "How many orders had a delivery fee of 0 and a subtotal above 100?"
+    text: "How many orders had a delivery_fee of 0 and a subtotal above 100?"
     thinking_order: "From orders, keeping the ones where the fee is 0 and the subtotal is above 100, how many?"
     model: "SELECT COUNT(*) FROM orders WHERE delivery_fee = 0 AND subtotal > 100"
     rows: 1
@@ -243,7 +243,7 @@ steps:
       - "From orders, how many had a delivery fee of 0?"
       - "Now add the second question after the first, joined with the word for both."
     return:
-      text: "The promised_minutes column holds 30, 40 or 50. How many orders were promised in 30 minutes and came to less than 20?"
+      text: "The promised_minutes column holds 30, 40 or 50. How many orders had a promised_minutes of 30 and a subtotal below 20?"
       model: "SELECT COUNT(*) FROM orders WHERE promised_minutes = 30 AND subtotal < 20"
       rows: 1
       result: [[101]]
@@ -560,7 +560,7 @@ steps:
     requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "sort", "sort-direction", "cut", "sort-by-summary", "summary-per-pile"]
     friction: true
     any_column_order: true
-    text: "The last one, and I won't break it down. The five restaurants with the most delivered orders, with how many each had."
+    text: "The last one, and I won't break it down. Show the restaurant_id of each of the five restaurants with the most delivered orders, with how many delivered orders each had."
     model: "SELECT restaurant_id, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id ORDER BY COUNT(*) DESC LIMIT 5"
     rows: 5
     result: [[2, 113], [24, 112], [59, 109], [3, 109], [22, 108]]
@@ -582,7 +582,7 @@ steps:
       - "Sort the piles by the count, the biggest first."
       - "Cut it to the first five."
     return:
-      text: "Among the delivered orders, show the three restaurants with the biggest total of subtotals, with each total."
+      text: "Among the delivered orders, show the restaurant_id of each of the three restaurants with the biggest total subtotal, with each total."
       model: "SELECT restaurant_id, SUM(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id ORDER BY SUM(subtotal) DESC LIMIT 3"
       any_column_order: true
       rows: 3
@@ -608,7 +608,7 @@ steps:
     requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
     ordered: true
     any_column_order: true
-    text: "The two cities with the most couriers, and how many each."
+    text: "Show the two cities with the most couriers, each with its number of couriers."
     model: "SELECT city, COUNT(*) FROM couriers GROUP BY city ORDER BY COUNT(*) DESC LIMIT 2"
     rows: 2
     result: [["São Paulo", 89], ["Rio de Janeiro", 49]]

@@ -15,7 +15,7 @@ steps:
     requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
     ordered: true
     any_column_order: true
-    text: "The two cuisines with the most restaurants, and how many each."
+    text: "Show the two cuisines with the most restaurants, each with its number of restaurants."
     model: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine ORDER BY COUNT(*) DESC LIMIT 2"
     rows: 2
     result: [["hamburguer", 13], ["brasileira", 11]]
@@ -65,7 +65,7 @@ steps:
   # 3
   - kind: "ask"
     requires: ["count-rows", "from-table", "choose-columns", "keep-rows", "compare-signs", "text-quotes", "two-questions", "text-is-exact"]
-    text: "The names of the hamburguer restaurants in São Paulo. The tilde on the a is part of the word, so copy the city exactly as I wrote it."
+    text: "Show the names of the hamburguer restaurants in São Paulo. The tilde on the a is part of the word, so copy the city exactly as I wrote it."
     thinking_order: "From restaurants, keeping the ones in São Paulo that serve hamburguer, just the name."
     model: "SELECT name FROM restaurants WHERE city = 'São Paulo' AND cuisine = 'hamburguer'"
     rows: 5
@@ -199,7 +199,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "empty-cells"]
     any_column_order: true
-    text: "For each status, how many orders have no subtotal?"
+    text: "Show each status with how many of its orders have no subtotal."
     thinking_order: "From orders, keeping the ones with an empty subtotal, a pile per status, the status and how many."
     model: "SELECT status, COUNT(*) FROM orders WHERE subtotal IS NULL GROUP BY status"
     rows: 2
@@ -219,7 +219,7 @@ steps:
       - "How many orders have an empty subtotal?"
       - "Now sort those into piles by status, and put the pile's name in front."
     return:
-      text: "For each promised time, how many orders had no coupon?"
+      text: "Show each promised_minutes value with how many of its orders had no coupon."
       model: "SELECT promised_minutes, COUNT(*) FROM orders WHERE coupon_code IS NULL GROUP BY promised_minutes"
       rows: 3
       result: [[30, 1384], [40, 1364], [50, 1368]]
@@ -248,7 +248,7 @@ steps:
   # 10
   - kind: "ask"
     requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "summary-column", "how-many-different"]
-    text: "How many different customers had an order cancelled?"
+    text: "How many different customer_ids had a cancelled order?"
     thinking_order: "From orders, keeping the cancelled ones, how many different customers?"
     model: "SELECT COUNT(DISTINCT customer_id) FROM orders WHERE status = 'cancelled'"
     rows: 1
@@ -287,7 +287,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "how-many-different"]
     any_column_order: true
-    text: "For each status, how many different customers?"
+    text: "Show each status with the number of different customer_ids that have an order with that status."
     model: "SELECT status, COUNT(DISTINCT customer_id) FROM orders GROUP BY status"
     rows: 2
     result: [["cancelled", 342], ["delivered", 1469]]
@@ -306,7 +306,7 @@ steps:
       - "From orders, a pile per status, and the status and how many orders in each."
       - "Now count each customer once in each pile."
     return:
-      text: "For each promised time, how many different customers ordered?"
+      text: "Show each promised_minutes value with the number of different customer_ids that have an order with it."
       model: "SELECT promised_minutes, COUNT(DISTINCT customer_id) FROM orders GROUP BY promised_minutes"
       rows: 3
       result: [[30, 1113], [40, 1132], [50, 1100]]
@@ -432,7 +432,7 @@ steps:
       - "From orders, the average subtotal of each restaurant."
       - "Now keep only the piles whose average is above 65."
     return:
-      text: "For each promised time, show the average actual time, but only for the promises whose average is above 35."
+      text: "Show each promised_minutes value with the average actual_minutes of its orders, but only the values whose average is above 35."
       model: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes HAVING AVG(actual_minutes) > 35"
       rows: 2
       result: [[40, 39.61], [50, 49.44]]
@@ -594,7 +594,7 @@ steps:
   - kind: "cold-check"
     requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles", "rows-or-piles"]
     any_column_order: true
-    text: "In São Paulo, which cuisines have more than 3 restaurants? Show each cuisine with its count."
+    text: "In São Paulo, which cuisines have more than 3 restaurants? Show each cuisine with its number of restaurants."
     model: "SELECT cuisine, COUNT(*) FROM restaurants WHERE city = 'São Paulo' GROUP BY cuisine HAVING COUNT(*) > 3"
     rows: 4
     result: [["arabe", 5], ["hamburguer", 5], ["japonesa", 5], ["pizza", 6]]

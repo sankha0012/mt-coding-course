@@ -323,7 +323,7 @@ steps:
       - "Make a pile for each label."
       - "Show each label with the number in its pile."
     return:
-      text: "How many orders came to more than 100 and how many did not? Show a label, big or small, with its count."
+      text: "How many orders had a subtotal above 100 and how many did not? Show a label, big or small, with its count."
       model: "SELECT CASE WHEN subtotal > 100 THEN 'big' ELSE 'small' END AS size, COUNT(*) FROM orders GROUP BY size"
       rows: 2
       result: [["big", 632], ["small", 5368]]

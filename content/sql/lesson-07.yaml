@@ -13,7 +13,7 @@ steps:
   - kind: "cold-check"
     requires: ["beside-comes-late", "piles-that-stay", "row-against-pile", "name-a-table", "name-a-result", "summary-column", "from-table", "choose-columns", "commas", "keep-rows", "compare-signs"]
     any_column_order: true
-    text: "The id and promised minutes of the orders whose delivery fee was above the average delivery fee of the orders promised the same time."
+    text: "Show the id and promised_minutes of every order whose delivery_fee is above the average delivery_fee of the orders with the same promised_minutes."
     model: "WITH f AS (SELECT order_id, promised_minutes, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY promised_minutes) AS typical FROM orders) SELECT order_id, promised_minutes FROM f WHERE delivery_fee > typical"
     rows: 2967
     after_run: "That is where we stopped last time. On we go."
@@ -263,7 +263,7 @@ steps:
   # 12
   - kind: "ask"
     requires: ["top-n-per-pile", "number-the-rows", "compare-signs", "sort-direction", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
-    text: "Using a number beside each row, show the id and subtotal of the three biggest orders."
+    text: "Using a number beside each row, show the id and subtotal of the three orders with the biggest subtotal."
     model: "WITH n AS (SELECT order_id, subtotal, ROW_NUMBER() OVER (ORDER BY subtotal DESC) AS rn FROM orders) SELECT order_id, subtotal FROM n WHERE rn <= 3"
     rows: 3
     result: [[101347, 281.15], [105582, 233.44], [100169, 209.96]]
@@ -338,7 +338,7 @@ steps:
   # 14
   - kind: "ask"
     requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "sort-direction", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
-    text: "Show each customer's biggest order: the customer, the order id and the subtotal."
+    text: "Show each customer's biggest order by subtotal: the customer, the order id and the subtotal."
     model: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn = 1"
     rows: 1475
     narration:
@@ -358,7 +358,7 @@ steps:
       - "Show the customer, the order and the subtotal from it."
       - "Keep only the rows numbered 1."
     return:
-      text: "Show each restaurant's biggest order: the restaurant, the order id and the subtotal."
+      text: "Show each restaurant's biggest order by subtotal: the restaurant, the order id and the subtotal."
       model: "WITH n AS (SELECT restaurant_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY restaurant_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT restaurant_id, order_id, subtotal FROM n WHERE rn = 1"
       rows: 60
       narration:
@@ -442,7 +442,7 @@ steps:
     requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up", "keep-rows", "text-quotes", "compare-signs", "sort-direction", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
     friction: true
     any_column_order: true
-    text: "This one I won't break down. The biggest delivered order of each city: show the city, the order id and the subtotal. The city lives in restaurants."
+    text: "This one I won't break down. Show the biggest delivered order by subtotal of each city: the city, the order id and the subtotal. The city lives in restaurants."
     model: "WITH n AS (SELECT r.city, o.order_id, o.subtotal, ROW_NUMBER() OVER (PARTITION BY r.city ORDER BY o.subtotal DESC) AS rn FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered') SELECT city, order_id, subtotal FROM n WHERE rn = 1"
     rows: 4
     narration:
@@ -461,7 +461,7 @@ steps:
       - "Number the rows within each city, the biggest subtotal first, and name that table."
       - "Show the city, the order and the subtotal for the rows numbered 1."
     return:
-      text: "Show the two biggest delivered orders of each city: the city, the order id and the subtotal."
+      text: "Show the two delivered orders with the biggest subtotal of each city: the city, the order id and the subtotal."
       model: "WITH n AS (SELECT r.city, o.order_id, o.subtotal, ROW_NUMBER() OVER (PARTITION BY r.city ORDER BY o.subtotal DESC) AS rn FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered') SELECT city, order_id, subtotal FROM n WHERE rn <= 2"
       rows: 8
       narration:
@@ -506,7 +506,7 @@ steps:
     requires: ["top-n-per-pile", "number-inside-pile", "sort-direction", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
     friction: true
     any_column_order: true
-    text: "The last two, and I won't break them down. First: the three biggest orders of each restaurant, with the restaurant, the order id and the subtotal."
+    text: "The last two, and I won't break them down. First: show the three orders with the biggest subtotal of each restaurant: the restaurant, the order id and the subtotal."
     model: "WITH ranked AS (SELECT order_id, restaurant_id, subtotal, ROW_NUMBER() OVER (PARTITION BY restaurant_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT restaurant_id, order_id, subtotal FROM ranked WHERE rn <= 3"
     rows: 180
     narration:
@@ -527,7 +527,7 @@ steps:
       - "Show the restaurant, the order and the subtotal from it."
       - "Keep the rows numbered up to 3."
     return:
-      text: "Show each customer's two biggest orders: the customer, the order id and the subtotal."
+      text: "Show each customer's two orders with the biggest subtotal: the customer, the order id and the subtotal."
       model: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn <= 2"
       rows: 2845
       narration:
@@ -540,7 +540,7 @@ steps:
   - kind: "ask"
     requires: ["latest-is-number-one", "number-inside-pile", "sort-direction", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
     any_column_order: true
-    text: "And the second: each customer's latest order, with the customer, the order id and the time."
+    text: "And the second: show each customer's latest order: the customer, the order id and the time."
     model: "WITH ranked AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM ranked WHERE rn = 1"
     rows: 1475
     narration:
@@ -582,7 +582,7 @@ steps:
   - kind: "cold-check"
     requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "sort-direction", "keep-rows", "text-quotes", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
     any_column_order: true
-    text: "Each courier's second newest delivered order: the courier, the order id and the time."
+    text: "Show each courier's second newest delivered order: the courier, the order id and the time."
     model: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 2"
     rows: 200
     after_run: "That's the sitting. We pick up from here next time."

@@ -125,7 +125,7 @@ steps:
   # 6
   - kind: "ask"
     requires: ["count-rows", "from-table", "summary-column", "more-summaries", "piles", "one-row-per-pile", "pile-name", "commas", "name-a-result", "query-a-result"]
-    text: "What is the most orders any single restaurant has had? Count the orders of each restaurant, as in that last sentence, and then take the biggest of those counts."
+    text: "What is the largest number of orders any one restaurant has had? Count the orders of each restaurant, as in that last sentence, and then take the biggest of those counts."
     thinking_order: "From a table of how many orders each restaurant had, the biggest of the counts."
     model: "SELECT MAX(n) FROM (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)"
     rows: 1
@@ -255,7 +255,7 @@ steps:
       - "First the number: the average delivery fee, from orders."
       - "Put that in brackets where a number would go in the question about each order's fee."
     return:
-      text: "How many orders took longer to arrive than the average delivery? The actual_minutes column holds how long each really took."
+      text: "How many orders had an actual_minutes above the average actual_minutes? The actual_minutes column holds how long each really took."
       model: "SELECT COUNT(*) FROM orders WHERE actual_minutes > (SELECT AVG(actual_minutes) FROM orders)"
       rows: 1
       result: [[2469]]
@@ -268,7 +268,7 @@ steps:
   # 11
   - kind: "ask"
     requires: ["count-rows", "from-table", "summary-column", "keep-rows", "compare-signs", "text-quotes", "two-questions", "one-number-from-a-query"]
-    text: "How many delivered orders came to more than the average subtotal of the cancelled ones?"
+    text: "How many delivered orders had a subtotal above the average subtotal of the cancelled orders?"
     thinking_order: "From orders, keeping the delivered ones above a number, where the number is the average subtotal of the cancelled orders, how many?"
     model: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal > (SELECT AVG(subtotal) FROM orders WHERE status = 'cancelled')"
     rows: 1
@@ -288,7 +288,7 @@ steps:
       - "First the number: the average subtotal of the cancelled orders."
       - "Now count the delivered orders, keeping those above that number, in brackets."
     return:
-      text: "How many cancelled orders came to more than the average subtotal of the delivered ones?"
+      text: "How many cancelled orders had a subtotal above the average subtotal of the delivered orders?"
       model: "SELECT COUNT(*) FROM orders WHERE status = 'cancelled' AND subtotal > (SELECT AVG(subtotal) FROM orders WHERE status = 'delivered')"
       rows: 1
       result: [[160]]
@@ -301,7 +301,7 @@ steps:
   # 12
   - kind: "ask"
     requires: ["count-rows", "from-table", "choose-columns", "summary-column", "more-summaries", "keep-rows", "compare-signs", "one-number-from-a-query"]
-    text: "Which order was the biggest one? Show its id."
+    text: "Which order had the biggest subtotal? Show its id."
     thinking_order: "From orders, keeping the one whose subtotal equals the biggest subtotal, the id."
     model: "SELECT order_id FROM orders WHERE subtotal = (SELECT MAX(subtotal) FROM orders)"
     rows: 1
@@ -321,7 +321,7 @@ steps:
       - "First the number: the biggest subtotal, from orders."
       - "Now keep the order whose subtotal equals that number, and show its id."
     return:
-      text: "Which delivery took the longest? Show its id. The actual_minutes column holds how long each really took."
+      text: "Which order had the biggest actual_minutes? Show its id. The actual_minutes column holds how long each really took."
       model: "SELECT order_id FROM orders WHERE actual_minutes = (SELECT MAX(actual_minutes) FROM orders)"
       rows: 1
       result: [[103690]]
@@ -350,7 +350,7 @@ steps:
   # 14
   - kind: "ask"
     requires: ["count-rows", "from-table", "choose-columns", "keep-rows", "compare-signs", "text-quotes", "two-questions", "in-a-list", "list-from-a-query"]
-    text: "Show the names of the restaurants that have had a cancelled order of more than 150."
+    text: "Show the names of the restaurants that have had a cancelled order with a subtotal above 150."
     thinking_order: "From restaurants, keeping the ones whose restaurant_id is in the ids of the orders that were cancelled and came to more than 150, the name."
     model: "SELECT name FROM restaurants WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE status = 'cancelled' AND subtotal > 150)"
     rows: 5
@@ -370,7 +370,7 @@ steps:
       - "First the list: the restaurant_ids of the cancelled orders above 150."
       - "Now from restaurants, keep the ones whose id is in that list, and show the name."
     return:
-      text: "Show the ids of the couriers who have carried an order above 200."
+      text: "Show the ids of the couriers who have carried an order with a subtotal above 200."
       model: "SELECT courier_id FROM couriers WHERE courier_id IN (SELECT courier_id FROM orders WHERE subtotal > 200)"
       rows: 5
       result: [[25], [35], [73], [74], [198]]
@@ -421,7 +421,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "compare-signs", "piles", "one-row-per-pile", "pile-name", "commas", "name-a-result", "keep-before-piles", "query-a-result", "name-a-table"]
     any_column_order: true
-    text: "Name a table of the delivered orders each restaurant had, with the count called n. Then, from the name, show the restaurants with more than 105."
+    text: "Count the delivered orders of each restaurant, call the count n, and give that table a name. Then, from the name, show each restaurant_id with its n, but only where n is above 105."
     thinking_order: "Name a table of how many delivered orders each restaurant had. Then, from that name, keeping the rows where the count is above 105, the restaurant and the count."
     model: "WITH d AS (SELECT restaurant_id, COUNT(*) AS n FROM orders WHERE status = 'delivered' GROUP BY restaurant_id) SELECT restaurant_id, n FROM d WHERE n > 105"
     rows: 5
@@ -442,7 +442,7 @@ steps:
       - "Name it with WITH and AS."
       - "Under it, keep the rows of the name where n is above 105."
     return:
-      text: "Name a table of how many motos each city has, with the count called n. Then, from the name, show the cities with more than 20."
+      text: "Count the moto couriers of each city, call the count n, and give that table a name. Then, from the name, show each city with its n, but only where n is above 20."
       model: "WITH k AS (SELECT city, COUNT(*) AS n FROM couriers WHERE vehicle = 'moto' GROUP BY city) SELECT city, n FROM k WHERE n > 20"
       any_column_order: true
       rows: 2
@@ -456,7 +456,7 @@ steps:
   # 18
   - kind: "ask"
     requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "in-a-list", "list-from-a-query"]
-    text: "Some customers have placed an order of more than 200. How many orders have those customers placed, all together?"
+    text: "Some customers have placed an order with a subtotal above 200. How many orders have those customers placed, all together?"
     thinking_order: "From orders, keeping the ones whose customer_id is in the customers of the orders above 200, how many?"
     model: "SELECT COUNT(*) FROM orders WHERE customer_id IN (SELECT customer_id FROM orders WHERE subtotal > 200)"
     rows: 1
@@ -476,7 +476,7 @@ steps:
       - "First the list: the customer_id of the orders above 200."
       - "Now count the orders whose customer_id is in that list."
     return:
-      text: "How many orders have been placed at restaurants that have had an order above 200?"
+      text: "How many orders have been placed at restaurants that have had an order with a subtotal above 200?"
       model: "SELECT COUNT(*) FROM orders WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE subtotal > 200)"
       rows: 1
       result: [[527]]
@@ -490,7 +490,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-piles", "one-number-from-a-query"]
     any_column_order: true
-    text: "For each promised time, show the average actual time, but only for the promises whose average is above the average actual time of all the orders."
+    text: "Show each promised_minutes value with the average actual_minutes of its orders, but only the values whose average is above the average actual_minutes of all the orders."
     thinking_order: "From orders, a pile per promised time, the promise and its average actual time, keeping the piles whose average is above the average of all the orders."
     model: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes HAVING AVG(actual_minutes) > (SELECT AVG(actual_minutes) FROM orders)"
     rows: 2
@@ -510,7 +510,7 @@ steps:
       - "For each promised time, the average actual time."
       - "Now keep only the piles above one number: the average actual time of all the orders, from a query in brackets."
     return:
-      text: "For each promised time, show the average subtotal, but only for the promises whose average is above the average subtotal of all the orders."
+      text: "Show each promised_minutes value with the average subtotal of its orders, but only the values whose average is above the average subtotal of all the orders."
       model: "SELECT promised_minutes, AVG(subtotal) FROM orders GROUP BY promised_minutes HAVING AVG(subtotal) > (SELECT AVG(subtotal) FROM orders)"
       any_column_order: true
       rows: 1
@@ -571,7 +571,7 @@ steps:
   # 22
   - kind: "cold-check"
     requires: ["count-rows", "from-table", "summary-column", "keep-rows", "compare-signs", "one-number-from-a-query"]
-    text: "How many orders were promised in more minutes than the average promise?"
+    text: "How many orders had a promised_minutes above the average promised_minutes?"
     model: "SELECT COUNT(*) FROM orders WHERE promised_minutes > (SELECT AVG(promised_minutes) FROM orders)"
     rows: 1
     result: [[3981]]

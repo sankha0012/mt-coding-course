@@ -221,7 +221,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "choose-columns", "commas", "keep-rows", "compare-signs", "join", "join-on", "whose-column", "short-names"]
     any_column_order: true
-    text: "Show the id of each order that came to more than 150, with the cuisine of its restaurant. Call the tables o and r."
+    text: "Show the id of each order with a subtotal above 150, with the cuisine of its restaurant. Call the tables o and r."
     thinking_order: "From orders o, stuck to restaurants r where the restaurant_ids match, keeping the ones above 150, the order id and the cuisine."
     model: "SELECT o.order_id, r.cuisine FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.subtotal > 150"
     rows: 60
@@ -240,7 +240,7 @@ steps:
       - "Show each order's id and its restaurant's cuisine, with the join."
       - "Now keep only the orders with a subtotal above 150, after the join."
     return:
-      text: "Show the id of each order that came to more than 150, with the vehicle its courier rides. Call the tables o and c."
+      text: "Show the id of each order with a subtotal above 150, with the vehicle its courier rides. Call the tables o and c."
       model: "SELECT o.order_id, c.vehicle FROM orders o JOIN couriers c ON o.courier_id = c.courier_id WHERE o.subtotal > 150"
       any_column_order: true
       rows: 55
@@ -253,7 +253,7 @@ steps:
   # 10
   - kind: "ask"
     requires: ["count-rows", "from-table", "count-rows", "keep-rows", "compare-signs", "text-quotes", "text-is-exact", "two-questions", "join", "join-on", "whose-column", "short-names"]
-    text: "How many orders from restaurants in São Paulo came to more than 100?"
+    text: "How many orders from restaurants in São Paulo had a subtotal above 100?"
     thinking_order: "From orders o, stuck to restaurants r, keeping the ones where the city is São Paulo and the subtotal is above 100, how many?"
     model: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'São Paulo' AND o.subtotal > 100"
     rows: 1
@@ -274,7 +274,7 @@ steps:
       - "Keep the ones in São Paulo."
       - "Add the second question, joined with the word for both."
     return:
-      text: "How many cancelled orders came from restaurants in Curitiba?"
+      text: "How many cancelled orders were placed at restaurants in Curitiba?"
       model: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'Curitiba' AND o.status = 'cancelled'"
       rows: 1
       result: [[41]]
@@ -304,7 +304,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "count-rows", "piles", "one-row-per-pile", "pile-name", "commas", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
     any_column_order: true
-    text: "For each cuisine, how many orders were there?"
+    text: "Show each cuisine with how many orders were placed at restaurants that serve it."
     thinking_order: "From orders o, stuck to restaurants r, a pile per cuisine, the cuisine and how many."
     model: "SELECT r.cuisine, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.cuisine"
     rows: 6
@@ -324,7 +324,7 @@ steps:
       - "Join orders to restaurants, with the short names o and r."
       - "Pile by the cuisine and count each pile, with the pile's name in front."
     return:
-      text: "Show each of the restaurant cities with how many orders it had, the number you saw earlier."
+      text: "Show each city with how many orders were placed at restaurants in it."
       model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
       any_column_order: true
       rows: 4
@@ -339,7 +339,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "count-rows", "piles", "one-row-per-pile", "pile-name", "commas", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
     any_column_order: true
-    text: "How many orders did the couriers carry on each kind of vehicle? Call the tables o and c."
+    text: "Show each vehicle with how many orders were carried by couriers who ride it. Call the tables o and c."
     thinking_order: "From orders o, stuck to couriers c, a pile per vehicle, the vehicle and how many orders."
     model: "SELECT c.vehicle, COUNT(*) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle"
     rows: 3
@@ -359,7 +359,7 @@ steps:
       - "Join orders to couriers, with the short names o and c, matching the courier_id."
       - "Pile by the vehicle and count each pile."
     return:
-      text: "How many orders were carried by couriers in each city? Call the tables o and c."
+      text: "Show each courier city with how many orders were carried by couriers in it. Call the tables o and c."
       model: "SELECT c.city, COUNT(*) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.city"
       any_column_order: true
       rows: 4
@@ -412,7 +412,7 @@ steps:
   - kind: "ask"
     requires: ["count-rows", "from-table", "keep-rows", "empty-cells", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
     any_column_order: true
-    text: "For each city, how many orders have no subtotal?"
+    text: "Show each restaurant city with how many orders placed there have no subtotal."
     model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.subtotal IS NULL GROUP BY r.city"
     rows: 4
     result: [["Belo Horizonte", 7], ["Curitiba", 3], ["Rio de Janeiro", 8], ["São Paulo", 7]]
@@ -432,7 +432,7 @@ steps:
       - "Keep only the orders with an empty subtotal."
       - "Pile by the city, and show each city with its count."
     return:
-      text: "For each cuisine, how many orders had no coupon?"
+      text: "Show each cuisine with how many orders placed at restaurants that serve it had no coupon."
       model: "SELECT r.cuisine, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.coupon_code IS NULL GROUP BY r.cuisine"
       any_column_order: true
       rows: 6
@@ -489,7 +489,7 @@ steps:
     friction: true
     ordered: true
     any_column_order: true
-    text: "This one I won't break down. The two restaurants with the most delivered orders, shown by their names and not their ids, with how many each had."
+    text: "This one I won't break down. Show the names, not the ids, of the two restaurants with the most delivered orders, with how many delivered orders each had."
     model: "SELECT r.name, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.name ORDER BY COUNT(*) DESC LIMIT 2"
     rows: 2
     result: [["Rest 02", 113], ["Rest 24", 112]]
@@ -563,7 +563,7 @@ steps:
     requires: ["count-rows", "from-table", "summary-column", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
     friction: true
     any_column_order: true
-    text: "The last one, and I won't break it down. Among the delivered orders, the average subtotal in each city. Use o and r for the tables, and think about what happens first."
+    text: "The last one, and I won't break it down. Among the delivered orders, show each restaurant city with the average subtotal of the orders placed there. Use o and r for the tables, and think about which comes first in the sentence."
     model: "SELECT r.city, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.city"
     rows: 4
     result: [["Belo Horizonte", 59.83], ["Curitiba", 61.37], ["Rio de Janeiro", 60.98], ["São Paulo", 60.25]]
@@ -585,7 +585,7 @@ steps:
       - "Keep only the delivered orders."
       - "Pile by the city, and show each city with the average subtotal."
     return:
-      text: "Among the cancelled orders, the average delivery fee for each cuisine. Use o and r for the tables."
+      text: "Among the cancelled orders, show each cuisine with the average delivery_fee of the orders placed at restaurants that serve it. Use o and r for the tables."
       model: "SELECT r.cuisine, AVG(o.delivery_fee) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'cancelled' GROUP BY r.cuisine"
       any_column_order: true
       rows: 6
@@ -610,7 +610,7 @@ steps:
   - kind: "cold-check"
     requires: ["count-rows", "from-table", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
     any_column_order: true
-    text: "For each kind of vehicle, what was the average delivery fee of the orders its couriers carried? Use o and c for the tables."
+    text: "Show each vehicle with the average delivery_fee of the orders carried by couriers who ride it. Use o and c for the tables."
     model: "SELECT c.vehicle, AVG(o.delivery_fee) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle"
     rows: 3
     result: [["bike", 5.1], ["carro", 5.23], ["moto", 5.27]]

@@ -12,7 +12,7 @@ steps:
   - kind: "cold-check"
     requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "summary-column", "name-a-result", "name-a-table", "one-number-from-a-query", "keep-rows", "compare-signs"]
     any_column_order: true
-    text: "The customers who placed more orders than the average customer, each with how many orders they placed."
+    text: "Show the customer_id of each customer who placed more orders than the average customer, with how many orders that customer placed."
     model: "WITH counts AS (SELECT customer_id, COUNT(*) AS n FROM orders GROUP BY customer_id) SELECT customer_id, n FROM counts WHERE n > (SELECT AVG(n) FROM counts)"
     rows: 549
     after_run: "That is where we stopped last time. On we go."
@@ -264,7 +264,7 @@ steps:
   # 12
   - kind: "ask"
     requires: ["row-against-pile", "beside-each-row", "piles-that-stay", "summary-column", "from-table", "choose-columns", "commas", "compare-signs", "empty-cells"]
-    text: "Show each order's id and actual minutes, and whether it took longer than the average for orders promised the same time."
+    text: "Show each order's id and actual_minutes, and whether its actual_minutes is above the average actual_minutes of the orders with the same promised_minutes."
     model: "SELECT order_id, actual_minutes, actual_minutes > AVG(actual_minutes) OVER (PARTITION BY promised_minutes) FROM orders"
     rows: 6000
     narration:
@@ -321,7 +321,7 @@ steps:
   # 14
   - kind: "ask"
     requires: ["beside-comes-late", "row-against-pile", "piles-that-stay", "name-a-table", "name-a-result", "summary-column", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
-    text: "Show the id, customer and subtotal of every order that came to more than the average subtotal of its own customer."
+    text: "Show the id, customer and subtotal of every order whose subtotal is above the average subtotal of its own customer."
     model: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders) SELECT order_id, customer_id, subtotal FROM c WHERE subtotal > cust_avg"
     rows: 2690
     narration:
@@ -353,7 +353,7 @@ steps:
   # 15
   - kind: "ask"
     requires: ["beside-comes-late", "row-against-pile", "piles-that-stay", "name-a-table", "name-a-result", "summary-column", "keep-rows", "text-quotes", "compare-signs", "from-table", "choose-columns", "commas", "keep-before-piles"]
-    text: "Among the delivered orders, show the id and actual minutes of those that took longer than the average for orders promised the same time."
+    text: "Among the delivered orders, show the id and actual_minutes of those whose actual_minutes is above the average actual_minutes of the delivered orders with the same promised_minutes."
     model: "WITH t AS (SELECT order_id, actual_minutes, AVG(actual_minutes) OVER (PARTITION BY promised_minutes) AS typical FROM orders WHERE status = 'delivered') SELECT order_id, actual_minutes FROM t WHERE actual_minutes > typical"
     rows: 2534
     narration:
@@ -382,7 +382,7 @@ steps:
   # 16
   - kind: "ask"
     requires: ["beside-comes-late", "beside-each-row", "row-against-pile", "piles-that-stay", "name-a-table", "name-a-result", "count-rows", "summary-column", "keep-rows", "compare-signs", "from-table"]
-    text: "How many orders came to more than the average subtotal of their own customer?"
+    text: "How many orders have a subtotal above the average subtotal of their own customer?"
     model: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders) SELECT COUNT(*) FROM c WHERE subtotal > cust_avg"
     rows: 1
     result: [[2690]]
@@ -402,7 +402,7 @@ steps:
       - "Keep the rows above the average beside them."
       - "Now, in place of showing them, count them."
     return:
-      text: "How many orders came to more than the average subtotal of all the orders? Write the average beside each row first."
+      text: "How many orders have a subtotal above the average subtotal of all the orders? Write the average beside each row first."
       model: "WITH a AS (SELECT subtotal, AVG(subtotal) OVER () AS avg_all FROM orders) SELECT COUNT(*) FROM a WHERE subtotal > avg_all"
       rows: 1
       result: [[2574]]
@@ -515,7 +515,7 @@ steps:
     requires: ["beside-each-row", "piles-that-stay", "row-against-pile", "beside-comes-late", "name-a-table", "name-a-result", "summary-column", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
     friction: true
     any_column_order: true
-    text: "The last one, and I won't break it down. The orders that came to more than their own restaurant's average, with that average beside each."
+    text: "The last one, and I won't break it down. Show the id, restaurant and subtotal of every order whose subtotal is above the average subtotal of its own restaurant, with that average beside each."
     model: "WITH o AS (SELECT order_id, restaurant_id, subtotal, AVG(subtotal) OVER (PARTITION BY restaurant_id) AS rest_avg FROM orders) SELECT order_id, restaurant_id, subtotal, rest_avg FROM o WHERE subtotal > rest_avg"
     rows: 2588
     narration:
@@ -536,7 +536,7 @@ steps:
       - "From it, show the order, the restaurant, the subtotal and the average."
       - "Keep only the rows where the subtotal is above the average."
     return:
-      text: "Among the delivered orders, show the id, customer and subtotal of those that came to less than their own customer's average, with that average beside each."
+      text: "Among the delivered orders, show the id, customer and subtotal of those whose subtotal is below the average subtotal of their own customer's delivered orders, with that average beside each."
       model: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders WHERE status = 'delivered') SELECT order_id, customer_id, subtotal, cust_avg FROM c WHERE subtotal < cust_avg"
       rows: 2945
       narration:
@@ -559,7 +559,7 @@ steps:
   - kind: "cold-check"
     requires: ["beside-comes-late", "piles-that-stay", "name-a-table", "name-a-result", "count-rows", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
     any_column_order: true
-    text: "The id and cuisine of the restaurants whose cuisine is shared by more than 10 restaurants."
+    text: "Show the id and cuisine of the restaurants whose cuisine is shared by more than 10 restaurants."
     model: "WITH r AS (SELECT restaurant_id, cuisine, COUNT(*) OVER (PARTITION BY cuisine) AS n FROM restaurants) SELECT restaurant_id, cuisine FROM r WHERE n > 10"
     rows: 24
     after_run: "That's the sitting. We pick up from here next time."
