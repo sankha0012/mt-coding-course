@@ -11,6 +11,9 @@ CREATE TABLE IF NOT EXISTS items (
 CREATE TABLE IF NOT EXISTS events (
   id INTEGER PRIMARY KEY, run_id INTEGER, ts TEXT, step INTEGER, variant TEXT,
   typed TEXT, outcome TEXT, misses INTEGER);
+CREATE TABLE IF NOT EXISTS questions (
+  id INTEGER PRIMARY KEY, run_id INTEGER, step INTEGER, asked_at TEXT,
+  question TEXT, reply TEXT, provider TEXT, guarded INTEGER);
 """
 
 
@@ -69,5 +72,19 @@ class Store:
         cur = self.conn.execute(
             "SELECT e.id, e.run_id, r.lesson, e.ts, e.step, e.variant, e.typed, e.outcome, e.misses "
             "FROM events e JOIN runs r ON r.id = e.run_id ORDER BY e.id")
+        names = [d[0] for d in cur.description]
+        return [dict(zip(names, r)) for r in cur.fetchall()]
+
+    def add_question(self, run_id, step, question, reply, provider, guarded):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO questions (run_id, step, asked_at, question, reply, provider, guarded) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (run_id, step, _now(), question, reply, provider, int(guarded)))
+
+    def questions(self):
+        cur = self.conn.execute(
+            "SELECT q.id, q.run_id, r.lesson, q.step, q.asked_at, q.question, q.reply, q.provider, q.guarded "
+            "FROM questions q JOIN runs r ON r.id = q.run_id ORDER BY q.id")
         names = [d[0] for d in cur.description]
         return [dict(zip(names, r)) for r in cur.fetchall()]

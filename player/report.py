@@ -31,13 +31,27 @@ def build_report(events, lessons):
     return [r[4] for r in sorted(rows)]
 
 
+def build_question_report(questions):
+    """The steps the learner asked about most, each with the latest question. For the writer, never a score."""
+    groups = {}
+    for q in questions:
+        groups.setdefault((q["lesson"], q["step"]), []).append(q)
+    ranked = sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+    return [f"{lesson} step {step}: {len(qs)} question{'s' if len(qs) != 1 else ''}; latest: {qs[-1]['question']}"
+            for (lesson, step), qs in ranked]
+
+
 def main(argv=None):
     p = argparse.ArgumentParser(prog="player.report", description="Where the learner missed.")
     p.add_argument("--content", default="content")
     p.add_argument("--progress", default="progress")
     args = p.parse_args(argv)
+    store = Store(args.progress)
     _, lessons = load_content(args.content)
-    print("\n".join(build_report(Store(args.progress).events(), lessons)))
+    print("\n".join(build_report(store.events(), lessons)))
+    asked = build_question_report(store.questions())
+    if asked:
+        print("\nQuestions asked:\n" + "\n".join(asked))
     return 0
 
 
