@@ -51,6 +51,7 @@ Add `lang: python` to every step, including `give` steps. Python is judged by wh
 
 - The teacher speaks to one person, warmly, in short sentences. No em dashes. No lists in the teacher's lines.
 - Wording keeps changing. The same instruction is never phrased the same way twice. Narration varies in depth.
+- **A typed prompt is exact, whatever its tone.** Variety belongs in the teacher's talk and narration, never in what a prompt asks for. Every typed prompt states the table, the column names it uses, the rows to keep, and what to show ("show each status with the average subtotal of its orders"). No fragments ("Average subtotal by status."), no loose words ("typical", "came to", "big", "them") where a column name or a number would do. Read each prompt as a stranger would: if two different sentences could answer it, it is not finished. (Owner, 24 Nov 2026, after sitting lesson 1.)
 - A leading question points at the cause without giving the fix. Its `why` is stated after the learner gets it right.
 - Name only what the learner has met. A column or table the lesson has not shown is named in the prompt.
 - No invented mnemonics. "This just is" is a perfectly good reason when there is no other.

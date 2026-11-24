@@ -75,7 +75,7 @@ steps:
   - kind: ask
     requires: [star, from-table]
     text: |
-      There is a third table, couriers: the people who carry the orders. Show me all of it.
+      There is a third table, couriers: the people who carry the orders. Show me every row and every column of couriers.
     model: SELECT * FROM couriers
     rows: 200
     narration:
@@ -114,7 +114,7 @@ steps:
     imports: [compare-signs]
     requires: [star, from-table, keep-rows, compare-signs]
     text: |
-      Usually we don't want every row. To keep only some, we ask each row a question, and each row answers yes or no. Only the yes rows go on. The question is written with the signs you know from maths: >, < and =. For the big orders it reads `WHERE subtotal > 100`, and it comes straight after the table.
+      Usually we don't want every row. To keep only some, we ask each row a question, and each row answers yes or no. Only the yes rows go on. The question is written with the signs you know from maths: >, < and =. For the big orders it reads `WHERE subtotal > 100`, where subtotal is a column of orders, and it comes straight after the table.
 
       So: from orders, keeping the rows where the subtotal is above 100, show me everything.
     model: SELECT * FROM orders WHERE subtotal > 100
@@ -150,7 +150,7 @@ steps:
   - kind: ask
     requires: [count-rows, from-table, keep-rows, compare-signs]
     text: |
-      How many orders had a delivery fee under 5?
+      How many orders had a delivery_fee below 5? Count the orders.
     thinking_order: "From orders, keeping the ones where the delivery fee is under 5, how many?"
     model: SELECT COUNT(*) FROM orders WHERE delivery_fee < 5
     rows: 1
@@ -170,7 +170,7 @@ steps:
       - "How many orders are there?"
       - "Keep only the rows where the delivery fee is under 5: add the question after the table."
     return:
-      text: "How many orders came to more than 90?"
+      text: "How many orders had a subtotal above 90? Count the orders."
       model: "SELECT COUNT(*) FROM orders WHERE subtotal > 90"
       rows: 1
       result: [[950]]
@@ -208,7 +208,7 @@ steps:
   - kind: ask
     requires: [count-rows, from-table, keep-rows, compare-signs, text-quotes]
     text: |
-      The couriers ride a bike, a moto or a carro. How many of them ride a bike?
+      The couriers ride a bike, a moto or a carro. How many couriers ride a bike?
     model: SELECT COUNT(*) FROM couriers WHERE vehicle = 'bike'
     rows: 1
     result: [[73]]
@@ -277,7 +277,7 @@ steps:
     text: |
       Counting is one thing we can say about a set of rows. An average is another. The word is AVG. An average has to be the average of something, so the column goes inside its brackets: `AVG(subtotal)`. The count took a star there, because it counts whole rows.
 
-      From orders, the average subtotal?
+      From orders, what is the average subtotal?
     model: SELECT AVG(subtotal) FROM orders
     rows: 1
     result: [[60.4]]
@@ -312,7 +312,7 @@ steps:
     friction: true
     requires: [from-table, summary-column, keep-rows, compare-signs]
     text: |
-      This one I won't break down for you. What was the typical delivery fee on the big orders, the ones above 100?
+      This one I won't break down for you. From orders, what was the average delivery_fee for the orders whose subtotal is above 100?
     model: SELECT AVG(delivery_fee) FROM orders WHERE subtotal > 100
     rows: 1
     result: [[5.32]]
@@ -350,7 +350,7 @@ steps:
   - kind: ask
     requires: [from-table, summary-column, keep-rows, compare-signs, text-quotes]
     text: |
-      On the delivered orders, what was the average subtotal?
+      From orders, keeping only the delivered ones, what was the average subtotal?
     thinking_order: "From orders, keeping the delivered ones, the average subtotal."
     model: SELECT AVG(subtotal) FROM orders WHERE status = 'delivered'
     rows: 1
@@ -368,7 +368,7 @@ steps:
       - "From orders, the average subtotal."
       - "Keep only the delivered rows first."
     return:
-      text: "On the cancelled orders, what was the average delivery fee?"
+      text: "From orders, keeping only the cancelled ones, what was the average delivery_fee?"
       model: "SELECT AVG(delivery_fee) FROM orders WHERE status = 'cancelled'"
       rows: 1
       result: [[5.37]]
@@ -400,7 +400,7 @@ steps:
     new: [one-row-per-pile]
     requires: [count-rows, from-table, piles, one-row-per-pile]
     text: |
-      The restaurants are spread over four cities. Count the restaurants in each city, the same way: one pile per city. Before you run it, decide how many rows will come back.
+      The restaurants are spread over four cities. Count the restaurants in each city, the same way: one pile per city. Show only the counts. Before you run it, decide how many rows will come back.
     model: SELECT COUNT(*) FROM restaurants GROUP BY city
     rows: 4
     result: [[15], [6], [14], [25]]
@@ -419,7 +419,7 @@ steps:
       - "How many restaurants are there?"
       - "Sort them into piles by city before counting: add the piling part after the table."
     return:
-      text: "The couriers are spread over cities too. Count the couriers in each city, one pile per city. Before you run it, decide how many rows will come back."
+      text: "The couriers are spread over cities too. Count the couriers in each city, one pile per city. Show only the counts. Before you run it, decide how many rows will come back."
       model: "SELECT COUNT(*) FROM couriers GROUP BY city"
       rows: 4
       result: [[32], [30], [49], [89]]
@@ -476,7 +476,7 @@ steps:
     requires: [count-rows, from-table, piles, one-row-per-pile, pile-name, commas]
     any_column_order: true
     text: |
-      And the cities. How many restaurants per city?
+      And the cities. Show each city with the number of restaurants in it.
     model: SELECT city, COUNT(*) FROM restaurants GROUP BY city
     rows: 4
     result: [["Belo Horizonte", 15], ["Curitiba", 6], ["Rio de Janeiro", 14], ["São Paulo", 25]]
@@ -491,7 +491,7 @@ steps:
       - "Sort the restaurants into piles by city and count each pile."
       - "Put the pile's name in front."
     return:
-      text: "For each status, how many orders?"
+      text: "Show each status with the number of orders that have it."
       model: "SELECT status, COUNT(*) FROM orders GROUP BY status"
       any_column_order: true
       rows: 2
@@ -509,7 +509,7 @@ steps:
     requires: [from-table, summary-column, piles, one-row-per-pile, pile-name, commas, summary-per-pile]
     any_column_order: true
     text: |
-      Back to orders. What we say about each pile does not have to be a count. Any summary will do. Average subtotal by status.
+      Back to orders. What we say about each pile does not have to be a count. Any summary will do. Show each status with the average subtotal of its orders.
     model: SELECT status, AVG(subtotal) FROM orders GROUP BY status
     rows: 2
     result: [["cancelled", 59.99], ["delivered", 60.43]]
@@ -527,7 +527,7 @@ steps:
       - "Sort the orders into piles by status first, so that the average is said of each pile."
       - "Put the pile's name in front."
     return:
-      text: "The promised_minutes column holds 30, 40 or 50. For each promised time, what was the average subtotal?"
+      text: "The promised_minutes column holds 30, 40 or 50. For each promised time, show the promised time with the average subtotal."
       model: "SELECT promised_minutes, AVG(subtotal) FROM orders GROUP BY promised_minutes"
       any_column_order: true
       rows: 3
@@ -578,7 +578,7 @@ steps:
     requires: [from-table, summary-column, keep-rows, compare-signs, text-quotes, piles, one-row-per-pile, pile-name, commas, summary-per-pile, keep-before-piles]
     any_column_order: true
     text: |
-      The last one, and I won't break it down. For the delivered orders only, the average subtotal of each restaurant. Think about what happens first, keeping rows or making piles. Then write them in that order.
+      The last one, and I won't break it down. Keeping only the delivered orders, show each restaurant_id with the average subtotal of its orders. Think about which comes first in the sentence, keeping rows or making piles. Then write them in that order.
     model: SELECT restaurant_id, AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id
     rows: 60
     narration:
@@ -598,7 +598,7 @@ steps:
       - "Now sort what is left into piles by restaurant: the piling goes after the keeping."
       - "Put the pile's name in front."
     return:
-      text: "Among the cancelled orders only, what was each restaurant's average delivery fee? Think about what happens first, keeping rows or making piles."
+      text: "Keeping only the cancelled orders, show each restaurant_id with the average delivery_fee of its orders. Think about which comes first in the sentence, keeping rows or making piles."
       model: "SELECT restaurant_id, AVG(delivery_fee) FROM orders WHERE status = 'cancelled' GROUP BY restaurant_id"
       any_column_order: true
       rows: 60
@@ -623,7 +623,7 @@ steps:
     requires: [count-rows, from-table, keep-rows, compare-signs, text-quotes, piles, one-row-per-pile, pile-name, commas, keep-before-piles]
     any_column_order: true
     text: |
-      Counting only the couriers on bikes, how many are there in each city?
+      Counting only the couriers who ride a bike, show each city with how many of them there are.
     model: SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'bike' GROUP BY city
     rows: 4
     result: [["Belo Horizonte", 9], ["Curitiba", 13], ["Rio de Janeiro", 18], ["São Paulo", 33]]
