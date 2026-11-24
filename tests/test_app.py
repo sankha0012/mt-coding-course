@@ -86,6 +86,12 @@ def test_the_page_and_its_files_are_served(make_client):
     assert c.get("/static/style.css").status_code == 200
 
 
+def test_the_page_files_are_never_served_from_a_stale_browser_cache(make_client):
+    c = make_client()
+    for path in ("/", "/static/app.js", "/static/style.css"):
+        assert c.get(path).headers["cache-control"] == "no-cache"
+
+
 @pytest.fixture
 def course(tmp_path, data_dir):
     """A two-lesson course in a temporary folder. Returns a function that builds a client on it."""

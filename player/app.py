@@ -141,6 +141,13 @@ def make_app(content_dir, data_dir, progress_dir, rng=None):
     def post_new(body: NewRun | None = None):
         return player.new_run(go_next=bool(body and body.next))
 
+    @app.middleware("http")
+    async def revalidate(request, call_next):
+        # local app: always check for a newer page, so an edit shows at once
+        response = await call_next(request)
+        response.headers["Cache-Control"] = "no-cache"
+        return response
+
     @app.get("/")
     def index():
         return FileResponse(WEB / "index.html")

@@ -206,11 +206,24 @@ async function send(path, body) {
 }
 
 // ---- the try-it panel: the learner's own code on the same data. Nothing is saved or logged.
+// It opens to the right of the lesson, and the bar between them drags to resize.
+
+const keep = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* not kept; fine */ } },
+};
 
 function initPlay() {
-  const panel = el('details'); panel.id = 'play';
-  panel.appendChild(el('summary', null, 'Try your own code'));
-  const body = el('div', 'play-body');
+  const split = document.getElementById('split');
+  const gutter = el('div'); gutter.id = 'gutter'; gutter.tabIndex = 0;
+  gutter.setAttribute('role', 'separator'); gutter.setAttribute('aria-orientation', 'vertical');
+  gutter.setAttribute('aria-label', 'Resize the panes');
+  const panel = el('aside'); panel.id = 'play';
+  const opener = button('Try your own code', () => setOpen(true), 'tab'); opener.id = 'play-open';
+
+  const head = el('div', 'play-head');
+  head.append(el('span', null, 'Try your own code'), button('\u00d7', () => setOpen(false), 'close'));
+  head.lastChild.setAttribute('aria-label', 'Close this pane');
   const ed = makeEditor('sql');
   const out = el('div', 'play-out');
   const hint = el('p', 'hint');
@@ -233,10 +246,44 @@ function initPlay() {
   };
   ed.box.addEventListener('input', () => { hint.textContent = ''; });
   ed.box.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); go(); } });
-  body.append(tabs, ed.wrap, button('Run', go, 'primary small'), hint, out);
-  panel.appendChild(body);
+  panel.append(head, tabs, ed.wrap, button('Run', go, 'primary small'), hint, out);
   pick('sql');
-  document.querySelector('main').appendChild(panel);
+
+  const MIN = 280;
+  const setWidth = px => {
+    const w = Math.max(MIN, Math.min(px, window.innerWidth - MIN - 9));
+    panel.style.setProperty('--play-w', w + 'px');
+    keep.set('play-width', String(Math.round(w)));
+    return w;
+  };
+  const setOpen = on => {
+    keep.set('play-open', on ? '1' : '0');
+    if (on) {
+      split.append(gutter, panel); opener.remove(); ed.sync(); ed.box.focus();
+      // in a narrow window the pane stacks under the lesson, so bring it into view
+      if (getComputedStyle(gutter).display === 'none') panel.scrollIntoView({ block: 'start' });
+    }
+    else { gutter.remove(); panel.remove(); document.body.appendChild(opener); }
+  };
+  gutter.addEventListener('pointerdown', e => {
+    gutter.setPointerCapture(e.pointerId);
+    gutter.classList.add('drag'); document.body.classList.add('dragging');
+  });
+  gutter.addEventListener('pointermove', e => {
+    if (gutter.hasPointerCapture(e.pointerId)) setWidth(window.innerWidth - e.clientX - 4);
+  });
+  const stop = e => { gutter.classList.remove('drag'); document.body.classList.remove('dragging'); };
+  gutter.addEventListener('pointerup', stop);
+  gutter.addEventListener('pointercancel', stop);
+  gutter.addEventListener('keydown', e => {
+    const step = e.key === 'ArrowLeft' ? 24 : e.key === 'ArrowRight' ? -24 : 0;
+    if (step) { e.preventDefault(); setWidth(panel.getBoundingClientRect().width + step); }
+  });
+  window.addEventListener('resize', () => { if (panel.isConnected) setWidth(panel.getBoundingClientRect().width); });
+
+  const saved = parseInt(keep.get('play-width'), 10);
+  if (saved) panel.style.setProperty('--play-w', saved + 'px');
+  setOpen(keep.get('play-open') === '1');
 }
 
 initPlay();
