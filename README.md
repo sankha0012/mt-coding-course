@@ -8,6 +8,10 @@ A course that takes one person from "can read code but freezes on a blank page" 
 
 The owner already has the maths, statistics and ML. Companies are sending them into a coding round before deciding on a role, so the round is a gate that has to be cleared whatever job follows. A sibling project, `live-coding-gym`, trains reading, robustness and interview routine. It assumes the learner can already write some code. This course is the step before that.
 
+## Asking the teacher
+
+The Ask tab beside the code editor sends a question to Gemini or Groq, as you choose from its menu. The lesson waits, a side thread answers, and "Got it, back to the lesson" returns you to the step (decision C22). The model never sees a step's expected answer. To set it up, copy `.env.example` to `.env`, put in `GEMINI_API_KEY` and `GROQ_API_KEY` (and optionally `GEMINI_MODEL`, `GROQ_MODEL`), and restart the player. `.env` is git-ignored. Your questions are kept in `progress/progress.db`, and `uv run python -m player.report` lists the steps you asked about most.
+
 ## Read in this order
 
 | File | What it gives you |

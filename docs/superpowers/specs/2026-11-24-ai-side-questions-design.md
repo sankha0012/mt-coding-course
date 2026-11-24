@@ -52,11 +52,11 @@ Any question about SQL, Python, pandas or machine learning is fine, in or out of
 
 ### Providers and keys
 
-Gemini and Groq. Both offer an OpenAI-style chat endpoint, so one small function, `chat(messages) -> text`, serves both, using only `urllib` from the standard library. No SDK, no new dependency.
+Gemini and Groq. Both offer an OpenAI-style chat endpoint, so one small function, `chat(messages, provider=...) -> (text, provider)`, serves both, using only `urllib` from the standard library. No SDK, no new dependency.
 
-- Order: Gemini first, Groq as fallback when Gemini answers with a rate limit or a server error. The order is one line of configuration.
-- Settings live in the environment or in a git-ignored `.env` at the repository root: `GEMINI_API_KEY`, `GROQ_API_KEY`, and optional `GEMINI_MODEL`, `GROQ_MODEL`, `AI_ORDER`. The desktop launcher does not load the shell environment, so `.env` is what makes it work from there.
-- Model names are checked against each provider's model list on the first live call, then written as defaults. They change often, so they are configuration and not code.
+- Choice: a menu beside the Ask button lists the providers that have a key. The learner picks one, the choice is remembered in the browser, and only that provider is asked. There is no silent fallback: if it fails, the calm line says so and suggests the other one. With no choice made, the first provider that has a key is used.
+- Settings live in the environment or in a git-ignored `.env` at the repository root: `GEMINI_API_KEY`, `GROQ_API_KEY`, and optional `GEMINI_MODEL`, `GROQ_MODEL`. The desktop launcher does not load the shell environment, so `.env` is what makes it work from there.
+- Model names are set in `.env`. They change often, so they are configuration and not code.
 - The key is read on the server only. It never appears in a response, a log line or the progress file.
 - With no key, or both providers failing, the Ask tab says so in one calm line and the lesson is unaffected.
 - Replies are not streamed. A short "thinking" line shows until the reply arrives. Streaming can be added later if the wait bothers the learner.
@@ -73,7 +73,7 @@ A new table `questions(id, run_id, step, asked_at, question, reply, provider, gu
 | `player/ai.py` | builds the context, calls `chat`, applies the guard, returns the reply | `Runner`, the engine's read-only view of the current step, `content/ui.yaml` |
 | `player/llm.py` | `chat(messages)` over `urllib`, provider order, fallback, `.env` loading | standard library |
 | `player/store.py` | `questions` table, `add_question`, `questions_by_step` | sqlite |
-| `player/app.py` | `POST /api/ask` (`{question, thread}` returns `{reply}`), and `POST /api/thread/close` returns the pending step view | the above |
+| `player/app.py` | `POST /api/ask` (`{question, thread, provider}` returns `{reply, ok, guarded}`) and `GET /api/providers` (the providers that have a key) | the above |
 | `player/web/app.js`, `style.css` | tabs, side-thread blocks, the back button | the routes |
 
 The engine itself gains one read-only method that returns what the model may see for the current step. It gains no new state.
@@ -93,8 +93,8 @@ A live check with the owner's keys, in a scratch progress folder, ends the work.
 
 ## Open for the owner
 
-1. Provider order: Gemini first (assumed) or Groq first.
-2. Whether the learner wants the reply streamed from the start.
+1. Provider: a menu, not a default order (decided 24 Nov 2026).
+2. Streaming: not at first (decided 24 Nov 2026).
 
 ## Decision to add to `docs/06-decisions.md` once approved
 
