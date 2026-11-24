@@ -38,42 +38,58 @@ Read the miss log with the owner. Revise lesson 1. Settle O2, O3, O4 and O5 from
 
 Done when: lesson 1 has been revised once and the open questions it could answer are closed.
 
-## 6. Finish the SQL foundation
+The milestones below replaced the earlier 6 to 11 on 24 Nov 2026, when the goal was restated as fluency (decision C9) and the lesson map in `docs/03-curriculum.md` was agreed. Code is written only with the owner's go-ahead, one piece at a time.
 
-Panorama movements 1 to 8, woven, with cold checks between sittings.
+## 6. Approve the strand maps
 
-Done when: the owner can do pass-bar tasks 1 and 2 from a blank page, untimed.
+The owner reads `docs/maps/sql.md`, `docs/maps/python.md` and `docs/maps/pandas-ml.md` and answers the questions at the end of each.
 
-## 7. SQL at interview level
+Done when: the three maps are approved.
 
-Queries on query results, window functions, rows with no match, dates, conditional buckets. Write the panorama for this layer first, since it does not exist yet.
+## 7. The player plays a course
 
-Done when: the owner can do pass-bar tasks 3 to 6, untimed.
+More than one lesson: a course order across strands, "next lesson" at the end of a sitting, and an opening cold check drawn from an earlier lesson. The lesson format and the checker gain shape grade: a step lists the spellings it supplies, and the checker confirms each appears in the step's text.
 
-## 8. Python foundation
+Done when: lesson 1 and a second lesson play in order, and the second opens with a cold check from the first.
 
-Add Python execution and result checking to the player. Write the strand from the draft opening onward.
+## 8. Finish the SQL foundation
 
-Done when: the owner can write a small complete script from a blank page, and can do the core of pass-bar tasks 7 and 8.
+SQL-2, SQL-3 and SQL-4, one at a time: write the YAML, pass the checker, the owner sits it, read the miss report, revise.
 
-## 9. Python at interview level
+Done when: the owner has sat SQL-4, and can do pass-bar tasks 1 and 2.
 
-Sorting by a rule, text as pieces, loops that carry state, two positions through sorted data, tests and cost.
+## 9. Python foundation
 
-Done when: pass-bar tasks 7 to 12, untimed.
+Add Python to the checker and the player: run the learner's code in a separate process with a time limit, judge it by what it produces, and indent automatically after a colon. Then PY-1 to PY-6.
 
-## 10. pandas and ML code
+Done when: the owner has sat PY-6, and can write the function behind pass-bar task 8.
 
-Write the pandas panorama, then the strand, then the fit, predict and evaluate routine and the two by-hand pieces.
+## 10. pandas foundation
 
-Done when: pass-bar tasks 13 to 17, untimed.
+Add pandas to the checker and the player. Then PD-1 to PD-4, and cold sitting A.
 
-## 11. Speed and exams
+Done when: the owner has sat cold sitting A. Pass 1 is complete: something runs in all three strands.
 
-Either build stage 3 here or hand it to the gym, per O6.
+## 11. The interview layer in SQL
 
-Done when: the owner completes all seventeen tasks inside their time limits, without an assistant, explaining aloud.
+SQL-5 to SQL-9. SQL-8 needs `data/coupons.csv`, a new small file.
+
+Done when: the owner has sat SQL-9, and can do pass-bar tasks 3 to 6.
+
+## 12. The interview layer in Python
+
+PY-7 to PY-10.
+
+Done when: the owner has sat PY-10, and can do pass-bar tasks 7, 9, 11 and 12.
+
+## 13. Windows in pandas, and ML code
+
+Add scikit-learn. Settle the data question first: the practice data has nothing to predict (see `docs/maps/pandas-ml.md`). Then PD-5, ML-1, ML-2, ML-3, and cold sitting B.
+
+Done when: the owner has written k-fold cross-validation by hand in ML-3 and sat cold sitting B.
 
 ## A note on order
 
-SQL at interview level (milestone 7) is placed before Python on purpose. Medium SQL with window functions is the part of the pass bar that appears in almost every source and is most often auto-graded, so it is the highest-value thing to reach early. If an interview with a known format arrives, reorder to suit it.
+The order is breadth first (decision C12): the foundation of all three strands before the interview layer of any, so that no round finds the learner with nothing to say in one of them. If an interview with a known format arrives, reorder to suit it. The likeliest change is to bring milestone 11 forward, since medium SQL with window functions appears in almost every source and is the part most often auto-graded.
+
+Speed and mock exams are not built here. They moved to `live-coding-gym` (decision O6, closed 24 Nov 2026).

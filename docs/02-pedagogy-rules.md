@@ -95,9 +95,9 @@ One sentence from the guidebook governs everything else: the magic "is not to be
 
 **F1. Cold checks.** Each sitting opens with one blank-page prompt from the previous sitting and closes with one from the current one. They are unscored. Their only job is to tell the script where to restart.
 
-**F2. State the limit.** Stages 1 and 2 are acquisition. They do not make the learner fast.
+**F2. State the limit.** The course is acquisition. It does not make the learner fast.
 
-**F3. Speed is a separate stage.** Timers appear only in stage 3.
+**F3. Speed is trained elsewhere.** No timer appears in this course. Timed practice lives in `live-coding-gym` (decision O6).
 
 ## G. For the writer
 

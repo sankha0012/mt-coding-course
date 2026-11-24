@@ -40,6 +40,18 @@ A lesson is one sitting of roughly ten to twenty minutes. It is an ordered list 
 | Friction | A flag for steps that are deliberately not broken down. |
 | Note for the writer | Why the step is here. Never shown to the learner. |
 
+## Grades
+
+Every thought is core, shape or name only (decision C10, explained in `docs/01-scope.md`).
+
+- A **core** thought is asked for and comes back spaced.
+- A **shape** thought is asked for only in steps whose teacher's line carries the spelling. The line also says plainly that this is something people look up, for example: "This one you would look up. The thought is: cut a date down to its month. Here it is spelled `strftime('%Y-%m', created_at)`." A shape step lists the spellings it supplies, and the checker confirms each appears in the step's text. This is not a reference panel: the spelling arrives in the teacher's voice, at the moment it is needed.
+- A **name only** thought appears in one Aside and in no prompt.
+
+## Cold sittings
+
+A cold sitting is a short lesson file made only of Cold check steps, drawn from every strand taught so far. It has no ladder, no narration and no score. Two exist, one after each pass (see `docs/03-curriculum.md`).
+
 ## What a Give step carries
 
 The teacher's text, the example in use, the one-line reason or the statement that this just is, the new thought's identifier, and whether what is imported is being named (for example "commas, as in English").

@@ -42,7 +42,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 
 ### What must be absent
 
-- R17. No timer, score, streak, percentage or leaderboard in stages 1 and 2.
+- R17. No timer, score, streak, percentage or leaderboard.
 - R18. No reference panel, cheat sheet, glossary or notes feature. The only help is the ladder.
 - R19. No instructions screen before the first lesson. Rules of engagement appear in the lesson text when they first matter.
 - R20. No multiple choice.
@@ -58,7 +58,9 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - R24. Lessons are plain files, separate from app code.
 - R25. A content checker implements the seven checks in `docs/04-script-format.md` and runs before any lesson is shipped.
 
-### Stage 3 only
+### Not built here
+
+These were planned as a third, timed stage. They moved to `live-coding-gym` on 24 Nov 2026 (decision O6) and are kept only as a record.
 
 - R26. Timed drills on the pass-bar tasks, with the timer visible.
 - R27. A mode where the tables cannot be seen and only a description of their columns is given.
@@ -69,7 +71,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - One learner, one machine. Starting it should take one command or one double-click.
 - Works offline once set up.
 - Rough visual finish is fine. The teacher's text must be comfortable to read, because the lesson is a conversation.
-- The teacher's voice is warm. Nothing in the interface should feel like an exam before stage 3.
+- The teacher's voice is warm. Nothing in the interface should feel like an exam.
 
 ## Running the learner's code
 

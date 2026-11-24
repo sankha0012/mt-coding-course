@@ -4,7 +4,7 @@ A course that teaches SQL, basic Python and pandas to one learner by the Michel 
 
 ## State of the repository
 
-Design, one full lesson script (`content/sql/`), a content checker, and the first player. Run the checker with `uv run python -m checker content/sql`, the player with `uv run python -m player`, the miss report with `uv run python -m player.report`, and the tests with `uv run pytest`. The progress file is `progress/progress.db`: never delete, overwrite or reset it, and test against a scratch folder. The owner has not yet sat the lesson: do not revise lesson text before they have. The research is clear that the quality lives in the script and not in the question-and-answer mechanism.
+Design, one full lesson script (`content/sql/`), a content checker, and the first player. Run the checker with `uv run python -m checker content/sql`, the player with `uv run python -m player`, the miss report with `uv run python -m player.report`, and the tests with `uv run pytest`. The progress file is `progress/progress.db`: never delete, overwrite or reset it, and test against a scratch folder. The owner has not yet sat the lesson: do not revise lesson text before they have. The goal is fluency, not mastery (`docs/01-scope.md`): about 27 lessons in two passes, planned in `docs/03-curriculum.md` and `docs/maps/`. The maps await the owner's approval. The research is clear that the quality lives in the script and not in the question-and-answer mechanism.
 
 ## What must not be broken
 
@@ -14,7 +14,7 @@ These come from `docs/02-pedagogy-rules.md`. A feature or a lesson that violates
 2. One new thought per step. If a step needs two, split it.
 3. Never ask for anything the script has not already given the means to build.
 4. Nothing is ever marked wrong. A miss moves the learner down the correction ladder and brings the sentence back later.
-5. No timer, score, streak or speed pressure anywhere in stages 1 and 2.
+5. No timer, score, streak or speed pressure anywhere in this course. Timed practice lives in the gym.
 6. No reference panel, cheat sheet or notes feature.
 7. Two consecutive prompts must not be answerable by editing one slot of the previous answer.
 8. A step must leave nothing behind for the learner to remember as an arbitrary rule. If it does, redesign or postpone the step.
@@ -26,7 +26,7 @@ These come from `docs/02-pedagogy-rules.md`. A feature or a lesson that violates
 - **Content and code stay apart.** Lessons are plain files. The app reads them.
 - **Every expected answer must run.** No lesson ships if its own model answers fail against the data in `data/`. The checker does this. Run it after every content change.
 - **Every prompt must pass the audit.** Each step lists the thoughts it requires, and a check confirms each was introduced in an earlier step. See `docs/04-script-format.md`.
-- **Write for the owner's review.** A lesson script is reviewed and approved in readable form before it is wired into the app.
+- **Write for the owner's review.** The owner approves a map per strand (`docs/maps/`), which lists each lesson's thoughts and the sentence it builds to. A lesson is then written as YAML, passes the checker, and is reviewed by the owner sitting it. The miss log drives revisions. Do not write a lesson that is not in an approved map.
 - **Verify before claiming.** Run the thing and read the output before saying it works.
 - **Single user, local.** Rough visual finish is acceptable. Sloppy lesson content is not.
 - **Keep the owner's data safe.** Never delete or overwrite a progress file. Test against a scratch copy.
