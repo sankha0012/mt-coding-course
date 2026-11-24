@@ -86,9 +86,12 @@ body.dragging { cursor: col-resize; user-select: none; }
 .play-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; color: var(--muted); font-size: 0.9rem; }
 button.close { margin: 0; border: 0; background: transparent; color: var(--muted); font-size: 1.1rem; cursor: pointer; padding: 0.1rem 0.5rem; border-radius: 6px; }
 button.close:hover { background: var(--code); }
-#play-open { position: fixed; top: 0.8rem; right: 1rem; z-index: 5; margin: 0; padding: 0.35rem 1rem; border: 1px solid var(--line); border-radius: 999px;
-  background: var(--card); color: var(--muted); font: 0.85rem system-ui, sans-serif; cursor: pointer; box-shadow: var(--shadow); }
-#play-open:hover { color: var(--accent); border-color: var(--accent); }
+#play-open { position: fixed; top: 0.8rem; right: 1rem; z-index: 5; display: flex; gap: 0.4rem; }
+#play-open button.tab { background: var(--card); box-shadow: var(--shadow); padding: 0.35rem 1rem; }
+#play-open button.tab:hover { color: var(--accent); border-color: var(--accent); }
+#play > [hidden] { display: none; }
+.empty { color: var(--muted); font-style: italic; opacity: 0.7; }
+.play-head .tabs { margin-bottom: 0; }
 @media (max-width: 48rem) {
   #split { display: block; height: auto; }
   #lesson { overflow: visible; }

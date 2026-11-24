@@ -3,7 +3,7 @@ const inputEl = document.getElementById('input');
 let shown = 0;
 
 async function api(path, body) {
-  const options = (path === '/api/run' || path === '/api/providers') ? {} : {
+  const options = ['/api/run', '/api/providers', '/api/data'].includes(path) ? {} : {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) };
   const r = await fetch(path, options);
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -276,6 +276,8 @@ function renderInput(pending) {
   show('code');
 }
 
+let onView = () => {};
+
 function render(view) {
   if (view.items.length < shown) { shown = 0; threads.length = 0; }  // a new sitting starts clean
   itemsEl.replaceChildren();
@@ -292,6 +294,7 @@ function render(view) {
   lastTeacher = t ? { text: t.text, lang: t.lang || 'sql' } : null;
   renderInput(view.pending);
   inputEl.scrollIntoView({ block: 'end', behavior: 'smooth' });
+  onView();
 }
 
 async function send(path, body) {
@@ -313,10 +316,18 @@ function initPlay() {
   gutter.setAttribute('role', 'separator'); gutter.setAttribute('aria-orientation', 'vertical');
   gutter.setAttribute('aria-label', 'Resize the panes');
   const panel = el('aside'); panel.id = 'play';
-  const opener = button('Try your own code', () => setOpen(true), 'tab'); opener.id = 'play-open';
+  const opener = el('div'); opener.id = 'play-open';
+  opener.append(button('Data', () => setOpen(true, 'data'), 'tab'),
+                button('Try your own code', () => setOpen(true, 'try'), 'tab'));
 
   const head = el('div', 'play-head');
-  head.append(el('span', null, 'Try your own code'), button('\u00d7', () => setOpen(false), 'close'));
+  const viewTabs = el('div', 'tabs');
+  const viewButtons = {};
+  [['try', 'Try'], ['data', 'Data']].forEach(([v, label]) => {
+    viewButtons[v] = button(label, () => showView(v), 'tab');
+    viewTabs.appendChild(viewButtons[v]);
+  });
+  head.append(viewTabs, button('\u00d7', () => setOpen(false), 'close'));
   head.lastChild.setAttribute('aria-label', 'Close this pane');
   const ed = makeEditor('sql');
   const out = el('div', 'play-out');
@@ -340,8 +351,70 @@ function initPlay() {
   };
   ed.box.addEventListener('input', () => { hint.textContent = ''; });
   ed.box.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); go(); } });
-  panel.append(head, tabs, ed.wrap, button('Run', go, 'primary small'), hint, out);
+  const tryView = el('div');
+  tryView.append(tabs, ed.wrap, button('Run', go, 'primary small'), hint, out);
+  const dataView = el('div', 'data-view');
+  panel.append(head, tryView, dataView);
   pick('sql');
+
+  let view = keep.get('play-view') === 'data' ? 'data' : 'try';
+  let shownKey = null;  // the dataset now drawn
+
+  const dataTable = t => {
+    const box = el('div');
+    const n = t.total.toLocaleString();
+    const note = t.total > t.rows.length ? n + ' rows, first ' + t.rows.length + ' shown' : n + ' rows';
+    const table = el('table');
+    const hr = el('tr');
+    t.columns.forEach(c => hr.appendChild(el('th', null, c)));
+    table.appendChild(hr);
+    t.rows.forEach(r => {
+      const tr = el('tr');
+      r.forEach(v => {
+        const td = el('td');
+        if (v === null) td.appendChild(el('span', 'empty', 'empty')); else td.textContent = v;
+        tr.appendChild(td);
+      });
+      table.appendChild(tr);
+    });
+    const wrap = el('div', 'tablewrap'); wrap.appendChild(table);
+    box.append(el('div', 'total', note), wrap);
+    return box;
+  };
+
+  const drawData = tables => {
+    if (!tables.length) { dataView.replaceChildren(el('p', 'hint', 'There is no data for this step.')); return; }
+    const chips = el('div', 'tabs');
+    const grid = el('div');
+    const buttons = tables.map((t, i) => { const b = button(t.name, () => show(i), 'tab'); chips.appendChild(b); return b; });
+    const show = i => {
+      buttons.forEach((b, j) => b.classList.toggle('on', i === j));
+      grid.replaceChildren(dataTable(tables[i]));
+    };
+    dataView.replaceChildren(chips, grid);
+    show(0);
+  };
+
+  const loadData = async () => {
+    if (!panel.isConnected || view !== 'data') return;
+    try {
+      const d = await api('/api/data');
+      if (d.data === shownKey) return;  // same dataset: stay as it is
+      shownKey = d.data;
+      drawData(d.tables);
+    } catch (e) {
+      shownKey = null;
+      dataView.replaceChildren(el('p', 'hint', 'The data did not load.'));
+    }
+  };
+
+  const showView = v => {
+    view = v; keep.set('play-view', v);
+    tryView.hidden = v !== 'try'; dataView.hidden = v !== 'data';
+    Object.entries(viewButtons).forEach(([n, b]) => b.classList.toggle('on', n === v));
+    if (v === 'try') { ed.sync(); ed.box.focus(); } else loadData();
+  };
+  onView = loadData;
 
   const MIN = 280;
   const setWidth = px => {
@@ -350,10 +423,11 @@ function initPlay() {
     keep.set('play-width', String(Math.round(w)));
     return w;
   };
-  const setOpen = on => {
+  const setOpen = (on, v) => {
     keep.set('play-open', on ? '1' : '0');
     if (on) {
-      split.append(gutter, panel); opener.remove(); ed.sync(); ed.box.focus();
+      split.append(gutter, panel); opener.remove();
+      showView(v || view);
       // in a narrow window the pane stacks under the lesson, so bring it into view
       if (getComputedStyle(gutter).display === 'none') panel.scrollIntoView({ block: 'start' });
     }
