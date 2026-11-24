@@ -162,7 +162,7 @@ steps:
       - "Write each pile's average beside its rows, with the summary's name in quotes."
       - "Keep it in a column called usual_fee, and print its first five values."
     return:
-      text: "For each restaurant, its average promised time, written beside its orders in a column called `rest_promise`. Print the first five values of that column."
+      text: "For each restaurant, the average promised_minutes of its orders, written beside each order in a column called `rest_promise`. Print the first five values of that column."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -185,7 +185,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
-    text: "Now use it. How many orders came to more than their own restaurant's average subtotal? Print the number."
+    text: "Now use it. How many orders had a subtotal above the average subtotal of their own restaurant? Print the number."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')

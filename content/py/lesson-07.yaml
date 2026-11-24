@@ -13,7 +13,7 @@ steps:
   - kind: "cold-check"
     requires: ["conditional-count", "buckets", "piles", "one-row-per-pile", "pile-name", "commas"]
     any_column_order: true
-    text: "For each promised time, how many of the orders were cancelled?"
+    text: "Show each promised_minutes value with how many of its orders were cancelled."
     model: "SELECT promised_minutes, SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY promised_minutes"
     rows: 3
     result: [[30, 117], [40, 140], [50, 142]]

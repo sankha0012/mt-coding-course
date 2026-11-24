@@ -114,7 +114,7 @@ steps:
       - "Read restaurants.csv into a table and give it a name: a name, one equals sign, then pd.read_csv with the file's name in quotes."
       - "Print how many rows it has. The word that counted a list counts these."
     return:
-      text: "There is a small file called coupons.csv. Read it in and tell me how many rows it has."
+      text: "There is a small file called coupons.csv. Read it in and show how many rows it has."
       model: |
         import pandas as pd
         coupons = pd.read_csv('coupons.csv')
@@ -323,7 +323,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "text-quotes"]
-    text: "What was the average delivery fee over all the orders?"
+    text: "Show the average delivery_fee over all the orders."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -360,7 +360,7 @@ steps:
       - "Take the delivery fee column out of it."
       - "Say the summary after the column: the average is called mean."
     return:
-      text: "The promised_minutes column says how long each delivery was promised for. What was the average promise?"
+      text: "The promised_minutes column says how long each delivery was promised for. Show the average promised_minutes over all the orders."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -376,7 +376,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows"]
-    text: "The actual_minutes column says how long each delivery really took. What was the longest?"
+    text: "The actual_minutes column says how long each delivery really took. Show the largest actual_minutes."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -406,7 +406,7 @@ steps:
       - "Read orders.csv, and take the column that holds the minutes the deliveries really took."
       - "Say the summary after it: the biggest is called max."
     return:
-      text: "What did all the subtotals add up to?"
+      text: "Show the total of all the subtotals."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -532,7 +532,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "how-many", "compare-signs"]
-    text: "How many orders came to more than 100?"
+    text: "Show how many orders had a subtotal above 100."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -564,7 +564,7 @@ steps:
       - "Hand that to the brackets of the table, so only the yes rows are kept."
       - "Count what came out."
     return:
-      text: "How many orders were promised in under 40 minutes?"
+      text: "Show how many orders had a promised_minutes below 40."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -580,7 +580,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes"]
-    text: "What was the average delivery fee of the cancelled orders?"
+    text: "Show the average delivery_fee of the cancelled orders."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -611,7 +611,7 @@ steps:
       - "Hand that to the table's brackets, so only the cancelled orders stay."
       - "Take the delivery fee column of what is left, and say its average."
     return:
-      text: "What was the average delivery fee of the delivered orders?"
+      text: "Show the average delivery_fee of the delivered orders."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -693,7 +693,7 @@ steps:
       - "Print how many rows that table has."
       - "Print the average of its subtotal column."
     return:
-      text: "Name the orders that came to more than 90, then print how many there are, and their average delivery fee."
+      text: "Name the orders with a subtotal above 90, then print how many there are, and their average delivery_fee."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -713,7 +713,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "compare-signs"]
-    text: "This one I won't break down. What was the typical delivery fee on the big orders, the ones above 100?"
+    text: "This one I won't break down. Show the average delivery_fee of the orders with a subtotal above 100."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -739,7 +739,7 @@ steps:
       - "Of the rows left, take the delivery fee column."
       - "Say its average."
     return:
-      text: "How long did a delivery really take, on average, for the orders promised in 50 minutes?"
+      text: "Show the average actual_minutes of the orders with a promised_minutes of 50."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -814,7 +814,7 @@ steps:
   - kind: "cold-check"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "how-many", "text-quotes"]
-    text: "How many of the couriers ride a bike? Start from nothing."
+    text: "Show how many couriers ride a bike. Start from nothing."
     model: |
       import pandas as pd
       couriers = pd.read_csv('couriers.csv')

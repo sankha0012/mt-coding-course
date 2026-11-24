@@ -15,7 +15,7 @@ steps:
     requires: ["from-table", "more-summaries", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary"]
     ordered: true
     any_column_order: true
-    text: "For each promised time, what was the longest real delivery time? Show the longest first."
+    text: "Show each promised_minutes value with the largest actual_minutes of its orders, the largest first."
     model: "SELECT promised_minutes, MAX(actual_minutes) FROM orders GROUP BY promised_minutes ORDER BY MAX(actual_minutes) DESC"
     rows: 3
     result: [[50, 109.9], [40, 95.5], [30, 63.9]]

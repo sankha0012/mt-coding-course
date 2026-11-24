@@ -263,7 +263,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "ml-imports", "how-many"]
     supplies: ["from sklearn.model_selection import train_test_split"]
-    text: "Bring in the splitter with `from sklearn.model_selection import train_test_split`. Build X from the distance and the bag size, and y as whether a delivery was late at all. Hold back a quarter of the rows. Print how many rows are in the training part and how many in the test part."
+    text: "Bring in the splitter with `from sklearn.model_selection import train_test_split`. Build X from the distance and the bag size, and y as whether a delivery was late at all. Hold back a quarter of the rows. Print how many rows are in the training part and how many in the test part. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       import pandas as pd
@@ -308,7 +308,7 @@ steps:
       - "Bring in the splitter. Then give it X, y, the share to hold back and the fixed shuffle."
       - "Name the four pieces in the order they come, and print the lengths of the two X pieces."
     return:
-      text: "Use `from sklearn.model_selection import train_test_split` once more. X holds the rain and the distance, y is whether a delivery was late, and a tenth of the rows are held back. Print the number of rows in the test part, and then in the training part."
+      text: "Use `from sklearn.model_selection import train_test_split` once more. X holds the rain and the distance, y is whether a delivery was late, and a tenth of the rows are held back. Print the number of rows in the test part, and then in the training part. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         import pandas as pd
@@ -331,7 +331,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "ml-imports", "mean-of-yes-no"]
     supplies: ["from sklearn.model_selection import train_test_split"]
-    text: "The held-back rows should look like the rest. Using `from sklearn.model_selection import train_test_split`, take all three columns for X and lateness for y, and hold back a fifth. Print the share of late deliveries among the training rows, and then among the test rows, each rounded to three places."
+    text: "The held-back rows should look like the rest. Using `from sklearn.model_selection import train_test_split`, take all three columns for X and lateness for y, and hold back a fifth. Print the share of late deliveries among the training rows, and then among the test rows, each rounded to three places. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       import pandas as pd
@@ -380,7 +380,7 @@ steps:
       - "The share of yes in a yes-or-no column is its mean. Which piece of y is the training part?"
       - "Print the two means, training first."
     return:
-      text: "Using `from sklearn.model_selection import train_test_split` again, take the distance and the rain for X and whether the delivery took more than 40 minutes for y. Hold back a third of the rows. Print the share of yes in the training rows and then in the test rows, rounded to three places."
+      text: "Using `from sklearn.model_selection import train_test_split` again, take the distance and the rain for X and whether the delivery took more than 40 minutes for y. Hold back 33 percent of the rows. Print the share of yes in the training rows and then in the test rows, rounded to three places. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         import pandas as pd
@@ -449,7 +449,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "ml-imports", "total"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
-    text: "Fit a model of your own. Bring in what you need with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the rain and the distance, y is whether a delivery was late, and a fifth of the rows are held back. Make the model, fit it on the training rows, and predict the held-back rows. Print how many of the predictions are True."
+    text: "Fit a model of your own. Bring in what you need with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the rain and the distance, y is whether a delivery was late, and a fifth of the rows are held back. Make the model, fit it on the training rows, and predict the held-back rows. Print how many of the predictions are True. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -521,7 +521,7 @@ steps:
       - "Make the model, name it, and fit it on the training rows: features first, answers second."
       - "Predict the held-back rows, and print how many predictions are True."
     return:
-      text: "Again, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model on the training rows and print how many of the predictions on the held-back rows are False."
+      text: "Again, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model on the training rows and print how many of the predictions on the held-back rows are False. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -554,7 +554,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "hold-rows-back", "make-fit-predict", "ml-imports", "yes-no-as-column", "mean-of-yes-no"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
-    text: "How often were the guesses right? Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, with all three columns for X and lateness for y, a fifth held back, and a model fitted on the training rows. Then compare each prediction with the true answer: ask each row whether the two are equal, and take the mean of that column. Print it rounded to three places."
+    text: "How often were the guesses right? Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, with all three columns for X and lateness for y, a fifth held back, and a model fitted on the training rows. Then compare each prediction with the true answer: ask each row whether the two are equal, and take the mean of that column. Print it rounded to three places. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -611,7 +611,7 @@ steps:
       - "Ask each row: does the prediction equal the true answer? You have a column of yes and no."
       - "The mean of that column is the share of yes. Print it rounded."
     return:
-      text: "Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression` again, with the rain and the distance for X, lateness for y, and a third held back. Fit a model and predict the held-back rows. What share of the held-back rows were both guessed late and truly late? Print it rounded to three places."
+      text: "Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression` again, with the rain and the distance for X, lateness for y, and 33 percent held back. Fit a model and predict the held-back rows. What share of the held-back rows were both guessed late and truly late? Print it rounded to three places. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -683,7 +683,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "hold-rows-back", "make-fit-predict", "score", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import accuracy_score"]
-    text: "Score a model with the library. Bring in what you need with `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit on the training rows, and print the accuracy on the held-back rows, rounded to three places."
+    text: "Score a model with the library. Bring in what you need with `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit on the training rows, and print the accuracy on the held-back rows, rounded to three places. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -743,7 +743,7 @@ steps:
       - "Predict the held-back rows."
       - "Hold the truth and the predictions up against each other with the metric, and print it rounded."
     return:
-      text: "Once more, with `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`. X holds the rain and the distance, y is whether a delivery was late, and 30 percent of the rows are held back. Print the accuracy on the held-back rows, rounded to three places."
+      text: "Once more, with `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`. X holds the rain and the distance, y is whether a delivery was late, and 30 percent of the rows are held back. Print the accuracy on the held-back rows, rounded to three places. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -799,7 +799,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
-    text: "Score with AUC. Bring in `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance and the bag size, y is whether a delivery was late, and a fifth of the rows are held back. Fit a model on the training rows, and print the AUC on the held-back rows, rounded to three places."
+    text: "Score with AUC. Bring in `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance and the bag size, y is whether a delivery was late, and a fifth of the rows are held back. Fit a model on the training rows, and print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -872,7 +872,7 @@ steps:
       - "Ask for the probabilities of the held-back rows, and take the column for late."
       - "Hold the truth and those probabilities up against each other with the metric, and print it rounded."
     return:
-      text: "With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the rain and the distance, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print its AUC on the held-back rows, rounded to three places."
+      text: "With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the rain and the distance, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print its AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -899,7 +899,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
-    text: "A probability can answer a question of its own. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, take the rain and the distance for X, lateness for y, and hold back a fifth. Fit a model, and take its chance of late for the held-back rows. Print how many of those rows got a chance above 0.5."
+    text: "A probability can answer a question of its own. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, take the rain and the distance for X, lateness for y, and hold back a fifth. Fit a model, and take its chance of late for the held-back rows. Print how many of those rows got a chance above 0.5. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -955,7 +955,7 @@ steps:
       - "Take the chance of late for the held-back rows: the second column."
       - "Keep the chances above 0.5, and count them."
     return:
-      text: "Once more, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print how many of the held-back rows got a chance of late above 0.6."
+      text: "Once more, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print how many of the held-back rows got a chance of late above 0.6. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -982,7 +982,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
-    text: "Which single column knows the most? With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the distance in X, let y be whether a delivery was late, hold back a fifth, and print the AUC of a logistic regression on the held-back rows, rounded to three places."
+    text: "Which single column knows the most? With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the distance in X, let y be whether a delivery was late, hold back a fifth, and print the AUC of a logistic regression on the held-back rows, rounded to three places. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1038,7 +1038,7 @@ steps:
       - "Make the model and fit it on the training rows."
       - "Print the AUC from the chance of late on the held-back rows."
     return:
-      text: "And the bag size on its own. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the bag size in X, let y be whether a delivery was late, hold back a quarter, and print the AUC on the held-back rows, rounded to three places."
+      text: "And the bag size on its own. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the bag size in X, let y be whether a delivery was late, hold back a quarter, and print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1065,7 +1065,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
-    text: "Try a different guess: whether it rained. Use `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance, the bag size and the promised minutes, y is the rain column, and a third of the rows are held back. Print the AUC on the held-back rows, rounded to three places."
+    text: "Try a different guess: whether it rained. Use `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance, the bag size and the promised minutes, y is the rain column, and 33 percent of the rows are held back. Print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1118,10 +1118,10 @@ steps:
         ask: "What did I ask the model to guess this time?"
     walk:
       - "Build X from the three columns, and y as the rain column."
-      - "Hold back a third, make the model and fit it."
+      - "Hold back 33 percent, make the model and fit it."
       - "Print the AUC from the chance of the second answer."
     return:
-      text: "And one more. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: guess whether the courier carried more than one order. X holds the rain, the distance and the promised minutes, and a fifth of the rows are held back. Print the AUC on the held-back rows, rounded to three places."
+      text: "And one more. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: guess whether the courier carried more than one order. X holds the rain, the distance and the promised minutes, and a fifth of the rows are held back. Print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1155,7 +1155,7 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     friction: true
-    text: "The last one, and I won't break it down. Predict late deliveries and report how good the prediction is. X holds the distance, the rain and the bag size, y is whether a delivery was late, with the rows with no distance dropped. Hold back a fifth. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    text: "The last one, and I won't break it down. Predict late deliveries and report how good the prediction is. X holds the distance, the rain and the bag size, y is whether a delivery was late, with the rows with no distance dropped. Hold back a fifth. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1225,7 +1225,7 @@ steps:
       - "Make the model and fit it on the training rows."
       - "Take the chance of late for the held-back rows, and hold it up against the truth with AUC. Print it rounded."
     return:
-      text: "Not broken down either. Predict whether a delivery took more than 40 minutes, from the distance, the rain and the bag size, with the rows with no distance dropped and a quarter held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+      text: "Not broken down either. Predict whether a delivery took more than 40 minutes, from the distance, the rain and the bag size, with the rows with no distance dropped and a quarter held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. Use `random_state=0` for the split."
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1258,7 +1258,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
-    text: "Guess whether a delivery took more than 40 minutes. X holds the distance and the bag size, with the rows with no distance dropped, and 30 percent of the rows are held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    text: "Guess whether a delivery took more than 40 minutes. X holds the distance and the bag size, with the rows with no distance dropped, and 30 percent of the rows are held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. Use `random_state=0` for the split."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression

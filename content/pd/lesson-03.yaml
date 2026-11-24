@@ -16,7 +16,7 @@ steps:
   - kind: "cold-check"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "sort-values", "pile-names-on-left", "keep-before-piles"]
-    text: "Counting only the cancelled orders, how many were promised for each time, the biggest count first? Start from nothing."
+    text: "Counting only the cancelled orders, show each promised_minutes value with how many orders have it, the biggest count first. Start from nothing."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -56,7 +56,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "first-look", "text-quotes"]
-    text: "The restaurants file is another table. Look it over the way you would a stranger: its columns, their kinds, and how many cells are filled."
+    text: "The restaurants file is another table. Show its summary, the way `orders.info()` did for orders: its columns, their kinds, and how many cells are filled."
     model: |
       import pandas as pd
       restaurants = pd.read_csv('restaurants.csv')
@@ -87,7 +87,7 @@ steps:
       - "Bring pandas in and read restaurants.csv."
       - "Ask the table who it is: the action that reports its columns, their kinds and how full each is."
     return:
-      text: "Now the couriers file. Look it over in the same way."
+      text: "Now the couriers file. Show its summary in the same way."
       model: |
         import pandas as pd
         couriers = pd.read_csv('couriers.csv')
@@ -474,7 +474,7 @@ steps:
       - "Ask the subtotal column the question, with the sign for above."
       - "Keep the answers as a new column called pricey, and show it with the order id."
     return:
-      text: "Add a column called quick that says whether the promised time is under 40 minutes, and show the order id and quick for the first five."
+      text: "Add a column called quick that says whether promised_minutes is below 40, and show the order id and quick for the first five."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -523,7 +523,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no", "name-the-result", "equals-asks"]
-    text: "What share of the delivered orders had a delivery fee of 0?"
+    text: "Show the share of the delivered orders that had a delivery_fee of 0, as a number between 0 and 1."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -561,7 +561,7 @@ steps:
       - "Keep only the delivered orders, and give them a name."
       - "Say the average of the new column for those orders."
     return:
-      text: "What share of the delivered orders were promised in under 40 minutes?"
+      text: "Show the share of the delivered orders with a promised_minutes below 40, as a number between 0 and 1."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -601,7 +601,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "find-missing", "yes-no-as-column"]
-    text: "How many orders have no actual time?"
+    text: "Show how many orders have no actual_minutes."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -632,7 +632,7 @@ steps:
       - "Ask every cell whether it is empty."
       - "Add up the True's, and print."
     return:
-      text: "How many orders have an empty coupon_code?"
+      text: "Show how many orders have an empty coupon_code."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -715,7 +715,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "fill-or-drop", "list-of-columns", "how-many"]
-    text: "Drop the orders that have no actual time, and tell me how many are left."
+    text: "Drop the orders that have no actual_minutes, and show how many are left."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -763,7 +763,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no", "name-the-result", "groupby", "pick-then-summarise", "pile-names-on-left"]
-    text: "This one I won't break down. For the delivered orders, what share was late, for each promised time?"
+    text: "This one I won't break down. For the delivered orders, show each promised_minutes value with the share of its orders that were late: actual_minutes above promised_minutes."
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -805,7 +805,7 @@ steps:
       - "Keep only the delivered orders."
       - "Make piles by promised time, pick the late column, and say the average."
     return:
-      text: "For the delivered orders, what share had free delivery, for each promised time?"
+      text: "For the delivered orders, show each promised_minutes value with the share of its orders that had a delivery_fee of 0."
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -919,7 +919,7 @@ steps:
   - kind: "cold-check"
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no"]
-    text: "What share of the couriers ride a bike? Start from nothing."
+    text: "Show the share of the couriers that ride a bike, as a number between 0 and 1. Start from nothing."
     model: |
       import pandas as pd
       couriers = pd.read_csv('couriers.csv')

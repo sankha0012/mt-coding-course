@@ -15,7 +15,7 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "pick-the-metric", "read-and-criticise"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
-    text: "Keep every delivery. Guess whether a delivery was more than 12 minutes late. X holds the distance, the bag size and the promised minutes, and a quarter of the rows are held back. Fill the empty distances with the median of the training rows only, fit gradient boosting, and print its AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`."
+    text: "Keep every delivery. Guess whether a delivery was more than 12 minutes late. X holds the distance, the bag size and the promised minutes, and a quarter of the rows are held back. Fill the empty distances with the median of the training rows only, fit gradient boosting, and print its AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`. Use `random_state=0` for the split and for the model."
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.ensemble import GradientBoostingClassifier
@@ -1357,7 +1357,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "what-comes-out", "swap-the-model", "show-or-return"]
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
-    text: "Put your function to work. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate` once more, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over five folds of a logistic regression, and then of gradient boosting, rounded to three places."
+    text: "Put your function to work. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate` once more, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over five folds of a logistic regression, and then of gradient boosting, rounded to three places. Use `random_state=0` for the model."
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -1436,7 +1436,7 @@ steps:
       - "Read, merge, build X and y."
       - "Call it with the plain model, and then with the boosted one, and print each, rounded."
     return:
-      text: "The same with three folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate`, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over three folds of a logistic regression, and then of gradient boosting, rounded to three places."
+      text: "The same with three folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate`, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over three folds of a logistic regression, and then of gradient boosting, rounded to three places. Use `random_state=0` for the model."
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression

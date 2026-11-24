@@ -18,7 +18,7 @@ steps:
     requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
     ordered: true
     any_column_order: true
-    text: "The two cities with the most restaurants, and how many restaurants each has."
+    text: "Show the two cities with the most restaurants, each with its number of restaurants."
     model: "SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC LIMIT 2"
     rows: 2
     result: [["São Paulo", 25], ["Belo Horizonte", 15]]

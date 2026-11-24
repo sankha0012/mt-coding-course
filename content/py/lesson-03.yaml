@@ -15,7 +15,7 @@ steps:
   - kind: "cold-check"
     requires: ["from-table", "summary-column", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles"]
     any_column_order: true
-    text: "Looking only at the delivered orders, what was the average delivery fee for each promised time?"
+    text: "Looking only at the delivered orders, show each promised_minutes value with the average delivery_fee of its orders."
     model: "SELECT promised_minutes, AVG(delivery_fee) FROM orders WHERE status = 'delivered' GROUP BY promised_minutes"
     rows: 3
     result: [[30, 5.14], [40, 5.19], [50, 5.27]]
@@ -599,7 +599,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "dict", "for-each", "block", "two-names", "running-result"]
-    text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. What do all the prices add up to? Use a loop, with a running result."
+    text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Show what all the prices add up to. Use a loop, with a running result."
     model: |-
       prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
       total = 0
@@ -638,7 +638,7 @@ steps:
       - "Go through the pairs, and add each price to the total."
       - "Show the total, after the loop."
     return:
-      text: "The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. What do the discounts add up to?"
+      text: "The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Show what the discounts add up to."
       model: |-
         discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
         total = 0
@@ -787,7 +787,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "position-or-name", "running-result"]
     friction: true
-    text: "The last one, and I won't break it down. The dict prices holds pizza at 40, sushi at 60 and acai at 25. An order has pizza, acai and pizza. What does the order cost in all?"
+    text: "The last one, and I won't break it down. The dict prices holds pizza at 40, sushi at 60 and acai at 25. An order has pizza, acai and pizza. Show what the order costs in all."
     model: |-
       prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
       order = ['pizza', 'acai', 'pizza']
@@ -839,7 +839,7 @@ steps:
       - "Go through the order. For each dish, find its price in the dict, and add it to the total."
       - "Show the total, after the loop."
     return:
-      text: "Same price list. A different order has sushi, sushi and acai. What does it cost in all?"
+      text: "Same price list. A different order has sushi, sushi and acai. Show what it costs in all."
       model: |-
         prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
         order = ['sushi', 'sushi', 'acai']
@@ -869,7 +869,7 @@ steps:
   - kind: "cold-check"
     lang: "python"
     requires: ["name-a-value", "show", "dict", "text-in-list", "text-quotes", "for-each", "block", "get-by-name", "running-result"]
-    text: "Four orders used coupons, in this order: PIZZA20, BEMVINDO10, PIZZA20 and FRETEGRATIS. The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. What do the four discounts add up to?"
+    text: "Four orders used coupons, in this order: PIZZA20, BEMVINDO10, PIZZA20 and FRETEGRATIS. The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Show what the four discounts add up to."
     model: |-
       discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
       codes = ['PIZZA20', 'BEMVINDO10', 'PIZZA20', 'FRETEGRATIS']
