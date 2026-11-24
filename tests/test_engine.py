@@ -364,3 +364,22 @@ def test_returns_still_waiting_at_the_end_of_a_lesson_with_no_cold_check_play_be
     st, _, _ = finish_step(e, st, "SELECT COUNT(*) FROM restaurants WHERE 1 = 1")
     st, items, _ = e.advance(st)
     assert e.pending(st) == {"mode": "done"}
+
+
+def test_solves_is_true_only_for_code_the_step_would_accept(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    assert e.solves(st, "SELECT COUNT(*) FROM restaurants") is True
+    assert e.solves(st, "select count(*)  from restaurants;") is True
+    assert e.solves(st, "SELECT COUNT(*) FROM couriers") is False
+    assert e.solves(st, "SELECT") is False
+    assert e.solves(e.start()[0], "SELECT COUNT(*) FROM restaurants") is False  # not waiting for an answer
+
+
+def test_solves_does_not_change_the_state(make_engine, reach):
+    import copy
+    e = make_engine()
+    st = reach(e, 2)
+    before = copy.deepcopy(st)
+    e.solves(st, "SELECT COUNT(*) FROM restaurants")
+    assert st == before

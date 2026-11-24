@@ -88,6 +88,14 @@ class Engine:
         self._on_miss(st, cur, text, res, items)
         return st, self._tag(st, items), [event("miss")]
 
+    def solves(self, st, code):
+        """Would this code be taken as the answer to the step now waiting? Read-only. The guard on side
+        questions uses it, so a reply that gives the answer away can be replaced."""
+        if st["phase"] != "answer":
+            return False
+        cur = self._cur(st)
+        return self._correct(cur, self.runner.run(cur, code))
+
     # ---- moving through the lesson
 
     def _enter(self, st, items):
