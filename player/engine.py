@@ -1,8 +1,6 @@
 import copy
 
-from checker.data import same_rows
-
-from .sql import normalise, run_sql
+from .sql import normalise
 
 
 def _teacher(text, style=None):
@@ -15,8 +13,8 @@ def _teacher(text, style=None):
 class Engine:
     """The sitting as a state machine. It knows neither the web nor the progress file."""
 
-    def __init__(self, steps, conn, ui, rng):
-        self.steps, self.conn, self.ui, self.rng = steps, conn, ui, rng
+    def __init__(self, steps, runner, ui, rng):
+        self.steps, self.runner, self.ui, self.rng = steps, runner, ui, rng
         self._cache = {}
 
     # ---- public
@@ -27,22 +25,34 @@ class Engine:
               "last_narration": None, "last_ui": {}}
         items = []
         self._enter(st, items)
-        return st, items, []
+        return st, self._tag(st, items), []
+
+    def _tag(self, st, items):
+        """Teacher text in a Python step says so, so the screen colours its inline code as Python."""
+        if st["phase"] != "done" and self._lang(self.steps[st["playing"]["step"]]) == "python":
+            for item in items:
+                if item["type"] == "teacher":
+                    item["lang"] = "python"
+        return items
 
     def pending(self, st):
         phase, step = st["phase"], st["playing"]["step"]
         if phase == "run":
-            return {"mode": "run", "sql": self.steps[step]["shows"][-1]}
-        if phase == "answer":
-            return {"mode": "answer", "step": step + 1, "variant": st["playing"]["variant"]}
-        return {"mode": phase}
+            out = {"mode": "run", "sql": self.steps[step]["shows"][-1]}
+        elif phase == "answer":
+            out = {"mode": "answer", "step": step + 1, "variant": st["playing"]["variant"]}
+        else:
+            return {"mode": phase}
+        if self._lang(self.steps[step]) == "python":
+            out["lang"] = "python"
+        return out
 
     def advance(self, state):
         st, items = copy.deepcopy(state), []
         cur = self.steps[st["playing"]["step"]]
         if st["phase"] == "run":
-            sql = cur["shows"][-1]
-            items += [{"type": "learner", "sql": sql}, run_sql(self.conn, sql).item()]
+            code = cur["shows"][-1]
+            items += [self._learner(cur, code), self.runner.run(cur, code, check=False).item()]
             if cur.get("after_run"):
                 items.append(_teacher(cur["after_run"].strip()))
             st["phase"] = "continue"
@@ -52,32 +62,31 @@ class Engine:
             self._enter(st, items)
         else:
             raise ValueError("nothing to continue")
-        return st, items, []
+        return st, self._tag(st, items), []
 
     def answer(self, state, text):
         st = copy.deepcopy(state)
         if st["phase"] != "answer":
             raise ValueError("not waiting for an answer")
         cur, step, variant = self._cur(st), st["playing"]["step"], st["playing"]["variant"]
-        res = run_sql(self.conn, text)
-        items = [{"type": "learner", "sql": text}, res.item()]
+        res = self.runner.run(cur, text)
+        items = [self._learner(cur, text), res.item()]
         before = st["misses"]
 
         def event(outcome):
             return {"step": step + 1, "variant": variant, "typed": text, "outcome": outcome, "misses": before}
 
         if variant == "main" and self.steps[step].get("kind") == "cold-check":
-            items = [{"type": "learner", "sql": text}, res.item("Yours"),
-                     run_sql(self.conn, cur["model"]).item("Model")]
+            items = [self._learner(cur, text), res.item("Yours"), self.runner.run(cur, cur["model"]).item("Model")]
             if cur.get("after_run"):
                 items.append(_teacher(cur["after_run"].strip()))
             st["phase"] = "continue"
-            return st, items, [event("shown")]
+            return st, self._tag(st, items), [event("shown")]
         if self._correct(cur, res):
             outcome = self._on_correct(st, cur, step, variant, text, items)
-            return st, items, [event(outcome)]
+            return st, self._tag(st, items), [event(outcome)]
         self._on_miss(st, cur, text, res, items)
-        return st, items, [event("miss")]
+        return st, self._tag(st, items), [event("miss")]
 
     # ---- moving through the lesson
 
@@ -115,15 +124,34 @@ class Engine:
 
     def _cur(self, st):
         s = self.steps[st["playing"]["step"]]
-        return s["return"] if st["playing"]["variant"] == "return" else s
+        if st["playing"]["variant"] != "return":
+            return s
+        # a return is played in its step's language and on its step's data
+        return {**{k: s[k] for k in ("lang", "data") if k in s}, **s["return"]}
+
+    @staticmethod
+    def _lang(step):
+        return step.get("lang", "sql")
+
+    def _learner(self, cur, text):
+        item = {"type": "learner", "sql": text}
+        if self._lang(cur) == "python":
+            item["lang"] = "python"
+        return item
+
+    def _norm(self, cur, text):
+        """Text in a form that is equal when only trivial things differ."""
+        return " ".join(text.split()) if self._lang(cur) == "python" else normalise(text)
 
     # ---- judging an answer
 
-    def _rows(self, sql):
-        if sql not in self._cache:
-            r = run_sql(self.conn, sql)
-            self._cache[sql] = None if r.error else r.full
-        return self._cache[sql]
+    def _run(self, cur, code):
+        """A model, accepted or wrong answer, run once and kept. None if it does not run."""
+        key = (self._lang(cur), cur.get("data", ""), cur.get("check"), code)
+        if key not in self._cache:
+            r = self.runner.run(cur, code)
+            self._cache[key] = None if r.error else r
+        return self._cache[key]
 
     @staticmethod
     def _flags(cur):
@@ -133,15 +161,16 @@ class Engine:
         if res.error:
             return False
         for sql in [cur["model"], *cur.get("accepts", [])]:
-            want = self._rows(sql)
-            if want is not None and same_rows(res.full, want, **self._flags(cur)):
+            want = self._run(cur, sql)
+            if want is not None and res.key(self._flags(cur)) == want.key(self._flags(cur)):
                 return True
         return False
 
     def _on_correct(self, st, cur, step, variant, text, items):
         if st["why"]:
             items.append(_teacher(st["why"][0].upper() + st["why"][1:]))
-        if normalise(text) == normalise(cur["model"]) and text.strip() != cur["model"].strip():
+        if (self._lang(cur) == "sql" and normalise(text) == normalise(cur["model"])
+                and text.strip() != cur["model"].strip()):
             items.append({"type": "compare", "yours": text.strip(), "usual": cur["model"]})
             items.append(_teacher(self._pick(st, "slip")))
             outcome = "slip"
@@ -173,13 +202,14 @@ class Engine:
     # ---- the correction ladder
 
     def _match_wrong(self, cur, text, res):
-        mine = normalise(text)
+        mine = self._norm(cur, text)
         for w in cur.get("wrong", []):
-            if normalise(w["sql"]) == mine:
+            code = w.get("sql") or w.get("code")
+            if self._norm(cur, code) == mine:
                 return w
             if res.error is None:
-                want = self._rows(w["sql"])
-                if want is not None and same_rows(res.full, want, **self._flags(cur)):
+                want = self._run(cur, code)
+                if want is not None and res.key(self._flags(cur)) == want.key(self._flags(cur)):
                     return w
         return None
 
@@ -208,4 +238,4 @@ class Engine:
             steps = "\n".join(f"{i}. {w}" for i, w in enumerate(cur["walk"], 1))
             items.append(_teacher(f"{self._pick(st, 'walk_intro')}\n\n{steps}"))
         else:
-            items.append(_teacher(f"{self._pick(st, 'show_answer')}\n\n```sql\n{cur['model']}\n```"))
+            items.append(_teacher(f"{self._pick(st, 'show_answer')}\n\n```{self._lang(cur)}\n{cur['model']}\n```"))

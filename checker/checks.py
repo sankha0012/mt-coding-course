@@ -143,6 +143,9 @@ def check_returns(env, lesson, steps):
         if "model" not in r:
             fail("has no model")
             continue
+        if _is_python(s) and s.get("check") and not r.get("check"):
+            fail("needs its own check, because its step has one")
+            continue
         # a return runs in the same language and data folder as its step
         ret = {**{k: s[k] for k in ("lang", "data") if k in s}, **r}
         value, problems = _model_problems(env, ret)

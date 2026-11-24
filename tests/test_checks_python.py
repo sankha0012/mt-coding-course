@@ -112,3 +112,11 @@ def test_a_lesson_whose_data_is_missing_is_skipped_with_a_warning(env):
     fails, warns, *_ = check_all(env, {}, [("t-01", steps)])
     assert not has(fails, "does not run")
     assert warns[0] == "WARN t-01: the data folder 'real/not-here' was not found, so its answers were not run"
+
+
+def test_a_python_return_needs_its_own_check_if_its_step_has_one(env):
+    step = ask(model="def f(x):\n    return x", check="print(f(1))",
+               **{"return": {"text": "t", "model": "def g(x):\n    return x", "narration": ["a", "b"]}})
+    assert has(check_returns(env, "t-01", [step]), "step 1: return: needs its own check, because its step has one")
+    step["return"]["check"] = "print(g(2))"
+    assert check_returns(env, "t-01", [step]) == []

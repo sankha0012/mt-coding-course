@@ -1,0 +1,5 @@
+# The lessons in the order they are played. Each entry is strand/lesson-file, without .yaml.
+# Thoughts are shared across strands, so a later lesson may require any earlier thought.
+course:
+  - sql/lesson-01
+  - sql/lesson-02

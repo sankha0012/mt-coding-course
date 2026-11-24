@@ -4,7 +4,7 @@ import threading
 import time
 from dataclasses import dataclass, field
 
-from checker.data import load_db
+from checker.data import canon, load_db
 
 _ALLOWED = {sqlite3.SQLITE_SELECT, sqlite3.SQLITE_READ, sqlite3.SQLITE_FUNCTION, sqlite3.SQLITE_RECURSIVE}
 _SINGLE_QUOTED = re.compile(r"('(?:[^']|'')*')")
@@ -38,6 +38,10 @@ class Result:
     rows: list
     total: int
     full: list = field(default_factory=list, repr=False)
+
+    def key(self, flags):
+        """What two results are compared by: the rows, in the order the step cares about."""
+        return canon(self.full, **flags)
 
     def item(self, label=None):
         out = {"type": "result", "columns": self.columns, "rows": self.rows,

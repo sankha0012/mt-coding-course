@@ -5,7 +5,7 @@ import pytest
 import yaml
 
 from checker.data import load_db
-from player.sql import open_database
+from player.runner import Runner
 
 ROOT = Path(__file__).parent.parent
 
@@ -56,8 +56,8 @@ def write_strand(tmp_path, thoughts):
 
 
 @pytest.fixture(scope="session")
-def play_db(data_dir):
-    return open_database(data_dir)
+def play_runner(data_dir):
+    return Runner(data_dir)
 
 
 @pytest.fixture
@@ -95,11 +95,11 @@ def play_steps():
 
 
 @pytest.fixture
-def make_engine(play_db, ui, play_steps):
+def make_engine(play_runner, ui, play_steps):
     from player.engine import Engine  # imported here so conftest loads before the engine exists
 
     def make(steps=None, seed=1):
-        return Engine(steps if steps is not None else play_steps, play_db, ui, random.Random(seed))
+        return Engine(steps if steps is not None else play_steps, play_runner, ui, random.Random(seed))
     return make
 
 

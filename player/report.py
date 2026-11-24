@@ -1,7 +1,7 @@
 import argparse
 from collections import Counter
 
-from checker.lesson import load_strand
+from checker.lesson import load_content
 
 from .store import Store
 
@@ -33,10 +33,10 @@ def build_report(events, lessons):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog="player.report", description="Where the learner missed.")
-    p.add_argument("--content", default="content/sql")
+    p.add_argument("--content", default="content")
     p.add_argument("--progress", default="progress")
     args = p.parse_args(argv)
-    _, lessons = load_strand(args.content)
+    _, lessons = load_content(args.content)
     print("\n".join(build_report(Store(args.progress).events(), lessons)))
     return 0
 

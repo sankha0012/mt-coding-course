@@ -151,6 +151,11 @@ def _tokens(text):
     return out
 
 
+def output_key(text):
+    """A comparable form of an output: its words and numbers, whatever the spacing."""
+    return _tokens(text)
+
+
 def same_output(a, b):
     """Two outputs are the same if they have the same words and numbers, whatever the spacing."""
     return _tokens(a) == _tokens(b)

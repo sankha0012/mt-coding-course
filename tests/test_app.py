@@ -153,3 +153,44 @@ def test_the_course_resumes_in_the_lesson_it_was_in(course):
     c.post("/api/run/new", json={"next": True})
     again = course().get("/api/run").json()
     assert again["lesson"] == "t-02"
+
+
+def test_the_try_it_panel_runs_sql_and_shows_the_result(make_client):
+    c = make_client()
+    c.get("/api/run")
+    item = c.post("/api/play", json={"lang": "sql", "code": "SELECT COUNT(*) FROM couriers"}).json()
+    assert item["type"] == "result" and item["rows"] == [[200]]
+
+
+def test_the_try_it_panel_runs_python(make_client):
+    c = make_client()
+    c.get("/api/run")
+    item = c.post("/api/play", json={"lang": "python", "code": "print(sum([1, 2, 3]))"}).json()
+    assert item["lang"] == "python" and item["text"] == "6\n"
+
+
+def test_the_try_it_panel_cannot_change_the_core_data(make_client, data_dir):
+    c = make_client()
+    c.get("/api/run")
+    before = {f.name: f.read_bytes() for f in data_dir.glob("*.csv")}
+    assert c.post("/api/play", json={"lang": "sql", "code": "DROP TABLE orders"}).json()["error"]
+    assert c.post("/api/play", json={"lang": "python", "code": "open('orders.csv', 'w').write('x')"}).json()["error"]
+    assert {f.name: f.read_bytes() for f in data_dir.glob("*.csv")} == before
+    assert c.post("/api/play", json={"lang": "sql", "code": "SELECT COUNT(*) FROM orders"}).json()["rows"] == [[6000]]
+
+
+def test_playing_changes_nothing_in_the_sitting(make_client, tmp_path):
+    from player.store import Store
+    c = make_client()
+    before = c.get("/api/run").json()
+    c.post("/api/play", json={"lang": "sql", "code": "SELECT 1"})
+    after = c.get("/api/run").json()
+    assert after == before
+    assert Store(tmp_path).events() == []
+
+
+def test_the_try_it_panel_refuses_empty_code_and_unknown_languages(make_client):
+    c = make_client()
+    c.get("/api/run")
+    assert c.post("/api/play", json={"lang": "sql", "code": "  "}).status_code == 400
+    assert c.post("/api/play", json={"lang": "ruby", "code": "puts 1"}).status_code == 400
