@@ -64,7 +64,6 @@ def play_runner(data_dir):
 def ui():
     return {
         "again": ["AGAIN-1", "AGAIN-2"],
-        "slip": ["SLIP-1", "SLIP-2"],
         "walk_intro": ["WALK-1", "WALK-2"],
         "show_answer": ["SHOW-1", "SHOW-2"],
     }

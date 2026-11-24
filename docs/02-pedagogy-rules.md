@@ -85,7 +85,7 @@ One sentence from the guidebook governs everything else: the magic "is not to be
 
 **E4. The missed sentence returns** a few steps later inside a new one.
 
-**E5. Let small slips pass.** Letter case, spacing, quote style, a missing semicolon. Show the model answer and move on, so the current climb is not broken.
+**E5. Let small slips pass.** Letter case, spacing, quote style, a missing semicolon. Accept them silently and move on: no comparison, no remark, so the current climb is not broken.
 
 **E6. Correct in advance.** Where a confusion is predictable, a classmate makes the mistake first and is corrected, before the learner can make it.
 

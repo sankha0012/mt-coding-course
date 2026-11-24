@@ -177,20 +177,13 @@ class Engine:
     def _on_correct(self, st, cur, step, variant, text, items):
         if st["why"]:
             items.append(_teacher(st["why"][0].upper() + st["why"][1:]))
-        if (self._lang(cur) == "sql" and normalise(text) == normalise(cur["model"])
-                and text.strip() != cur["model"].strip()):
-            items.append({"type": "compare", "yours": text.strip(), "usual": cur["model"]})
-            items.append(_teacher(self._pick(st, "slip")))
-            outcome = "slip"
-        else:
-            self._narrate(st, cur, items)
-            outcome = "correct"
+        self._narrate(st, cur, items)
         queued = {q["step"] for q in st["queue"]}
         if (variant == "main" and st["misses"] >= 1 and "return" in self.steps[step]
                 and step not in st["returned"] and step not in queued):
             st["queue"].append({"step": step, "due": step + 3})
         st["phase"] = "continue"
-        return outcome
+        return "correct"
 
     def _narrate(self, st, cur, items):
         pool = list(cur.get("narration", []))

@@ -71,24 +71,21 @@ def test_an_empty_narration_line_says_nothing(make_engine, reach, play_steps):
     assert kinds(items) == ["learner", "result"]
 
 
-def test_a_slip_shows_both_spellings_and_no_narration(make_engine, reach):
+def test_a_difference_in_looks_only_is_simply_correct(make_engine, reach):
     e = make_engine()
     st = reach(e, 2)
     st, items, events = e.answer(st, "select  count(*) from restaurants;")
-    assert kinds(items) == ["learner", "result", "compare", "teacher"]
-    assert items[2] == {"type": "compare", "yours": "select  count(*) from restaurants;",
-                        "usual": "SELECT COUNT(*) FROM restaurants"}
-    assert items[3]["text"] in ("SLIP-1", "SLIP-2")
-    assert events[0]["outcome"] == "slip"
+    assert "compare" not in kinds(items)
+    assert events[0]["outcome"] == "correct"
     assert e.pending(st) == {"mode": "continue"}
 
 
-def test_double_quotes_are_a_slip_not_a_miss(make_engine, reach, play_steps):
+def test_double_quotes_are_correct_not_a_miss(make_engine, reach, play_steps):
     play_steps[4]["model"] = "SELECT * FROM couriers WHERE vehicle = 'bike'"
     e = make_engine(play_steps)
     st = reach(e, 5)
     st, items, events = e.answer(st, 'SELECT * FROM couriers WHERE vehicle = "bike"')
-    assert events[0]["outcome"] == "slip"
+    assert events[0]["outcome"] == "correct" and "compare" not in kinds(items)
 
 
 def test_a_different_sentence_with_the_same_result_is_correct(make_engine, reach):
