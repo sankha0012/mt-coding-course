@@ -54,8 +54,9 @@ def chat(messages, cfg=None, urlopen=urllib.request.urlopen, timeout=30, provide
     try:
         with urlopen(req, timeout=timeout) as r:
             text = json.load(r)["choices"][0]["message"]["content"]
-    except (OSError, ValueError, KeyError, IndexError, TypeError):
-        raise Unavailable(name) from None
+    except (OSError, ValueError, KeyError, IndexError, TypeError) as e:
+        # the reason is for the console: an error class and an HTTP status, never a key or a body
+        raise Unavailable(f"{name}: {type(e).__name__} {getattr(e, 'code', '')}".strip()) from None
     if not (text and text.strip()):
-        raise Unavailable(name)
+        raise Unavailable(f"{name}: empty reply")
     return text.strip(), name

@@ -116,3 +116,10 @@ def test_settings_read_the_env_file_and_the_environment_wins(tmp_path):
 
 def test_settings_without_a_file(tmp_path):
     assert llm.settings({"A": "1"}, tmp_path / "missing") == {"A": "1"}
+
+
+def test_a_failure_says_why_without_a_key():
+    with pytest.raises(llm.Unavailable, match=r"gemini: HTTPError 429"):
+        llm.chat(MSGS, BOTH, fake(too_many()), provider="gemini")
+    with pytest.raises(llm.Unavailable, match=r"gemini: empty reply"):
+        llm.chat(MSGS, BOTH, fake(" "), provider="gemini")

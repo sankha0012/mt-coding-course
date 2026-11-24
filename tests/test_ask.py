@@ -40,14 +40,14 @@ def make(tmp_path, data_dir):
 def fake_chat(reply="Counting is simple.", provider="gemini"):
     calls = []
 
-    def chat(messages, provider=None):
+    def chat(messages, *, provider=None):
         calls.append((messages, provider))
         return reply, provider or "gemini"
     chat.calls = calls
     return chat
 
 
-def unavailable(messages, provider=None):
+def unavailable(messages, *, provider=None):
     raise llm.Unavailable("no key set")
 
 
@@ -168,7 +168,7 @@ def test_the_key_never_leaves_the_server(make):
         sent.append(req)
         return Reply()
 
-    def chat(messages, provider=None):
+    def chat(messages, *, provider=None):
         return llm.chat(messages, {"GEMINI_API_KEY": key}, urlopen, provider=provider)
     c, progress = make(chat)
     r = c.post("/api/ask", json={"question": "what is count?", "thread": []})

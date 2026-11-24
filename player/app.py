@@ -1,3 +1,4 @@
+import logging
 import random
 import threading
 from pathlib import Path
@@ -107,8 +108,9 @@ class Player:
                 ai.attempt_text(items) if st["phase"] == "answer" and st["misses"] else "",
                 ai.schema_lines(self.runner.path(step.get("data", ""))), thread, question)
         try:  # the lock is free while the model thinks
-            reply, used = self.chat(messages, provider)
-        except llm.Unavailable:
+            reply, used = self.chat(messages, provider=provider)
+        except llm.Unavailable as e:
+            logging.getLogger("uvicorn.error").warning("ask failed: %s", e)
             return {"reply": self.ui["ask_unavailable"], "ok": False}
         with self.lock:
             # st is the step that was asked about, even if the learner has moved on since
