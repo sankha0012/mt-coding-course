@@ -1,0 +1,952 @@
+lesson: pd-05
+title: "Windows in pandas"
+strand: pd
+stage: 2
+thoughts:
+  transform-beside: "`.transform('mean')` writes each pile's summary beside the rows of that pile. It is `OVER (PARTITION BY ...)`."
+  top-n-in-pandas: "Sort, make piles, take the first three of each: `.head(3)` after `groupby`."
+  latest-in-pandas: "Sort by time, make piles, take the last one of each: `.tail(1)`."
+  text-to-date: {text: "`pd.to_datetime(...)` turns text into dates, and `.dt` reaches the month.", grade: shape}
+  shift: {text: "`.shift()` is the previous row's value. It is `LAG`.", grade: shape}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "show", "one-line-list", "each-thing-once"]
+    text: "Here is a list of delivery fees: `fees = [8.99, 6.99, 4.5, 8.99, 7.25, 6.99, 3.2]`. Type the list, then print how many different fees are above 5."
+    model: |
+      fees = [8.99, 6.99, 4.5, 8.99, 7.25, 6.99, 3.2]
+      print(len(set([f for f in fees if f > 5])))
+    output: "3"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PY-10 (the one-line list and each thing once), on a combination never practised. Never scored. Plain Python, as the map asks, before the pandas starts."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["transform-beside"]
+    text: |
+      Today we take the jobs SQL did with windows and do them in pandas. The first one. When you made piles, one row came out for each pile. Sometimes you want each pile's answer written beside every row of that pile instead, so that the rows stay. In SQL that was `AVG(subtotal) OVER (PARTITION BY restaurant_id)`. In pandas it is the piles you already know, then the column, then one new word, `transform`, with the name of the summary in quotes:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].transform('mean')
+      print(orders[['restaurant_id', 'subtotal', 'rest_avg']].head())
+      ```
+
+      Run it.
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].transform('mean')
+        print(orders[['restaurant_id', 'subtotal', 'rest_avg']].head())
+    after_run: |
+      Look down the rest_avg column. Every row of one restaurant carries that restaurant's average, and the rows did not collapse: 6,000 went in and 6,000 are here. `.mean()` alone gives sixty numbers, one per pile. `transform('mean')` gives a number for every row, so it can sit in a column beside them. The summary's name wears quotes because it is a word, not a column.
+    note: "The first word of the lesson. It is SQL's OVER with PARTITION BY, in thinking order: piles, the column, the summary. The learner already owns groupby, a column by name, and a new column from PD-3, so only `transform` is new. The step prints five rows so that the learner sees a different restaurant's number on each row."
+
+  # 3
+  - kind: "classmate"
+    lang: "python"
+    requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "look-at-rows"]
+    text: |
+      Ana wanted each restaurant's average subtotal beside its orders, and wrote:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].mean()
+      print(orders['rest_avg'].head())
+      ```
+
+      No error came, but look at what printed. The first row is empty, and the next four hold numbers that cannot be right for their rows. In fact 5,940 of the 6,000 rows are empty. Ana, how many numbers does `.mean()` give, and how many rows does the table have? ... Sixty numbers against 6,000 rows. pandas lines a new column up with the rows by their labels, so sixty numbers land on sixty rows and the rest stay empty. Write the whole script again, the way she should have.
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].transform('mean')
+      print(orders['rest_avg'].head())
+    output: |-
+      0    62.751947
+      1    68.058776
+      2    65.964911
+      3    65.088571
+      4    61.217358
+      Name: rest_avg, dtype: float64
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].mean()
+        print(orders['rest_avg'].head())
+    narration:
+      - "Every row has its own restaurant's number now. The word that writes a pile's answer beside every row is transform."
+      - "Sixty numbers were never going to fit 6,000 rows. `transform('mean')` gives one for each row."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].mean()
+          print(orders['rest_avg'].head())
+        ask: "That is Ana's sentence again, and the empty cells are still there. Which word gives a number for every row and not one for each pile?"
+        why: "`.mean()` gives sixty numbers, one per pile, and a new column wants one for every row."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['rest_avg'] = orders['subtotal'].mean()
+          print(orders['rest_avg'].head())
+        ask: "Every row has a number, but it is the same number. Whose average is it?"
+        why: "the average of the whole column is one number for all the rows. Each row wants its own restaurant's."
+    walk:
+      - "Start with the piles: group the orders by restaurant, and pick the subtotal."
+      - "Now the summary that writes a number beside every row, with its name in quotes."
+      - "Put it in a new column called rest_avg, and print the first five."
+    return:
+      text: "Write the average delivery fee of each courier beside its orders, in a column called `courier_fee`, and print the first five values of that column. Write the whole script."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['courier_fee'] = orders.groupby('courier_id')['delivery_fee'].transform('mean')
+        print(orders['courier_fee'].head())
+      output: |-
+        0    4.170588
+        1    5.232400
+        2    5.055000
+        3    5.797500
+        4    4.688696
+        Name: courier_fee, dtype: float64
+      narration:
+        - "Every row carries its courier's average fee. The piles are couriers this time, and the word that writes it beside every row is the same."
+        - "Groupby, the column, `transform('mean')`: a number for each row, not one for each courier."
+      note: "Return for step 3. Other pile and other column. The first two couriers are real, so the first five rows hold real numbers."
+    note: "Ana makes the one slip a learner would make here (rule E6), and pandas gives no error, so the empty cells are the evidence. The real reason is that a new column lines up by label. Her sentence is shown only, since it runs without error. The repair is the whole script, which keeps the 'read your own file' habit."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "look-at-rows"]
+    text: "Now one of your own. Beside every order, write the average delivery fee that order's customer pays, in a column called `usual_fee`. Then print the first five values of that column."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['usual_fee'] = orders.groupby('customer_id')['delivery_fee'].transform('mean')
+      print(orders['usual_fee'].head())
+    output: |-
+      0    8.323333
+      1    5.592000
+      2    4.280000
+      3    6.490000
+      4    4.660000
+      Name: usual_fee, dtype: float64
+    narration:
+      - "Each order now carries what its customer usually pays. The piles were customers this time, and the column was the fee."
+      - "The same movement as Ana's repair: piles, the column, `transform('mean')`, a new column to keep it in."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['usual_fee'] = orders.groupby('customer_id')['delivery_fee'].mean()
+          print(orders['usual_fee'].head())
+        ask: "Count how many numbers the right-hand side makes, and compare it with the number of rows. Which word makes one number for every row?"
+        why: "`.mean()` makes one number per customer. A new column needs one for each order."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['usual_fee'] = orders.groupby('restaurant_id')['delivery_fee'].transform('mean')
+          print(orders['usual_fee'].head())
+        ask: "Whose usual fee did I ask for? Which column makes the piles?"
+    walk:
+      - "Make the piles, one for each customer, and pick the delivery fee."
+      - "Write each pile's average beside its rows, with the summary's name in quotes."
+      - "Keep it in a column called usual_fee, and print its first five values."
+    return:
+      text: "For each restaurant, its average promised time, written beside its orders in a column called `rest_promise`. Print the first five values of that column."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['rest_promise'] = orders.groupby('restaurant_id')['promised_minutes'].transform('mean')
+        print(orders['rest_promise'].head())
+      output: |-
+        0    39.739130
+        1    39.693878
+        2    40.892857
+        3    40.357143
+        4    39.528302
+        Name: rest_promise, dtype: float64
+      narration:
+        - "Every order carries its restaurant's average promise. Piles, the column, transform, and a column to keep it in."
+        - "The same movement on another pile and another column."
+      note: "Return for step 4. Other pile and other column."
+    note: "The learner now writes transform unaided, one step after Ana. The column is the delivery fee and the pile is the customer, so the previous answer cannot be edited into this one."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
+    text: "Now use it. How many orders came to more than their own restaurant's average subtotal? Print the number."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].transform('mean')
+      print(len(orders[orders['subtotal'] > orders['rest_avg']]))
+    output: "2588"
+    narration:
+      - "2,588. The same number SQL gave. There you wrote the number beside the row, named that result, and asked a second question of it. Here the column is part of the table already, so the keeping is one more line."
+      - "The restaurant's average sits beside each order, and a yes-or-no question compares the two columns row by row. Keep the yes rows and count them."
+      - "2,588 of the 6,000 orders were above their own restaurant's average."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[orders['subtotal'] > orders['subtotal'].mean()]))
+        ask: "Those are the orders above the average of all orders together. Whose average should each order be compared with?"
+        why: "the question is about each row's own pile, so the pile's average has to sit beside the row first."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].transform('mean')
+          print(orders[orders['subtotal'] > orders['rest_avg']].head())
+        ask: "That shows the first rows, and I asked how many. What do you put around the kept rows to count them?"
+    walk:
+      - "Write each restaurant's average subtotal beside its orders."
+      - "Ask each row: is its subtotal above that average?"
+      - "Keep the yes rows and count them."
+    return:
+      text: "How many orders carried a delivery fee below their own customer's average fee? Print the number."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['usual_fee'] = orders.groupby('customer_id')['delivery_fee'].transform('mean')
+        print(len(orders[orders['delivery_fee'] < orders['usual_fee']]))
+      output: "2512"
+      narration:
+        - "2,512. The customer's average sat beside each order, and a question compared the two."
+        - "Each row against its own pile: a column of yes and no, then keep the yes rows and count them."
+      note: "Return for step 5. Other pile, other column and the other sign."
+    note: "SQL-6's closing sentence, and the same 2,588. In SQL `beside-comes-late` forced a second query. In pandas the column is already in the table, which the narration says out loud. Row-against-pile is the SQL-6 thought, used without a new id."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
+    text: "The summary does not have to be the average. How many orders were the biggest order their own restaurant ever took? Print the number."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['rest_top'] = orders.groupby('restaurant_id')['subtotal'].transform('max')
+      print(len(orders[orders['subtotal'] == orders['rest_top']]))
+    output: "60"
+    narration:
+      - "60. One for each of the sixty restaurants: the biggest of its pile, written beside every row, and only the row that equals it is kept."
+      - "The summary's name changed to max, and the question changed to two equals signs, which ask whether the two cells are the same."
+      - "Sixty orders, one per restaurant, and no two restaurants tied."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['rest_top'] = orders['subtotal'].max()
+          print(len(orders[orders['subtotal'] == orders['rest_top']]))
+        ask: "That is the biggest order of all, beside every row. Whose biggest did I ask for?"
+        why: "each row is compared with its own pile's biggest, so the piles have to be made first."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['rest_top'] = orders.groupby('restaurant_id')['subtotal'].transform('max')
+          print(len(orders[orders['subtotal'] > orders['rest_top']]))
+        ask: "Could any order be above the biggest one its own restaurant took? How would you ask whether it is that biggest one?"
+    walk:
+      - "Write each restaurant's biggest subtotal beside its orders: the summary's name changes to max."
+      - "Ask each row whether its subtotal equals that number, then keep the yes rows and count them."
+    return:
+      text: "How many orders carried the biggest delivery fee their own customer ever paid? Print the number."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['top_fee'] = orders.groupby('customer_id')['delivery_fee'].transform('max')
+        print(len(orders[orders['delivery_fee'] == orders['top_fee']]))
+      output: "2324"
+      narration:
+        - "A customer's biggest fee, written beside each of their orders, and the rows that equal it kept. Ties count, so there are more than one per customer."
+        - "Piles, the biggest of each, beside every row, then keep the rows that match it."
+      note: "Return for step 6. Other pile and column. Customers who paid the same fee twice add extra rows, so the answer is larger than the number of customers."
+    note: "A second summary word inside transform, and the question moves from above to equals. Both `max` and the two equals signs are already owned."
+
+  # 7
+  - kind: "aside"
+    lang: "python"
+    text: "\nSomething that is only interesting, with nothing in it to keep. The pattern behind groupby and transform has a name: split, apply, combine. Split the rows into piles, apply a summary to each pile, combine the answers back into one table. The statistician Hadley Wickham gave it that name in a paper in 2011, for the R language, and pandas follows the same idea. The only difference between the two words you now own is the combining: `.mean()` puts the answers together as one row per pile, and `transform('mean')` puts them back beside the original rows.\n"
+    note: "Relief after the first climb, and a real origin, not a mnemonic. It restates the contrast between a summary per pile and a summary beside each row, in the words the pass-bar interview would use."
+
+  # 8
+  - kind: "give"
+    lang: "python"
+    new: ["top-n-in-pandas"]
+    text: |
+      Another job SQL did with a window: the three biggest orders of each restaurant. There you numbered the rows inside each pile and kept the numbers up to 3. In pandas it takes three movements, in the order they happen. Sort the whole table, make the piles, take the first three rows of each pile:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      ranked = orders.sort_values('subtotal', ascending=False)
+      top = ranked.groupby('restaurant_id').head(3)
+      print(len(top))
+      print(round(top['subtotal'].sum(), 2))
+      ```
+
+      Run it. The `round(number, 2)` is plain Python: the number, and how many places to keep.
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        ranked = orders.sort_values('subtotal', ascending=False)
+        top = ranked.groupby('restaurant_id').head(3)
+        print(len(top))
+        print(round(top['subtotal'].sum(), 2))
+    after_run: |
+      180 rows: three for each of sixty restaurants, the same 180 SQL found. You have met `.head()` as the first rows of a table. After `groupby` it gives the first rows of each pile, and the sorting you did first is kept inside every pile, so the first three are the biggest three.
+    note: "In SQL, ROW_NUMBER then keep up to 3. Here there is no numbering: the sorted order is kept inside each pile, so head(3) is enough. The learner owns sort_values and head already. The reason given is real. `round` is supplied in the teacher's line."
+
+  # 9
+  - kind: "ask"
+    lang: "python"
+    requires: ["top-n-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
+    text: "For each courier, keep the two orders that took the longest, by actual minutes. Print how many rows are left, and then their actual minutes added up, rounded to one place with `round(total, 1)`."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      ranked = orders.sort_values('actual_minutes', ascending=False)
+      kept = ranked.groupby('courier_id').head(2)
+      print(len(kept))
+      print(round(kept['actual_minutes'].sum(), 1))
+    output: |-
+      400
+      26864.0
+    narration:
+      - "400 rows: two for each of 200 couriers. Sort with the longest first, make the piles, take the first two of each."
+      - "The sorting came first and the piles second, the order they happen in. The cut is made inside each pile."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          ranked = orders.sort_values('actual_minutes')
+          kept = ranked.groupby('courier_id').head(2)
+          print(len(kept))
+          print(round(kept['actual_minutes'].sum(), 1))
+        ask: "Those are the two quickest deliveries of each courier. Which end of the sorting do we want first?"
+        why: "head takes from the top of each pile, so the biggest has to come first."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          kept = orders.groupby('courier_id').head(2)
+          print(len(kept))
+          print(round(kept['actual_minutes'].sum(), 1))
+        ask: "Those are each courier's first two rows, whatever they took. What should the piles be in order of before the first two are taken?"
+        why: "head only takes the first rows. The sorting is what makes them the longest."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          ranked = orders.sort_values('actual_minutes', ascending=False)
+          kept = ranked.head(2)
+          print(len(kept))
+          print(round(kept['actual_minutes'].sum(), 1))
+        ask: "Two rows came back in all. How many piles did we want?"
+    walk:
+      - "Sort the orders by actual minutes, the longest first."
+      - "Make the piles, one for each courier, and take the first two rows of each."
+      - "Print how many rows are left, then the total of their actual minutes."
+    return:
+      text: "For each customer, keep the three orders with the biggest subtotal. Print how many rows are left, and the total of their subtotals, rounded to two places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        ranked = orders.sort_values('subtotal', ascending=False)
+        kept = ranked.groupby('customer_id').head(3)
+        print(len(kept))
+        print(round(kept['subtotal'].sum(), 2))
+      output: |-
+        4017
+        284724.4
+      narration:
+        - "4,017 rows: most customers have three orders or fewer, so most keep all they have. Sorted biggest first, piles by customer, the first three of each."
+        - "The same three movements with another pile and another column."
+      note: "Return for step 9. Other pile, column and number."
+    note: "The first typed top-n. Two things are printed so that a missing sort or a missing groupby shows in the numbers. The longest times have no ties across a courier's second and third, and the answer is a sum, so ties would not matter anyway. Cancelled orders have no actual minutes and sort last."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["top-n-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
+    text: "Now the other end. For each restaurant, the two cheapest orders by subtotal. Print how many rows you kept, and the total of their subtotals, rounded to two places."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      ranked = orders.sort_values('subtotal')
+      kept = ranked.groupby('restaurant_id').head(2)
+      print(len(kept))
+      print(round(kept['subtotal'].sum(), 2))
+    output: |-
+      120
+      1535.48
+    narration:
+      - "120 rows, two for each of the sixty restaurants. Sorting with nothing said puts the smallest first, as in SQL, so the first two of each pile are the cheapest."
+      - "No `ascending=False` this time, and the cheapest come out. The piles and the cut are the same."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          ranked = orders.sort_values('subtotal', ascending=False)
+          kept = ranked.groupby('restaurant_id').head(2)
+          print(len(kept))
+          print(round(kept['subtotal'].sum(), 2))
+        ask: "Those are the two biggest. Which way does the sorting go when you say nothing?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          ranked = orders.sort_values('subtotal')
+          kept = ranked.groupby('restaurant_id').tail(2)
+          print(len(kept))
+          print(round(kept['subtotal'].sum(), 2))
+        ask: "Look at which end of each pile you took. The pile is sorted with the smallest first. Where are the first two?"
+    walk:
+      - "Sort the orders by subtotal. What does nothing said give you first?"
+      - "Make the piles by restaurant, take the first two of each, and print the two numbers."
+    return:
+      text: "For each restaurant, keep only its single longest delivery, by actual minutes. Print how many rows that leaves and the total of those actual minutes, rounded to one place."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        ranked = orders.sort_values('actual_minutes', ascending=False)
+        kept = ranked.groupby('restaurant_id').head(1)
+        print(len(kept))
+        print(round(kept['actual_minutes'].sum(), 1))
+      output: |-
+        60
+        4980.3
+      narration:
+        - "60 rows, one for each restaurant: its longest delivery. A top one is a top three with a smaller number."
+        - "Longest first, piles by restaurant, the first row of each."
+      note: "Return for step 10. A cut of one, the other column."
+    note: "The direction flips, so the learner cannot edit step 9's answer in one place. Only one thing is new from the previous step, and it is the missing `ascending=False`."
+
+  # 11
+  - kind: "give"
+    lang: "python"
+    new: ["latest-in-pandas"]
+    text: |
+      The other sentence from the SQL lesson: each customer's latest order. There you numbered from the newest and kept number one. In pandas it is the same three movements with the other end of each pile. Sort by time with the oldest first, make the piles, and take the last row of each pile, which is the newest. `.head(3)` took the first rows. `.tail(1)` takes the last:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      latest = orders.sort_values('created_at').groupby('customer_id').tail(1)
+      print(len(latest))
+      ```
+
+      Run it.
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        latest = orders.sort_values('created_at').groupby('customer_id').tail(1)
+        print(len(latest))
+    after_run: |
+      1,475 rows, one for each customer, and the same 1,475 orders SQL found. Sorted with the oldest first, the last row of each pile is the newest. You can sort created_at as it is, even though it is text, because a date written year first, then month, then day, sorts in time order.
+    note: "Latest is sort by time, group, take the last one. Written without a new spelling: tail is the other end of head. The text-sorts-in-time-order remark pays a debt for step 15: dates are text, and sorting works anyway, so the date thought only has to be used when the learner needs the month."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["latest-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
+    text: "Take each customer's latest order. Print how many rows that is, and then the average subtotal of those orders, rounded to two places."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      latest = orders.sort_values('created_at').groupby('customer_id').tail(1)
+      print(len(latest))
+      print(round(latest['subtotal'].mean(), 2))
+    output: |-
+      1475
+      61.18
+    narration:
+      - "1,475 customers, and their latest orders average 61.18. You sorted by time, made a pile for each customer, and kept the last row of each."
+      - "Oldest first, then the piles, then the last one of each. The average was said of the rows that were kept."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          latest = orders.sort_values('created_at', ascending=False).groupby('customer_id').tail(1)
+          print(len(latest))
+          print(round(latest['subtotal'].mean(), 2))
+        ask: "Sorted with the newest first, which end of each pile is the last row?"
+        why: "`tail(1)` is the last row of the pile, so the newest has to be at the bottom, which means the oldest first."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          latest = orders.sort_values('created_at').groupby('customer_id').head(1)
+          print(len(latest))
+          print(round(latest['subtotal'].mean(), 2))
+        ask: "That is each customer's first order ever. Which end of the pile did you take?"
+    walk:
+      - "Sort the orders by when they were created, the oldest first."
+      - "Make a pile for each customer and take the last row of each. Name that."
+      - "Print how many rows, then the average subtotal of those rows."
+    return:
+      text: "Take each restaurant's latest order. Print how many rows that is, and the total of their subtotals, rounded to two places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        latest = orders.sort_values('created_at').groupby('restaurant_id').tail(1)
+        print(len(latest))
+        print(round(latest['subtotal'].sum(), 2))
+      output: |-
+        60
+        3457.44
+      narration:
+        - "60 rows, one for each restaurant, and 3,457.44 between them. Sorted by time, piled by restaurant, the last of each."
+        - "The last row of each pile, once the pile is sorted from oldest to newest."
+      note: "Return for step 12. Other pile and summary."
+    note: "SQL-7's second closing sentence, in the learner's own hands. The file happens to be in time order already, so a missing sort would not show in the answer. Only the wrong end shows. The sort is kept as the habit, and the next step says why in the narration."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["latest-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
+    text: "For each restaurant, the very first order it took. Print how many rows that is, and the average promised minutes of those orders, rounded to two places. A real table is not always in order of time, so sort it yourself first."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      first = orders.sort_values('created_at').groupby('restaurant_id').head(1)
+      print(len(first))
+      print(round(first['promised_minutes'].mean(), 2))
+    output: |-
+      60
+      40.0
+    narration:
+      - "60 first orders, with 40.0 minutes promised on average. The piles are the same, and the end you take is the other end."
+      - "Oldest first, one pile each, and the first row of each pile."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          first = orders.sort_values('created_at').groupby('restaurant_id').tail(1)
+          print(len(first))
+          print(round(first['promised_minutes'].mean(), 2))
+        ask: "That is each restaurant's latest. Which end of an oldest-first pile holds the first order?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          first = orders.sort_values('created_at').groupby('customer_id').head(1)
+          print(len(first))
+          print(round(first['promised_minutes'].mean(), 2))
+        ask: "Whose first order did I ask for? Which column makes the piles?"
+    walk:
+      - "Sort the orders by when they were created, the oldest first."
+      - "Pile them by restaurant and take the first row of each."
+      - "Print how many rows, then the average promised minutes."
+    return:
+      text: "For each courier, the most recent order they carried. Print how many rows that is, and the average actual minutes of those orders, rounded to two places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        latest = orders.sort_values('created_at').groupby('courier_id').tail(1)
+        print(len(latest))
+        print(round(latest['actual_minutes'].mean(), 2))
+      output: |-
+        200
+        38.76
+      narration:
+        - "200 couriers, and their latest orders took 38.76 minutes on average. Oldest first, a pile for each courier, the last of each."
+        - "The last row of each courier's pile."
+      note: "Return for step 13. Cancelled orders have no courier, so they belong to no pile and drop out."
+    note: "The first and the latest side by side, so that head and tail are both owned before dates arrive. It differs from step 12 in the pile, the end taken and the column."
+
+  # 14
+  - kind: "recap"
+    lang: "python"
+    text: "\nStop there. Three things you did in SQL with a window, now in pandas. A pile's answer written beside each row of the pile. The first few rows of each pile. The latest row of each pile. Each of them is the piles you already knew, with a different word at the end: `transform`, `head` and `tail`. Sort first, make the piles second, and the word at the end says what to do with each pile. Dates are next.\n"
+    note: "Relief after three new thoughts. It says the shape once, in plain words, and gives the load a rest before the two look-it-up thoughts (rule C8)."
+
+  # 15
+  - kind: "give"
+    lang: "python"
+    new: ["text-to-date"]
+    text: |
+      Now dates. The created_at column holds text, like `2026-08-01 00:00:00`, and text can be sorted but cannot be asked what month it is. This is something people look up, so I will give you the spelling. The thought is: turn the text into dates, then reach into the dates for their month. It reads `pd.to_datetime(orders['created_at'])`, and then `.dt.month` after it:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+      print(orders['month'].value_counts())
+      ```
+
+      Run it.
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+        print(orders['month'].value_counts())
+    after_run: |
+      Three months, 8, 9 and 10, with their counts, the biggest first. The new month column is an ordinary column from now on, so you can make piles from it. That is what SQL's strftime did, with another spelling. Every library spells this one differently, which is why nobody keeps it in their head.
+    note: "Shape grade. The teacher's text carries the spelling and says that it is looked up. The grouping by a computed thing is SQL-9's pile-by-computed, done here through a new column that already exists as a thought (new-column)."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["text-to-date", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "summary-follows"]
+    supplies: ["pd.to_datetime(orders['created_at'])", ".dt.month"]
+    text: "Make the month column again, with `pd.to_datetime(orders['created_at'])` and `.dt.month` to look up. Then add up the subtotals for each month, and print the result."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+      print(orders.groupby('month')['subtotal'].sum())
+    output: |-
+      month
+      8     124179.67
+      9     117429.67
+      10    119276.01
+      Name: subtotal, dtype: float64
+    narration:
+      - "The three months with their totals: 124,179.67, then 117,429.67, then 119,276.01. A month column, then piles by it, then a sum, and the piles' names come out on the left by themselves."
+      - "The text became dates, the dates gave the month, and the month made the piles."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['month'] = orders['created_at'].dt.month
+          print(orders.groupby('month')['subtotal'].sum())
+        ask: "The error says `.dt` works on dates. What is created_at when it arrives from the file, and what turns that into dates?"
+        why: "a column read from a file is text. `.dt` only opens up dates."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+          print(orders.groupby('month')['subtotal'].mean())
+        ask: "Those are the averages. What did I ask to do with the subtotals of each month?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('created_at')['subtotal'].sum())
+        ask: "Look at how many piles came out. Which column makes one pile per month?"
+    walk:
+      - "Turn created_at into dates and keep their month in a new column."
+      - "Make the piles by that column, pick the subtotal, and add it up."
+      - "Print what comes out."
+    return:
+      text: "Make the same month column, using `pd.to_datetime(orders['created_at'])` and `.dt.month`. Then, for each month, work out the average delivery fee, and print it."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+        print(orders.groupby('month')['delivery_fee'].mean())
+      output: |-
+        month
+        8     5.250716
+        9     5.257066
+        10    5.130604
+        Name: delivery_fee, dtype: float64
+      narration:
+        - "Three months, and the average fee of each, about 5.25, 5.26 and 5.13. The same month column, and a different summary of a different column."
+        - "Dates, month, piles, then the average of the fee."
+      note: "Return for step 16. Other column and summary."
+    note: "First ask on a shape thought. The spellings are in the text, and listed in `supplies`. The error from the `.dt` slip is the learner's real feedback."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["text-to-date", "top-n-in-pandas", "bring-pandas-in", "read-a-table", "new-column", "sort-values", "groupby", "column", "show", "summary-follows"]
+    supplies: ["pd.to_datetime(orders['created_at'])", ".dt.month"]
+    text: "A month is a pile like any other. Using `pd.to_datetime(orders['created_at'])` and `.dt.month` again, find the biggest order of each month. Print how many rows that is, and the total of their subtotals, rounded to two places."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+      ranked = orders.sort_values('subtotal', ascending=False)
+      kept = ranked.groupby('month').head(1)
+      print(len(kept))
+      print(round(kept['subtotal'].sum(), 2))
+    output: |-
+      3
+      676.13
+    narration:
+      - "Three rows, one for each month, adding up to 676.13. A month column, then the top-one-of-each-pile you wrote a few steps ago."
+      - "The month is a column now, so it makes piles the way a restaurant does."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+          ranked = orders.sort_values('subtotal')
+          kept = ranked.groupby('month').head(1)
+          print(len(kept))
+          print(round(kept['subtotal'].sum(), 2))
+        ask: "Those are the smallest orders of each month. Which end of the sorting do we want first?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          ranked = orders.sort_values('subtotal', ascending=False)
+          kept = ranked.groupby('created_at').head(1)
+          print(len(kept))
+          print(round(kept['subtotal'].sum(), 2))
+        ask: "How many rows came out? A pile for each what? What did we make from the dates so that a month could make piles?"
+    walk:
+      - "Make the month column, with the spelling you were given."
+      - "Sort the orders by subtotal, the biggest first."
+      - "Pile them by month, keep the first row of each, and print the two numbers."
+    return:
+      text: "Make the month column once more, with `pd.to_datetime(orders['created_at'])` and `.dt.month`. Take the latest order of each month, and print how many rows that is and the total of their subtotals, rounded to two places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+        latest = orders.sort_values('created_at').groupby('month').tail(1)
+        print(len(latest))
+        print(round(latest['subtotal'].sum(), 2))
+      output: |-
+        3
+        158.84
+      narration:
+        - "Three rows, the last order of each month, adding up to 158.84. A month column, then oldest first, piles by month, and the last row of each."
+        - "The same month column, and the latest-of-each-pile you wrote earlier."
+      note: "Return for step 17. The tail end of each month instead of the biggest."
+    note: "A recombination. The month is a computed pile, and top-n and the dates meet in one sentence. The file is sorted in time, so the sort by subtotal is what matters for the biggest."
+
+  # 18
+  - kind: "give"
+    lang: "python"
+    new: ["shift"]
+    text: |
+      One more window from SQL: `LAG`, the previous row's value written beside this row. This is another one to look up, and the thought is: every row gets the value of the row above it. It is spelled `.shift()`, and it goes after a column or a list of numbers. Here are the month totals, and then each month's total next to the one before it:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+      monthly = orders.groupby('month')['subtotal'].sum()
+      print(monthly)
+      print(monthly.shift())
+      print(monthly - monthly.shift())
+      ```
+
+      Run it.
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+        monthly = orders.groupby('month')['subtotal'].sum()
+        print(monthly)
+        print(monthly.shift())
+        print(monthly - monthly.shift())
+    after_run: |
+      Each month's total slid down one row: August's is now beside September, and August itself has nothing before it, so its cell is empty, NaN, which is SQL's empty cell. The last print subtracts row by row, as columns always do. September is down 6,750.00 and October is up 1,846.34, the same two changes SQL found. Shift only means "the one above", so the rows need to be in the order you want first. The month numbers are in order already.
+    note: "Shape grade. It is LAG, and the learner has seen the empty first cell in SQL. Subtraction of two columns is `column-sums` from PD-3, which the step uses without a new id. Echoes SQL-9's closing sentence exactly."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["shift", "text-to-date", "bring-pandas-in", "read-a-table", "new-column", "groupby", "size", "column-sums", "show", "name-the-result"]
+    supplies: ["pd.to_datetime(orders['created_at'])", ".dt.month", ".shift()"]
+    text: "How much did the number of orders change from each month to the next? The spellings to look up are `pd.to_datetime(orders['created_at'])`, `.dt.month` and `.shift()`. Make the month column, count the orders in each month, and print each count minus the month's before."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+      counts = orders.groupby('month').size()
+      print(counts - counts.shift())
+    output: |-
+      month
+      8       NaN
+      9    -122.0
+      10     40.0
+      dtype: float64
+    narration:
+      - "August has nothing before it, then 122 fewer orders in September, then 40 more in October. A count for each month, the count slid down one row, and a subtraction."
+      - "The previous month's count sat beside each month, and the difference is that column minus its shifted self."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+          counts = orders.groupby('month').size()
+          print(counts.shift() - counts)
+        ask: "September shows plus 122 here. Did September have more orders than August, or fewer? Which month should come first in the subtraction?"
+        why: "a change is this month minus the month before it."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+          counts = orders.groupby('month').size()
+          print(counts.shift())
+        ask: "That shows the month before, and nothing else. What do you do with it and the counts to get the change?"
+    walk:
+      - "Make the month column and count the orders in each month. Name the counts."
+      - "Slide the counts down one row with the spelling you were given."
+      - "Subtract the slid counts from the counts, and print that."
+    return:
+      text: "How much did the total of the delivery fees change from each month to the next? Make the month column with `pd.to_datetime(orders['created_at'])` and `.dt.month`, add up the fees in each month, and print each total minus the month's before, using `.shift()`."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['month'] = pd.to_datetime(orders['created_at']).dt.month
+        fees = orders.groupby('month')['delivery_fee'].sum()
+        print(fees - fees.shift())
+      output: |-
+        month
+        8        NaN
+        9    -628.23
+        10    -40.87
+        Name: delivery_fee, dtype: float64
+      narration:
+        - "Empty for August, then 628.23 less in September, then 40.87 less in October. Totals per month, the previous total beside each, and the difference."
+        - "The same slide and subtraction, on the sums of another column."
+      note: "Return for step 19. A sum of another column instead of a count."
+    note: "SQL-9's LAG sentence in pandas, on a different quantity. The shape thought is asked once and returns once. A classmate's trap, the subtraction the wrong way round, is a wrong answer, not a step."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["latest-in-pandas", "merge", "only-matches-survive", "mean-of-yes-no", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "name-the-result", "summary-follows"]
+    friction: true
+    text: "This one I won't break down. The deliveries table says whether it rained, one row for each delivered order. Take each customer's latest delivery. Print how many customers that is, and then what share of those deliveries happened in the rain, rounded to three places. Think about what comes first, the join or picking the latest."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      latest = joined.sort_values('created_at').groupby('customer_id').tail(1)
+      print(len(latest))
+      print(round(latest['rain'].mean(), 3))
+    output: |-
+      1469
+      0.186
+    narration:
+      - "1,469 customers, and 18.6 percent of their latest deliveries were in the rain. Join first, so that every row has a delivery, then sort, pile and keep the last of each. The share is the mean of a column of ones and noughts."
+      - "Merge, sort by time, a pile for each customer, the last row of each, then the mean of rain. Each movement was one you owned, and you chose their order."
+      - "You found the order yourself: a cancelled order has no delivery, so it has to be dropped before the latest is picked."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          latest = orders.sort_values('created_at').groupby('customer_id').tail(1)
+          joined = latest.merge(deliveries, on='order_id')
+          print(len(joined))
+          print(round(joined['rain'].mean(), 3))
+        ask: "Fewer customers came out. Which kinds of order have no delivery, and what happens to a latest order that was one of them?"
+        why: "a merge drops the rows with no partner. If the latest order was cancelled, the customer is gone, though they had earlier deliveries."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(len(joined))
+          print(round(joined['rain'].mean(), 3))
+        ask: "That is every delivery, not each customer's latest. What picks one row for each customer?"
+    walk:
+      - "Stick the deliveries onto the orders, matching on the order id."
+      - "Sort what is left by time, pile it by customer, and keep the last row of each."
+      - "Print how many rows, and the mean of the rain column rounded to three places."
+    return:
+      text: "Take each restaurant's latest delivery, with the rain from the deliveries table. Print how many restaurants that is, and what share of those deliveries happened in the rain, rounded to three places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        latest = joined.sort_values('created_at').groupby('restaurant_id').tail(1)
+        print(len(latest))
+        print(round(latest['rain'].mean(), 3))
+      output: |-
+        60
+        0.15
+      narration:
+        - "Join, sort by time, a pile for each restaurant, the last of each, the mean of the rain."
+        - "A restaurant's latest delivery, and the share of those that were wet."
+      note: "Return for step 20. Not broken down, like the step."
+    note: "Deliberate friction (rule C9). Latest, merge and the mean of a yes-or-no column meet, and the order of the first two is the point. The classmate-style trap, a latest order that was cancelled, is real and is caught in the wrong answers. PD-4 reads the same tables."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["transform-beside", "latest-in-pandas", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "sort-values", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
+    friction: true
+    text: "The last one, and I won't break it down. How many customers' latest order was bigger than that customer's own average subtotal, counted over all of their orders? Print the number. Think about what has to sit beside each row before you keep only the latest."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['customer_avg'] = orders.groupby('customer_id')['subtotal'].transform('mean')
+      latest = orders.sort_values('created_at').groupby('customer_id').tail(1)
+      print(len(latest[latest['subtotal'] > latest['customer_avg']]))
+    output: "667"
+    narration:
+      - "667 customers. That is a real question about habits, and you built it from two windows: the average of every order written beside every row, and then only the latest row of each customer. The average had to be written before the rows were cut down."
+      - "Transform first, so that each average still covers all of a customer's orders. Then sort, pile, keep the last, and compare."
+      - "667 of 1,475. Written in the order things happen, once again."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          latest = orders.sort_values('created_at').groupby('customer_id').tail(1)
+          latest['customer_avg'] = latest.groupby('customer_id')['subtotal'].transform('mean')
+          print(len(latest[latest['subtotal'] > latest['customer_avg']]))
+        ask: "Zero came out. Once the table has been cut down to one row for each customer, how many rows does each pile hold, and what is its average?"
+        why: "a pile of one row averages to that row, so nothing is above it. The average has to be written while the pile still holds every order."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['customer_avg'] = orders.groupby('customer_id')['subtotal'].transform('mean')
+          print(len(orders[orders['subtotal'] > orders['customer_avg']]))
+        ask: "That counts every order that beat its customer's average. I asked only about each customer's latest. What picks the latest?"
+    walk:
+      - "Write each customer's average subtotal beside all of their orders."
+      - "Sort by time, pile by customer, and keep the last row of each."
+      - "Keep the rows whose subtotal is above their average, and count them."
+    return:
+      text: "How many restaurants' latest order was bigger than the average subtotal of all that restaurant's orders? Print the number. Think about what has to sit beside each row before you keep only the latest."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['rest_avg'] = orders.groupby('restaurant_id')['subtotal'].transform('mean')
+        latest = orders.sort_values('created_at').groupby('restaurant_id').tail(1)
+        print(len(latest[latest['subtotal'] > latest['rest_avg']]))
+      output: "24"
+      narration:
+        - "Transform first, over all of a restaurant's orders, then the latest row of each, then the comparison."
+        - "The average was written before the rows were cut down, which is why it still means something."
+      note: "Return for step 21. Not broken down, like the step."
+    note: "The surprise sentence. It joins transform and latest in the one order that works, and the wrong answer that cuts down first gives zero and shows why. The learner works the order out, not told it (rule B4), as in SQL-1's last step."
+
+  # 22
+  - kind: "recap"
+    lang: "python"
+    text: "\nStop there. In one sitting you took the three things SQL did with a window and did them with the piles you already owned: a pile's answer beside every row, the first few rows of each pile, the latest row of each pile. And you looked up the spellings for a month and for the row above. Every one of those was the same thought as in SQL, and the answers were the same numbers.\n\nYou are not fast at it yet, and you are not meant to be. For now the only aim is that you can think a sentence out. Don't go over any of this before next time. One more question, cold, and then we stop.\n"
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 23
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["latest-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "how-many", "summary-follows"]
+    text: "Keep each restaurant's two most recent orders. Print how many rows that leaves, and the total of their subtotals, rounded to two places."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      latest = orders.sort_values('created_at').groupby('restaurant_id').tail(2)
+      print(len(latest))
+      print(round(latest['subtotal'].sum(), 2))
+    output: |-
+      120
+      7075.63
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: sort by time, piles, and the last two of each pile, on a combination never practised (the lesson only took the last one, or the first few). Never scored (rule F1). A miss tells the script whether the piles, the sorting or the end of each pile was absent."

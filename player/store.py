@@ -32,6 +32,10 @@ class Store:
             "SELECT id, state_json FROM runs WHERE lesson = ? ORDER BY id DESC LIMIT 1", (lesson,)).fetchone()
         return (row[0], json.loads(row[1])) if row else None
 
+    def latest_any(self):
+        row = self.conn.execute("SELECT id, lesson, state_json FROM runs ORDER BY id DESC LIMIT 1").fetchone()
+        return (row[0], row[1], json.loads(row[2])) if row else None
+
     def new_run(self, lesson, state, items, finished=False):
         with self.conn:
             cur = self.conn.execute(
@@ -63,6 +67,7 @@ class Store:
 
     def events(self):
         cur = self.conn.execute(
-            "SELECT id, run_id, ts, step, variant, typed, outcome, misses FROM events ORDER BY id")
+            "SELECT e.id, e.run_id, r.lesson, e.ts, e.step, e.variant, e.typed, e.outcome, e.misses "
+            "FROM events e JOIN runs r ON r.id = e.run_id ORDER BY e.id")
         names = [d[0] for d in cur.description]
         return [dict(zip(names, r)) for r in cur.fetchall()]

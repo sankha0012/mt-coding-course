@@ -40,6 +40,36 @@ A lesson is one sitting of roughly ten to twenty minutes. It is an ordered list 
 | Friction | A flag for steps that are deliberately not broken down. |
 | Note for the writer | Why the step is here. Never shown to the learner. |
 
+## Grades
+
+Every thought is core, shape or name only (decision C10, explained in `docs/01-scope.md`).
+
+- A **core** thought is asked for and comes back spaced.
+- A **shape** thought is asked for only in steps whose teacher's line carries the spelling. The line also says plainly that this is something people look up, for example: "This one you would look up. The thought is: cut a date down to its month. Here it is spelled `strftime('%Y-%m', created_at)`." A shape step lists the spellings it supplies, and the checker confirms each appears in the step's text. This is not a reference panel: the spelling arrives in the teacher's voice, at the moment it is needed.
+- A **name only** thought appears in one Aside and in no prompt.
+
+In `thoughts.yaml` a core thought is a plain string. A shape or name-only thought is written `{text: ..., grade: shape}` or `{text: ..., grade: name-only}`. A step that supplies spellings lists them in `supplies`, each exactly as it appears in the step's `text`. Check 9 enforces it: a step that requires a shape thought must have `supplies`, every `supplies` entry must appear in the step's text, and no step may require a name-only thought.
+
+## Languages and data
+
+A step is SQL unless it says `lang: python`. Python covers plain Python, pandas and scikit-learn. A step may name its data folder with `data`, relative to `data/`. A lesson whose folder is missing is left out.
+
+- **Python answers are judged by what they print.** A step that asks for a function, or any program that prints nothing itself, carries `check`: hidden code that is run after the learner's code and printed. The learner sees only what their own code printed. A step with no output and no `check` is a fault, and the checker says so.
+- A return in a Python step is played in the same language and on the same data. If its step has a `check`, the return needs its own.
+- `output` is the expected printed text of a Python model answer, in place of `rows` and `result`.
+- In `wrong`, a Python entry uses `code` where an SQL entry uses `sql`.
+- Output is compared by its words and numbers, whatever the spacing, with numbers rounded to six places.
+- Python has no slip view. Its ladder ends in a Python code block.
+- The learner's code runs in a long-lived worker process that imports pandas and scikit-learn once, in a temporary folder whose CSV files are read-only links to private copies. A program that runs for too long is stopped.
+
+## Several lessons
+
+A strand folder holds `lesson-01.yaml`, `lesson-02.yaml` and so on, and its own `thoughts.yaml`. `content/course.yaml` lists the lessons as `strand/lesson-01`, in the order they are played, which interleaves the strands. An id may be defined in one strand's `thoughts.yaml` only, and any lesson may require any earlier thought, whichever strand it came from. The checker takes either a course folder or a single strand folder. A lesson opens with a cold check from an earlier lesson by starting with a step of kind `cold-check`. The audit lets it require any thought from any earlier lesson. When a lesson ends, the player offers the next one, or to sit the same lesson again.
+
+## Cold sittings
+
+A cold sitting is a short lesson file made only of Cold check steps, drawn from every strand taught so far. It has no ladder, no narration and no score. Two exist, one after each pass (see `docs/03-curriculum.md`).
+
 ## What a Give step carries
 
 The teacher's text, the example in use, the one-line reason or the statement that this just is, the new thought's identifier, and whether what is imported is being named (for example "commas, as in English").

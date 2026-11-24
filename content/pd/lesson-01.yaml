@@ -1,0 +1,824 @@
+lesson: pd-01
+title: "The same movements, in thinking order"
+strand: pd
+stage: 1
+thoughts:
+  bring-pandas-in: "`import pandas as pd` brings the library in, under a short name."
+  read-a-table: "`orders = pd.read_csv('orders.csv')` reads a file into a table and names it."
+  dataframe: "The table is called a DataFrame. A table goes in, a table comes out, as before."
+  look-at-rows: "`orders.head()` shows the first rows."
+  column: "`orders['subtotal']` gets one column by name. The name is text, so it wears quotes."
+  summary-follows: "The summary comes after the column: `.mean()`, `.sum()`, `.max()`. In SQL it wrapped the column."
+  yes-no-column: "`orders['status'] == 'delivered'` asks every row and gives a column of yes and no."
+  brackets-keep-yes: "Hand that column to the brackets and only the yes rows come out."
+  name-the-result: "Name what came out, then do something with it."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["row-is-dict", "table-is-list-of-rows", "cell", "for-each", "block", "if-question", "equals-asks", "running-result", "build-average", "show"]
+    text: |-
+      Here are three delivery rows, each one a dict, in a list:
+
+      ```python
+      rows = [{'status': 'delivered', 'fee': 5.0}, {'status': 'cancelled', 'fee': 7.5}, {'status': 'delivered', 'fee': 3.0}]
+      ```
+
+      Type them in, and print the average fee of the delivered rows.
+    model: |
+      rows = [{'status': 'delivered', 'fee': 5.0}, {'status': 'cancelled', 'fee': 7.5}, {'status': 'delivered', 'fee': 3.0}]
+      total = 0
+      count = 0
+      for row in rows:
+          if row['status'] == 'delivered':
+              total = total + row['fee']
+              count = count + 1
+      print(total / count)
+    output: "4.0"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PY-6, the closing idea in small: a list of rows, a loop, a question, a running total and a count. It is also the loop that pandas is about to replace, so the lesson can say so in step 10. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["bring-pandas-in"]
+    text: |-
+      You have spent six lessons doing by hand what a library does in a word. The library for tables is called pandas. It lives outside the plain Python you have used so far, so before we can use it we have to bring it in. One line does it, and it goes at the top of every script from now on:
+
+      ```python
+      import pandas as pd
+      ```
+
+      Run it.
+    shows:
+      - "import pandas as pd"
+    after_run: "Nothing came out, and nothing should: the line only brought the library in. The \"as pd\" gives it a short name, so that from here on pd means pandas. Everybody writes pd. That one just is."
+    note: "The first line of every pandas script, used before it is explained (rule B3). \"Everybody writes pd\" is the honest reason, and the rule about mnemonics says to say so (rule B6). The learner will type this line in every step from here on."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["read-a-table"]
+    text: |-
+      Now a table. The orders are in a file called orders.csv, and pandas can read a file into a table in one line. You know this shape: a name, one equals sign, and what the name is given to. The file's name is text, so it wears quotes. Then a line to say how many rows came in, with the word that counted a list:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders))
+    after_run: "6,000, the count SQL gave you in the first minute. pd.read_csv read the file, and orders is the name we gave to the table that came out. The name is ours to choose, and it is kind to call a table what it is."
+    note: "Three imports said aloud: one equals sign names (PY-1), text wears quotes, len counts. The learner types the read line in every step from here on, which is the owner's decision of 24 Nov."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "how-many", "name-a-value", "text-quotes"]
+    text: "The restaurants are in a file called restaurants.csv. Read them in and print how many there are. Think it out before you type, and start the script the way every script starts."
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(len(restaurants))
+    output: "60"
+    narration:
+      - "60. Bring pandas in, read the file under a name, count the rows: the same three movements as with the orders."
+      - "60 restaurants, the same 60 SQL counted. Only the file and the name changed."
+      - "60."
+    wrong:
+      - code: |-
+          restaurants = pd.read_csv('restaurants.csv')
+          print(len(restaurants))
+        ask: "Python reads your first line and meets pd. Has it been told what pd is?"
+        why: "pd is only a short name for pandas, and it exists once the library has been brought in. Every script starts there."
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv(restaurants.csv)
+          print(len(restaurants))
+        ask: "Is restaurants.csv a name in your program, or a piece of text?"
+        why: "a file's name is text, so it wears quotes, like any other word we are looking for."
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants)
+        ask: "That shows the table, or as much as fits. I asked how many rows there are. What counted the items of a list?"
+        why: "len counts whatever it is given, and a table's items are its rows."
+    walk:
+      - "Bring pandas in, the way every script starts."
+      - "Read restaurants.csv into a table and give it a name: a name, one equals sign, then pd.read_csv with the file's name in quotes."
+      - "Print how many rows it has. The word that counted a list counts these."
+    return:
+      text: "There is a small file called coupons.csv. Read it in and tell me how many rows it has."
+      model: |
+        import pandas as pd
+        coupons = pd.read_csv('coupons.csv')
+        print(len(coupons))
+      output: "4"
+      narration:
+        - "4 coupons. Bring pandas in, read the file, count the rows: the same three movements."
+        - "4. The file's name wore quotes, and len counted the rows."
+      note: "Return for step 4. Early step: only the table can change."
+    note: "First typed sentence, and the first rule of engagement, at the moment it matters. Only the table changes from step 3, on purpose: it fixes where the file's name goes. This is the one place where a one-slot change is wanted. SQL-1 step 2 did the same."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["dataframe"]
+    text: |-
+      Pause on what you just made. Pandas has a name for it: a DataFrame. It is a table, with rows and columns, the very same table SQL had. And the picture you kept from the first lesson still holds: a table goes in, a table comes out. Everything from here is that, written in Python.
+
+      You will hardly need the word DataFrame again, but you will hear it everywhere, so now you have met it.
+    note: "The overarching idea (rule C10), carried over from SQL-1 step 5 and marked as the one thing to hold on to. It is only a name, and the learner is told it is only a name."
+
+  # 6
+  - kind: "give"
+    lang: "python"
+    new: ["look-at-rows"]
+    text: |-
+      To look at a table without drowning in it, ask it for its first few rows. A thing in Python is asked to do something by a dot after its name and the action after the dot, the way a list was asked to append. The action here is called head, and the number in its brackets says how many rows:
+
+      ```python
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(restaurants.head(3))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        restaurants = pd.read_csv('restaurants.csv')
+        print(restaurants.head(3))
+    after_run: "Three rows, every column, and a number down the side that pandas adds for itself. With nothing in the brackets, head gives five. A table went in and a smaller table came out."
+    note: "The dot-and-brackets of an action is imported from the list's append, not explained. The restaurants table has five columns and fits the screen. The orders table has eleven, and pandas would cut the middle out, so it is not shown yet."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "look-at-rows", "dataframe", "text-quotes"]
+    text: "The couriers are in couriers.csv. Show me their first four rows."
+    model: |
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
+      print(couriers.head(4))
+    output: |-
+      courier_id vehicle       city
+      0           1    bike  São Paulo
+      1           2    bike  São Paulo
+      2           3   carro  São Paulo
+      3           4    bike  São Paulo
+    narration:
+      - "Four couriers, with their vehicle and their city. The table was asked for its first rows, and the number said how many."
+      - "The first four rows, and nothing else: a smaller table came out of the table that went in."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          couriers = pd.read_csv('couriers.csv')
+          print(couriers)
+        ask: "That shows the table, or as much of it as fits. Which action asks for only the first few?"
+      - code: |-
+          import pandas as pd
+          couriers = pd.read_csv('couriers.csv')
+          print(couriers.head)
+        ask: "Python showed you the action itself and did not run it. What do brackets do after an action's name?"
+        why: "the brackets are what run it. With none, you have only named it."
+      - code: |-
+          import pandas as pd
+          couriers = pd.read_csv('couriers.csv')
+          print(couriers.head())
+        ask: "Count the rows that came out. How many did I ask for, and where does a number go?"
+    walk:
+      - "Bring pandas in and read couriers.csv into a table with a name."
+      - "Ask the table for its first rows: a dot, head, and in its brackets the number you want."
+      - "Print what came out."
+    return:
+      text: "The coupons file has only a few rows. Show me the first two."
+      model: |
+        import pandas as pd
+        coupons = pd.read_csv('coupons.csv')
+        print(coupons.head(2))
+      output: |-
+        coupon_code  discount_pct
+        0   BEMVINDO10            10
+        1  FRETEGRATIS             0
+      narration:
+        - "The first two coupons, and their codes and discounts. The same action, with another number and another table."
+        - "Two rows came out of the table that went in."
+      note: "Return for step 7."
+    note: "Show me, in place of count me. The learner has met couriers.csv by name only. The vehicle column is seen here, many steps before the closing cold check needs it."
+
+  # 8
+  - kind: "give"
+    lang: "python"
+    new: ["column"]
+    text: |-
+      A table has columns, and each column has a name. To take one column out, put its name in square brackets after the table. You have used square brackets before: they always mean get something from inside. And a column's name is text, so it wears quotes. A column is long, so we look at its first five with head:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['subtotal'].head())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['subtotal'].head())
+    after_run: "One column, with the row numbers beside its values. The line at the foot is only pandas saying what it is. Square brackets, a name in quotes: get that one from inside. The table came out narrower, down to a single column."
+    note: "Imports square brackets (get from inside, PY-3) and quotes. The quotes-and-brackets spelling is the only one this course uses for a column. Dot-spelling is never taught (decision in the map)."
+
+  # 9
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "look-at-rows", "get-by-name", "text-quotes"]
+    text: "The restaurants' cities are in the city column of the restaurants table. Show me the first five of them."
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(restaurants['city'].head())
+    output: |-
+      0    Belo Horizonte
+      1         São Paulo
+      2          Curitiba
+      3    Rio de Janeiro
+      4         São Paulo
+      Name: city, dtype: str
+    narration:
+      - "Belo Horizonte, São Paulo, Curitiba: a city for each of the first five restaurants. The table, then the column's name in brackets and quotes, then the first rows."
+      - "One column of the table, and the first five of its values."
+      - "The first five cities."
+    wrong:
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants[city].head())
+        ask: "Is city a name in your program, or the name of a column? What does a column's name wear?"
+        why: "a column's name is text, so inside the brackets it wears quotes, as a word we are looking for always does."
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants['city'])
+        ask: "That is the whole column, as much as fits. Which action shows only the first few?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants['City'].head())
+        ask: "Look at the top of the table you saw earlier. Is that column spelled the way you wrote it?"
+        why: "a name is matched letter for letter, capitals included, as text inside quotes always is."
+    walk:
+      - "Bring pandas in and read restaurants.csv into a table."
+      - "Take the one column out: square brackets after the table's name, and the column's name in quotes inside them."
+      - "Ask it for its first rows, and print."
+    return:
+      text: "Now the couriers again. Show me the first five of the vehicle column."
+      model: |
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        print(couriers['vehicle'].head())
+      output: |-
+        0     bike
+        1     bike
+        2    carro
+        3     bike
+        4     bike
+        Name: vehicle, dtype: str
+      narration:
+        - "Bike, bike, carro, bike: the vehicle of each of the first couriers. A column by name, then its first rows."
+        - "The same movement on another table and another column."
+      note: "Return for step 9. Other table and column."
+    note: "Brackets and quotes met in one sentence. The word city is the first thing in this table that is only text."
+
+  # 10
+  - kind: "give"
+    lang: "python"
+    new: ["summary-follows"]
+    text: |-
+      A summary of a column is still what it was in SQL: an average, a total, a biggest. But the order changes. In SQL the summary wrapped the column, AVG of the subtotal. In pandas you take the column first, and the summary follows it after a dot, as head did:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['subtotal'].mean())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['subtotal'].mean())
+    after_run: "About 60.40, the average SQL gave you in the first lesson. 25 of the subtotals are empty, and pandas leaves them out, as AVG did. The table, then the column, then the summary: that is the order you think it in, and now it is the order you write it in. Two more work the same way: .sum() adds the column up, and .max() finds its biggest."
+    note: "The thought is an order, not a spelling. The map says SQL wrapped the column and pandas follows it. mean, sum and max are the spellings of AVG, SUM and MAX, said here once. 25 subtotals are empty, which is why the number is not exactly SQL's to the last digit, and it is said as a plain fact."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "text-quotes"]
+    text: "What was the average delivery fee over all the orders?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['delivery_fee'].mean())
+    output: "5.213018333333333"
+    narration:
+      - "About 5.21. The table, then the column, then the summary after it."
+      - "5.21 on average. The word for an average is shorter here, mean, and it comes last."
+      - "The summary followed the column, and a single number came out."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['delivery_fee'])
+        ask: "That is the column itself. What do we want said about it?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(mean(orders['delivery_fee']))
+        ask: "In SQL the summary wrapped the column. Which one comes first in pandas?"
+        why: "in pandas the column comes first and the summary follows it."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['delivery_fee'].avg())
+        tell: "The word is mean. That spelling just is."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['delivery_fee'].mean)
+        ask: "Python showed you the action and did not run it. What do brackets do after an action's name?"
+    walk:
+      - "Read orders.csv into a table, as every script does."
+      - "Take the delivery fee column out of it."
+      - "Say the summary after the column: the average is called mean."
+    return:
+      text: "The promised_minutes column says how long each delivery was promised for. What was the average promise?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['promised_minutes'].mean())
+      output: "39.931666666666665"
+      narration:
+        - "About 39.93 minutes, SQL's answer again. The column first, and the summary after it."
+        - "The table, then the column, then the average."
+      note: "Return for step 11. Other column."
+    note: "The first summary the learner types. The thinking-order phrase is on the step so the order of the sentence can be found, as in SQL-1 step 7."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows"]
+    text: "The actual_minutes column says how long each delivery really took. What was the longest?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['actual_minutes'].max())
+    output: "109.9"
+    narration:
+      - "109.9 minutes. The same place in the sentence as mean, with another word."
+      - "From orders, the actual minutes, the biggest. 109.9."
+      - "The longest delivery took 109.9 minutes."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['actual_minutes'].min())
+        ask: "That is the shortest. Which end did I ask for?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['actual_minutes'].sum())
+        ask: "That adds every delivery's minutes up. Which summary finds the biggest?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['actual_minutes'])
+        ask: "That shows the column. Which word turns many values into one?"
+    walk:
+      - "Read orders.csv, and take the column that holds the minutes the deliveries really took."
+      - "Say the summary after it: the biggest is called max."
+    return:
+      text: "What did all the subtotals add up to?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['subtotal'].sum())
+      output: "360885.35"
+      narration:
+        - "360,885.35, the total SQL gave you. The column first, then the word for adding up."
+        - "Every subtotal added together: one number out of 6,000 values."
+      note: "Return for step 12."
+    note: "Two spellings, sum and max, in two steps. The echoes are 109.9 from SQL-2 step 7 and 360,885.35 from SQL-2 step 6."
+
+  # 13
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. The name pandas has nothing to do with the animal. It comes from panel data, the economists' word for tables that follow the same things over time. The library was first written in 2008, at an investment firm, for exactly the work you are about to do: asking questions of tables of numbers."
+    note: "Relief after the first climb (rule C8), and before the question-and-brackets climb. A real origin and not a mnemonic. The firm is not named."
+
+  # 14
+  - kind: "classmate"
+    lang: "python"
+    new: ["yes-no-column"]
+    text: |-
+      Now a question, as in SQL, where every row answers yes or no. Davi wanted to ask every order whether it was delivered. He wrote:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(status == 'delivered')
+      ```
+
+      Python answered: NameError: name 'status' is not defined. Davi, is status a name in the program, or a column of the table? ... A column. And you know how a column is asked for: the table, then its name in square brackets and quotes. The two equals signs then ask the question, as they did in your loop, but of the whole column at once:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['status'] == 'delivered')
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['status'] == 'delivered')
+    broken: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(status == 'delivered')
+    after_run: "A column of True and False, one answer for every row. Pandas shows only the first few and the last few of the 6,000. True means the order was delivered. Nothing has been dropped: all the rows are still here, each with its answer. In the loop you asked one row at a time, and here one line asked every row."
+    note: "Davi makes the mistake before the learner can (rule E6), and Python's own message supplies the real reason: a bare word is a name in the program, and status is a column. It is the same slip as the unquoted word in SQL-1 step 8. Equals-asks arrives as an import from PY-1, said aloud. A list of True and False is shown as it is. The words yes and no stay in the narration."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "compare-signs", "text-quotes"]
+    text: "Ask every order whether its subtotal is above 100, and show me the answers."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['subtotal'] > 100)
+    output: "0       False\n1       False\n2       False\n3       False\n4       False\n        ...  \n5995     True\n5996    False\n5997    False\n5998    False\n5999    False\nName: subtotal, Length: 6000, dtype: bool"
+    narration:
+      - "True where the subtotal is above 100, False where it is not. The column was asked the question, and a column of answers came back."
+      - "One answer per row, all 6,000 of them. The sign you know from maths asked the question of the whole column."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'] == 100)
+        ask: "That asks whether it is exactly 100. Which sign asks \"above\"?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'] > '100')
+        ask: "Is 100 a word we are looking for, or a number?"
+        why: "a number does not wear quotes. Text and numbers are not compared with each other."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[subtotal > 100])
+        ask: "Is subtotal a name in your program, or a column of the table? How is a column asked for?"
+    walk:
+      - "Read orders.csv into a table."
+      - "Take the subtotal column out, with its name in brackets and quotes."
+      - "Ask the question of it with the sign for above."
+    return:
+      text: "The promised_minutes column holds how long each delivery was promised for. Ask every order whether it was promised in under 40 minutes, and show me the answers."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['promised_minutes'] < 40)
+      output: "0       False\n1        True\n2       False\n3        True\n4       False\n        ...  \n5995    False\n5996     True\n5997    False\n5998    False\n5999    False\nName: promised_minutes, Length: 6000, dtype: bool"
+      narration:
+        - "A True or False for each of the 6,000 orders: promised in under 40, or not."
+        - "The same question with another column and another sign."
+      note: "Return for step 15."
+    note: "The question on its own, kept for a step so the next step can hand it to the brackets. It is the question of SQL-1 step 6 in Python. Spelling out the answer as a column is the thought, and nothing is dropped yet."
+
+  # 16
+  - kind: "give"
+    lang: "python"
+    new: ["brackets-keep-yes"]
+    text: |-
+      You have a column of yes and no. Hand it to the table's square brackets, the same brackets that took a column out by its name, and the table keeps only the rows that said yes. How many orders were cancelled?
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders[orders['status'] == 'cancelled']))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders[orders['status'] == 'cancelled']))
+    after_run: "399, the number SQL found. The brackets were given a column of yes and no in place of a name, and they kept the yes rows. A table came out, so len counted its rows. The question inside the brackets has to say which table's column it is asking about, and that is why orders appears twice. Say it as you would in English: from orders, keep the rows where the status is cancelled."
+    note: "The doubled orders is explained in one clause as a plain reason and left there: the outer one is where the rows come from, and the inner one says whose column. It is never offered as a rule to remember, because the learner has just typed the question alone in step 15. B5 holds."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "how-many", "compare-signs"]
+    text: "How many orders came to more than 100?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders[orders['subtotal'] > 100]))
+    output: "632"
+    narration:
+      - "632, the same 632 SQL kept. You asked the question of the column, handed the answers to the brackets, and counted what was left."
+      - "From orders, keep the rows above 100, count them. That is the order it happens in."
+      - "632."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders['subtotal'] > 100))
+        ask: "That counted the answers, and there is one for every row. What keeps only the yes rows?"
+        why: "the question alone only answers. The brackets are what drop the no rows."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['subtotal'] > 100])
+        ask: "Those are the rows themselves. I asked how many. What counted the rows of a table?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[subtotal > 100]))
+        ask: "Is subtotal a name in your program, or a column of the table?"
+    walk:
+      - "Ask the subtotal column the question: is it above 100?"
+      - "Hand that to the brackets of the table, so only the yes rows are kept."
+      - "Count what came out."
+    return:
+      text: "How many orders were promised in under 40 minutes?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders[orders['promised_minutes'] < 40]))
+      output: "2019"
+      narration:
+        - "2,019. Ask, keep, count. SQL's answer again."
+        - "From orders, keep the quick promises, count them: 2,019."
+      note: "Return for step 17."
+    note: "The first sentence where the learner builds the doubled orders alone, after hand-holding in step 16. Keep-rows is thinking-order again: table, keep, how many."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes"]
+    text: "What was the average delivery fee of the cancelled orders?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['status'] == 'cancelled']['delivery_fee'].mean())
+    output: "5.3682456140350885"
+    narration:
+      - "About 5.37. Keep the cancelled rows, take the delivery fee column, say the average: the order you think it in is the order it is written in."
+      - "From orders, keeping the cancelled ones, the delivery fee, its average. Each part followed the one before."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['delivery_fee'].mean())
+        ask: "That is the average over every order. Which orders did I ask about?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['status'] == 'cancelled']['delivery_fee'])
+        ask: "Those are the cancelled orders' fees, all of them. What do we want said about them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['status'] == cancelled]['delivery_fee'].mean())
+        ask: "Is cancelled a name in your program, or a word we are looking for?"
+    walk:
+      - "Ask the status column whether each order was cancelled."
+      - "Hand that to the table's brackets, so only the cancelled orders stay."
+      - "Take the delivery fee column of what is left, and say its average."
+    return:
+      text: "What was the average delivery fee of the delivered orders?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[orders['status'] == 'delivered']['delivery_fee'].mean())
+      output: "5.2019603642206755"
+      narration:
+        - "About 5.21. Keep the delivered rows, take the fee column, say the average."
+        - "Delivered is the word, in quotes. The column after the brackets is what the average is about."
+      note: "Return for step 18. Other word."
+    note: "Keep, then column, then summary, in one sentence. 5.37 is SQL-1's return for cancelled orders."
+
+  # 19
+  - kind: "give"
+    lang: "python"
+    new: ["name-the-result"]
+    text: |-
+      That sentence is getting long, and the next ones will be longer. When something comes out, you can give it a name, and then do something with it. It is the move you made in the first Python lesson: a name, one equals sign, and what the name is given to. Here the thing being named is a table:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      quick = orders[orders['promised_minutes'] == 30]
+      print(quick['actual_minutes'].mean())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        quick = orders[orders['promised_minutes'] == 30]
+        print(quick['actual_minutes'].mean())
+    after_run: "About 29.38 minutes: the orders promised in 30 minutes really took about 29. Two short lines in the place of one long one. quick is a table, so it can be asked for a column and a summary like any other. The name is yours, so choose one that says what is inside."
+    note: "Name the result, then do something with it: the strand's idea (the map's closing line for PD-1). It is a plain import of name-a-value. 29.38 is the answer SQL-1's friction return gave."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "name-the-result", "brackets-keep-yes", "yes-no-column", "how-many", "column", "summary-follows", "text-quotes"]
+    text: "Name the cancelled orders, then print how many there are, and their average subtotal."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      cancelled = orders[orders['status'] == 'cancelled']
+      print(len(cancelled))
+      print(cancelled['subtotal'].mean())
+    output: |-
+      399
+      59.99017632241813
+    narration:
+      - "399 cancelled orders, and an average subtotal of about 59.99. You named the kept rows once, and then asked that name two things."
+      - "One name, two questions: how many, and the average. The long sentence was written once and used twice."
+      - "399 and 59.99, the two numbers SQL gave you separately."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          cancelled = orders['status'] == 'cancelled'
+          print(len(cancelled))
+          print(cancelled['subtotal'].mean())
+        ask: "The name holds a column of yes and no, with an answer for every row. What turns that into only the cancelled rows?"
+        why: "the question alone only answers. The brackets keep."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          cancelled = orders[orders['status'] == 'cancelled']
+          print(cancelled['subtotal'].mean())
+        ask: "That gave one of the two things. What else did I ask for?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(cancelled['subtotal'].mean())
+          cancelled = orders[orders['status'] == 'cancelled']
+          print(len(cancelled))
+        ask: "Python read your lines in order, and met cancelled before you had named it. Which line has to come first?"
+        why: "a name has to be given before it is used, as it always was."
+    walk:
+      - "Keep only the cancelled rows, and give what is left a name."
+      - "Print how many rows that table has."
+      - "Print the average of its subtotal column."
+    return:
+      text: "Name the orders that came to more than 90, then print how many there are, and their average delivery fee."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        big = orders[orders['subtotal'] > 90]
+        print(len(big))
+        print(big['delivery_fee'].mean())
+      output: |-
+        950
+        5.287242105263157
+      narration:
+        - "950 orders, and an average delivery fee of about 5.29. One name, two questions."
+        - "Keep the big orders once, name them, and ask them both things."
+      note: "Return for step 20."
+    note: "A named table used twice. Two prints, so the step ends in a pair of numbers."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "compare-signs"]
+    text: "This one I won't break down. What was the typical delivery fee on the big orders, the ones above 100?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['subtotal'] > 100]['delivery_fee'].mean())
+    output: "5.321645569620254"
+    narration:
+      - "5.32, the same figure as SQL. Two different columns: one inside the question, to choose the rows, and another after the brackets, to say what the average is about."
+      - "From orders, keep the big ones, take their delivery fee, average it. You found that order yourself."
+      - "Typical meant average, big meant above 100, and you did the translating."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['subtotal'] > 100]['subtotal'].mean())
+        ask: "That is the average size of a big order. Which column did I ask the average of?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['delivery_fee'] > 100]['delivery_fee'].mean())
+        ask: "No delivery fee is above 100, so no rows were left. What is it that is above 100?"
+    walk:
+      - "Ask the subtotal column whether each order is above 100, and keep those rows."
+      - "Of the rows left, take the delivery fee column."
+      - "Say its average."
+    return:
+      text: "How long did a delivery really take, on average, for the orders promised in 50 minutes?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[orders['promised_minutes'] == 50]['actual_minutes'].mean())
+      output: "49.43921568627451"
+      narration:
+        - "About 49.4 minutes. The column inside the brackets chose the rows, and the one after them said what to average."
+        - "Keep the 50-minute promises, take their real time, average it. You found that order yourself."
+      note: "Return for step 21. Not broken down, like the step."
+    note: "Deliberate friction (rule C9), and the same sentence as SQL-1 step 12. 'Typical' for average, 'big' for above 100, and the column inside the brackets is not the column after them."
+
+  # 22
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "name-the-result", "text-quotes"]
+    text: "The last one, and I won't break it down. Start from nothing, as a script starts, and print the average subtotal of the delivered orders."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['status'] == 'delivered']['subtotal'].mean())
+    output: "60.42833452850484"
+    narration:
+      - "60.43, the figure at the end of SQL's first lesson. That is a whole script, and you built it by thinking: bring pandas in, read the table, keep the delivered rows, take the subtotal, say the average. Every line was in the order it happens."
+      - "From orders, keep the delivered ones, take the subtotal, average it. Only the first lines, the reading, are before their turn, and every script starts there."
+      - "60.43 over the delivered orders. The same sentence you wrote in SQL, written in the order you think it."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'].mean())
+        ask: "That averages every order, the cancelled ones too. Where do we drop them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['status'] == 'delivered'].mean())
+        ask: "Python complains that it cannot average words. Which one column did I ask the average of?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['status'] == delivered]['subtotal'].mean())
+        ask: "Is delivered a name, or a word we are looking for?"
+    walk:
+      - "Bring pandas in and read orders.csv."
+      - "Keep only the delivered orders: ask the status column the question, and hand it to the brackets."
+      - "Take the subtotal of what is left, and say its average."
+    return:
+      text: "From nothing again: print the average actual minutes of the delivered orders."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        delivered = orders[orders['status'] == 'delivered']
+        print(delivered['actual_minutes'].mean())
+      output: "39.35618639528656"
+      narration:
+        - "About 39.36 minutes. The delivered rows kept, then the column, then the average."
+        - "Name the delivered orders, then ask them for a column and a summary. You may well have written it in one line, and that is the same sentence."
+      note: "Return for step 22. Shown with a name, to show it is the same sentence."
+    note: "The surprise sentence, and the closing sentence of PD-1 in the map: 60.43, the answer SQL-1 step 14 gave. A whole script from the first line, by thinking. Pandas leaves out the empty subtotals (and AVG did) so the result is exactly SQL's."
+
+  # 23
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. In one sitting you took the three movements from SQL and wrote them in Python, in the order you think them: the table, keep the rows you want, take the column, say the summary. Pandas spells each one differently, and every one is a thought you already owned. The numbers matched SQL's, because they are the same questions asked of the same table.
+
+      You are not fast at it, and you are not meant to be. For now the only aim is that you can think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and says, in other words, that the learner is not to revise (rule A3)."
+
+  # 24
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "how-many", "text-quotes"]
+    text: "How many of the couriers ride a bike? Start from nothing."
+    model: |
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
+      print(len(couriers[couriers['vehicle'] == 'bike']))
+    output: "73"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: reading, a text question, the brackets and a count, on a table that was only met in step 7. 73, SQL-1's answer. Never scored (rule F1). What a miss tells the script: which of the import, the read, the quotes, the doubled table or the count was absent."

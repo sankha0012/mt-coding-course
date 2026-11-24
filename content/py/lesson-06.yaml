@@ -1,0 +1,1294 @@
+lesson: py-06
+title: "A table by hand"
+strand: py
+stage: 1
+thoughts:
+  row-is-dict: "A row is a dict: the column names are the names, and this row's cells are the values."
+  table-is-list-of-rows: "A table is a list of rows. Two pairs of square brackets pick a cell: the row first, then the column's name."
+  cell: "`row['status']` is one cell: the row is asked for the column's name, as a dict is asked for anything."
+  missing-is-none: "An empty cell in a row is `None`, the same `None` that stands for nothing. A file hands it over as empty text, and we turn it into `None` ourselves."
+  skip-the-missing: "`if row['subtotal'] is not None:` leaves the empty cells out, which is what `AVG` and `SUM` did for you."
+  read-a-file: {text: "`csv.DictReader` turns a file into rows like these. Every cell arrives as text.", grade: shape}
+  text-to-number: "A cell from a file is text, even when it looks like a number. `float('81.1')` turns it into a number."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "for-each", "if-question", "running-result", "how-many", "empty-case", "nothing"]
+    text: "Write a function called `share_over` that takes a list of values and a limit, and hands back what fraction of the values are above the limit. If the list is empty it hands back None."
+    check: |-
+      print(share_over([30, 45, 50, 20], 40))
+      print(share_over([], 40))
+    model: |-
+      def share_over(values, limit):
+          if len(values) == 0:
+              return None
+          count = 0
+          for v in values:
+              if v > limit:
+                  count = count + 1
+          return count / len(values)
+    output: |-
+      0.5
+      None
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PY-5: a function, a loop with a running result, the empty case. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["row-is-dict"]
+    text: |-
+      Today the lists get rows in them. You know what a row is: one line of the orders table, with a value under each column's name. Python already has something that holds values under names, and you have used it. A dict. So a row is a dict: the column names are the names, and this row's cells are the values.
+
+      ```python
+      row = {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1}
+      print(row)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        row = {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1}
+        print(row)
+    after_run: "One row of orders, cut down to three columns. Nothing was built here that you did not have. It is a dict, and it is looked at the way a dict is looked at: by name. SQL had the columns, and here they are the names."
+    note: "The first thought of the doorway to pandas: a row is a dict. It is an import from SQL (a row) and from PY-3 (a dict) at once, so it is given and not asked."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    new: ["cell"]
+    requires: ["def", "what-goes-in", "what-comes-out", "row-is-dict", "cell", "get-by-name"]
+    text: "Here is the first thing anyone does with a row: look at one cell. Write a function called `status_of` that takes a row and hands back its status."
+    check: "print(status_of({'order_id': 7, 'status': 'cancelled', 'subtotal': 12.5}))"
+    model: |-
+      def status_of(row):
+          return row['status']
+    output: "cancelled"
+    narration:
+      - "The status, handed back. That is a cell: one value from one row, asked for by the column's name, in square brackets with the name in quotes."
+      - "A row is a dict, so you asked it by name. The cell comes out and goes back to whoever called."
+      - ""
+    wrong:
+      - code: |-
+          def status_of(row):
+              return row.status
+        ask: "That is how some languages ask for a part of something. Python's own message is that a dict has no attribute called status. How did we ask a dict for what is under a name?"
+        why: "a row is a dict, and a dict is asked with square brackets and the name in quotes."
+      - code: |-
+          def status_of(row):
+              return row[status]
+        ask: "Python says name 'status' is not defined. Is status a name you gave a value to, or a word you are looking for?"
+        why: "a word we are looking for wears quotes. A bare word is a name Python goes looking for."
+      - code: |-
+          def status_of(row):
+              print(row['status'])
+        ask: "That showed the status to us, but the function gave nothing back to whoever asked. Which word hands a value back?"
+        why: "print shows to a person, return hands to the code that called. The check is code."
+    walk:
+      - "Here is a row: `row = {'status': 'cancelled'}`. Type the line that shows its status."
+      - "Now make it a function that takes the row as what goes in."
+      - "Instead of showing the status, hand it back."
+    return:
+      text: "Now write `to_pay`, which takes a row and hands back the subtotal and the delivery fee added together."
+      check: "print(to_pay({'order_id': 7, 'subtotal': 12.5, 'delivery_fee': 4.99}))"
+      model: |-
+        def to_pay(row):
+            return row['subtotal'] + row['delivery_fee']
+      output: "17.490000000000002"
+      narration:
+        - "12.5 and 4.99 added: 17.49. Two cells of the same row, each asked by its name."
+        - "Two cells, one sum, handed back."
+      note: "Return for step 3. Two cells instead of one, and an addition."
+    note: "The first cell. It needs only get-by-name, so it is asked and not given. A function is used so that the learner does not have to type a row each time. The three wrong answers are the three real ways to miss it."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "row-is-dict", "cell"]
+    text: "A delivery has a promised time and an actual time, which sit in its row as promised_minutes and actual_minutes. Write a function called `minutes_late` that takes a row and hands back how many minutes it took beyond the promise: the actual minutes less the promised minutes."
+    check: "print(round(minutes_late({'promised_minutes': 30, 'actual_minutes': 35.2}), 1))"
+    model: |-
+      def minutes_late(row):
+          return row['actual_minutes'] - row['promised_minutes']
+    output: "5.2"
+    narration:
+      - "Two cells from the same row, taken away from each other. 5.2 minutes over, in the sample."
+      - "Ask the row for each cell by its name, and do the sum on what comes out."
+      - ""
+    wrong:
+      - code: |-
+          def minutes_late(row):
+              return row['promised_minutes'] - row['actual_minutes']
+        ask: "Try a delivery that took longer than promised. Is the answer positive or negative? Which one did we say to take away from which?"
+        why: "actual less promised is positive when the delivery was late, and the order of a subtraction matters."
+      - code: |-
+          def minutes_late(row):
+              return row[actual_minutes] - row[promised_minutes]
+        ask: "Python says name 'actual_minutes' is not defined. Are those names you gave a value to, or the names of columns, which are words?"
+        why: "a column's name is a word, and a word we are looking for wears quotes."
+    walk:
+      - "Ask the row for its actual minutes."
+      - "Ask it for its promised minutes."
+      - "Take one away from the other, and hand that back."
+    return:
+      text: "Write `speed_of`, which takes a row and hands back the subtotal divided by the actual minutes."
+      check: "print(round(speed_of({'subtotal': 81.1, 'actual_minutes': 35.2}), 2))"
+      model: |-
+        def speed_of(row):
+            return row['subtotal'] / row['actual_minutes']
+      output: "2.3"
+      narration:
+        - "About 2.3 for the sample: two cells, divided. The row is asked twice, once for each."
+        - "Two cells and a division this time."
+      note: "Return for the minutes_late step."
+    note: "A second cell step, so that the learner uses cell twice before the table arrives, and so that the new thoughts do not come three steps in a row. The order of the subtraction is the one thing that can go wrong."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["table-is-list-of-rows"]
+    text: |-
+      A table is a lot of rows, and Python already has something that holds a lot of things in order. A list. So a table is a list of rows. Here are three rows from the orders table.
+
+      ```python
+      rows = [
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+      ]
+      print(len(rows))
+      print(rows[1]['subtotal'])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        rows = [
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+        ]
+        print(len(rows))
+        print(rows[1]['subtotal'])
+    after_run: "3 rows, and then 31.3. The first pair of brackets picked the row, the second the cell. Square brackets always mean: get from inside. Read it from left to right. rows[1] is the second row, because positions start at zero, and then ['subtotal'] is a cell of that row."
+    note: "Table is list of rows. Reuses position from PY-2 and get-by-name from PY-3. The 'positions start at zero' reminder is the one place the second pair of brackets could confuse."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "new-list-in-loop", "add-to-end"]
+    text: "Now a whole table at once. Write a function called `subtotals` that takes the rows and hands back a list of their subtotals, one for each row, in order."
+    check: |-
+      print(subtotals([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1, 'delivery_fee': 8.99},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3, 'delivery_fee': 4.99},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72, 'delivery_fee': 4.99},
+          {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23, 'delivery_fee': 6.99},
+      ]))
+    model: |-
+      def subtotals(rows):
+          result = []
+          for row in rows:
+              result.append(row['subtotal'])
+          return result
+    output: "[81.1, 31.3, 57.72, 84.23]"
+    narration:
+      - "A list of the subtotals, in the order of the rows. One new list, filled inside the loop with one cell from each row."
+      - "Go through the rows, take the subtotal from each, add it to the list, hand the list back. That is a column, pulled out of a table."
+      - ""
+    wrong:
+      - code: |-
+          def subtotals(rows):
+              return rows['subtotal']
+        ask: "Python says list indices must be integers or slices. Which thing has the column names: the whole table, or each row in it?"
+        why: "the column names belong to each row. So you go through the rows and ask each one."
+      - code: |-
+          def subtotals(rows):
+              for row in rows:
+                  result = []
+                  result.append(row['subtotal'])
+              return result
+        ask: "Where does the empty list begin: before the loop, or on every turn of it?"
+        why: "a list started inside the loop is thrown away and started again each time round."
+      - code: |-
+          def subtotals(rows):
+              result = []
+              for row in rows:
+                  result.append(row['subtotal'])
+                  return result
+        ask: "Run it on three rows and count how many subtotals come back. When does the loop get to hand the list back?"
+        why: "a return ends the function at once. It belongs after the loop, outside it."
+    walk:
+      - "A table is a list of rows. Write the loop that goes through them, one row at a time."
+      - "Start an empty list before the loop, and inside it add the row's subtotal."
+      - "When the loop is done, hand the list back."
+    return:
+      text: "Write `with_fees`, which takes the rows and hands back a list holding each row's subtotal and delivery fee added together."
+      check: |-
+        print([round(x, 2) for x in with_fees([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1, 'delivery_fee': 8.99},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3, 'delivery_fee': 4.99},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72, 'delivery_fee': 4.99},
+            {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23, 'delivery_fee': 6.99},
+        ])])
+      model: |-
+        def with_fees(rows):
+            result = []
+            for row in rows:
+                result.append(row['subtotal'] + row['delivery_fee'])
+            return result
+      output: "[90.09, 36.29, 62.71, 91.22]"
+      narration:
+        - "One new number for each row, in the order of the table: 90.09 for the first."
+        - "Rows in, a list of sums out. The loop is the same, with two cells in it."
+      note: "Return for step 5. Two cells added in the loop."
+    note: "Keep-rows by hand with a new list (PY-2) and a cell (step 3). It pulls a column out of a table, which is SELECT subtotal. Three wrong answers: the table asked for a column, a list restarted on every turn, and a return inside the loop."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "equals-asks", "running-result"]
+    text: "How many of the rows have a given status? Write a function called `count_status` that takes the rows and a status, and hands back how many of the rows have that status."
+    check: |-
+      print(count_status([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1, 'delivery_fee': 8.99},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3, 'delivery_fee': 4.99},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72, 'delivery_fee': 4.99},
+          {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23, 'delivery_fee': 6.99},
+      ], 'delivered'))
+      print(count_status([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1, 'delivery_fee': 8.99},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3, 'delivery_fee': 4.99},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72, 'delivery_fee': 4.99},
+          {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23, 'delivery_fee': 6.99},
+      ], 'cancelled'))
+    model: |-
+      def count_status(rows, status):
+          count = 0
+          for row in rows:
+              if row['status'] == status:
+                  count = count + 1
+          return count
+    output: |-
+      3
+      1
+    narration:
+      - "A question asked of each row, and a count that grows on every yes. That is COUNT with a WHERE, written out by hand."
+      - "Three delivered, one cancelled. The row's status was asked against the status you were given."
+      - ""
+    wrong:
+      - code: |-
+          def count_status(rows, status):
+              count = 0
+              for row in rows:
+                  if row['status'] = status:
+                      count = count + 1
+              return count
+        ask: "Python calls that a syntax error. One equals sign does what, and what does a question use?"
+        why: "one equals sign gives a name. Two ask."
+      - code: |-
+          def count_status(rows, status):
+              count = 0
+              for row in rows:
+                  if status == 'delivered':
+                      count = count + 1
+              return count
+        ask: "Ask it for cancelled and see what comes back. Which part of the question changes from row to row?"
+        why: "the question has to be about the row in your hands. The status you were given stays the same all through the loop."
+      - code: |-
+          def count_status(rows, status):
+              count = 0
+              for row in rows:
+                  if row['status'] == status:
+                      count = count + 1
+                  return count
+        ask: "That sends the count back after the first row. Where does the return belong?"
+        why: "the return belongs after the loop, outside it, so that every row is counted first."
+    walk:
+      - "Start a count at zero, and go through the rows."
+      - "For each row ask: is its status the one we were given? On a yes, add one."
+      - "After the loop, hand the count back."
+    return:
+      text: "Write `count_over`, which takes the rows and a limit, and hands back how many rows have a subtotal above the limit."
+      check: |-
+        print(count_over([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1, 'delivery_fee': 8.99},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3, 'delivery_fee': 4.99},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72, 'delivery_fee': 4.99},
+            {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23, 'delivery_fee': 6.99},
+        ], 50))
+      model: |-
+        def count_over(rows, limit):
+            count = 0
+            for row in rows:
+                if row['subtotal'] > limit:
+                    count = count + 1
+            return count
+      output: "3"
+      narration:
+        - "Three rows have a subtotal above 50. The question was a comparison this time, still asked of each row."
+        - "A number question on a cell, and the same count."
+      note: "Return for step 6. A comparison on a cell instead of an equality on text."
+    note: "Counting with a question: if-question, equals-asks and running-result from PY-1, now over rows. The second wrong answer compares the wrong thing, which is the real slip here."
+
+  # 8
+  - kind: "give"
+    lang: "python"
+    new: ["missing-is-none"]
+    text: |-
+      Now a row with something missing. In the real table, 25 orders have an empty subtotal: nobody wrote the number down. In a row, an empty cell is None. It is the same None you met when a list had nothing in it: nothing, written down as a value.
+
+      ```python
+      row = {'order_id': 103877, 'status': 'delivered', 'subtotal': None}
+      print(row['subtotal'])
+      print(row['subtotal'] is None)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        row = {'order_id': 103877, 'status': 'delivered', 'subtotal': None}
+        print(row['subtotal'])
+        print(row['subtotal'] is None)
+    after_run: "None, and then True. The cell is there, and it holds nothing. The question is the one you already know: is None, which is what SQL wrote as IS NULL. Careful, though. Nothing here will leave the empty cell out for you."
+    note: "missing-is-none. The 25 is true of the data (23 delivered, 2 cancelled). The last two sentences set up the classmate, who is about to find out."
+
+  # 9
+  - kind: "classmate"
+    lang: "python"
+    new: ["skip-the-missing"]
+    text: |-
+      Ana wanted the total of some subtotals, and the last row had an empty one. She wrote:
+
+      ```python
+      rows = [
+          {'subtotal': 81.1},
+          {'subtotal': 57.72},
+          {'subtotal': None},
+      ]
+      total = 0
+      for row in rows:
+          total = total + row['subtotal']
+      print(total)
+      ```
+
+      Python stopped with: TypeError: unsupported operand type(s) for +: 'float' and 'NoneType'. Ana, what is in the third subtotal? ... Nothing. You cannot add nothing to a number. In SQL, SUM and AVG left the empty cells out without telling you. Here you say it yourself: ask of each row whether its subtotal is not None, and add only on a yes.
+
+      ```python
+      rows = [
+          {'subtotal': 81.1},
+          {'subtotal': 57.72},
+          {'subtotal': None},
+      ]
+      total = 0
+      for row in rows:
+          if row['subtotal'] is not None:
+              total = total + row['subtotal']
+      print(total)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        rows = [
+            {'subtotal': 81.1},
+            {'subtotal': 57.72},
+            {'subtotal': None},
+        ]
+        total = 0
+        for row in rows:
+            if row['subtotal'] is not None:
+                total = total + row['subtotal']
+        print(total)
+    broken: |-
+      rows = [
+          {'subtotal': 81.1},
+          {'subtotal': 57.72},
+          {'subtotal': None},
+      ]
+      total = 0
+      for row in rows:
+          total = total + row['subtotal']
+      print(total)
+    after_run: "138.82. The row with nothing in it was asked, answered no, and stayed out. That is what AVG did for you in SQL, and now you can see how it did it: a question, asked of each row, before anything is added. Is not None is the question you had, turned round."
+    note: "The classmate gets the real Python message first (rule E6). The thought is the question 'is not None' as the way to leave the empty cells out. The step is given and not typed, so that the next step is the first time the learner writes it."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "running-result", "missing-is-none", "skip-the-missing"]
+    text: "Write a function called `total_of` that takes the rows and hands back the total of their subtotals. Some subtotals are empty."
+    check: |-
+      print(total_of([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ]))
+    model: |-
+      def total_of(rows):
+          total = 0
+          for row in rows:
+              if row['subtotal'] is not None:
+                  total = total + row['subtotal']
+          return total
+    output: "170.12"
+    narration:
+      - "The total of the subtotals that are there. The empty one was asked about and left out, as SUM would have done."
+      - "Ask before you add: is there something in the cell? Then add. 170.12 in all."
+      - ""
+    wrong:
+      - code: |-
+          def total_of(rows):
+              total = 0
+              for row in rows:
+                  total = total + row['subtotal']
+              return total
+        ask: "Python stops with a TypeError on the empty one. What did Ana's fix ask of each row before adding?"
+        why: "addition has no answer for nothing. The question comes first."
+      - code: |-
+          def total_of(rows):
+              total = 0
+              for row in rows:
+                  if row['subtotal'] is None:
+                      total = total + row['subtotal']
+              return total
+        ask: "Read your question aloud: add only when the subtotal is... what? Which rows do you want to add?"
+        why: "the question has to keep the rows with something in them. Is None keeps exactly the rows we want to leave out."
+      - code: |-
+          def total_of(rows):
+              total = 0
+              for row in rows:
+                  if row['subtotal'] is not None:
+                      total = total + row['subtotal']
+                  return total
+        ask: "Check it on four rows. How many get looked at before the function ends?"
+        why: "return ends the function. After the loop, not inside it."
+    walk:
+      - "Start a total at zero and go through the rows."
+      - "Ask of each row: is its subtotal not None? Add on a yes only."
+      - "After the loop, hand the total back."
+    return:
+      text: "Write `count_filled`, which takes the rows and hands back how many of them have a subtotal."
+      check: |-
+        print(count_filled([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+        ]))
+      model: |-
+        def count_filled(rows):
+            count = 0
+            for row in rows:
+                if row['subtotal'] is not None:
+                    count = count + 1
+            return count
+      output: "3"
+      narration:
+        - "3 of the 4 rows have a subtotal. The same question, and a count in place of a total."
+        - "How many are filled in: ask each row, count the yeses."
+      note: "Return for step 9. A count in place of a total."
+    note: "First time the learner writes is not None with nothing in front of them but the classmate step. The wrong answers are the TypeError, the question turned the wrong way, and the return inside the loop. Sum 81.1 + 31.3 + 57.72 = 170.12."
+
+  # 11
+  - kind: "aside"
+    text: "Something that is only interesting. In pandas, which comes later, the same empty cell is written NaN, and pandas leaves it out of an average for you, as SQL did. Same idea, third spelling. When we get there it will be a thing you recognise, and not a new one."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "new-list-in-loop", "add-to-end", "skip-the-missing", "sorted", "last"]
+    text: "Write a function called `biggest_subtotal` that takes the rows and hands back the largest subtotal. Some are empty, and an empty one is not the largest."
+    check: |-
+      print(biggest_subtotal([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ]))
+    model: |-
+      def biggest_subtotal(rows):
+          values = []
+          for row in rows:
+              if row['subtotal'] is not None:
+                  values.append(row['subtotal'])
+          return sorted(values)[-1]
+    output: "81.1"
+    narration:
+      - "81.1 is the largest. The empty subtotal never got into the list, and the sorted list ends with the biggest."
+      - "Keep the rows that have a number, collect the numbers, sort them, take the last. Keep, collect, sort, pick."
+      - ""
+    wrong:
+      - code: |-
+          def biggest_subtotal(rows):
+              values = []
+              for row in rows:
+                  values.append(row['subtotal'])
+              return sorted(values)[-1]
+        ask: "Python says it cannot compare None with a number, when it sorts. Which rows should never get into the list?"
+        why: "sorting means comparing, and nothing cannot be compared with a number. The question belongs before the adding to the list."
+      - code: |-
+          def biggest_subtotal(rows):
+              values = []
+              for row in rows:
+                  if row['subtotal'] is not None:
+                      values.append(row['subtotal'])
+              return sorted(values)[0]
+        ask: "That is the smallest. Which end of a sorted list has the biggest?"
+        why: "a list sorted the usual way starts with the smallest and ends with the biggest."
+      - code: |-
+          def biggest_subtotal(rows):
+              values = []
+              for row in rows:
+                  if row['subtotal'] is not None:
+                      values.append(row['subtotal'])
+              return sorted(values)
+        ask: "That gives a whole list back. Which one of its items did I ask for?"
+        why: "sorted gives the whole list, and you pick the one you want from it by its position."
+    walk:
+      - "Make a list of the subtotals that are there, leaving the empty ones out."
+      - "Sort it."
+      - "Hand back the item at the end."
+    return:
+      text: "Write `sorted_subtotals`, which takes the rows and hands back the subtotals that are there, the smallest first."
+      check: |-
+        print(sorted_subtotals([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+        ]))
+      model: |-
+        def sorted_subtotals(rows):
+            values = []
+            for row in rows:
+                if row['subtotal'] is not None:
+                    values.append(row['subtotal'])
+            return sorted(values)
+      output: "[31.3, 57.72, 81.1]"
+      narration:
+        - "The three subtotals that exist, smallest first. The empty one stayed out of the list."
+        - "Keep, collect, sort."
+      note: "Return for step 11. Drops the last item."
+    note: "A recombination of PY-2 (new list, sorted, last) with this lesson's skip. It is also the SQL idea of ORDER BY subtotal DESC LIMIT 1, done the other way round. Not asked for the empty case: the next steps return to it."
+
+  # 13
+  - kind: "give"
+    lang: "python"
+    new: ["read-a-file"]
+    text: |-
+      Real tables live in files, not in your code. Reading a file is something people look up, and nobody minds. The thought is only: turn a file into rows like these. Python spells it with `csv.DictReader`. Here it is, and I'll give you the spelling again whenever you need it:
+
+      ```python
+      import csv
+      orders = list(csv.DictReader(open('orders.csv')))
+      print(len(orders))
+      print(orders[0])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import csv
+        orders = list(csv.DictReader(open('orders.csv')))
+        print(len(orders))
+        print(orders[0])
+    after_run: "6,000 rows, and the first of them is a dict with every column of the orders table in it. The names of the columns came from the first line of the file. Now look at the values. Every one of them wears quotes, even the numbers, and an empty cell is two quotes with nothing between them. A file has only text in it, and nothing has decided yet what is a number."
+    note: "Shape grade (the owner decided it: spelling supplied, thought core). The teacher says plainly that this is looked up. The after_run sets up the next three steps: text, and the empty cell as empty text."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["read-a-file", "table-is-list-of-rows", "cell", "for-each", "if-question", "equals-asks", "running-result", "show"]
+    supplies: ["import csv", "list(csv.DictReader(open('orders.csv')))"]
+    text: "This one you would look up, so here is the spelling again: `import csv`, then `list(csv.DictReader(open('orders.csv')))`. Read the orders and show me how many have an empty subtotal. Remember what an empty cell looks like when it comes from a file."
+    model: |-
+      import csv
+      orders = list(csv.DictReader(open('orders.csv')))
+      count = 0
+      for row in orders:
+          if row['subtotal'] == '':
+              count = count + 1
+      print(count)
+    output: "25"
+    narration:
+      - "25 empty subtotals. A file has only text, so an empty cell is empty text, and the question was whether the cell equals it."
+      - "25. The spelling gave you the rows, and the rest was a count with a question, as before."
+      - ""
+    wrong:
+      - code: |-
+          import csv
+          orders = list(csv.DictReader(open('orders.csv')))
+          count = 0
+          for row in orders:
+              if row['subtotal'] is None:
+                  count = count + 1
+          print(count)
+        ask: "Zero. Look at what an empty cell looked like in the row we printed. Is it None yet?"
+        why: "a file only has text. Nothing has turned the empty text into None, so we have to ask about the text."
+      - code: |-
+          orders = list(csv.DictReader(open('orders.csv')))
+          count = 0
+          for row in orders:
+              if row['subtotal'] == '':
+                  count = count + 1
+          print(count)
+        ask: "Python says name 'csv' is not defined. What line did the spelling begin with?"
+        why: "the csv tools have to be brought in before they can be used."
+      - code: |-
+          import csv
+          orders = list(csv.DictReader(open('orders.csv')))
+          count = 0
+          for row in orders:
+              if row['subtotal'] == '':
+                  count = count + 1
+              print(count)
+        ask: "That printed a very long list of counts. When should the count be shown: on every row, or once?"
+        why: "a print inside the loop shows on every turn. After the loop it shows the result."
+    walk:
+      - "Read the file into rows, using the spelling."
+      - "Start a count at zero and go through the rows."
+      - "What does an empty cell from a file look like? Count the rows whose subtotal looks like that, and show the count."
+    return:
+      text: "The spelling again: `import csv`, then `list(csv.DictReader(open('orders.csv')))`. How many of the orders were cancelled?"
+      model: |-
+        import csv
+        orders = list(csv.DictReader(open('orders.csv')))
+        count = 0
+        for row in orders:
+            if row['status'] == 'cancelled':
+                count = count + 1
+        print(count)
+      output: "399"
+      narration:
+        - "399 cancelled. The same file, the same count, a different cell."
+        - "399: the number you met in SQL, now counted by hand."
+      note: "Return for step 13. Another cell, another word. 399 matches the SQL strand."
+    note: "The shape-grade spelling is supplied in the text. The first wrong answer is the lesson's key mistake: asking is None of text that has not been converted. It gives 0, so it differs from 25."
+
+  # 15
+  - kind: "give"
+    lang: "python"
+    new: ["text-to-number"]
+    text: |-
+      One more thing about text. A subtotal from a file is text, even though it looks like 81.1, and text cannot be added. To make a number out of it, put it inside float:
+
+      ```python
+      print(float('81.1') + 1)
+      ```
+
+      Run it.
+    shows:
+      - "print(float('81.1') + 1)"
+    broken: "float('')"
+    after_run: "82.1. Float takes text and gives a number, with a decimal point if it has one. The empty cell is the awkward one: float of empty text stops with ValueError: could not convert string to float. So the empty text has to be dealt with first, and that is where None comes in."
+    note: "text-to-number. The error message is quoted from Python itself. The next step asks for exactly this."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "if-question", "equals-asks", "text-to-number", "missing-is-none", "nothing"]
+    text: "A cell comes from a file as text. Write a function called `to_number` that takes that text and hands back a number. If the text is empty, it hands back None."
+    check: |-
+      print(to_number('81.1') + 1)
+      print(to_number(''))
+    model: |-
+      def to_number(text):
+          if text == '':
+              return None
+          return float(text)
+    output: |-
+      82.1
+      None
+    narration:
+      - "Text in, number out, and the empty text became None on the way. That is one cell, made ready."
+      - "Ask first whether it is empty, and send back None if so. Otherwise float."
+      - ""
+    wrong:
+      - code: |-
+          def to_number(text):
+              return float(text)
+        ask: "Try it on an empty cell. What does Python say, and which case has to be dealt with first?"
+        why: "float of empty text is an error. The empty case has to be asked about before float is used."
+      - code: |-
+          def to_number(text):
+              if text == '':
+                  return None
+              return text
+        ask: "Look at what comes back for '81.1'. Is it a number yet?"
+        why: "the text has to go through float, or it stays text."
+      - code: |-
+          def to_number(text):
+              if text is None:
+                  return None
+              return float(text)
+        ask: "Is an empty cell from a file None at that point, or is it still something else?"
+        why: "from a file it is still empty text, two quotes with nothing between. The question has to be about that."
+    walk:
+      - "What does an empty cell from a file look like? Ask whether the text is that, and if so hand back None."
+      - "Otherwise hand back the text as a number."
+      - "Put both inside a function that takes the text."
+    return:
+      text: "Write `to_zero`, the same idea with a different answer for the empty cell: it takes text and hands back a number, and an empty cell gives 0."
+      check: |-
+        print(to_zero('4.5'))
+        print(to_zero(''))
+      model: |-
+        def to_zero(text):
+            if text == '':
+                return 0
+            return float(text)
+      output: |-
+        4.5
+        0
+      narration:
+        - "4.5 from the text, and 0 for the empty one. The question was the same, and the answer for the empty cell changed."
+        - "Text in, number out, with a different way out for the empty one."
+      note: "Return for step 15. Same thoughts, no None."
+    note: "Combines text-to-number with missing-is-none and PY-5's None. The third wrong answer is the same error as in step 13, in a new place, on purpose."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "equals-asks", "otherwise", "set-by-name", "text-to-number", "missing-is-none"]
+    text: "Now do it to a whole table. Write a function called `convert` that takes the rows, and in each row turns the subtotal into a number, or into None if it is empty. Hand the rows back."
+    check: "print(convert([{'status': 'delivered', 'subtotal': '81.1'}, {'status': 'cancelled', 'subtotal': ''}]))"
+    model: |-
+      def convert(rows):
+          for row in rows:
+              if row['subtotal'] == '':
+                  row['subtotal'] = None
+              else:
+                  row['subtotal'] = float(row['subtotal'])
+          return rows
+    output: "[{'status': 'delivered', 'subtotal': 81.1}, {'status': 'cancelled', 'subtotal': None}]"
+    narration:
+      - "Every subtotal is a number or None now, and the rows are the same rows, changed where they stood. A row is a dict, so you set a cell the way you set a name in a dict."
+      - "Loop, question, two ways out: None for the empty, float for the rest."
+      - ""
+    wrong:
+      - code: |-
+          def convert(rows):
+              for row in rows:
+                  if row['subtotal'] == '':
+                      row['subtotal'] = None
+                  row['subtotal'] = float(row['subtotal'])
+              return rows
+        ask: "Python stops with a ValueError. After the empty one is set to None, what runs next?"
+        why: "without otherwise, the line that follows runs for every row, including the one just made None."
+      - code: |-
+          def convert(rows):
+              for row in rows:
+                  if row['subtotal'] == '':
+                      row['subtotal'] == None
+                  else:
+                      row['subtotal'] == float(row['subtotal'])
+              return rows
+        ask: "Nothing changed. Two equals signs do what, and which sign gives a cell its new value?"
+        why: "two signs ask a question and change nothing. One sign sets."
+      - code: |-
+          def convert(rows):
+              for row in rows:
+                  if row['subtotal'] == '':
+                      row['subtotal'] = None
+                  else:
+                      row['subtotal'] = float(row['subtotal'])
+        ask: "The function did its work, but what did the check receive? What is missing at the end?"
+        why: "the function changed the rows, and still has to hand them back."
+    walk:
+      - "Go through the rows."
+      - "If the subtotal is empty text, set the subtotal of that row to None."
+      - "Otherwise set it to the text turned into a number. Then hand the rows back."
+    return:
+      text: "Write `tidy_fees`, which takes the rows and turns each row's delivery fee into a number. An empty fee becomes 0. Hand the rows back."
+      check: "print(tidy_fees([{'delivery_fee': '4.99'}, {'delivery_fee': ''}]))"
+      model: |-
+        def tidy_fees(rows):
+            for row in rows:
+                if row['delivery_fee'] == '':
+                    row['delivery_fee'] = 0
+                else:
+                    row['delivery_fee'] = float(row['delivery_fee'])
+            return rows
+      output: "[{'delivery_fee': 4.99}, {'delivery_fee': 0}]"
+      narration:
+        - "The fees are numbers, and the empty one is 0. The same loop, on another cell."
+        - "Another column, another way out for the empty one."
+      note: "Return for step 16. Another column, another empty case."
+    note: "set-by-name from PY-3 applied to a row, with otherwise from PY-2. The first wrong answer leaves out else, so the float line meets empty text again: the real reason for otherwise."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "skip-the-missing", "one-entry-per-pile", "update-the-pile", "get-with-default", "total-per-pile"]
+    text: "Piles again. Write a function called `totals_by` that takes the rows, the name of a column to pile by, and the name of a column to add up. It hands back a dict with one total per pile, and leaves the empty cells out."
+    check: |-
+      totals = totals_by([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ], 'status', 'subtotal')
+      for k in sorted(totals):
+          print(k, totals[k])
+    model: |-
+      def totals_by(rows, key, value):
+          totals = {}
+          for row in rows:
+              if row[value] is not None:
+                  totals[row[key]] = totals.get(row[key], 0) + row[value]
+          return totals
+    output: |-
+      cancelled 31.3
+      delivered 138.82
+    narration:
+      - "A total for each status, with the empty cell left out. That is SELECT status, SUM(subtotal) GROUP BY status, written by hand."
+      - "The name of the column went in as a value, and the row was asked for it. Nothing here said subtotal or status."
+      - ""
+    wrong:
+      - code: |-
+          def totals_by(rows, key, value):
+              totals = {}
+              for row in rows:
+                  if row[value] is not None:
+                      totals['key'] = totals.get('key', 0) + row['value']
+              return totals
+        ask: "Everything landed in one pile called key. Is key a word you are looking for, or a name that holds the column?"
+        why: "the column's name is stored in key and value. Quotes would make them plain words."
+      - code: |-
+          def totals_by(rows, key, value):
+              totals = {}
+              for row in rows:
+                  totals[row[key]] = totals.get(row[key], 0) + row[value]
+              return totals
+        ask: "Python stops with a TypeError on a row we have seen before. What do we ask of each row before adding?"
+        why: "the empty cell cannot be added. The question comes first."
+      - code: |-
+          def totals_by(rows, key, value):
+              totals = {}
+              for row in rows:
+                  if row[value] is not None:
+                      totals[row[key]] = row[value]
+              return totals
+        ask: "Each pile shows only one subtotal. What should the pile hold before the new one is added?"
+        why: "the pile's running total is what is already there, plus the new value. get gives the zero when there is nothing yet."
+    walk:
+      - "Start an empty dict for the totals, and go through the rows."
+      - "Skip the rows whose value is empty."
+      - "For the rest, find the pile named by the row's key column and add the row's value to it, starting from zero."
+    return:
+      text: "Write `fee_totals`, which takes the rows and the name of a column to pile by, and hands back a dict with the total delivery fee in each pile."
+      check: |-
+        fees = fee_totals([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1, 'delivery_fee': 8.99},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3, 'delivery_fee': 4.99},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72, 'delivery_fee': 4.99},
+            {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23, 'delivery_fee': 6.99},
+        ], 'status')
+        for k in sorted(fees):
+            print(k, round(fees[k], 2))
+      model: |-
+        def fee_totals(rows, key):
+            totals = {}
+            for row in rows:
+                totals[row[key]] = totals.get(row[key], 0) + row['delivery_fee']
+            return totals
+      output: |-
+        cancelled 4.99
+        delivered 20.97
+      narration:
+        - "Delivered 20.97, cancelled 4.99. A total per pile, from a cell that has no empty ones."
+        - "The same piles, and a different cell to add."
+      note: "Return for step 17. A different cell, and no skip needed because delivery fees have no empty cells in this sample."
+    note: "PY-4's totals per pile (get with default) with this lesson's rows and skip. Key and value are names, so the function is general: the same shape as the closing sentence. The wrong answers are quoted names, no skip, and no running total."
+
+  # 19
+  - kind: "classmate"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "skip-the-missing", "running-result", "build-average", "empty-case", "nothing"]
+    text: |-
+      Davi wrote `average_of`, which takes the rows and the name of a column, and hands back the average of that column, leaving the empty cells out. He tried it on four rows, where one subtotal was empty, and got 42.53, which looked too small. This is what he wrote:
+
+      ```python
+      def average_of(rows, value):
+          total = 0
+          for row in rows:
+              if row[value] is not None:
+                  total = total + row[value]
+          return total / len(rows)
+      ```
+
+      No error. Davi, how many numbers did he add up, and how many did he divide by? ... Three added, four divided by. The empty row was left out of the total but counted in the dividing. AVG leaves it out of both. Write `average_of` so that it does. If no row has a value at all, it hands back None.
+    check: |-
+      print(average_of([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ], 'subtotal'))
+      print(average_of([{'subtotal': None}], 'subtotal'))
+    model: |-
+      def average_of(rows, value):
+          total = 0
+          count = 0
+          for row in rows:
+              if row[value] is not None:
+                  total = total + row[value]
+                  count = count + 1
+          if count == 0:
+              return None
+          return total / count
+    output: |-
+      56.70666666666667
+      None
+    narration:
+      - "56.71 now: 170.12 over three, not over four. The count has to grow on the same yes that the total does."
+      - "The same question guarded both numbers. And a pile of nothing gets None, not an error."
+      - ""
+    wrong:
+      - code: |-
+          def average_of(rows, value):
+              total = 0
+              count = 0
+              for row in rows:
+                  if row[value] is not None:
+                      total = total + row[value]
+                  count = count + 1
+              if count == 0:
+                  return None
+              return total / count
+        ask: "Look at where the count grows. Is it inside the same question as the total?"
+        why: "a row that failed the question must not be counted either, or it still pulls the average down."
+      - code: |-
+          def average_of(rows, value):
+              total = 0
+              count = 0
+              for row in rows:
+                  if row[value] is not None:
+                      total = total + row[value]
+                      count = count + 1
+              return total / count
+        ask: "Try it on rows that are all empty. What does Python say about dividing by zero?"
+        why: "when nothing is left after the skipping, there is no average. Ask for the empty case before dividing, as with the empty list."
+    walk:
+      - "Keep two numbers going: a total and a count, both starting at zero."
+      - "Both grow inside the same question: is the cell not None?"
+      - "If the count is still zero, hand back None. Otherwise hand back the total over the count."
+    return:
+      text: "Write `share_filled`, which takes the rows and the name of a column and hands back what fraction of the rows have a value in that column. If there are no rows, it hands back None."
+      check: |-
+        print(share_filled([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+        ], 'subtotal'))
+        print(share_filled([], 'subtotal'))
+      model: |-
+        def share_filled(rows, value):
+            if len(rows) == 0:
+                return None
+            count = 0
+            for row in rows:
+                if row[value] is not None:
+                    count = count + 1
+            return count / len(rows)
+      output: |-
+        0.75
+        None
+      narration:
+        - "3 of 4 rows have a value: 0.75. A count over the number of rows, and the empty case asked first."
+        - "A fraction. Here the dividing is by all the rows, because that is the question."
+      note: "Return for step 18. The same question, with the dividing deliberately by all the rows."
+    note: "The classic slip, made by a classmate just before the learner could (rule E6): skipping the missing in the total and not in the count. There is no Python message, so Davi's wrong number is the real reason. The step is typed. Expected result 170.12 over 3."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "skip-the-missing", "one-entry-per-pile", "update-the-pile", "get-with-default"]
+    text: "Another one on the same theme. Write a function called `counts_filled_by` that takes the rows, the name of a column to pile by and the name of a column to look at. It hands back a dict with how many rows in each pile have a value there. Empty cells are not counted."
+    check: |-
+      counts = counts_filled_by([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ], 'status', 'subtotal')
+      for k in sorted(counts):
+          print(k, counts[k])
+    model: |-
+      def counts_filled_by(rows, key, value):
+          counts = {}
+          for row in rows:
+              if row[value] is not None:
+                  counts[row[key]] = counts.get(row[key], 0) + 1
+          return counts
+    output: |-
+      cancelled 1
+      delivered 2
+    narration:
+      - "A count for each status of the rows that have a number. The empty one belonged to delivered and did not count."
+      - "Skip the empty cells, pile by the key, add one. The count per pile is the dividing half of an average."
+      - ""
+    wrong:
+      - code: |-
+          def counts_filled_by(rows, key, value):
+              counts = {}
+              for row in rows:
+                  counts[row[key]] = counts.get(row[key], 0) + 1
+              return counts
+        ask: "Delivered says 3 and we only have two numbers. Which question did the count forget?"
+        why: "every row got counted. The empty ones have to be asked about first."
+      - code: |-
+          def counts_filled_by(rows, key, value):
+              counts = {}
+              for row in rows:
+                  if row[value] is not None:
+                      counts[key] = counts.get(key, 0) + 1
+              return counts
+        ask: "Everything is in one pile, called by the column's name. What should name the pile: the column's name, or the row's cell in that column?"
+        why: "the pile is named by what the row has under that column. The column's name is the same for every row."
+    walk:
+      - "Start an empty dict for the counts."
+      - "Go through the rows and skip those whose value is empty."
+      - "For the rest, add one to the pile named by the row's key cell."
+    return:
+      text: "Write `missing_by`, which takes the rows, a column to pile by and a column to look at, and hands back a dict with how many rows in each pile have nothing there."
+      check: |-
+        missing = missing_by([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+        ], 'status', 'subtotal')
+        for k in sorted(missing):
+            print(k, missing[k])
+      model: |-
+        def missing_by(rows, key, value):
+            counts = {}
+            for row in rows:
+                if row[value] is None:
+                    counts[row[key]] = counts.get(row[key], 0) + 1
+            return counts
+      output: "delivered 1"
+      narration:
+        - "Only delivered shows up, with 1. A pile that has no empty cell never got an entry."
+        - "The question turned round, and a count per pile of the rows that fail it."
+      note: "Return for step 19. The question is None in place of is not None."
+    note: "The dividing half of average_by, asked alone so that the closing function is one more join of two things the learner has just written. Two steps between it and totals_by, so it is not a one-slot change."
+
+  # 21
+  - kind: "recap"
+    text: "Stop there for a moment. You now have a table in Python: a list of rows, and each row is a dict. You can ask a row for a cell, you can skip the cells that are empty, and you can turn the text from a file into numbers. And you can pile: a total for each pile and a count for each pile. One more step, and I will not break it down."
+
+  # 22
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "skip-the-missing", "one-entry-per-pile", "update-the-pile", "get-with-default", "total-per-pile", "average-from-two-dicts"]
+    friction: true
+    text: "This is the one I won't break down. Write a function called `average_by` that takes the rows, the name of a column to pile by and the name of a column to average. It hands back a dict with one average per pile. Empty cells are left out, as AVG leaves them."
+    check: |-
+      result = average_by([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ], 'status', 'subtotal')
+      for k in sorted(result):
+          print(k, result[k])
+    model: |-
+      def average_by(rows, key, value):
+          totals = {}
+          counts = {}
+          for row in rows:
+              if row[value] is not None:
+                  totals[row[key]] = totals.get(row[key], 0) + row[value]
+                  counts[row[key]] = counts.get(row[key], 0) + 1
+          result = {}
+          for name in totals:
+              result[name] = totals[name] / counts[name]
+          return result
+    output: |-
+      cancelled 31.3
+      delivered 69.41
+    narration:
+      - "That is SELECT status, AVG(subtotal) FROM orders GROUP BY status, in full, by hand. Piles, the skip, a total and a count for each, and one division at the end."
+      - "69.41 for delivered and 31.3 for cancelled. Nothing in it was new: it was the last three steps put together, on rows."
+      - "You wrote GROUP BY and AVG yourself, with the empty cells left out."
+    wrong:
+      - code: |-
+          def average_by(rows, key, value):
+              totals = {}
+              counts = {}
+              for row in rows:
+                  totals[row[key]] = totals.get(row[key], 0) + row[value]
+                  counts[row[key]] = counts.get(row[key], 0) + 1
+              result = {}
+              for name in totals:
+                  result[name] = totals[name] / counts[name]
+              return result
+        ask: "Python stops with a TypeError. What did the total need to ask about the cell before it could add?"
+        why: "an empty cell has to be left out of both the total and the count."
+      - code: |-
+          def average_by(rows, key, value):
+              totals = {}
+              counts = {}
+              for row in rows:
+                  if row[value] is not None:
+                      totals[row[key]] = totals.get(row[key], 0) + row[value]
+                  counts[row[key]] = counts.get(row[key], 0) + 1
+              result = {}
+              for name in totals:
+                  result[name] = totals[name] / counts[name]
+              return result
+        ask: "Delivered looks too small. Which of the two dicts counted the empty row?"
+        why: "the count must live inside the same question as the total."
+      - code: |-
+          def average_by(rows, key, value):
+              totals = {}
+              counts = {}
+              for row in rows:
+                  if row[value] is not None:
+                      totals[row[key]] = totals.get(row[key], 0) + row[value]
+                      counts[row[key]] = counts.get(row[key], 0) + 1
+              return totals
+        ask: "Those are the totals. What do you still have to do to each pile?"
+        why: "an average is a total divided by how many. The division is one more loop, over the piles."
+    walk:
+      - "Make two empty dicts: one for the totals and one for the counts."
+      - "Go through the rows, skip the empty values, and update both piles."
+      - "Make a third dict. For each pile, put its total divided by its count in it, and hand it back."
+    return:
+      text: "Write `share_by`, which takes the rows, a column to pile by and a column to look at. For each pile it hands back how many rows have a value there, as a fraction of all the rows in that pile."
+      check: |-
+        s = share_by([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+        ], 'status', 'subtotal')
+        for k in sorted(s):
+            print(k, round(s[k], 3))
+      model: |-
+        def share_by(rows, key, value):
+            seen = {}
+            filled = {}
+            for row in rows:
+                seen[row[key]] = seen.get(row[key], 0) + 1
+                if row[value] is not None:
+                    filled[row[key]] = filled.get(row[key], 0) + 1
+            result = {}
+            for name in seen:
+                result[name] = filled.get(name, 0) / seen[name]
+            return result
+      output: |-
+        cancelled 1.0
+        delivered 0.667
+      narration:
+        - "Delivered 2 out of 3, cancelled 1 out of 1. Two dicts, one skip, one division per pile."
+        - "The same architecture as average_by, with the first dict counting every row."
+      note: "Return for step 21. Same ingredients, a different question."
+    note: "The closing sentence of PY-6 and pass-bar task 8, unbroken (friction). Nothing in it is new: it is totals_by, counts_filled_by, and PY-4's division. Delivered: 69.41, cancelled: 31.3."
+
+  # 23
+  - kind: "give"
+    lang: "python"
+    text: |-
+      Now let it loose on the real table. Here is the function you just wrote, with the conversion from before, run over all 6,000 orders:
+
+      ```python
+      import csv
+
+      def average_by(rows, key, value):
+          totals = {}
+          counts = {}
+          for row in rows:
+              if row[value] is not None:
+                  totals[row[key]] = totals.get(row[key], 0) + row[value]
+                  counts[row[key]] = counts.get(row[key], 0) + 1
+          result = {}
+          for name in totals:
+              result[name] = totals[name] / counts[name]
+          return result
+
+      orders = list(csv.DictReader(open('orders.csv')))
+      for row in orders:
+          if row['subtotal'] == '':
+              row['subtotal'] = None
+          else:
+              row['subtotal'] = float(row['subtotal'])
+
+      result = average_by(orders, 'status', 'subtotal')
+      for status in result:
+          print(status, round(result[status], 2))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import csv
+
+        def average_by(rows, key, value):
+            totals = {}
+            counts = {}
+            for row in rows:
+                if row[value] is not None:
+                    totals[row[key]] = totals.get(row[key], 0) + row[value]
+                    counts[row[key]] = counts.get(row[key], 0) + 1
+            result = {}
+            for name in totals:
+                result[name] = totals[name] / counts[name]
+            return result
+
+        orders = list(csv.DictReader(open('orders.csv')))
+        for row in orders:
+            if row['subtotal'] == '':
+                row['subtotal'] = None
+            else:
+                row['subtotal'] = float(row['subtotal'])
+
+        result = average_by(orders, 'status', 'subtotal')
+        for status in result:
+            print(status, round(result[status], 2))
+    after_run: "Delivered 60.43, cancelled 59.99. Ask SQL: SELECT status, AVG(subtotal) FROM orders GROUP BY status, and you get the same two numbers. Python did what SQL does, a line at a time, and now you have seen every line. When we reach pandas, that whole function becomes one short line, and it will not be a mystery."
+    note: "The doorway to pandas. Numbers checked against the data: 60.43 and 59.99 (5,578 and 397 orders with a subtotal)."
+
+  # 24
+  - kind: "recap"
+    text: |-
+      That is the end of the sitting. A row is a dict, and a table is a list of rows. A cell is asked for by the column's name. An empty cell is None, and it is left out with a question, because Python will not do it for you. A file gives text, and you turn it into numbers yourself.
+
+      You are not fast at this yet, and you are not meant to be. This is acquisition, and the speed comes from using it on real problems later. Don't go back over any of it. One more question, cold, and then we stop.
+
+  # 25
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "for-each", "if-question", "skip-the-missing", "running-result", "and-or", "equals-asks"]
+    text: "Write a function called `biggest_by` that takes the rows and a status, and hands back the largest subtotal among the rows with that status, leaving out empty ones."
+    check: |-
+      print(biggest_by([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ], 'delivered'))
+      print(biggest_by([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103877, 'status': 'delivered', 'subtotal': None},
+      ], 'cancelled'))
+    model: |-
+      def biggest_by(rows, status):
+          values = []
+          for row in rows:
+              if row['status'] == status and row['subtotal'] is not None:
+                  values.append(row['subtotal'])
+          return sorted(values)[-1]
+    output: |-
+      81.1
+      31.3
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: table, a question about a cell, the skip, and a pick from a sorted list, on a combination not yet practised. Never scored. It uses and-or from PY-2."

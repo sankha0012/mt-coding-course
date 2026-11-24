@@ -1,0 +1,925 @@
+lesson: py-01
+title: "Name a thing, then do something with it"
+strand: py
+stage: 1
+thoughts:
+  name-a-value: "One equals sign gives a value a name. It asks nothing."
+  list: "A list holds several values in order, in square brackets, with commas between them."
+  how-many: "`len(fees)` says how many. The list goes inside the brackets, as a column went inside `AVG`."
+  total: "`sum(fees)` adds the list up."
+  build-average: "There is no average word for a list. It is the total divided by how many."
+  text-in-list: "A list can hold words, and words wear quotes here as they did in SQL."
+  for-each: "`for fee in fees:` does the same thing for each item, and gives the item a name for the moment."
+  block: "The colon opens a block, and the lines pushed in underneath are inside it."
+  show: "`print` means show me what is inside the brackets."
+  if-question: "`if` asks a yes-or-no question of each item. The lines pushed in under it run only on yes."
+  equals-asks: "Two equals signs ask whether two things are equal, because one is taken for naming."
+  running-result: "A result starts before the loop, is updated inside it, and is ready after it."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["join", "join-on", "whose-column", "short-names", "pile-by-looked-up", "summary-column", "from-table", "piles", "pile-name", "commas"]
+    any_column_order: true
+    text: "For each vehicle the couriers ride, what was the average real delivery time?"
+    model: "SELECT c.vehicle, AVG(o.actual_minutes) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle"
+    rows: 3
+    result: [["bike", 39.4], ["carro", 39.81], ["moto", 39.26]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-4: a join, whose column is whose, short names, and piling by a looked-up column, on a pairing (orders with couriers) that SQL-4's closing sentence did not use. Never scored. The python strand starts next, so a miss tells the script that the SQL habits it is about to import were shaky."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["name-a-value"]
+    text: |-
+      Now the same thoughts in a second language, Python, where you do by hand what the database did for you. Everything you learned in SQL comes with you: quotes, commas, counting, averages, keeping the rows you want. In Python we give things names, using one equals sign. Here is a number and the name we give it:
+
+      ```python
+      fee = 8.99
+      print(fee)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fee = 8.99
+        print(fee)
+    after_run: "8.99. The first line named the number: from now on, fee means 8.99. The name is yours to invent, so choose one that says what it is. That equals sign asks nothing. It only names. The second line is print, and for now it just puts on the screen what is inside its brackets."
+    note: "The overarching idea of the strand ('give a thing a name, then do something with it') in the first sentence. The equals sign is introduced as naming from its very first appearance, so that step 17 can contrast it with asking. print is used before it is explained (rule B3), as COUNT(*) was in SQL-1, and its thought is taken in the next step. print has to arrive this early because a program prints only what it is told to print."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    new: ["show"]
+    requires: ["name-a-value", "show"]
+    text: "Python shows you only what you ask it to show, and the word for that is print: show me whatever is inside the brackets. Each program you type stands on its own, so it makes its own names. Give the number 18.85 the name subtotal, then show it. Stop and think before you type. Nothing here is timed."
+    model: |-
+      subtotal = 18.85
+      print(subtotal)
+    output: "18.85"
+    narration:
+      - "18.85. You named the number, then asked to see what the name stands for."
+      - "The name went to the left of the equals sign and the number to the right, and print showed it."
+      - "18.85, named and shown."
+    wrong:
+      - code: "subtotal = 18.85"
+        ask: "Nothing came back. The name is made, but what makes it appear on the screen?"
+        why: "naming and showing are two different jobs, and each has its own line."
+      - code: "print(subtotal)"
+        ask: "Python has never heard of subtotal. What gives a number a name?"
+      - code: "18.85 = subtotal"
+        tell: "The name goes on the left and the value on the right. That order just is."
+    walk:
+      - "Give the number 18.85 a name: subtotal, an equals sign, then the number."
+      - "Now ask to see it: print, with the name inside its brackets."
+    return:
+      text: "Name the number 35.2 as minutes, and show it."
+      model: |-
+        minutes = 35.2
+        print(minutes)
+      output: "35.2"
+      narration:
+        - "35.2. The name, the equals sign and the number, and then print to show it."
+        - "A number named, then shown."
+      note: "Return for step 3. Early step: only the name and the number can change."
+    note: "First typed program. print is named as 'show me' here, one step after it was used. Only the name and the number change from step 2, on purpose: it fixes which side the name goes on. This is the one place where a one-slot change is wanted."
+
+  # 4
+  - kind: "give"
+    lang: "python"
+    new: ["list"]
+    text: |-
+      Usually we have several values, not one. A list holds them in order. It has square brackets round it and commas between the items, just as commas separated the columns after SELECT:
+
+      ```python
+      fees = [8.99, 6.99, 0]
+      print(fees)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0]
+        print(fees)
+    after_run: "[8.99, 6.99, 0]. One name, three values, kept in the order you wrote them. The whole list is a thing in its own right: it has a name and you can show it."
+    note: "Commas arrive as an import from SQL and are named as one. The values are real delivery fees from the orders table."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "list", "commas"]
+    text: "Three order subtotals: 81.1, 18.85 and 84.23. Make a list called subtotals holding them, and show it."
+    model: |-
+      subtotals = [81.1, 18.85, 84.23]
+      print(subtotals)
+    output: "[81.1, 18.85, 84.23]"
+    narration:
+      - "A list of three, under one name. Square brackets round it, commas between the numbers."
+      - "[81.1, 18.85, 84.23]. The name first, then the equals sign, then the list."
+      - ""
+    wrong:
+      - code: |-
+          subtotals = [81.1 18.85 84.23]
+          print(subtotals)
+        ask: "Three numbers in a row with nothing between them. In SELECT, what went between two columns?"
+        why: "the same comma that separated columns separates the items of a list."
+      - code: |-
+          subtotals = (81.1, 18.85, 84.23)
+          print(subtotals)
+        ask: "Look at the brackets round your numbers. Which kind held the list we ran?"
+      - code: "subtotals = [81.1, 18.85, 84.23]"
+        ask: "The list exists, but nothing appeared. What shows it?"
+    walk:
+      - "Open a square bracket, and put the three numbers in with commas between them. Close it. The name and an equals sign go in front."
+      - "Now show it."
+    return:
+      text: "The actual_minutes column holds how long deliveries really took. Make a list called minutes holding 35.2, 24.8, 31.7 and 28.2, and show it."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2]
+        print(minutes)
+      output: "[35.2, 24.8, 31.7, 28.2]"
+      narration:
+        - "Four numbers under one name, in the order you gave them."
+        - "[35.2, 24.8, 31.7, 28.2]. Square brackets and commas, then print."
+      note: "Return for step 5. Other name, other numbers."
+    note: "The list is asked for once the learner has seen one. The next three steps all use a list, so this one has to be comfortable."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    new: ["how-many"]
+    requires: ["list", "show", "how-many"]
+    text: "You already know how to ask how many. In Python the word is len, short for length, and the list goes inside its brackets, the way a column went inside AVG. Four subtotals: 81.1, 18.85, 84.23 and 91.11. Put them in a list called subtotals, and show how many there are."
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11]
+      print(len(subtotals))
+    output: "4"
+    narration:
+      - "4. The list went inside the brackets of len, as the column went inside AVG."
+      - "Many values in, one number out: how many there are."
+      - "4. The word for how many, with the list inside."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(subtotals)
+        ask: "That shows the list itself. Which word asks how many?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(len(81.1, 18.85, 84.23, 91.11))
+        ask: "Where are the numbers kept? What went inside the brackets of AVG: the values, or the column's name?"
+        why: "a summary word takes the name of the thing, and the name carries the values with it."
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(len[subtotals])
+        ask: "Look at the brackets after len. Which kind went round the column in AVG(subtotal)?"
+    walk:
+      - "Make the list called subtotals, as you did before."
+      - "Now, in place of showing the list, show how many: print, with len inside it, and the list's name inside that."
+    return:
+      text: "Here are the delivery fees of five orders: 8.99, 6.99, 6.99, 4.99 and 4.99. How many orders is that? Make the list first."
+      model: |-
+        fees = [8.99, 6.99, 6.99, 4.99, 4.99]
+        print(len(fees))
+      output: "5"
+      narration:
+        - "5. Many values in, one number out: how many there are."
+        - "The list inside len, and print to show it: 5."
+      note: "Return for step 6. Other name, other numbers, and 'how many orders' as the signal."
+    note: "Imports the shape of AVG(subtotal). 'Short for length' is a real origin, not a hook. The list is retyped each time because each program stands alone. This is also the first step in which print has to wrap another call."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    new: ["total"]
+    requires: ["list", "show", "how-many", "total"]
+    text: "For the total, the word is sum, and it works just as len does. The delivery fees were 8.99, 6.99 and 0. What do they add up to?"
+    model: |-
+      fees = [8.99, 6.99, 0]
+      print(sum(fees))
+    output: "15.98"
+    narration:
+      - "15.98. The same place in the sentence as len, with a different word."
+      - "Sum, with the list inside its brackets, and print to show it."
+      - "15.98. The total of the fees."
+    wrong:
+      - code: |-
+          fees = [8.99, 6.99, 0]
+          print(len(fees))
+        ask: "That is how many fees there are. Which word adds them up?"
+      - code: |-
+          fees = [8.99, 6.99, 0]
+          print(sum(8.99, 6.99, 0))
+        ask: "Sum takes one thing in its brackets. What is the one thing that holds all three fees?"
+      - code: "print(sum(fees))"
+        ask: "Python has never heard of fees. What makes the list, with its name?"
+    walk:
+      - "Make a list called fees holding the three fees."
+      - "Show the total: print, with sum inside it and the list inside that."
+    return:
+      text: "Three deliveries really took 35.2, 24.8 and 31.7 minutes. How long was that altogether?"
+      model: |-
+        minutes = [35.2, 24.8, 31.7]
+        print(sum(minutes))
+      output: "91.7"
+      narration:
+        - "91.7. The list went inside sum, as it went inside len."
+        - "Three times added: 91.7 minutes."
+      note: "Return for step 7. Other name, other numbers; 'altogether' is the signal for a total."
+    note: "The list changes as well as the word, so the previous answer cannot just be edited. The fees are the first three of the earlier give."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "how-many", "total"]
+    text: "Four fees: 8.99, 6.99, 6.99 and 4.99. Show me how many there are, and then what they add up to: two lines."
+    model: |-
+      fees = [8.99, 6.99, 6.99, 4.99]
+      print(len(fees))
+      print(sum(fees))
+    output: |-
+      4
+      27.96
+    narration:
+      - "4 and 27.96, one line each. The same list, asked two different questions."
+      - "How many, then the total: COUNT and SUM from one table, by hand."
+      - ""
+    wrong:
+      - code: |-
+          fees = [8.99, 6.99, 6.99, 4.99]
+          print(sum(fees))
+          print(len(fees))
+        ask: "Both are there, but which did I ask for first?"
+      - code: |-
+          fees = [8.99, 6.99, 6.99, 4.99]
+          print(len(fees))
+        ask: "That is the first line. What do I want on the second?"
+    walk:
+      - "Make the list."
+      - "Show how many."
+      - "Show the total on the next line."
+    return:
+      text: "Show the total of these subtotals first, and then how many there are: 81.1, 18.85 and 84.23."
+      model: |-
+        subtotals = [81.1, 18.85, 84.23]
+        print(sum(subtotals))
+        print(len(subtotals))
+      output: |-
+        184.18
+        3
+      narration:
+        - "184.18 and 3, in the order I asked for them."
+        - "The total, then how many. Each got its own print."
+      note: "Return for step 8. Same two thoughts, in the other order, on other numbers."
+    note: "An easy recombination after the climb of steps 7 and 8 (rule C8). It also puts the idea in front of the learner that one list can be asked several questions."
+
+  # 9
+  - kind: "ask"
+    lang: "python"
+    new: ["build-average"]
+    requires: ["list", "show", "how-many", "total", "build-average"]
+    text: "Python has no word for the average of a list, like AVG. But you know what an average is made of, and a slash is divided by, as on a calculator. The four subtotals were 81.1, 18.85, 84.23 and 91.11. What was their average?"
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11]
+      print(sum(subtotals) / len(subtotals))
+    output: "68.8225"
+    narration:
+      - "68.8225. The total divided by how many. You didn't need a word for it."
+      - "Sum over len: the two words you already had, put together into an average."
+      - "68.8225. Nothing new was given for this one. You built it."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(sum(subtotals))
+        ask: "That is the total. An average is the total shared out among how many?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(len(subtotals) / sum(subtotals))
+        ask: "Total over how many, or how many over the total? Think of dividing 10 sweets among 2 children."
+    walk:
+      - "Make the list of four subtotals."
+      - "What is an average made of? A total, and how many things were added. Write each as you have before."
+      - "Put a slash between them, total first, and show the whole thing."
+    return:
+      text: "Three deliveries took 35.2, 24.8 and 31.7 minutes. What was the average delivery time?"
+      model: |-
+        minutes = [35.2, 24.8, 31.7]
+        print(sum(minutes) / len(minutes))
+      output: "30.566666666666666"
+      narration:
+        - "About 30.57. The total of the minutes, divided by how many deliveries."
+        - "Sum over len, again: an average built from two parts."
+      note: "Return for step 9. 'Average' is the signal."
+    note: "The first small surprise: the learner builds something that was never given (draft C5). The second wrong answer is the slip most likely to come from careless thinking."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    new: ["text-in-list"]
+    requires: ["list", "show", "text-quotes", "text-in-list"]
+    text: "A list can hold words too, and words wear quotes here as well, just as they did in SQL. A list called statuses holding delivered, cancelled and delivered. Show it."
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      print(statuses)
+    output: "['delivered', 'cancelled', 'delivered']"
+    narration:
+      - "Three words in a list, each in quotes, each separated by a comma."
+      - "Python shows the words with quotes round them, so you can see they are text."
+      - "Words wear quotes here as in SQL, and the list is as before."
+    wrong:
+      - code: |-
+          statuses = [delivered, cancelled, delivered]
+          print(statuses)
+        ask: "Python looks for something called delivered, as SQL looked for a column of that name. Is it a name, or a word we are looking for?"
+        why: "a bare word is read as a name that you made. A word that is just text wears quotes."
+      - code: |-
+          statuses = ['delivered' 'cancelled' 'delivered']
+          print(statuses)
+        ask: "That came out as one long word. What separates the items?"
+      - code: |-
+          statuses = 'delivered', 'cancelled', 'delivered'
+          print(statuses)
+        ask: "Look at the brackets that Python put round yours when it showed it. Which kind held our lists?"
+    walk:
+      - "Make a list with the three words in it, each word in quotes and a comma between them."
+      - "Give the list the name statuses, and show it."
+    return:
+      text: "Four couriers ride bike, moto, carro and bike. Make a list called vehicles holding those words, and show it."
+      model: |-
+        vehicles = ['bike', 'moto', 'carro', 'bike']
+        print(vehicles)
+      output: "['bike', 'moto', 'carro', 'bike']"
+      narration:
+        - "Four words under one name, each in quotes."
+        - "Words in a list wear quotes, as they did in SQL."
+      note: "Return for step 10. Other name, other words."
+    note: "Quotes are imported from SQL, and the wrong answer says so. The list is typed from words the learner has seen in the status column."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "text-in-list", "how-many"]
+    text: "The list of statuses again: delivered, cancelled, delivered, delivered. How many orders are in it?"
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered', 'delivered']
+      print(len(statuses))
+    output: "4"
+    narration:
+      - "4. A list of words is counted like a list of numbers: it is one item per word."
+      - "Len, with the list of statuses inside its brackets."
+      - ""
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered']
+          print(statuses)
+        ask: "That shows them. Which word asks how many?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered']
+          print(len('statuses'))
+        ask: "Those quotes make it the word statuses, which has eight letters. Is statuses a word we are looking for, or the name of our list?"
+        why: "the name of a list is a bare word, and it never wears quotes. Quotes make text."
+    walk:
+      - "Make the list of four statuses."
+      - "Show how many items it has."
+    return:
+      text: "The first five couriers ride bike, bike, carro, bike and bike. How many couriers is that?"
+      model: |-
+        vehicles = ['bike', 'bike', 'carro', 'bike', 'bike']
+        print(len(vehicles))
+      output: "5"
+      narration:
+        - "5. One item per courier, however long each word is."
+        - "How many, from a list of words."
+      note: "Return for step 11. Other words, other length."
+    note: "A list of words meets len for the first time, while text-in-list is one step old (rule C1, gap of 1). It also gets the learner to say the difference between a name and a word out loud, which step 17 needs."
+
+  # 12
+  - kind: "give"
+    lang: "python"
+    new: ["for-each"]
+    text: |-
+      In SQL the database went through the rows for you. In Python you say it yourself: for each fee in the list, do something. Here the something is to show it:
+
+      ```python
+      fees = [8.99, 6.99, 0]
+      for fee in fees:
+          print(fee)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0]
+        for fee in fees:
+            print(fee)
+    after_run: "Three lines, one for each fee. The line with for reads: for each fee in fees. The name fee stands for whichever item the loop is on at that moment, and it changes at every turn. That name is yours to choose, as always. This is FROM, by hand: SQL went through the rows of a table, and you go through the items of a list."
+    note: "Marked as essential. The colon and the pushed-in line are used here and explained in the next step (rule B3). The echo of FROM is the strand's first explicit link back to SQL."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    new: ["block"]
+    requires: ["list", "text-in-list", "show", "for-each", "block"]
+    text: "Look again at what you ran. The line with for ends in a colon, and the line under it is pushed in. The colon opens what is to be done for each item, and the lines pushed in underneath are inside it. Python needs that push, so it knows where the loop ends. The statuses are delivered, cancelled and delivered. Show me each status, one at a time."
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      for status in statuses:
+          print(status)
+    output: |-
+      delivered
+      cancelled
+      delivered
+    narration:
+      - "Three lines, one for each status. The colon opened the block, and the pushed-in print was inside it."
+      - "For each status in statuses, show it. The name status changes at each turn."
+      - ""
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          for status in statuses:
+          print(status)
+        ask: "Python wants to know which lines are inside the loop. What shows that?"
+        why: "the push tells Python where the block begins and where it ends."
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          for status in statuses
+              print(status)
+        ask: "What opens the block? Look at the end of the for line."
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          print(statuses)
+        ask: "That shows the list in one go. What makes Python do something for each item?"
+    walk:
+      - "Make the list of statuses."
+      - "Write the going-through: for, a name for one status, in, the list, and a colon."
+      - "Push one line in underneath it, and show the status."
+    return:
+      text: "The first four couriers ride bike, bike, carro and bike. Make a list called vehicles, and show each vehicle on its own line."
+      model: |-
+        vehicles = ['bike', 'bike', 'carro', 'bike']
+        for vehicle in vehicles:
+            print(vehicle)
+      output: |-
+        bike
+        bike
+        carro
+        bike
+      narration:
+        - "Four lines, one for each courier. The colon opened the block and the push put the print inside it."
+        - "For each vehicle in vehicles, show it."
+      note: "Return for step 13. Other list, other names."
+    note: "The colon and the push, as one idea that will be used for if and def as well. The first typed step in which spacing matters, and the slip view does not exist for Python: the player will show the model."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "how-many", "for-each", "block"]
+    text: "Three fees: 8.99, 0 and 6.99. Show each fee on its own line, and when you have been through them all, show how many there were."
+    model: |-
+      fees = [8.99, 0, 6.99]
+      for fee in fees:
+          print(fee)
+      print(len(fees))
+    output: |-
+      8.99
+      0
+      6.99
+      3
+    narration:
+      - "Three fees, then the number 3. The last print is back at the left, so it ran once, after the loop."
+      - "Going through them and counting them are two different things, and the push told Python which line belongs to which."
+      - ""
+    wrong:
+      - code: |-
+          fees = [8.99, 0, 6.99]
+          for fee in fees:
+              print(fee)
+              print(len(fees))
+        ask: "That showed how many at every turn. Which line should run once, when the loop is over?"
+        why: "a line that is not pushed in is outside the loop, and runs once when the loop is finished."
+      - code: |-
+          fees = [8.99, 0, 6.99]
+          for fee in fees:
+              print(fee)
+        ask: "Each fee is there. What did I ask for afterwards?"
+    walk:
+      - "Make the list, and show each fee: a loop with a print pushed in."
+      - "Then, back at the left edge, show how many fees there are."
+    return:
+      text: "Show each of these delivery times on its own line, and afterwards what they add up to: 35.2, 24.8 and 31.7."
+      model: |-
+        minutes = [35.2, 24.8, 31.7]
+        for minute in minutes:
+            print(minute)
+        print(sum(minutes))
+      output: |-
+        35.2
+        24.8
+        31.7
+        91.7
+      narration:
+        - "The three times, one per line, and then 91.7: the total, shown once, after the loop."
+        - "A loop, and then a line back at the left that runs when the loop is finished."
+      note: "Return for the relief step before the if."
+    note: "An easy recombination after the climb of steps 12 and 13 (rule C8), and the preparation for running-result: the learner has already put a line after a loop and seen that it runs once."
+
+  # 15
+  - kind: "give"
+    lang: "python"
+    new: ["if-question"]
+    text: |-
+      Inside the loop we can ask a question, the same kind each row answered after WHERE. The word is if. It ends with a colon too, and what should happen on a yes is pushed in again:
+
+      ```python
+      fees = [8.99, 6.99, 0]
+      for fee in fees:
+          if fee > 5:
+              print(fee)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0]
+        for fee in fees:
+            if fee > 5:
+                print(fee)
+    after_run: "8.99 and 6.99. The zero answered no, so the print did not run for it. Each fee was asked the question, and only the yes ones ran the line pushed in under it. That was WHERE, by hand. The signs are the ones from maths, as they were in SQL."
+    note: "The colon and push are used a second time without being re-taught. compare-signs is imported from SQL and named as such."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs"]
+    text: "Five order subtotals: 81.1, 18.85, 84.23, 91.11 and 31.3. Go through them and show only the ones above 50."
+    thinking_order: "Make the list. For each subtotal in it, if the subtotal is above 50, show it."
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+      for subtotal in subtotals:
+          if subtotal > 50:
+              print(subtotal)
+    output: |-
+      81.1
+      84.23
+      91.11
+    narration:
+      - "81.1, 84.23 and 91.11. Every subtotal was asked the question, and only the yes ones were shown."
+      - "A loop with a question inside it, and the print pushed in twice. That is WHERE."
+      - "Three of the five answered yes."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          for subtotal in subtotals:
+              if subtotal > 50:
+              print(subtotal)
+        ask: "The print should run only on a yes. What shows that it belongs to the if?"
+        why: "the block of an if is pushed in again, one step further than the block of the loop."
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          for subtotal in subtotals:
+              if subtotal > 50
+                  print(subtotal)
+        ask: "The if line is a question that opens a block. What does every block-opener end with?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          for subtotal in subtotals:
+              print(subtotal > 50)
+        ask: "That shows each answer, yes or no, but keeps nothing. Which word makes the line run only on a yes?"
+    walk:
+      - "Make the list, and go through it: for each subtotal."
+      - "Inside, ask the question: if, the name, the sign and the number, then a colon."
+      - "Pushed in once more, show the subtotal."
+    return:
+      text: "The delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. Show only the ones under 30."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2]
+        for minute in minutes:
+            if minute < 30:
+                print(minute)
+      output: |-
+        24.8
+        28.2
+      narration:
+        - "24.8 and 28.2. Each time was asked the question, and only the yes ones were shown."
+        - "A loop, a question, a print pushed in twice: the same shape with another sign."
+      note: "Return for step 16. Other list, other sign."
+    note: "Prompt in thinking order for the first time in Python. The wrong answer that prints True and False is the learner's first look at a yes or no as a value, which PY-3 uses."
+
+  # 17
+  - kind: "classmate"
+    lang: "python"
+    new: ["equals-asks"]
+    requires: ["list", "text-in-list", "show", "for-each", "block", "if-question", "text-quotes", "equals-asks"]
+    text: |-
+      Ana was asked to go through the statuses and show only the delivered ones. She wrote:
+
+      ```python
+      statuses = ['delivered', 'cancelled', 'delivered']
+      for status in statuses:
+          if status = 'delivered':
+              print(status)
+      ```
+
+      Python answered: SyntaxError: invalid syntax. Ana, what does one equals sign do in Python? ... It gives a name. Ana is not naming anything here, she is asking, and asking is written with two equals signs. Type the whole program as she should have written it.
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      for status in statuses:
+          if status == 'delivered':
+              print(status)
+    output: |-
+      delivered
+      delivered
+    broken: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      for status in statuses:
+          if status = 'delivered':
+              print(status)
+    narration:
+      - "Two delivered statuses. One equals sign names, and two ask. That is the whole difference, and the if needed the asking."
+      - "In SQL a single equals sign was enough, because nothing there needed a name. Here naming is taken, so asking has two."
+      - "delivered, delivered. The question is the same as SQL's WHERE status = 'delivered', with one more equals sign."
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          for status in statuses:
+              if status = 'delivered':
+                  print(status)
+        ask: "That is Ana's again. What does one equals sign do?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          for status in statuses:
+              if status == delivered:
+                  print(status)
+        ask: "Two equals signs now, good. Is delivered a name you made, or a word we are looking for?"
+        why: "a word we are looking for wears quotes, here as in SQL."
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          for status in statuses:
+              if status == 'cancelled':
+                  print(status)
+        ask: "That shows the cancelled one. Which did Ana want?"
+    walk:
+      - "Ana's list and her loop are right. Look only at the question after if."
+      - "One equals sign gives a name. Which sign asks whether two things are the same?"
+    return:
+      text: "Go through these vehicles and show only the bikes: bike, moto, bike, carro."
+      model: |-
+        vehicles = ['bike', 'moto', 'bike', 'carro']
+        for vehicle in vehicles:
+            if vehicle == 'bike':
+                print(vehicle)
+      output: |-
+        bike
+        bike
+      narration:
+        - "Two bikes. Two equals signs asked, and the word wore quotes."
+        - "For each vehicle, if it is a bike, show it. WHERE vehicle = 'bike', by hand."
+      note: "Return for step 17. Other list, other word."
+    note: "The preventative correction from draft C11: Ana makes the slip before the learner can (rule E6), and Python's own message is the real reason. The learner repairs it by typing the program. The confusable pair, one and two equals signs, is met here through a classmate."
+
+  # 18
+  - kind: "give"
+    lang: "python"
+    new: ["running-result"]
+    text: |-
+      Showing is fine, but usually we want a number. For that we keep a running result. It starts at zero before the loop, and inside the loop, when the answer is yes, we add one to it: count = count + 1. When the loop is finished the count is ready. Here are the fees above 5:
+
+      ```python
+      fees = [8.99, 6.99, 0]
+      count = 0
+      for fee in fees:
+          if fee > 5:
+              count = count + 1
+      print(count)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0]
+        count = 0
+        for fee in fees:
+            if fee > 5:
+                count = count + 1
+        print(count)
+    after_run: "2. Look at where each line sits. The count is named before the loop. It goes up inside the loop, on each yes. And the print is back at the left edge, because it belongs after the loop, when the count is done. Reading count = count + 1: the new count is the old count plus one."
+    note: "The heaviest step of the lesson, so it comes after a classmate and before an aside. The three thoughts in the map, start before, update inside and ready after, are one thought here because they come as one shape. The last line of the give is deliberately back at the left, which the next step's wrong answers use."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "running-result"]
+    text: "Five subtotals: 81.1, 18.85, 84.23, 91.11 and 31.3. How many of them are above 50?"
+    thinking_order: "Make the list. Start a count at zero. For each subtotal, if it is above 50, add one to the count. Then show the count."
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+      count = 0
+      for subtotal in subtotals:
+          if subtotal > 50:
+              count = count + 1
+      print(count)
+    output: "3"
+    narration:
+      - "3. The count started at zero, went up on each yes, and was shown once the loop was over."
+      - "How many above 50: that is SELECT COUNT(*) ... WHERE subtotal > 50, written out by hand."
+      - "3. A running result: before the loop, inside it, and ready after it."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          count = 0
+          for subtotal in subtotals:
+              if subtotal > 50:
+                  count = count + 1
+                  print(count)
+        ask: "The count is shown at every turn that says yes. When is the count ready?"
+        why: "a running result is ready after the loop, so the print goes back to the left, outside the block."
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          for subtotal in subtotals:
+              count = 0
+              if subtotal > 50:
+                  count = count + 1
+          print(count)
+        ask: "At each turn the count goes back to 0. Where should a result start, so that it is not started over?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          for subtotal in subtotals:
+              if subtotal > 50:
+                  count = count + 1
+          print(count)
+        ask: "Python stopped: count means nothing yet. What is the count before any subtotal has been looked at?"
+    walk:
+      - "Start the count at zero, before anything else, after the list."
+      - "Go through the subtotals and ask the question. On a yes, add one: count = count + 1."
+      - "Show the count, after the loop is finished: back at the left edge."
+    return:
+      text: "The delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. How many took longer than 30?"
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2]
+        count = 0
+        for minute in minutes:
+            if minute > 30:
+                count = count + 1
+        print(count)
+      output: "2"
+      narration:
+        - "2. The count started at zero, went up on each yes, and was shown at the end."
+        - "A question inside a loop, and a result kept: COUNT with a WHERE."
+      note: "Return for step 19. Other list and other numbers."
+    note: "The first time the learner has to place the print, the start and the update. The wrong answers are the three classic places to put them wrong, each with a real reason."
+
+  # 20
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. Why is the word print used for putting words on a screen? Because early computers often answered on paper: a printer typed the result out, and the word stuck. Python is far newer than that, but the word was already everyone's word for it. And len, which you met earlier, is just the first three letters of length, to save typing."
+    note: "Relief after the climb of steps 18 and 19 (rule C8). A real origin, not a mnemonic. The remark about len repeats a thing the learner already holds."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "running-result"]
+    text: "The same shape, with a total where the count was. The subtotals were 81.1, 18.85, 84.23, 91.11 and 31.3. What did the ones above 50 add up to?"
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+      total = 0
+      for subtotal in subtotals:
+          if subtotal > 50:
+              total = total + subtotal
+      print(total)
+    output: "256.44"
+    narration:
+      - "256.44. The same running result, and this time the subtotal itself is added, not just one."
+      - "Start at zero, add the item on each yes, show it at the end: that is SUM with a WHERE, by hand."
+      - "256.44, from the three big ones."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          total = 0
+          for subtotal in subtotals:
+              if subtotal > 50:
+                  total = total + 1
+          print(total)
+        ask: "That adds one for each big subtotal, which is a count. What do we want to add?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+          total = 0
+          for subtotal in subtotals:
+              total = total + subtotal
+          print(total)
+        ask: "That adds up all five. Where is the question that keeps only the big ones?"
+    walk:
+      - "Start a total at zero, after the list."
+      - "Go through the subtotals. On a yes, add the subtotal itself."
+      - "Show the total once the loop is done."
+    return:
+      text: "The delivery fees were 8.99, 6.99, 0 and 4.99. What did the fees above 5 add up to?"
+      model: |-
+        fees = [8.99, 6.99, 0, 4.99]
+        total = 0
+        for fee in fees:
+            if fee > 5:
+                total = total + fee
+        print(total)
+      output: "15.98"
+      narration:
+        - "15.98. Started at zero, added the fee on each yes, shown at the end."
+        - "The same shape: a running total behind a question."
+      note: "Return for step 21. Other list; the total of the yes ones is 8.99 plus 6.99."
+    note: "The shape of step 19 with the item added instead of one. Not a one-slot repeat: the update line changes as well as the start and the print. This is the same step as 'total per pile' will be in PY-4."
+
+  # 22
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "text-in-list", "show", "for-each", "block", "if-question", "text-quotes", "equals-asks", "running-result"]
+    friction: true
+    text: "The last one, and I won't break it down. Six orders came back with these statuses: delivered, cancelled, delivered, delivered, cancelled, delivered. How many were delivered?"
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']
+      count = 0
+      for status in statuses:
+          if status == 'delivered':
+              count = count + 1
+      print(count)
+    output: "4"
+    narration:
+      - "4. That is SELECT COUNT(*) FROM orders WHERE status = 'delivered', written out by hand. You named a list, went through each item, asked a question and kept a count."
+      - "4 delivered. The list, the loop, the question with two equals signs and the running count: every piece of this lesson, in one program."
+      - "The first SQL question you ever answered, and now you have answered it twice."
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']
+          count = 0
+          for status in statuses:
+              if status = 'delivered':
+                  count = count + 1
+          print(count)
+        ask: "Python stopped at the question. What did Ana learn about one equals sign?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']
+          count = 0
+          for status in statuses:
+              if status == 'delivered':
+                  print(status)
+        ask: "That shows the delivered ones. Which did I ask for: to see them, or how many there are?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']
+          count = 0
+          for status in statuses:
+              if status == 'delivered':
+                  count = count + 1
+              print(count)
+        ask: "The count is shown at every turn. When is it ready?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']
+          count = 0
+          for status in statuses:
+              if status == 'cancelled':
+                  count = count + 1
+          print(count)
+        ask: "That counts the cancelled ones. Which word are we looking for?"
+    walk:
+      - "Make the list of six statuses."
+      - "Start a count at zero."
+      - "Go through the statuses. If the status is delivered, add one to the count."
+      - "Show the count, after the loop."
+    return:
+      text: "The first six couriers ride bike, bike, carro, bike, bike and bike. How many ride a bike?"
+      model: |-
+        vehicles = ['bike', 'bike', 'carro', 'bike', 'bike', 'bike']
+        count = 0
+        for vehicle in vehicles:
+            if vehicle == 'bike':
+                count = count + 1
+        print(count)
+      output: "5"
+      narration:
+        - "5 on bikes. A list, a loop, a question with two equals signs, and a running count."
+        - "Start at zero, add one for each bike, show the count at the end."
+      note: "Return for the closing step. Not broken down, like the step."
+    note: "The closing sentence of the lesson, and the closing of the loop back to the first SQL question the learner ever answered (draft C13). Deliberate friction (rule C9)."
+
+  # 23
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. In one sitting you gave things names, held many in a list, counted and added them up, went through them one at a time, asked each a question, and kept a running result. Most of that was SQL again, done by hand: the loop was FROM, the if was WHERE, and the running result was what COUNT and SUM did for you.
+
+      You are not fast at it yet, and you are not meant to be. Speed is trained separately, later. For now the only aim is that you can think a program out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and says, in other words, that the learner is not to revise (rule A3)."
+
+  # 24
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["list", "text-in-list", "show", "how-many", "for-each", "block", "if-question", "text-quotes", "equals-asks", "running-result", "build-average"]
+    text: "Here are the statuses of five orders: delivered, delivered, cancelled, delivered, delivered. What fraction of them were cancelled? Work it out as a number between 0 and 1."
+    model: |-
+      statuses = ['delivered', 'delivered', 'cancelled', 'delivered', 'delivered']
+      count = 0
+      for status in statuses:
+          if status == 'cancelled':
+              count = count + 1
+      print(count / len(statuses))
+    output: "0.2"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Every thought of the lesson that an answer can show, on a combination never practised: a count that is then divided by how many, which is an average built from a running result. Never scored (rule F1). What a miss tells the script: which of the loop, the question, the two equals signs, the running result or the division was absent. PY-2 opens by rebuilding from that point."

@@ -15,10 +15,13 @@ def _column_type(values):
     return str, "TEXT"
 
 
-def load_db(data_dir, check_same_thread=True):
-    """Build an in-memory database from every CSV in data_dir. Empty cells become NULL."""
+def load_db(data_dir, check_same_thread=True, max_bytes=30_000_000):
+    """Build an in-memory database from the CSV files in data_dir. Empty cells become NULL.
+    A file over max_bytes is left out of the database (Python can still read it)."""
     conn = sqlite3.connect(":memory:", check_same_thread=check_same_thread)
     for path in sorted(Path(data_dir).glob("*.csv")):
+        if path.stat().st_size > max_bytes:
+            continue
         with open(path, newline="", encoding="utf-8") as f:
             header, *body = csv.reader(f)
         types = [_column_type(col) for col in zip(*body)]

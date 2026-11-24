@@ -2,7 +2,7 @@
 
 A course that takes one person from "can read code but freezes on a blank page" to "passes the coding round of a Brazilian data science hiring process". It teaches SQL, basic Python and pandas with the Michel Thomas method as refined by Language Transfer's Thinking Method: the method carries the burden of remembering, the learner only thinks and produces.
 
-**Status (20 Nov 2026): design, the first lesson, a content checker and the first player are built.** SQL lesson 1 is in `content/sql/`. `uv run python -m checker content/sql` checks it and `uv run python -m player` plays it at http://127.0.0.1:8770. The next step is for the owner to sit lesson 1 and read the miss log (milestone 5).
+**Status (24 Nov 2026): the whole course is written.** 27 lessons in two passes, in SQL, Python, pandas and scikit-learn, and two cold sittings on real data, are in `content/` (`docs/03-curriculum.md`, `docs/maps/`). `uv run python -m checker content` checks them and `uv run python -m player` plays them at http://127.0.0.1:8770. No lesson has been sat by the owner yet. Next: the owner sits lesson 1 and reads the miss log (milestone 5).
 
 ## Why this exists
 
@@ -15,11 +15,12 @@ The owner already has the maths, statistics and ML. Companies are sending them i
 | `CLAUDE.md` | Working rules for whoever builds this |
 | `docs/01-scope.md` | The learner, the goal, the pass bar, what is out of scope |
 | `docs/02-pedagogy-rules.md` | The teaching rules every lesson and every feature must obey |
-| `docs/03-curriculum.md` | Three stages, three strands, the order of thoughts |
+| `docs/03-curriculum.md` | Two passes, three strands, the lessons in order |
 | `docs/04-script-format.md` | What a lesson script contains, step by step |
 | `docs/05-app-requirements.md` | What the app must do, with no implementation chosen |
 | `docs/06-decisions.md` | What is decided, what is only recommended, what is open |
 | `docs/07-roadmap.md` | Milestones, in order |
+| `docs/maps/` | The thoughts of every lesson, strand by strand |
 | `docs/research/` | The evidence behind all of the above |
 | `data/` | The practice dataset every example was checked against |
 
@@ -29,4 +30,4 @@ The owner already has the maths, statistics and ML. Companies are sending them i
 2. One new thought per step, immediately recombined with everything earlier.
 3. The learner is told not to memorise. The script does the spaced repetition, hidden inside new sentences.
 4. A miss is information about the script. The app steps back to a smaller piece and never marks anything wrong.
-5. Acquisition has no timer. Speed is trained afterwards, as a separate stage.
+5. Acquisition has no timer. Speed is trained afterwards, in the sibling gym.

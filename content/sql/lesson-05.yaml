@@ -1,0 +1,579 @@
+lesson: sql-05
+title: "A result can be queried again"
+strand: sql
+stage: 1
+thoughts:
+  in-a-list: "`IN ('pizza', 'japonesa')` asks whether a cell is one of several, listed in brackets with commas."
+  query-a-result: "A table comes out, so it can go in: a query in brackets can stand after `FROM`, with its columns named by `AS`."
+  name-a-table: "`WITH counts AS (...)` names a result, and the sentence below uses the name. Name a thing, then do something with it."
+  one-number-from-a-query: "A query that answers one number can stand in brackets where a number stands."
+  list-from-a-query: "A query that answers one column can stand in brackets where the list after `IN` stands."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes"]
+    text: "A moment in Python first, from the pandas sitting. Start from nothing: read orders.csv, and print the average delivery fee of the cancelled orders."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['status'] == 'cancelled']['delivery_fee'].mean())
+    output: "5.368245614035088"
+    after_run: "That was the same question as one in SQL, asked the other way round. Back to SQL now. On we go."
+    note: "Opening cold check from PD-1 (requirement R4): read, keep by a yes-no column, pick a column, summarise, on a combination never practised (the mean of the cancelled orders' fee, 5.37, which SQL-1 gave). Judged by its printed output, with the number compared to six places. Never scored."
+
+  # 2
+  - kind: "give"
+    new: ["in-a-list"]
+    text: |-
+      Back in lesson 2, Davi wanted the pizza restaurants and the japonesa ones together, and you joined two questions with OR. With three choices, or ten, that gets long. There is a shorter way to ask whether a cell is one of several words. List the words in brackets, with commas between them, as you would in English, and say IN:
+
+      ```sql
+      SELECT name FROM restaurants WHERE cuisine IN ('pizza', 'japonesa')
+      ```
+
+      Run it.
+    shows:
+      - "SELECT name FROM restaurants WHERE cuisine IN ('pizza', 'japonesa')"
+    after_run: "18 restaurants, the same 18 as Davi's. IN asks whether the cell is any one of the words in the brackets. Each word still wears its quotes, and the commas separate them, as in any list."
+    note: "Reuses a result the learner has already seen (18), so the new word is a shorter way to say something owned (rule C4, B7). The commas are the English commas of SQL-1, so nothing new is remembered."
+
+  # 3
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "commas", "in-a-list"]
+    text: "How many restaurants are in São Paulo or Curitiba? Ask it with IN."
+    thinking_order: "From restaurants, keeping the ones whose city is one of São Paulo and Curitiba, how many?"
+    model: "SELECT COUNT(*) FROM restaurants WHERE city IN ('São Paulo', 'Curitiba')"
+    rows: 1
+    result: [[31]]
+    narration:
+      - "31: 25 in São Paulo and 6 in Curitiba. One question, with the two cities listed in brackets."
+      - "The cell had to be one of the words in the list, and each word wore quotes."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM restaurants WHERE city IN ('Sao Paulo', 'Curitiba')"
+        ask: "That is 6 only. Is the first city written exactly as in the table?"
+      - sql: "SELECT COUNT(*) FROM restaurants WHERE city IN ('São Paulo' 'Curitiba')"
+        ask: "Two things in a list. What goes between them?"
+      - sql: "SELECT COUNT(*) FROM restaurants WHERE city IN (São Paulo, Curitiba)"
+        ask: "Are those two columns, or words we are looking for?"
+    walk:
+      - "How many restaurants are there?"
+      - "Keep only the ones whose city is in the list São Paulo and Curitiba, with the quotes and commas."
+    return:
+      text: "How many couriers ride a bike or a carro? Use IN."
+      model: "SELECT COUNT(*) FROM couriers WHERE vehicle IN ('bike', 'carro')"
+      rows: 1
+      result: [[90]]
+      narration:
+        - "90: 73 on bikes and 17 in cars. The word list went in brackets."
+        - "A cell that is one of several words, asked with IN."
+      note: "Return for step 3."
+    note: "First typed IN. The model gives 31, and dropping the tilde gives 6, a quiet slip."
+
+  # 4
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "in-a-list"]
+    any_column_order: true
+    text: "The customers with the ids 106, 187 and 199 are our keenest. For each of them, how many orders have they placed? Use IN for the three."
+    thinking_order: "From orders, keeping the ones whose customer_id is one of 106, 187 and 199, a pile per customer, the customer and how many."
+    model: "SELECT customer_id, COUNT(*) FROM orders WHERE customer_id IN (106, 187, 199) GROUP BY customer_id"
+    rows: 3
+    result: [[106, 11], [187, 12], [199, 10]]
+    narration:
+      - "Customer 187 has 12, customer 106 has 11 and customer 199 has 10. Keep the three customers' orders, pile by customer, count each pile."
+      - "Numbers do not wear quotes: they sit in the list as they are."
+      - ""
+    wrong:
+      - sql: "SELECT customer_id, COUNT(*) FROM orders GROUP BY customer_id"
+        ask: "That is every customer. Where do we keep only the three?"
+      - sql: "SELECT customer_id, COUNT(*) FROM orders WHERE customer_id IN (106, 187) GROUP BY customer_id"
+        ask: "One customer is missing. Which three did I ask for?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE customer_id IN (106, 187, 199)"
+        ask: "That is one number for all three together. Which pile is which customer?"
+    walk:
+      - "Show me the orders of those three customers: keep them with IN."
+      - "Now make a pile for each customer and count it, with the customer in front."
+    return:
+      text: "Among the couriers in Curitiba or Belo Horizonte, how many ride each vehicle? Show the vehicle with its count, and use IN."
+      model: "SELECT vehicle, COUNT(*) FROM couriers WHERE city IN ('Curitiba', 'Belo Horizonte') GROUP BY vehicle"
+      any_column_order: true
+      rows: 3
+      result: [["bike", 22], ["carro", 6], ["moto", 34]]
+      narration:
+        - "Moto 34, bike 22 and carro 6. The two cities sat in the list, each with its quotes."
+        - "Keep the three, pile by vehicle, count each pile."
+      note: "Return for step 4."
+    note: "IN with numbers, which need no quotes (the thought text-quotes is about words), and the return goes back to words. Piles come back after the keeping."
+
+  # 5
+  - kind: "give"
+    new: ["query-a-result"]
+    text: |-
+      Remember the one picture worth keeping: a table goes in, a table comes out. So a table that came out can go straight back in. Say we want the average number of orders a restaurant gets. First comes a table with one count for each restaurant, and the count is given a name, n, with the AS you know. Then that whole table, in brackets, goes where a table's name would go, after FROM:
+
+      ```sql
+      SELECT AVG(n) FROM (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)
+      ```
+
+      Run it.
+    shows:
+      - "SELECT AVG(n) FROM (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)"
+    after_run: "100. The inside made a table of sixty counts, one for each restaurant, and the outside took that table and averaged its column n. The count needed a name so that the outside could ask about it, which is what AS was for. A table came out, and it went back in: the average restaurant gets exactly 100 orders."
+    note: "'A table goes in, a table comes out' was the one idea worth holding from lesson 1 step 5. This is the same idea used twice, so it should cost little (map note). AS from lesson 2 is needed here for its real purpose."
+
+  # 6
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "more-summaries", "piles", "one-row-per-pile", "pile-name", "commas", "name-a-result", "query-a-result"]
+    text: "What is the most orders any single restaurant has had? Count the orders of each restaurant, as in that last sentence, and then take the biggest of those counts."
+    thinking_order: "From a table of how many orders each restaurant had, the biggest of the counts."
+    model: "SELECT MAX(n) FROM (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)"
+    rows: 1
+    result: [[120]]
+    narration:
+      - "120. The inside counted the orders of each restaurant, and the outside took the biggest of the counts."
+      - "A table of sixty counts came out, and the biggest was found in it."
+      - ""
+    wrong:
+      - sql: "SELECT MAX(COUNT(*)) FROM orders GROUP BY restaurant_id"
+        ask: "SQL refuses to put a summary inside a summary. What if the counts were a table first? Where does that table go?"
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders GROUP BY restaurant_id ORDER BY COUNT(*) DESC LIMIT 1"
+        ask: "That shows the winner and its count, two columns. I asked for one number: the biggest of the counts. Which summary finds the biggest, and of which column?"
+      - sql: "SELECT MIN(n) FROM (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)"
+        ask: "That is the smallest. Which end did I ask for?"
+      - sql: "SELECT MAX(n) FROM orders"
+        ask: "Is n a column of orders? Where does n come from?"
+    walk:
+      - "First the table of counts: the restaurant, and how many orders, called n."
+      - "Now put it in brackets after FROM and ask for the biggest n."
+    return:
+      text: "What is the smallest number of couriers any city has? Count the couriers of each city first."
+      model: "SELECT MIN(n) FROM (SELECT city, COUNT(*) AS n FROM couriers GROUP BY city)"
+      rows: 1
+      result: [[30]]
+      narration:
+        - "30. The inside counted the couriers of each city, and the outside took the smallest count."
+        - "A table of four counts came out, and the smallest was found in it."
+      note: "Return for step 6."
+    note: "query-a-result asked. A learner who writes MAX(COUNT(*)) meets SQLite's refusal, and the leading question points at the table-in-brackets as the cure. A learner who sorts and cuts is not wrong in spirit but asked for something else."
+
+  # 7
+  - kind: "give"
+    new: ["name-a-table"]
+    requires: ["name-a-value"]
+    text: |-
+      A sentence folded inside itself is hard to read: you have to start in the middle. In Python you gave a value a name with one equals sign, and then used the name. We can do the same with a table. Put WITH, the name you choose, AS, and the table in brackets, and the sentence under it uses the name:
+
+      ```sql
+      WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)
+      SELECT MAX(n) FROM counts
+      ```
+
+      Run it.
+    shows:
+      - "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT MAX(n) FROM counts"
+    after_run: "120 again: the same table in the brackets, and the same answer as a minute ago. Now the table has a name, counts, and the sentence below uses it. Name a thing, then do something with it, as in Python. It reads from the top, in the order it happens."
+    note: "Imports 'name a thing, then do something with it' from PY-1, said out loud, and ties it to the PD-1 echo (name what came out). The step requires name-a-value and does not import it again, because the checker allows an id to be introduced once."
+
+  # 8
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "more-summaries", "piles", "one-row-per-pile", "pile-name", "commas", "name-a-result", "query-a-result", "name-a-table"]
+    text: "Count the orders for each promised time, and give that table a name of your own. Then, from your named table, show the biggest count."
+    thinking_order: "Name a table of how many orders each promised time had. Then, from that name, the biggest count."
+    model: "WITH t AS (SELECT promised_minutes, COUNT(*) AS n FROM orders GROUP BY promised_minutes) SELECT MAX(n) FROM t"
+    rows: 1
+    result: [[2019]]
+    narration:
+      - "2,019: the 30-minute promises. You named the table of counts, and the sentence under it used your name."
+      - "Name it first, then use it. Your name could have been anything."
+      - ""
+    wrong:
+      - sql: "WITH t AS (SELECT promised_minutes, COUNT(*) AS n FROM orders GROUP BY promised_minutes) SELECT MAX(n)"
+        ask: "The table has its name, but the sentence below it asks from where?"
+      - sql: "SELECT MAX(n) FROM t WITH t AS (SELECT promised_minutes, COUNT(*) AS n FROM orders GROUP BY promised_minutes)"
+        ask: "Which comes first, naming the table or using the name?"
+      - sql: "WITH t AS (SELECT promised_minutes, COUNT(*) AS n FROM orders GROUP BY promised_minutes) SELECT MIN(n) FROM t"
+        ask: "That is the smallest. Which end did I ask for?"
+    walk:
+      - "Write the table: each promised time with how many orders, the count called n."
+      - "Put WITH, a name, AS and brackets around it."
+      - "Under it, from your name, the biggest n."
+    return:
+      text: "Count the couriers on each vehicle, and give that table a name. Then show the biggest count in it."
+      model: "WITH t AS (SELECT vehicle, COUNT(*) AS n FROM couriers GROUP BY vehicle) SELECT MAX(n) FROM t"
+      rows: 1
+      result: [[110]]
+      narration:
+        - "110: the motos. The table of counts had a name, and the sentence under it used the name."
+        - "Name the table of counts, then take the biggest."
+      note: "Return for step 8."
+    note: "The learner chooses the name, so there is nothing arbitrary to remember. The checker takes any name, because it compares results."
+
+  # 9
+  - kind: "give"
+    new: ["one-number-from-a-query"]
+    text: |-
+      A query that answers one number is as good as that number. Say we want to know how many orders came to more than the average, and we do not know the average. The question that finds it goes in brackets, exactly where the number would have gone:
+
+      ```sql
+      SELECT COUNT(*) FROM orders WHERE subtotal > (SELECT AVG(subtotal) FROM orders)
+      ```
+
+      Run it.
+    shows:
+      - "SELECT COUNT(*) FROM orders WHERE subtotal > (SELECT AVG(subtotal) FROM orders)"
+    after_run: "2,574 orders came to more than the average. The brackets ran first and found the average, a little over 60. Then the outside used it where 100 or 150 would have stood. One row and one column is a number, so a query that answers that can stand wherever a number stands."
+    note: "The reframe: a table with one row and one column is just a number. 2,574 is the count of orders above 60.40 (the average of the 5,975 filled subtotals)."
+
+  # 10
+  - kind: "classmate"
+    requires: ["count-rows", "from-table", "summary-column", "keep-rows", "compare-signs", "one-number-from-a-query"]
+    text: |-
+      Davi wanted to know how many orders had a delivery fee above the average delivery fee. He wrote:
+
+      ```sql
+      SELECT COUNT(*) FROM orders WHERE delivery_fee > AVG(delivery_fee)
+      ```
+
+      SQLite answered: misuse of aggregate: AVG(). Davi, a WHERE question is asked of each row, one at a time. Does one row have an average? ... No: an average is about the whole table, and the question in WHERE has only the one row in front of it. The average has to be worked out first, in a table of its own, and then used as a number. What should he have written?
+    model: "SELECT COUNT(*) FROM orders WHERE delivery_fee > (SELECT AVG(delivery_fee) FROM orders)"
+    rows: 1
+    result: [[2967]]
+    broken: "SELECT COUNT(*) FROM orders WHERE delivery_fee > AVG(delivery_fee)"
+    narration:
+      - "2,967 orders. The average was found by a query in brackets, and used where a number would be."
+      - "One number from a table of its own, then the question about each row."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE delivery_fee > SELECT AVG(delivery_fee) FROM orders"
+        ask: "The inner query is a table. What goes around it so that it can stand where a number stands?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE delivery_fee > (SELECT AVG(subtotal) FROM orders)"
+        ask: "Is the average of the same column as the one we are asking about?"
+      - sql: "SELECT AVG(delivery_fee) FROM orders"
+        ask: "That gives the average itself. What did I ask to count?"
+    walk:
+      - "First the number: the average delivery fee, from orders."
+      - "Put that in brackets where a number would go in the question about each order's fee."
+    return:
+      text: "How many orders took longer to arrive than the average delivery? The actual_minutes column holds how long each really took."
+      model: "SELECT COUNT(*) FROM orders WHERE actual_minutes > (SELECT AVG(actual_minutes) FROM orders)"
+      rows: 1
+      result: [[2469]]
+      narration:
+        - "2,469 orders took longer than the average time. The average came from a query in brackets."
+        - "A number from a query, used in the question about each row."
+      note: "Return for step 10."
+    note: "Davi makes the slip just before the learner could (rule E6), with SQLite's own words as the reason. It is the same reason as lesson 3's WHERE COUNT(*): a row's question cannot ask about a table's summary."
+
+  # 11
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "keep-rows", "compare-signs", "text-quotes", "two-questions", "one-number-from-a-query"]
+    text: "How many delivered orders came to more than the average subtotal of the cancelled ones?"
+    thinking_order: "From orders, keeping the delivered ones above a number, where the number is the average subtotal of the cancelled orders, how many?"
+    model: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal > (SELECT AVG(subtotal) FROM orders WHERE status = 'cancelled')"
+    rows: 1
+    result: [[2445]]
+    narration:
+      - "2,445. The number came from its own query, with its own question about cancelled orders inside the brackets."
+      - "Two sentences, one inside the other: the inner found the cancelled orders' average, about 59.99, and the outer used it."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal > (SELECT AVG(subtotal) FROM orders)"
+        ask: "That is above the average of all the orders. Which orders' average did I ask about?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE status = 'cancelled' AND subtotal > (SELECT AVG(subtotal) FROM orders WHERE status = 'delivered')"
+        ask: "Look at which status is counted and which one gives the average. Is that the way round I asked?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal > (SELECT AVG(subtotal) FROM orders WHERE status = 'delivered')"
+        ask: "That compares the delivered orders with their own average. Whose average did I ask for?"
+    walk:
+      - "First the number: the average subtotal of the cancelled orders."
+      - "Now count the delivered orders, keeping those above that number, in brackets."
+    return:
+      text: "How many cancelled orders came to more than the average subtotal of the delivered ones?"
+      model: "SELECT COUNT(*) FROM orders WHERE status = 'cancelled' AND subtotal > (SELECT AVG(subtotal) FROM orders WHERE status = 'delivered')"
+      rows: 1
+      result: [[160]]
+      narration:
+        - "160 cancelled orders. The average of the delivered ones came from a query in brackets."
+        - "The inner query found a number, and the outer question used it."
+      note: "Return for step 11."
+    note: "The inside has its own question, which is why a learner needs both parts. Distinct from step 10 in the WHERE only, but the step 10 model is a classmate repair; this one adds a second question and a WHERE inside the brackets, so the shape is not a one-slot edit."
+
+  # 12
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "choose-columns", "summary-column", "more-summaries", "keep-rows", "compare-signs", "one-number-from-a-query"]
+    text: "Which order was the biggest one? Show its id."
+    thinking_order: "From orders, keeping the one whose subtotal equals the biggest subtotal, the id."
+    model: "SELECT order_id FROM orders WHERE subtotal = (SELECT MAX(subtotal) FROM orders)"
+    rows: 1
+    result: [[101347]]
+    narration:
+      - "Order 101347, the one that came to 281.15. The biggest subtotal was found by a query in brackets, and the question asked which order had it."
+      - "A number from its own query, used with an equals sign this time."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, MAX(subtotal) FROM orders"
+        ask: "That gives two columns, and I only wanted the id. What is the question that asks which order has exactly the biggest subtotal?"
+      - sql: "SELECT MAX(order_id) FROM orders"
+        ask: "That is the highest id. Is the highest id the biggest order?"
+      - sql: "SELECT order_id FROM orders ORDER BY subtotal DESC"
+        ask: "The biggest is first, but all 6,000 orders are here. How do we keep only the one that equals the biggest?"
+    walk:
+      - "First the number: the biggest subtotal, from orders."
+      - "Now keep the order whose subtotal equals that number, and show its id."
+    return:
+      text: "Which delivery took the longest? Show its id. The actual_minutes column holds how long each really took."
+      model: "SELECT order_id FROM orders WHERE actual_minutes = (SELECT MAX(actual_minutes) FROM orders)"
+      rows: 1
+      result: [[103690]]
+      narration:
+        - "Order 103690, with 109.9 minutes. The longest time came from a query in brackets."
+        - "A number from its own query, matched with an equals sign."
+      note: "Return for step 12. Nothing ties for the longest time."
+    note: "The classic 'which row has the biggest value'. Sorting and cutting would also work (lesson 2), and the checker takes it, so the wrong answer list leaves that out. The maximum subtotal 281.15 belongs to one order only."
+
+  # 13
+  - kind: "give"
+    new: ["list-from-a-query"]
+    text: |-
+      The same move works for lists. IN wants a list in its brackets, and a query that answers one column is a list. Which restaurants have ever had an order above 200? Find the restaurant_ids of those orders, in brackets, where the list of words would stand:
+
+      ```sql
+      SELECT name FROM restaurants WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE subtotal > 200)
+      ```
+
+      Run it.
+    shows:
+      - "SELECT name FROM restaurants WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE subtotal > 200)"
+    after_run: "Five restaurants. The brackets ran first and made a column of restaurant_ids, with repeats, one for each big order. Then IN asked, for each restaurant, whether its id was in that column. A query that answers one column can stand wherever a list stands."
+    note: "The twin of step 9: one number goes where a number goes, one column goes where a list goes. The restaurants table has the name, and orders has the big subtotal, so the learner sees why two tables are talked to without a join."
+
+  # 14
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "choose-columns", "keep-rows", "compare-signs", "text-quotes", "two-questions", "in-a-list", "list-from-a-query"]
+    text: "Show the names of the restaurants that have had a cancelled order of more than 150."
+    thinking_order: "From restaurants, keeping the ones whose restaurant_id is in the ids of the orders that were cancelled and came to more than 150, the name."
+    model: "SELECT name FROM restaurants WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE status = 'cancelled' AND subtotal > 150)"
+    rows: 5
+    result: [["Rest 05"], ["Rest 07"], ["Rest 22"], ["Rest 26"], ["Rest 32"]]
+    narration:
+      - "Five names. The inside found the restaurant_ids of the big cancelled orders, and the outside asked which restaurants were in that list."
+      - "A column from one query, used as the list of another."
+      - ""
+    wrong:
+      - sql: "SELECT name FROM restaurants WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE subtotal > 150)"
+        ask: "That includes the delivered orders too. Which orders did I ask about?"
+      - sql: "SELECT restaurant_id FROM orders WHERE status = 'cancelled' AND subtotal > 150"
+        ask: "Those are the ids, with repeats, one for each order. I asked for names. Where do names live?"
+      - sql: "SELECT name FROM restaurants WHERE restaurant_id IN (SELECT name FROM orders WHERE status = 'cancelled' AND subtotal > 150)"
+        ask: "Does orders have a column called name? What links an order to its restaurant?"
+    walk:
+      - "First the list: the restaurant_ids of the cancelled orders above 150."
+      - "Now from restaurants, keep the ones whose id is in that list, and show the name."
+    return:
+      text: "Show the ids of the couriers who have carried an order above 200."
+      model: "SELECT courier_id FROM couriers WHERE courier_id IN (SELECT courier_id FROM orders WHERE subtotal > 200)"
+      rows: 5
+      result: [[25], [35], [73], [74], [198]]
+      narration:
+        - "Five courier ids. The inside found the courier_ids of the big orders, and the outside asked which couriers were in the list."
+        - "A column from one query, used as the list of another."
+      note: "Return for step 13."
+    note: "list-from-a-query asked. The wrong answer that returns the ids with repeats shows the difference between a list and the table it came from."
+
+  # 15
+  - kind: "aside"
+    text: "Something that is only interesting, with nothing in it to keep. A query inside brackets has a name: people call it a subquery. The WITH kind has a name too, a common table expression, which is why interviewers say CTE. Neither word means anything more than what you have already done. Everything today was the one picture from the start: a table goes in, a table comes out, and a table that came out can go in again."
+    note: "A name-only aside: the vocabulary an interviewer will use, with no thought attached (rule D4). Relief after two give-and-ask runs, before the climb to the closing sentence."
+
+  # 16
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "choose-columns", "keep-rows", "text-quotes", "text-is-exact", "two-questions", "commas", "in-a-list"]
+    text: "Show the names of the restaurants in São Paulo that serve pizza, hamburguer or japonesa."
+    thinking_order: "From restaurants, keeping the ones in São Paulo whose cuisine is one of pizza, hamburguer and japonesa, the name."
+    model: "SELECT name FROM restaurants WHERE city = 'São Paulo' AND cuisine IN ('pizza', 'hamburguer', 'japonesa')"
+    rows: 16
+    narration:
+      - "16 restaurants. One question about the city, joined with AND to one question about the cuisine, which was asked with IN."
+      - "A list inside a question, inside a sentence you already know."
+      - ""
+    wrong:
+      - sql: "SELECT name FROM restaurants WHERE city = 'São Paulo' OR cuisine IN ('pizza', 'hamburguer', 'japonesa')"
+        ask: "Would a restaurant have to pass both questions, or only one of them?"
+      - sql: "SELECT name FROM restaurants WHERE cuisine IN ('pizza', 'hamburguer', 'japonesa')"
+        ask: "That is every city. Where does the city go?"
+      - sql: "SELECT name FROM restaurants WHERE city = 'São Paulo' AND cuisine IN ('pizza', 'hamburguer')"
+        ask: "One cuisine is missing. Which three did I ask for?"
+    walk:
+      - "From restaurants, keep the ones in São Paulo, and show the name."
+      - "Add the second question, joined with the word for both: the cuisine is in a list of three."
+    return:
+      text: "Show the names of the restaurants in Rio de Janeiro that serve arabe or saudavel food."
+      model: "SELECT name FROM restaurants WHERE city = 'Rio de Janeiro' AND cuisine IN ('arabe', 'saudavel')"
+      rows: 3
+      result: [["Rest 40"], ["Rest 54"], ["Rest 57"]]
+      narration:
+        - "The Rio restaurants with one of those two cuisines."
+        - "The city was asked with an equals sign, and the cuisine with IN, joined by AND."
+      note: "Return for step 15."
+    note: "in-a-list comes back after eleven steps of other things. The answer is the same shape as lesson 2's Davi sentence with the cuisines as a list."
+
+  # 17
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "compare-signs", "piles", "one-row-per-pile", "pile-name", "commas", "name-a-result", "keep-before-piles", "query-a-result", "name-a-table"]
+    any_column_order: true
+    text: "Name a table of the delivered orders each restaurant had, with the count called n. Then, from the name, show the restaurants with more than 105."
+    thinking_order: "Name a table of how many delivered orders each restaurant had. Then, from that name, keeping the rows where the count is above 105, the restaurant and the count."
+    model: "WITH d AS (SELECT restaurant_id, COUNT(*) AS n FROM orders WHERE status = 'delivered' GROUP BY restaurant_id) SELECT restaurant_id, n FROM d WHERE n > 105"
+    rows: 5
+    result: [[2, 113], [3, 109], [22, 108], [24, 112], [59, 109]]
+    narration:
+      - "Five restaurants: 2, 3, 22, 24 and 59. You named the piles and then kept rows of the named table, which is the same as keeping the piles."
+      - "The count had a name, n, and that is what the question under the table asked about."
+      - ""
+    wrong:
+      - sql: "WITH d AS (SELECT restaurant_id, COUNT(*) AS n FROM orders WHERE status = 'delivered' GROUP BY restaurant_id) SELECT restaurant_id, n FROM d"
+        ask: "All sixty restaurants are here. Where do we keep only the ones above 105?"
+      - sql: "WITH d AS (SELECT restaurant_id, COUNT(*) AS n FROM orders WHERE status = 'delivered' GROUP BY restaurant_id) SELECT restaurant_id, n FROM d WHERE n > 100"
+        ask: "Some extra restaurants came in. Is the line at 100 or at 105?"
+      - sql: "WITH d AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT restaurant_id, n FROM d WHERE n > 105"
+        ask: "Those counts include the cancelled orders. Where do we drop them, inside the named table?"
+    walk:
+      - "First the table of counts for the delivered orders, each restaurant with n."
+      - "Name it with WITH and AS."
+      - "Under it, keep the rows of the name where n is above 105."
+    return:
+      text: "Name a table of how many motos each city has, with the count called n. Then, from the name, show the cities with more than 20."
+      model: "WITH k AS (SELECT city, COUNT(*) AS n FROM couriers WHERE vehicle = 'moto' GROUP BY city) SELECT city, n FROM k WHERE n > 20"
+      any_column_order: true
+      rows: 2
+      result: [["Rio de Janeiro", 28], ["São Paulo", 48]]
+      narration:
+        - "São Paulo 48 and Rio 28. The count had a name, and the question under the table asked about it."
+        - "Name the piles, then keep rows of the name."
+      note: "Return for step 16."
+    note: "A learner who has HAVING can see that this keeps piles, by a second route. The count's name is what makes the second route possible. The delivered-only question lives inside the named table."
+
+  # 18
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "in-a-list", "list-from-a-query"]
+    text: "Some customers have placed an order of more than 200. How many orders have those customers placed, all together?"
+    thinking_order: "From orders, keeping the ones whose customer_id is in the customers of the orders above 200, how many?"
+    model: "SELECT COUNT(*) FROM orders WHERE customer_id IN (SELECT customer_id FROM orders WHERE subtotal > 200)"
+    rows: 1
+    result: [[29]]
+    narration:
+      - "29. The inside found the customers who ever spent over 200, and the outside counted all the orders of those customers."
+      - "The same table asked twice: once for a list, once for a count."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE subtotal > 200"
+        ask: "That counts only the big orders. We want all the orders of the customers who placed one."
+      - sql: "SELECT COUNT(*) FROM orders WHERE customer_id IN (SELECT customer_id FROM orders)"
+        ask: "That list is every customer. Where does the 200 go?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE customer_id > (SELECT customer_id FROM orders WHERE subtotal > 200)"
+        ask: "IN asks whether a cell is in a list. What sign did you use, and does a list stand where a number does?"
+    walk:
+      - "First the list: the customer_id of the orders above 200."
+      - "Now count the orders whose customer_id is in that list."
+    return:
+      text: "How many orders have been placed at restaurants that have had an order above 200?"
+      model: "SELECT COUNT(*) FROM orders WHERE restaurant_id IN (SELECT restaurant_id FROM orders WHERE subtotal > 200)"
+      rows: 1
+      result: [[527]]
+      narration:
+        - "A count of all the orders of those restaurants. The inside made a list of restaurants, and the outside counted."
+        - "A column from one query, used as the list of another."
+      note: "Return for step 17."
+    note: "The same table in the inside and the outside, so the learner sees that a query on a table can be used to ask about the same table. Not a self-join: there is nothing to match."
+
+  # 19
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-piles", "one-number-from-a-query"]
+    any_column_order: true
+    text: "For each promised time, show the average actual time, but only for the promises whose average is above the average actual time of all the orders."
+    thinking_order: "From orders, a pile per promised time, the promise and its average actual time, keeping the piles whose average is above the average of all the orders."
+    model: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes HAVING AVG(actual_minutes) > (SELECT AVG(actual_minutes) FROM orders)"
+    rows: 2
+    result: [[40, 39.61], [50, 49.44]]
+    narration:
+      - "The 40 and the 50 stay. The average of all the orders came from a query in brackets, and the piles were kept against it."
+      - "A number worked out by its own query, used in the question about the piles."
+      - ""
+    wrong:
+      - sql: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes"
+        ask: "All three piles are here. Which word keeps only the ones above the overall average?"
+      - sql: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes HAVING AVG(actual_minutes) > AVG(actual_minutes)"
+        ask: "Each pile's average is being compared with itself. Where does the overall average come from?"
+      - sql: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes HAVING AVG(actual_minutes) > 40"
+        ask: "That is a line you chose. Which query finds the real one, the average of all the orders?"
+    walk:
+      - "For each promised time, the average actual time."
+      - "Now keep only the piles above one number: the average actual time of all the orders, from a query in brackets."
+    return:
+      text: "For each promised time, show the average subtotal, but only for the promises whose average is above the average subtotal of all the orders."
+      model: "SELECT promised_minutes, AVG(subtotal) FROM orders GROUP BY promised_minutes HAVING AVG(subtotal) > (SELECT AVG(subtotal) FROM orders)"
+      any_column_order: true
+      rows: 1
+      result: [[50, 60.8]]
+      narration:
+        - "Only the 50-minute promises are above the overall average subtotal."
+        - "Piles, an average for each, kept against a number from a query."
+      note: "Return for step 18."
+    note: "A number from a query used in HAVING, so the thought meets keep-piles from lesson 3. The overall average of actual_minutes is 39.36, and the piles are 29.4, 39.6 and 49.4."
+
+  # 20
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "name-a-result", "summary-column", "query-a-result", "name-a-table", "one-number-from-a-query", "keep-rows", "compare-signs"]
+    friction: true
+    any_column_order: true
+    text: "The last one, and I won't break it down. Which restaurants had more orders than the average restaurant? Show each restaurant with its number of orders. Name the table of counts, and use the name twice."
+    model: "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT restaurant_id, n FROM counts WHERE n > (SELECT AVG(n) FROM counts)"
+    rows: 29
+    narration:
+      - "That is a real interview question, and you built it by thinking: name a table of how many orders each restaurant had, work out the average of those counts as a number, and keep the restaurants above it. A table that came out went in twice."
+      - "29 restaurants. The name was used once for the rows and once, inside brackets, for the average."
+      - "Name a thing, then do something with it. You did it twice with the same name."
+    wrong:
+      - sql: "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT restaurant_id, n FROM counts"
+        ask: "All sixty restaurants are here. What do we keep only the above-average ones against?"
+      - sql: "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT restaurant_id, n FROM counts WHERE n > AVG(n)"
+        ask: "A row's question cannot ask for an average. Where does the average come from, as a number?"
+      - sql: "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT restaurant_id, n FROM counts WHERE n > 105"
+        ask: "That is a number you typed. Which query finds the average, so the line is always right?"
+      - sql: "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT restaurant_id, n FROM counts WHERE n < (SELECT AVG(n) FROM counts)"
+        ask: "Those are the ones below the average. Which way did I ask?"
+    walk:
+      - "Name the table: each restaurant with its count of orders, called n."
+      - "Work out the average of n from that name, in brackets, as a number."
+      - "Under the name, keep the rows where n is above that number."
+    return:
+      text: "Which cities had more couriers than the average city? Name the table of counts, show each city with its count, and use the name twice."
+      model: "WITH counts AS (SELECT city, COUNT(*) AS n FROM couriers GROUP BY city) SELECT city, n FROM counts WHERE n > (SELECT AVG(n) FROM counts)"
+      any_column_order: true
+      rows: 1
+      result: [["São Paulo", 89]]
+      narration:
+        - "Only São Paulo, with 89, is above the average of 50."
+        - "The name was used for the rows and again, in brackets, for the average."
+      note: "Return for step 19. Not broken down, like the step."
+    note: "The surprise sentence from the map: 29 restaurants. A table goes in, a table comes out, used twice. The wrong answers cover a missing comparison, WHERE n > AVG(n) (Davi's slip from step 10), a typed number, and the wrong direction. The restaurants' counts were run against data/ and the average is exactly 100.0, so no restaurant sits on the line."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today was one picture used again and again: a table goes in and a table comes out, so a table that came out can go in. It stood after FROM, it was given a name, it stood where a number stands and where a list stands.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "summary-column", "keep-rows", "compare-signs", "one-number-from-a-query"]
+    text: "How many orders were promised in more minutes than the average promise?"
+    model: "SELECT COUNT(*) FROM orders WHERE promised_minutes > (SELECT AVG(promised_minutes) FROM orders)"
+    rows: 1
+    result: [[3981]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a number from a query, on a column and a comparison not combined that way before. The average promise is 39.93, so the 40- and 50-minute promises are counted. Never scored (rule F1)."

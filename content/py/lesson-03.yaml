@@ -1,0 +1,882 @@
+lesson: py-03
+title: "Look up by name"
+strand: py
+stage: 1
+thoughts:
+  dict: "A dict holds values under names, in curly brackets: `{'pizza': 40}`."
+  get-by-name: "`prices['pizza']` gets a value by its name. Square brackets always mean get from inside."
+  set-by-name: "`prices['acai'] = 25` adds a name, or changes the value under one that is already there."
+  is-it-there: "`'acai' in prices` asks whether the name is there. The answer is True or False."
+  position-or-name: "A list is asked by position. A dict is asked by name."
+  go-through-dict: "`for dish in prices:` goes through the names, one at a time."
+  two-names: "`for dish, price in prices.items():` names both halves at once."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["from-table", "summary-column", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles"]
+    any_column_order: true
+    text: "Looking only at the delivered orders, what was the average delivery fee for each promised time?"
+    model: "SELECT promised_minutes, AVG(delivery_fee) FROM orders WHERE status = 'delivered' GROUP BY promised_minutes"
+    rows: 3
+    result: [[30, 5.14], [40, 5.19], [50, 5.27]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-1: keep, then pile, with a name for each pile and an average for each. Never scored. A pile with its name beside it is what PY-3's dict is, so the SQL sentence is the one the lesson will echo. The promised times (30, 40 and 50) are the pile names a dict will hold in PY-4."
+
+  # 2
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "sorted", "reverse", "first-few"]
+    text: "Let's start with where we stopped. Six order subtotals: 57.72, 39.91, 46.82, 29.05, 59.1 and 68.97. Show the three biggest, the biggest first."
+    model: |-
+      subtotals = [57.72, 39.91, 46.82, 29.05, 59.1, 68.97]
+      print(sorted(subtotals, reverse=True)[:3])
+    output: "[68.97, 59.1, 57.72]"
+    narration:
+      - "[68.97, 59.1, 57.72]. Sorted, turned round, cut to three: ORDER BY DESC, then LIMIT."
+      - "Sort, then cut. The order they happen in."
+      - ""
+    wrong:
+      - code: |-
+          subtotals = [57.72, 39.91, 46.82, 29.05, 59.1, 68.97]
+          print(sorted(subtotals)[:3])
+        ask: "Those are the three smallest. What turns the order round?"
+      - code: |-
+          subtotals = [57.72, 39.91, 46.82, 29.05, 59.1, 68.97]
+          print(sorted(subtotals, reverse=True))
+        ask: "They are all in order. Which part keeps only the first few?"
+    walk:
+      - "Make the list of six subtotals."
+      - "Sort it, with the biggest first."
+      - "Cut it to the first three: square brackets, a colon, and the number."
+    return:
+      text: "Show the two longest delivery times, the longest first. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+        print(sorted(minutes, reverse=True)[:2])
+      output: "[43.7, 35.2]"
+      narration:
+        - "[43.7, 35.2]. Sorted, turned round, then cut to two."
+        - "ORDER BY DESC, then LIMIT, by hand."
+      note: "Return for step 2."
+    note: "A warm start from PY-2: sort, turn round and cut, which the learner owns from SQL-2 and PY-2. It is the first Python step since the opening cold check, which was SQL."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["dict"]
+    text: |-
+      So far a list has held our values, and we asked for each by its position. Sometimes it is better to ask by a name. A dict holds values under names. It has curly brackets round it, each name is followed by a colon and its value, and commas separate the pairs:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60}
+      print(prices)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60}
+        print(prices)
+    after_run: "{'pizza': 40, 'sushi': 60}. Each name sits in front of its value, and the names are text, so they wear quotes. The commas are the same ones as in a list."
+    note: "Lists have had two full lessons to themselves (rule C6) before dicts begin. Curly brackets, colon and comma are given. The names are quoted because they are text, which the learner owns from SQL."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "commas", "dict"]
+    text: "Make a dict called discounts with two coupons in it: BEMVINDO10 gives 10, and PIZZA20 gives 20. Show it."
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      print(discounts)
+    output: "{'BEMVINDO10': 10, 'PIZZA20': 20}"
+    narration:
+      - "Two names, each with its value. The curly brackets hold the dict, a colon joins a name to its value, and a comma separates the pairs."
+      - "{'BEMVINDO10': 10, 'PIZZA20': 20}. The coupon codes are real ones from the coupons table."
+      - ""
+    wrong:
+      - code: |-
+          discounts = {BEMVINDO10: 10, PIZZA20: 20}
+          print(discounts)
+        ask: "Is BEMVINDO10 a name you made, or a word we are looking for?"
+        why: "the names in a dict are text, so they wear quotes, as words did in SQL."
+      - code: |-
+          discounts = {'BEMVINDO10' = 10, 'PIZZA20' = 20}
+          print(discounts)
+        ask: "Look at the dict we ran. What sits between a name and its value?"
+      - code: |-
+          discounts = ['BEMVINDO10', 10, 'PIZZA20', 20]
+          print(discounts)
+        ask: "That is a list of four items. Which brackets hold a dict?"
+    walk:
+      - "Open curly brackets. Write the first name in quotes, a colon, and its value."
+      - "Add a comma, and the second name and value. Close the brackets, give it the name discounts, and show it."
+    return:
+      text: "A dict called prices where pizza costs 40 and acai costs 25. Show it."
+      model: |-
+        prices = {'pizza': 40, 'acai': 25}
+        print(prices)
+      output: "{'pizza': 40, 'acai': 25}"
+      narration:
+        - "{'pizza': 40, 'acai': 25}. Names in quotes, a colon, the value."
+        - "Two names and their values, in curly brackets."
+      note: "Return for step 4."
+    note: "The dict is asked for once the learner has seen one. The values are real: the coupon codes and discounts are from coupons.csv."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["get-by-name"]
+    text: |-
+      To get a value out of a dict, say its name in square brackets after the dict:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60}
+      print(prices['pizza'])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60}
+        print(prices['pizza'])
+    after_run: "40. Square brackets after a name always mean get from inside. With a list you put a position in them, with a dict you put the name, and the name wears its quotes because it is text."
+    note: "The rule that square brackets always mean get from inside is the strand's. It returns for pandas columns and rows."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "commas", "dict", "get-by-name"]
+    text: "The coupons give these discounts: BEMVINDO10 is 10, FRETEGRATIS is 0 and PIZZA20 is 20. Make a dict called discounts, and show the discount for PIZZA20."
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+      print(discounts['PIZZA20'])
+    output: "20"
+    narration:
+      - "20. You asked the dict by name, and it handed over the value."
+      - "The name in square brackets, in quotes, after the dict."
+      - "20, found by name."
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          print(discounts[PIZZA20])
+        ask: "Is PIZZA20 a name you made, or a word we are looking for?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          print(discounts[2])
+        ask: "Python could not find a 2. What does a dict get asked by, and what are its names?"
+        why: "a dict has no positions unless you make them its names. It is asked by name."
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          print(discounts)
+        ask: "That shows the whole dict. How do you ask for just one value?"
+    walk:
+      - "Make the dict with its three coupons."
+      - "Show one value: print, the dict's name, and square brackets with the coupon's name in quotes."
+    return:
+      text: "Make a dict called prices where pizza is 40, sushi is 60 and acai is 25, and show the price of sushi."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        print(prices['sushi'])
+      output: "60"
+      narration:
+        - "60. The dish's name in square brackets gave its price."
+        - "A dict, asked by name."
+      note: "Return for step 6."
+    note: "The wrong answer discounts[2] is the list habit meeting a dict. It is predictable and leads to step 12, where the two are contrasted."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["set-by-name"]
+    text: |-
+      A dict can grow and change. The same square brackets, on the left of an equals sign, put a value under a name. A new name is added, and a name that is already there gets its new value:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60}
+      prices['acai'] = 25
+      prices['pizza'] = 45
+      print(prices)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60}
+        prices['acai'] = 25
+        prices['pizza'] = 45
+        print(prices)
+    after_run: "{'pizza': 45, 'sushi': 60, 'acai': 25}. Acai was added at the end, and pizza kept its place but changed its value. The equals sign is the same one: it gives a name to a value. Here the name lives inside the dict."
+    note: "Both halves of set-by-name, add and change, are given together because they are one movement. The asked steps take them one at a time."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "dict", "get-by-name", "set-by-name"]
+    text: "The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Add VOLTA15 at 15, and then show the dict."
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      discounts['VOLTA15'] = 15
+      print(discounts)
+    output: "{'BEMVINDO10': 10, 'PIZZA20': 20, 'VOLTA15': 15}"
+    narration:
+      - "A third coupon, added at the end. The name went in square brackets, and the value went on the right of the equals sign."
+      - "{'BEMVINDO10': 10, 'PIZZA20': 20, 'VOLTA15': 15}."
+      - ""
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          discounts.append('VOLTA15')
+          print(discounts)
+        ask: "Append belongs to lists, which grow at the end. A dict is asked by name. How do you put a value in by its name?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          discounts['VOLTA15'] = 15
+        ask: "The coupon is in, but nothing appeared. What shows the dict?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          discounts[VOLTA15] = 15
+          print(discounts)
+        ask: "Is VOLTA15 a name you made, or a word we are looking for?"
+    walk:
+      - "Make the dict with its two coupons."
+      - "Add the new one: the dict's name, the new name in square brackets and quotes, an equals sign, and the value."
+      - "Show the dict."
+    return:
+      text: "The dict prices holds pizza at 40 and sushi at 60. Raise the price of pizza to 45, and show the dict."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60}
+        prices['pizza'] = 45
+        print(prices)
+      output: "{'pizza': 45, 'sushi': 60}"
+      narration:
+        - "{'pizza': 45, 'sushi': 60}. A name that was already there got a new value."
+        - "The same brackets and equals sign, now changing a value."
+      note: "Return for step 8."
+    note: "Adding a name is asked here, and changing one is asked in the return, so the learner meets both halves of the thought. The wrong answer with append is the list habit again."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["is-it-there"]
+    text: |-
+      A dict can be asked whether a name is there at all. The word is in:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60}
+      print('pizza' in prices)
+      print('acai' in prices)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60}
+        print('pizza' in prices)
+        print('acai' in prices)
+    after_run: "True and then False. The question is the name, then in, then the dict, and the answer is a yes or a no: the same yes or no each row gave to a WHERE question. Python writes them True and False, with capital letters. That just is."
+    note: "True and False are given with the thought and said to just be (rule B6). The learner has already met the yes or no value, if only in a wrong answer in PY-1, where printing a comparison showed it."
+
+  # 10
+  - kind: "classmate"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "dict", "get-by-name", "is-it-there", "if-question", "otherwise", "block"]
+    text: |-
+      Davi wanted to know whether the coupon VOLTA15 exists, and to show its discount. The dict was discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}. He wrote:
+
+      ```python
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+      print(discounts['VOLTA15'])
+      ```
+
+      Python answered: KeyError: 'VOLTA15'. Davi, is VOLTA15 in the dict? ... No, and Python will not guess. A name that is not there stops the program. The fix is to ask first. Type the whole program so that it shows the discount of VOLTA15 if it is there, and shows the words no such coupon if it is not.
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+      if 'VOLTA15' in discounts:
+          print(discounts['VOLTA15'])
+      else:
+          print('no such coupon')
+    output: "no such coupon"
+    broken: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+      print(discounts['VOLTA15'])
+    narration:
+      - "no such coupon. The question was asked first, and the else caught the no."
+      - "Ask whether the name is there before you ask for its value, and a missing name no longer stops the program."
+      - "The dict never had VOLTA15, and the program said so politely."
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          print(discounts['VOLTA15'])
+        ask: "That is Davi's again. Is the name there?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          if 'VOLTA15' in discounts:
+              print(discounts['VOLTA15'])
+        ask: "Nothing came back at all. What should happen when the name is not there?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          if VOLTA15 in discounts:
+              print(discounts['VOLTA15'])
+          else:
+              print('no such coupon')
+        ask: "Is VOLTA15 a name you made, or a word we are looking for?"
+    walk:
+      - "Davi's dict is right. The trouble is asking for a name that is not there."
+      - "Ask first: if, the name in quotes, in, the dict, and a colon. Show the discount only on a yes, and on the else show the words."
+    return:
+      text: "Make a dict called prices where pizza is 40 and sushi is 60. Show the price of sushi if it is there, and the words not on the list if it is not."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60}
+        if 'sushi' in prices:
+            print(prices['sushi'])
+        else:
+            print('not on the list')
+      output: "60"
+      narration:
+        - "60. Sushi is there, so the yes branch ran and showed its price."
+        - "Ask whether the name is there, then ask for its value. The else only runs on a no."
+      note: "Return for step 10."
+    note: "Davi makes the slip before the learner can (rule E6), and Python's own message is the real reason. The thought in is not a rule to remember: it is the answer to the KeyError. VOLTA15 appears on no order in the data, which is a fact the learner will meet again in SQL."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "dict", "is-it-there"]
+    text: "The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Show True or False: is FRETEGRATIS one of the coupons in it?"
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      print('FRETEGRATIS' in discounts)
+    output: "False"
+    narration:
+      - "False. FRETEGRATIS is not in that dict, so the answer to the question is no."
+      - "The name, then in, then the dict: a yes or a no."
+      - ""
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(discounts['FRETEGRATIS'])
+        ask: "Python stopped with a KeyError. What do you ask first, when you are not sure a name is there?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(FRETEGRATIS in discounts)
+        ask: "Is FRETEGRATIS a name you made, or a word we are looking for?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print('PIZZA20' in discounts)
+        ask: "That asks about a different coupon. Which one did I ask about?"
+    walk:
+      - "Make the dict with its two coupons."
+      - "Ask the question: the name in quotes, then in, then the dict. Show the answer."
+    return:
+      text: "The dict prices holds pizza at 40 and sushi at 60. Show True or False: is sushi on the list?"
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60}
+        print('sushi' in prices)
+      output: "True"
+      narration:
+        - "True. Sushi is a name in that dict, so the answer is yes."
+        - "A name, in, and a dict: True or False."
+      note: "Return for step 11."
+    note: "The question is asked on its own and shown, not used in an if, so the learner sees the True or the False. It is typed one step after the classmate (rule C1)."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    new: ["position-or-name"]
+    requires: ["name-a-value", "show", "list", "dict", "position", "get-by-name", "text-quotes", "position-or-name"]
+    text: "A list is asked by position, and a dict by name, and the brackets look the same, so you have to know which one you are holding. Here are both: fees = [8.99, 6.99, 0] and discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}. Show the second fee, and then the discount for PIZZA20."
+    model: |-
+      fees = [8.99, 6.99, 0]
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      print(fees[1])
+      print(discounts['PIZZA20'])
+    output: |-
+      6.99
+      20
+    narration:
+      - "6.99 and 20. The list was asked by a position, which counts from 0, and the dict by a name, in quotes."
+      - "Same square brackets, two different questions: where is it, and what is it called."
+      - "The second fee is number 1. The discount is found by its name."
+    wrong:
+      - code: |-
+          fees = [8.99, 6.99, 0]
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(fees[1])
+          print(discounts[1])
+        ask: "A dict has no number 1 unless a name is 1. What is the dict asked by?"
+      - code: |-
+          fees = [8.99, 6.99, 0]
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(fees['PIZZA20'])
+          print(discounts['PIZZA20'])
+        ask: "A list does not know about names. What is a list asked by?"
+      - code: |-
+          fees = [8.99, 6.99, 0]
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(fees[2])
+          print(discounts['PIZZA20'])
+        ask: "That is the third fee. What number does the first fee have, and so the second?"
+    walk:
+      - "Make both: the list and the dict."
+      - "The list is asked by position. Which position has the second fee?"
+      - "The dict is asked by name. Show the discount for PIZZA20."
+    return:
+      text: "Here are fees = [8.99, 6.99, 0] and prices = {'pizza': 40, 'sushi': 60}. Show the last fee, and then the price of sushi."
+      model: |-
+        fees = [8.99, 6.99, 0]
+        prices = {'pizza': 40, 'sushi': 60}
+        print(fees[-1])
+        print(prices['sushi'])
+      output: |-
+        0
+        60
+      narration:
+        - "0 and 60. The list by a position from the end, the dict by a name."
+        - "Two questions in the same brackets: one by place, one by name."
+      note: "Return for step 12."
+    note: "The contrast of the pair, which has had two lessons of comfortable lists and four steps of comfortable dicts first (rule C6). The first wrong answer is the list habit in a dict, and the second is the dict habit in a list."
+
+  # 13
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. A dict is called a dictionary in full, because you look a word up to find what it means: the name is the word and the value is the meaning. And a dict is quick. Python does not read through every name to find the one you asked for. It can go almost straight to the entry, however many names there are. So a dict of a million coupons is not much slower to ask than a dict of three."
+    note: "Relief after the climb of steps 9 to 12 (rule C8). A real origin of the word, and a first mention that a dict is fast, which PY-10 spells out as cost. Nothing to remember."
+
+  # 14
+  - kind: "give"
+    lang: "python"
+    new: ["go-through-dict"]
+    text: |-
+      Going through a dict works like going through a list, except that what you get at each turn is a name. To get the value as well, ask the dict for it by that name, as before:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+      for dish in prices:
+          print(dish, prices[dish])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        for dish in prices:
+            print(dish, prices[dish])
+    after_run: "Three lines, each a name and its price. Going through a dict gives you the names, one at a time, in the order they were put in. By the way, print can show more than one thing: put commas between them and it leaves a space."
+    note: "The print with two things is mentioned in the after_run and used here first, which is why it is given and not asked. It is vocabulary and not a thought of the strand."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "go-through-dict"]
+    text: "The coupons give BEMVINDO10 10, FRETEGRATIS 0 and PIZZA20 20. Make the dict, then show each coupon with its discount, one line each."
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+      for code in discounts:
+          print(code, discounts[code])
+    output: |-
+      BEMVINDO10 10
+      FRETEGRATIS 0
+      PIZZA20 20
+    narration:
+      - "Three lines, each a coupon and its discount. For each name in the dict, the name, and the value found by that name."
+      - "BEMVINDO10 10, FRETEGRATIS 0, PIZZA20 20. The loop gave the names, and the brackets fetched the values."
+      - ""
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          for code in discounts:
+              print(code)
+        ask: "Only the names. Which half is missing, and how do you ask a dict for the value that goes with a name?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          for code in discounts:
+              print(discounts[code])
+        ask: "Only the values, so we cannot tell whose is whose. What is missing from the print?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
+          for code in discounts:
+          print(code, discounts[code])
+        ask: "Which lines are inside the loop? What shows that?"
+    walk:
+      - "Make the dict with its three coupons."
+      - "Go through it: for, a name for one coupon, in, the dict, and a colon."
+      - "Pushed in, show the coupon and then its discount, found by the coupon's name."
+    return:
+      text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Show each dish with its price."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        for dish in prices:
+            print(dish, prices[dish])
+      output: |-
+        pizza 40
+        sushi 60
+        acai 25
+      narration:
+        - "pizza 40, sushi 60 and acai 25. For each name, the name and its value."
+        - "A loop through the names, and a lookup by name inside it."
+      note: "Return for step 15."
+    note: "An easy step after the give. The wrong answers are the half-printed ones, each of which shows what is missing."
+
+  # 16
+  - kind: "give"
+    lang: "python"
+    new: ["two-names"]
+    text: |-
+      There is a shorter way to go through both halves at once. The dict can hand over its pairs, a name and its value together, with a dot and items. And the for line can name both halves:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+      for dish, price in prices.items():
+          print(dish, price)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        for dish, price in prices.items():
+            print(dish, price)
+    after_run: "The same three lines as before. There is no lookup inside the loop this time, because price is already the value that goes with dish. You wrote two names after for, with a comma between them, as you would in a list."
+    note: "Given and not asked, because a lucky guess could teach a false generalisation: without .items(), a loop with two names fails. That is the next step's wrong answer."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "go-through-dict", "two-names", "and-or"]
+    text: "The four coupons are BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Make the dict, and show only the coupons that give more than 5 and less than 20, each with its discount."
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+      for code, pct in discounts.items():
+          if pct > 5 and pct < 20:
+              print(code, pct)
+    output: |-
+      BEMVINDO10 10
+      VOLTA15 15
+    narration:
+      - "BEMVINDO10 10 and VOLTA15 15. Both halves named in the for line, and two questions joined, asked of the value."
+      - "A dict, gone through by pairs, with a question inside. That is WHERE, on a dict."
+      - "Two coupons passed both questions."
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+          for code, pct in discounts:
+              if pct > 5 and pct < 20:
+                  print(code, pct)
+        ask: "Python stopped. Going through the dict hands over only the names. What hands over a name and its value together?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+          for code, pct in discounts.items():
+              if pct > 5 or pct < 20:
+                  print(code, pct)
+        ask: "Every coupon passed that. Does a coupon need to say yes to both questions, or to either?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+          for code, pct in discounts.items():
+              if pct > 5 and pct < 20:
+                  print(code)
+        ask: "Both are named, but how big is each discount?"
+    walk:
+      - "Make the dict with its four coupons."
+      - "Go through its pairs: for, two names with a comma between, in, the dict, a dot and items."
+      - "Inside, ask the two questions about the value, joined, and show the name and the value."
+    return:
+      text: "The dict prices holds pizza at 40, sushi at 60, acai at 25 and burger at 35. Show only the dishes that cost more than 30 and less than 50, each with its price."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25, 'burger': 35}
+        for dish, price in prices.items():
+            if price > 30 and price < 50:
+                print(dish, price)
+      output: |-
+        pizza 40
+        burger 35
+      narration:
+        - "pizza 40 and burger 35. The loop named both halves, and both questions were asked of the price."
+        - "Two questions joined, asked of the value, with the name beside it."
+      note: "Return for step 17."
+    note: "The coupon table, in full: these are the four real rows of coupons.csv, so the learner will meet VOLTA15 again, as the coupon no order used. The two questions are joined with and, so that and-or returns one lesson after it was taught."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "dict", "for-each", "block", "two-names", "running-result"]
+    text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. What do all the prices add up to? Use a loop, with a running result."
+    model: |-
+      prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+      total = 0
+      for dish, price in prices.items():
+          total = total + price
+      print(total)
+    output: "125"
+    narration:
+      - "125. A total that starts at zero before the loop, grows by each price inside it, and is shown after it."
+      - "The running result, as before, with a dict to go through."
+      - "125, from three prices."
+    wrong:
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          total = 0
+          for dish, price in prices.items():
+              total = total + 1
+          print(total)
+        ask: "That counts the dishes. What do we want to add each time?"
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          for dish, price in prices.items():
+              total = 0
+              total = total + price
+          print(total)
+        ask: "Only the last price survived. Where should the total start?"
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          total = 0
+          for dish, price in prices.items():
+              total = total + price
+              print(total)
+        ask: "The total is shown at every turn. When is it ready?"
+    walk:
+      - "Start a total at zero, after the dict."
+      - "Go through the pairs, and add each price to the total."
+      - "Show the total, after the loop."
+    return:
+      text: "The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. What do the discounts add up to?"
+      model: |-
+        discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+        total = 0
+        for code, pct in discounts.items():
+            total = total + pct
+        print(total)
+      output: "45"
+      narration:
+        - "45. Started at zero, added each discount, shown at the end."
+        - "A running total over the values of a dict."
+      note: "Return for step 18."
+    note: "A recombination of the running result from PY-1 with the pairs from this lesson, a few steps after they were last needed together. The wrong answers are the three classic slips, as in PY-1."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "dict", "two-names", "add-to-end", "new-list-in-loop"]
+    text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Make a list called dear holding the names of the dishes that cost more than 30, and show it."
+    model: |-
+      prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+      dear = []
+      for dish, price in prices.items():
+          if price > 30:
+              dear.append(dish)
+      print(dear)
+    output: "['pizza', 'sushi']"
+    narration:
+      - "['pizza', 'sushi']. An empty list before the loop, a question about the price, and the name added on each yes."
+      - "The question was about the value, and what was kept was the name."
+      - "Two dishes kept, by name."
+    wrong:
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          dear = []
+          for dish, price in prices.items():
+              if price > 30:
+                  dear.append(price)
+          print(dear)
+        ask: "That kept the prices. I asked for the names of the dishes."
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          for dish, price in prices.items():
+              dear = []
+              if price > 30:
+                  dear.append(dish)
+          print(dear)
+        ask: "Where does an empty list belong, so that it is not made again at every turn?"
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          dear = []
+          for dish, price in prices.items():
+              if price < 30:
+                  dear.append(dish)
+          print(dear)
+        ask: "That is the cheap one. Which way does the sign point for more than?"
+    walk:
+      - "Make the dict, and an empty list called dear."
+      - "Go through the pairs. If the price is above 30, add the dish's name to dear."
+      - "Show dear, after the loop."
+    return:
+      text: "The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Make a list of the coupons that give 15 or more, and show it."
+      model: |-
+        discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+        kept = []
+        for code, pct in discounts.items():
+            if pct > 14:
+                kept.append(code)
+        print(kept)
+      output: "['PIZZA20', 'VOLTA15']"
+      narration:
+        - "['PIZZA20', 'VOLTA15']. The coupons that gave more than 14, kept by name."
+        - "A question about the value, and the name on each yes."
+      note: "Return for step 19."
+    note: "Weaves the list built in a loop from PY-2 with the pairs of this lesson. The names, not the values, are kept: a thought the learner will use in PY-4 when the piles' names are the result."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "is-it-there", "otherwise", "position-or-name"]
+    text: "Customers used these coupon codes on three orders, in this order: PIZZA20, VOLTA15 and BEMVINDO10. The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Show each code with its discount, and a 0 for a code the dict does not have."
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      codes = ['PIZZA20', 'VOLTA15', 'BEMVINDO10']
+      for code in codes:
+          if code in discounts:
+              print(code, discounts[code])
+          else:
+              print(code, 0)
+    output: |-
+      PIZZA20 20
+      VOLTA15 0
+      BEMVINDO10 10
+    narration:
+      - "PIZZA20 20, VOLTA15 0, BEMVINDO10 10. Each code was looked up in the dict, and the one that was not there got a 0."
+      - "Ask first, then look up, and say what happens on a no. Davi's fix, inside a loop."
+      - ""
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          codes = ['PIZZA20', 'VOLTA15', 'BEMVINDO10']
+          for code in codes:
+              print(code, discounts[code])
+        ask: "Python stopped on VOLTA15. What do you ask before looking a name up?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          codes = ['PIZZA20', 'VOLTA15', 'BEMVINDO10']
+          for code in codes:
+              if code in discounts:
+                  print(code, discounts[code])
+        ask: "One code has no line. What should happen to a code that is not in the dict?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          codes = ['PIZZA20', 'VOLTA15', 'BEMVINDO10']
+          for code in discounts:
+              if code in codes:
+                  print(code, discounts[code])
+              else:
+                  print(code, 0)
+        ask: "Which one are you going through, the codes that were used, or the dict itself?"
+    walk:
+      - "Make the dict, and the list of three codes used."
+      - "Go through the codes. If a code is in the dict, show it with its discount."
+      - "Else, show the code with a 0."
+    return:
+      text: "The dict prices holds pizza at 40 and sushi at 60. An order has sushi, acai and pizza. Show each dish with its price, and a 0 for a dish that is not on the list."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60}
+        order = ['sushi', 'acai', 'pizza']
+        for dish in order:
+            if dish in prices:
+                print(dish, prices[dish])
+            else:
+                print(dish, 0)
+      output: |-
+        sushi 60
+        acai 0
+        pizza 40
+      narration:
+        - "sushi 60, acai 0, pizza 40. Each dish was looked up, and the missing one got a 0."
+        - "Ask first, then fetch, with an else for the no."
+      note: "Return for step 20."
+    note: "Looking each item of a list up in a dict is what the closing sentence needs, and what a join does. The 0 for a missing name is the thought that PY-4 turns into .get, so this step is the plain version of what it will shorten."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "position-or-name", "running-result"]
+    friction: true
+    text: "The last one, and I won't break it down. The dict prices holds pizza at 40, sushi at 60 and acai at 25. An order has pizza, acai and pizza. What does the order cost in all?"
+    model: |-
+      prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+      order = ['pizza', 'acai', 'pizza']
+      total = 0
+      for dish in order:
+          total = total + prices[dish]
+      print(total)
+    output: "105"
+    narration:
+      - "105. Each dish in the order was looked up in the price list, and its price added to a running total. That is the heart of a JOIN: something in one table found by its name in another."
+      - "40 and 25 and 40, added up. A list to go through, a dict to look in, and a running result: three things from three lessons."
+      - "The order costs 105. The list was gone through, the dict was asked by name, and the total grew."
+    wrong:
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          order = ['pizza', 'acai', 'pizza']
+          total = 0
+          for dish in order:
+              total = total + dish
+          print(total)
+        ask: "Python cannot add a word to a number. What is the price of the dish?"
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          order = ['pizza', 'acai', 'pizza']
+          total = 0
+          for dish in prices:
+              total = total + prices[dish]
+          print(total)
+        ask: "That adds up the whole price list, not the order. Which one should you be going through?"
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          order = ['pizza', 'acai', 'pizza']
+          total = 0
+          for dish in order:
+              total = total + prices[dish]
+              print(total)
+        ask: "The total is shown at every turn. When is it ready?"
+      - code: |-
+          prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+          order = ['pizza', 'acai', 'pizza']
+          total = 0
+          for dish in order:
+              total = prices[dish]
+          print(total)
+        ask: "That keeps only the last price. What does the total have to be at each turn?"
+    walk:
+      - "Make the price dict, and the order as a list of three dishes."
+      - "Start a total at zero."
+      - "Go through the order. For each dish, find its price in the dict, and add it to the total."
+      - "Show the total, after the loop."
+    return:
+      text: "Same price list. A different order has sushi, sushi and acai. What does it cost in all?"
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        order = ['sushi', 'sushi', 'acai']
+        total = 0
+        for dish in order:
+            total = total + prices[dish]
+        print(total)
+      output: "145"
+      narration:
+        - "145. Each dish found in the price list, each price added to the running total."
+        - "A list to go through, a dict to ask by name, a total to keep."
+      note: "Return for the closing step. Not broken down, like the step."
+    note: "The closing sentence of the lesson, as in the map. Deliberate friction (rule C9). The narration echoes SQL-4's join, which the learner has just done: the price list is the other table, and the dish name is the column that matches. Only echoed, never relied on."
+
+  # 22
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. Today you met the second kind of container, the dict, which holds values under names. You made one, got a value by name, added and changed one, asked whether a name was there, and went through the names and the pairs. A list is asked by position, a dict is asked by name. And you used it to look things up in a second collection, which is what a join does.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a program out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 23
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["name-a-value", "show", "dict", "text-in-list", "text-quotes", "for-each", "block", "get-by-name", "running-result"]
+    text: "Four orders used coupons, in this order: PIZZA20, BEMVINDO10, PIZZA20 and FRETEGRATIS. The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. What do the four discounts add up to?"
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+      codes = ['PIZZA20', 'BEMVINDO10', 'PIZZA20', 'FRETEGRATIS']
+      total = 0
+      for code in codes:
+          total = total + discounts[code]
+      print(total)
+    output: "50"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check on a combination never practised: a list of codes looked up in a dict of discounts, and a running total of what was found. Never scored (rule F1). What a miss tells the script: which of the dict, the lookup by name or the running total was absent."

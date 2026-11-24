@@ -1,0 +1,34 @@
+# The lessons in the order they are played. Each entry is strand/lesson-file, without .yaml.
+# Thoughts are shared across strands, so a later lesson may require any earlier thought.
+course:
+  # pass 1: the foundation of all three strands
+  - sql/lesson-01
+  - sql/lesson-02
+  - sql/lesson-03
+  - sql/lesson-04
+  - py/lesson-01
+  - py/lesson-02
+  - py/lesson-03
+  - py/lesson-04
+  - py/lesson-05
+  - py/lesson-06
+  - pd/lesson-01
+  - pd/lesson-02
+  - pd/lesson-03
+  - pd/lesson-04
+  - cold/lesson-01
+  # pass 2: the interview layer
+  - sql/lesson-05
+  - sql/lesson-06
+  - sql/lesson-07
+  - sql/lesson-08
+  - sql/lesson-09
+  - py/lesson-07
+  - py/lesson-08
+  - py/lesson-09
+  - py/lesson-10
+  - pd/lesson-05
+  - ml/lesson-01
+  - ml/lesson-02
+  - ml/lesson-03
+  - cold/lesson-02

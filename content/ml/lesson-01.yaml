@@ -1,0 +1,1278 @@
+lesson: ml-01
+title: "Fit, predict, evaluate"
+strand: ml
+stage: 2
+thoughts:
+  features-and-target: "`X` is a table of the columns to learn from. `y` is the one column to predict."
+  hold-rows-back: "`train_test_split` holds some rows back, so the score is honest."
+  make-fit-predict: "Make a model, fit it on the training rows, predict the held-back rows. Three lines, always the same."
+  score: "A metric compares the predictions with the truth."
+  probabilities: "`predict_proba(...)[:, 1]` gives a probability for each row, which is what AUC needs."
+  ml-imports: {text: "The import lines. Everyone looks these up.", grade: shape}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "new-column", "yes-no-as-column", "groupby", "pick-then-summarise", "mean-of-yes-no", "show"]
+    text: "Join the orders to their deliveries and call a delivery late when its actual minutes are more than its promised minutes. For each bag size, print the share of late deliveries."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+      print(joined.groupby('bag_size')['late'].mean())
+    output: |-
+      bag_size
+      1    0.352276
+      2    0.519123
+      3    0.758741
+      Name: late, dtype: float64
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PD-4: merge, a yes-or-no column, piles by a column of the second table, and the mean of the yes-or-no column. PD-4 practised rain, so bag size is a combination never practised. It also puts lateness and its three suspects in front of the learner before the lesson uses them. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["features-and-target"]
+    text: |
+      Today a machine learns from your table. It is not magic. It is shown rows where the answer is known, it finds what tends to go with what, and then it guesses for rows it has never seen. To set that up you split the table in two. `X` is the table of columns the machine learns from. `y` is the single column it has to guess. Everybody writes a capital X and a small y, as in school maths, and that just is.
+
+      Here is the question: was a delivery late? And three columns that might explain it:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      print(X.head(3))
+      print(round(y.mean(), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        print(X.head(3))
+        print(round(y.mean(), 3))
+    after_run: |
+      Three columns to learn from, and one yes-or-no column to guess. 5,489 deliveries are left, because 112 had no distance and, for now, we drop them, as you did in the cleaning lesson. And 42.6 percent of the deliveries were late: the mean of a yes-or-no column is the share of yes. Everything today starts from these two names.
+    note: "The learner owns every line except the two names. The merge and the drop come from PD-4 and PD-3, and the yes-or-no column from PD-3. Capital X and small y are given as a convention (a real one, from matrices and vectors), with 'that just is'. The 112 missing distances are dropped, as ML-2 will later revisit."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "yes-no-as-column", "column-sums", "mean-of-yes-no", "look-at-rows"]
+    text: "Now build them yourself, with your own choices. Leave out the deliveries that have no distance, as before. X holds the distance and the bag size and nothing else. y is whether a delivery was more than 5 minutes late. Print the first three rows of X, and then the share of y that is yes, rounded to three places."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes'] + 5
+      print(X.head(3))
+      print(round(y.mean(), 3))
+    output: |-
+      distance_km  bag_size
+      0          4.1         2
+      1          1.1         1
+      2          3.8         1
+      0.251
+    narration:
+      - "Two columns in X, one yes-or-no column in y, and about 25 percent of the deliveries were more than five minutes late. X is what the machine learns from. y is what it has to guess."
+      - "You chose the columns and you chose what counts as the answer. Nothing else about the split changes."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data['distance_km', 'bag_size']
+          y = data['actual_minutes'] > data['promised_minutes'] + 5
+          print(X.head(3))
+          print(round(y.mean(), 3))
+        ask: "One name in square brackets gets a column. Which brackets hold a list of names, and so get a table?"
+        why: "X has to be a table, even with a single column, so the names go in a list inside the brackets."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          print(X.head(3))
+          print(round(y.mean(), 3))
+        ask: "That is the share that were late at all. What did I ask about the minutes?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes'] + 5
+          print(X.head(3))
+          print(round(y.mean(), 3))
+        ask: "How many columns did I say X would hold? Which ones?"
+    walk:
+      - "Merge the two tables, and drop the rows with no distance. Name the result data."
+      - "X is a table with two columns, so it takes a list of names."
+      - "y is a yes-or-no column: the actual minutes are more than the promised minutes plus 5. Print what was asked."
+    return:
+      text: "One more split, a different one. Leave out the deliveries with no distance again. X holds the rain and the distance. y is whether a delivery took more than 40 minutes. Print the first three rows of X and the share of y that is yes, rounded to three places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain']]
+        y = data['actual_minutes'] > 40
+        print(X.head(3))
+        print(round(y.mean(), 3))
+      output: |-
+        distance_km  rain
+        0          4.1     0
+        1          1.1     0
+        2          3.8     0
+        0.423
+      narration:
+        - "Rain and distance in X, a yes-or-no column in y. About 42 percent of the deliveries took over 40 minutes."
+        - "Two names for the learning, one column for the guessing."
+      note: "Return for step 3. Other columns and a plain number in the question."
+    note: "The first typed X and y, with the file read and merged as every script from now on. The target is built with column arithmetic (PD-3), so the learner cannot copy the give. A 'late' of 5 minutes keeps the result from being the give's number."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "mean-of-yes-no", "look-at-rows"]
+    text: "The column to guess can be any column. This time guess whether it rained. X holds the distance, the bag size and the promised minutes, with the same rows dropped. y is the rain column itself. Print the first three rows of X, and the mean of y rounded to three places."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size', 'promised_minutes']]
+      y = data['rain']
+      print(X.head(3))
+      print(round(y.mean(), 3))
+    output: |-
+      distance_km  bag_size  promised_minutes
+      0          4.1         2                40
+      1          1.1         1                30
+      2          3.8         1                40
+      0.195
+    narration:
+      - "Three columns to learn from, and y is simply the rain column: 1 when it rained. About 20 percent of the deliveries had rain. The thing to guess does not have to be built, it can already be a column."
+      - "Same two names, different roles. y can be a column that is already there."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size', 'promised_minutes']]
+          y = data[['rain']]
+          print(X.head(3))
+          print(round(y.mean(), 3))
+        ask: "y is one column to guess, not a table. One name or a list: which brackets give you a single column?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size', 'rain']]
+          y = data['rain']
+          print(X.head(3))
+          print(round(y.mean(), 3))
+        ask: "What would the machine learn if the answer were already in X? Which columns did I name for X?"
+        why: "a model given the answer among its inputs learns nothing. X holds what you would know beforehand."
+    walk:
+      - "Merge the tables and drop the rows with no distance."
+      - "X is three columns in a list. y is one column, the rain, with no list."
+      - "Print the first three rows of X, and the mean of y."
+    return:
+      text: "Guess whether the courier carried more than one order. X holds the rain, the distance and the promised minutes. y is whether the bag size is more than 1. Print the first three rows of X, and the share of y that is yes, rounded to three places."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['rain', 'distance_km', 'promised_minutes']]
+        y = data['bag_size'] > 1
+        print(X.head(3))
+        print(round(y.mean(), 3))
+      output: |-
+        rain  distance_km  promised_minutes
+        0     0          4.1                40
+        1     0          1.1                30
+        2     0          3.8                40
+        0.369
+      narration:
+        - "Rain, distance and the promise to learn from, and whether the bag held more than one order to guess. About 37 percent did."
+        - "Another X, and another y built from a comparison."
+      note: "Return for step 4."
+    note: "A second X and y, in which y is an ordinary column. It is a correction in advance: the thing to guess is chosen, not discovered. The wrong answer that puts the answer into X is the first mention of leakage, in its simplest form, before ML-2 names it."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["hold-rows-back"]
+    imports: ["ml-imports"]
+    text: |
+      Now the honest part. If you grade a student on the questions they practised, the grade tells you nothing. A model is the same. So before it learns anything, we hold some rows back, and keep them hidden until the end. One function does it. Bringing it into the script takes a line that everyone looks up, so I will give it to you whole every time you need it: `from sklearn.model_selection import train_test_split`. It goes at the top, above the pandas line.
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      print(len(X_train), len(X_test))
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        print(len(X_train), len(X_test))
+    after_run: |
+      4,391 rows to learn from, and 1,098 held back: a fifth, as `test_size=0.2` said. Four names on the left, because the function hands back four pieces: X cut in two, then y cut in two, the training part always first. The rows are picked at random, and `random_state=0` fixes the shuffle so that your numbers match mine on every run. The 0 is only a number, and that just is.
+    note: "Shape grade: the import line is supplied in the teacher's voice and called something people look up, and the learner is told to expect it whole each time. The four-name order has a real reason (X's pieces, then y's, training first). `random_state` is 'this just is', as the pedagogy rules allow."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "ml-imports", "how-many"]
+    supplies: ["from sklearn.model_selection import train_test_split"]
+    text: "Bring in the splitter with `from sklearn.model_selection import train_test_split`. Build X from the distance and the bag size, and y as whether a delivery was late at all. Hold back a quarter of the rows. Print how many rows are in the training part and how many in the test part."
+    model: |
+      from sklearn.model_selection import train_test_split
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+      print(len(X_train), len(X_test))
+    output: "4116 1373"
+    narration:
+      - "4,116 to learn from and 1,373 held back. A quarter went to the test, and the function handed back the four pieces in its usual order."
+      - "Training first, then test, X before y: the same four names as before, and a different share held back."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_test, X_train, y_test, y_train = train_test_split(X, y, test_size=0.25, random_state=0)
+          print(len(X_train), len(X_test))
+        ask: "The training part should be the bigger one. Which of the four names did you put first?"
+        why: "the function returns X's training part, then X's test part, then y's two parts, so the names have to come in that order."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          print(len(X_train), len(X_test))
+        ask: "A fifth was held back. What share did I ask for, and which part of the call says it?"
+    walk:
+      - "Merge, drop, and build X and y as before."
+      - "Bring in the splitter. Then give it X, y, the share to hold back and the fixed shuffle."
+      - "Name the four pieces in the order they come, and print the lengths of the two X pieces."
+    return:
+      text: "Use `from sklearn.model_selection import train_test_split` once more. X holds the rain and the distance, y is whether a delivery was late, and a tenth of the rows are held back. Print the number of rows in the test part, and then in the training part."
+      model: |
+        from sklearn.model_selection import train_test_split
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.1, random_state=0)
+        print(len(X_test), len(X_train))
+      output: "549 4940"
+      narration:
+        - "549 rows held back and 4,940 to learn from. A tenth for the test, the rest for training."
+        - "The split again, with a smaller share held back, and the two lengths in the other order."
+      note: "Return for step 6. Other columns, other share, and the prints swapped."
+    note: "First typed split. The import line is in the text so that `ml-imports` can be required, and every spelling in `supplies` is exactly as it appears there."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "ml-imports", "mean-of-yes-no"]
+    supplies: ["from sklearn.model_selection import train_test_split"]
+    text: "The held-back rows should look like the rest. Using `from sklearn.model_selection import train_test_split`, take all three columns for X and lateness for y, and hold back a fifth. Print the share of late deliveries among the training rows, and then among the test rows, each rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      print(round(y_train.mean(), 3))
+      print(round(y_test.mean(), 3))
+    output: |-
+      0.425
+      0.432
+    narration:
+      - "42.5 percent late in the training rows, and 43.2 in the test rows. The shuffle is fair: the rows held back look like the rows it learned from."
+      - "Two shares, one for each piece of y. They are close, which is what a random hold-back should give."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          print(round(y.mean(), 3))
+          print(round(y_test.mean(), 3))
+        ask: "The first number is the share for every row together. Which piece of y holds only the training rows?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          print(round(X_train.mean(), 3))
+          print(round(X_test.mean(), 3))
+        ask: "That took the mean of the columns of X. Which piece holds the late-or-not answers?"
+    walk:
+      - "Build X and y from all three columns and lateness, and hold back a fifth."
+      - "The share of yes in a yes-or-no column is its mean. Which piece of y is the training part?"
+      - "Print the two means, training first."
+    return:
+      text: "Using `from sklearn.model_selection import train_test_split` again, take the distance and the rain for X and whether the delivery took more than 40 minutes for y. Hold back a third of the rows. Print the share of yes in the training rows and then in the test rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain']]
+        y = data['actual_minutes'] > 40
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+        print(round(y_train.mean(), 3))
+        print(round(y_test.mean(), 3))
+      output: |-
+        0.417
+        0.435
+      narration:
+        - "About 42 percent in each piece. Another target and another share held back, the same fair shuffle."
+        - "Two means, one for each piece of y."
+      note: "Return for step 7. Other columns and share, and another target."
+    note: "The reason for the split made visible. The learner meets y_train and y_test as ordinary pandas columns on which a mean works. A one-step change from step 6 in only one run is avoided: features, share and print all change."
+
+  # 8
+  - kind: "give"
+    lang: "python"
+    new: ["make-fit-predict"]
+    text: |
+      Now the machine itself. In scikit-learn every model is used in the same three lines, and you already know the habit behind them: give a thing a name, then do something with it. First make the model and name it. Then fit it, which means: show it the training rows, the columns to learn from first and the answers second. Then predict: hand it the columns of the rows it has never seen, and it guesses their answers. This model is called logistic regression, and its line to bring it in is another one you would look up: `from sklearn.linear_model import LogisticRegression`.
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(predictions[:5])
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(predictions[:5])
+    after_run: |
+      Five guesses, one for each of the first five held-back rows: late or not. The three lines are make, fit, predict, and they are the same lines for every model there is. `fit` is given the features and then the answers, because that is what it learns from. `predict` is given only the features, because the answers are exactly what it is trying to guess. The model never saw the held-back rows' answers.
+    note: "The three verbs, shown in use before they are named. The learner owns name-then-do and slicing a list with a colon. The import is supplied again and is shape grade. The predictions are printed five at a time, as `[:5]` is PY-2's first-few."
+
+  # 9
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "ml-imports", "total"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
+    text: "Fit a model of your own. Bring in what you need with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the rain and the distance, y is whether a delivery was late, and a fifth of the rows are held back. Make the model, fit it on the training rows, and predict the held-back rows. Print how many of the predictions are True."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(sum(predictions))
+    output: "331"
+    narration:
+      - "The model said late for that many of the held-back rows. Make, fit, predict: the same three lines, with your own choice of columns."
+      - "Fit on the training rows, predict the test rows. The count is a plain sum of Trues."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train)
+          predictions = model.predict(X_test)
+          print(sum(predictions))
+        ask: "Fit learns from the features and from the answers. Which two things does it need, and which names hold them?"
+        why: "without the answers there is nothing to learn the pattern from."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          predictions = model.predict(X_test)
+          print(sum(predictions))
+        ask: "The model has been made, but has it seen any rows? Which line is missing between making and predicting?"
+        why: "a model that has not been fitted knows nothing yet, and scikit-learn refuses to guess."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_train)
+          print(sum(predictions))
+        ask: "Those are guesses about the rows it learned from. Which rows are the held-back ones?"
+    walk:
+      - "Build X and y and hold back a fifth."
+      - "Make the model, name it, and fit it on the training rows: features first, answers second."
+      - "Predict the held-back rows, and print how many predictions are True."
+    return:
+      text: "Again, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model on the training rows and print how many of the predictions on the held-back rows are False."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(len(predictions) - sum(predictions))
+      output: "930"
+      narration:
+        - "The model said not late for that many. Make, fit, predict, and a count of the other answer."
+        - "The same three lines on another pair of columns and a larger test set."
+      note: "Return for step 9. Other columns, other share, and the count of the False guesses."
+    note: "The first typed make-fit-predict. Common slips (leaving out y in fit, fitting nothing, predicting the training rows) are the wrong answers and each is a real message or a real wrong number. `sum` is PY-1's total, applied to a row of Trues and Falses."
+
+  # 10
+  - kind: "aside"
+    lang: "python"
+    text: "\nSomething that is only interesting, with nothing in it to keep. The `sk` in `sklearn` stands for scikit, which was the name for an add-on toolkit built on top of the scientific Python library SciPy. The project began in 2007 as a summer project for a student, and it is now what most people use first when they want a model on a table. Its three verbs, make, fit and predict, were chosen so that every model, simple or fancy, would look alike on the page. That is why next time you will be able to swap one model for another and change a single line.\n"
+    note: "A real origin for a spelling the learner will otherwise have to take as given, and relief after the first big load. It also plants the idea of ML-2's swap-the-model without teaching it."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "hold-rows-back", "make-fit-predict", "ml-imports", "yes-no-as-column", "mean-of-yes-no"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
+    text: "How often were the guesses right? Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, with all three columns for X and lateness for y, a fifth held back, and a model fitted on the training rows. Then compare each prediction with the true answer: ask each row whether the two are equal, and take the mean of that column. Print it rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(round((predictions == y_test).mean(), 3))
+    output: "0.66"
+    narration:
+      - "0.66. Two thirds of the guesses were right. Each prediction asked whether it equals the truth, and the mean of that yes-or-no column is the share of yes."
+      - "A question asked of every row, then its mean: the share you met in the cleaning lesson, applied to guesses."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(round(predictions.mean(), 3))
+        ask: "That is the share of guesses that said late. What did you compare each guess with?"
+        why: "a guess can only be judged against the truth, so the two have to meet in a question."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(round((predictions == y_test).sum(), 3))
+        ask: "That is how many were right, not the share. What is the mean of a column of yes and no?"
+    walk:
+      - "Make, fit and predict as before."
+      - "Ask each row: does the prediction equal the true answer? You have a column of yes and no."
+      - "The mean of that column is the share of yes. Print it rounded."
+    return:
+      text: "Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression` again, with the rain and the distance for X, lateness for y, and a third held back. Fit a model and predict the held-back rows. What share of the held-back rows were both guessed late and truly late? Print it rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(round((predictions & y_test).mean(), 3))
+      output: "0.199"
+      narration:
+        - "A share of the held-back rows where both the guess and the truth said late. Two columns of yes and no, joined with one ampersand, then the mean."
+        - "The question asked of every row at once, then its mean."
+      note: "Return for step 11. The question is both-and, with an ampersand, in place of equals."
+    note: "This is the metric by hand, built from two owned thoughts (`yes-no-as-column` and `mean-of-yes-no`) before the library gives it a name. The learner meets what accuracy is before the word comes in step 12."
+
+  # 12
+  - kind: "give"
+    lang: "python"
+    new: ["score"]
+    text: |
+      That share has a name: accuracy. It is one example of a metric, which is a function that holds the predictions up against the truth and gives back one number. The library keeps a drawer of them. Each takes the truth first, then the predictions. The line that brings this one in is `from sklearn.metrics import accuracy_score`:
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import accuracy_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(round(accuracy_score(y_test, predictions), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(round(accuracy_score(y_test, predictions), 3))
+    after_run: |
+      0.66, the same number you found by hand. A metric is only that: the truth and the guesses go in, one number comes out. There are many metrics, and later we will ask which one is the right one to use.
+    note: "`score`: a metric compares the predictions with the truth. The learner already did it by hand, so the word is attached to something owned. 'Which one is the right one' plants ML-2's pick-the-metric."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "hold-rows-back", "make-fit-predict", "score", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import accuracy_score"]
+    text: "Score a model with the library. Bring in what you need with `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit on the training rows, and print the accuracy on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import accuracy_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(round(accuracy_score(y_test, predictions), 3))
+    output: "0.646"
+    narration:
+      - "Accuracy on the rows the model never saw. The truth went in first, the guesses second, and one number came out."
+      - "Make, fit, predict, score: four lines you now own."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import accuracy_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_train)
+          print(round(accuracy_score(y_train, predictions), 3))
+        ask: "That scores the rows the model learned from. Which rows are held back, and so give an honest score?"
+        why: "a score on the rows the model has already seen is a score on its memory."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import accuracy_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(round(accuracy_score(y_test, predictions) * 100, 3))
+        ask: "Look at the size of that number. What did I ask the printed number to be?"
+    walk:
+      - "Build X and y, hold back a quarter, make the model and fit it."
+      - "Predict the held-back rows."
+      - "Hold the truth and the predictions up against each other with the metric, and print it rounded."
+    return:
+      text: "Once more, with `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`. X holds the rain and the distance, y is whether a delivery was late, and 30 percent of the rows are held back. Print the accuracy on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(round(accuracy_score(y_test, predictions), 3))
+      output: "0.652"
+      narration:
+        - "The accuracy of a model that only has rain and distance to go on. The same four lines, with other columns."
+        - "Make, fit, predict, score."
+      note: "Return for step 13. Other columns and share."
+    note: "The learner now writes the whole pipeline ending in a metric. Accuracy is symmetric in its two arguments, so the swapped order is not offered as a wrong answer. The mistake that is checked is scoring the training rows."
+
+  # 14
+  - kind: "classmate"
+    lang: "python"
+    new: ["probabilities"]
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "ml-imports"]
+    supplies: ["from sklearn.metrics import roc_auc_score"]
+    text: "\nDavi wanted a better metric than accuracy. He had heard of AUC, which asks how well a model puts the late deliveries above the on-time ones. He fitted his model as you did, and wrote:\n\n```python\npredictions = model.predict(X_test)\nprint(round(roc_auc_score(y_test, predictions), 3))\n```\n\nIt ran, and it printed 0.636. Davi, what do the predictions look like? ... Only False and True, nothing in between. To put rows in order from the least to the most likely late, the model has to say how likely, not only yes or no. That is a probability, and `predict_proba` gives one. It hands back a table with a column for each answer, and we take the column for late, which is the second, number 1 when you count from 0. The colon on its own means every row. The metric's line, to look up, is `from sklearn.metrics import roc_auc_score`:\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])\nX = data[['distance_km', 'rain', 'bag_size']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\nprobabilities = model.predict_proba(X_test)\nprint(probabilities[:3])\nlate_chance = probabilities[:, 1]\nprint(round(roc_auc_score(y_test, late_chance), 3))\n```\n\nRun it.\n"
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        probabilities = model.predict_proba(X_test)
+        print(probabilities[:3])
+        late_chance = probabilities[:, 1]
+        print(round(roc_auc_score(y_test, late_chance), 3))
+    after_run: "\n0.697, better than Davi's 0.636, with the same model. The first print shows the table `predict_proba` hands back: a column for False and a column for True, the two adding up to 1 on each row. `[:, 1]` takes the second column, and the rows now come in a ranking that AUC can use. You know what AUC is. This is what it needs to be fed: a probability for every row, not a yes or no.\n"
+    note: "The classmate makes the slip that the learner would make with AUC (rule E6), before probabilities are taught. His slip runs, and gives a number, so the teacher's question points at the cause. The reason for `[:, 1]` is real: a column for each answer, counted from 0, and a colon for every row, so nothing about it is an arbitrary rule (rule B5). Davi's sentence is in the text only, since it would not run alone."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Score with AUC. Bring in `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance and the bag size, y is whether a delivery was late, and a fifth of the rows are held back. Fit a model on the training rows, and print the AUC on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.67"
+    narration:
+      - "The AUC on rows the model never saw, from probabilities and not from yes-or-no guesses. Make, fit, predict the probabilities, score."
+      - "The same four lines, and the second column of the probabilities, the chance of late."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict(X_test)), 3))
+        ask: "That fed the metric yes-or-no guesses. What does the model give you that puts the rows in order?"
+        why: "AUC compares how rows are ranked, and a guess of False or True ranks them in only two levels."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)), 3))
+        ask: "predict_proba gives a table with two columns. Which one holds the chance of late, and how do you take it?"
+        why: "the metric wants one number per row, and the table has two columns, the chance of False and the chance of True."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 0]), 3))
+        ask: "Counting from 0, which column is the chance of True?"
+    walk:
+      - "Build X and y, hold back a fifth, make the model, and fit it."
+      - "Ask for the probabilities of the held-back rows, and take the column for late."
+      - "Hold the truth and those probabilities up against each other with the metric, and print it rounded."
+    return:
+      text: "With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the rain and the distance, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print its AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.679"
+      narration:
+        - "The AUC of a model that has only rain and distance, on a quarter of the rows. Make, fit, the second column of the probabilities, the metric."
+        - "The same four lines on another pair of columns."
+      note: "Return for step 15. Other columns and share."
+    note: "The learner now writes the probabilities themselves, one step after Davi. Each wrong answer is a real mistake: yes-or-no guesses, the whole table, and the wrong column."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
+    text: "A probability can answer a question of its own. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, take the rain and the distance for X, lateness for y, and hold back a fifth. Fit a model, and take its chance of late for the held-back rows. Print how many of those rows got a chance above 0.5."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      late_chance = model.predict_proba(X_test)[:, 1]
+      print(len(late_chance[late_chance > 0.5]))
+    output: "331"
+    narration:
+      - "That many rows got a chance of late above a half. It is the same number as the True guesses in the step where you fitted this very model. A guess of True is only a chance above 0.5."
+      - "Ask each chance whether it is above a half, keep the yes ones, count them. The question and the keeping are the ones you already own, on a list of chances."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          late_chance = model.predict_proba(X_test)[:, 1]
+          print(len(late_chance))
+        ask: "That counted every held-back row. Which question keeps only the rows with a chance above a half?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          late_chance = model.predict_proba(X_test)[:, 0]
+          print(len(late_chance[late_chance > 0.5]))
+        ask: "Which column of the table holds the chance of late: the first or the second?"
+    walk:
+      - "Build X and y, hold back a fifth, make the model and fit it."
+      - "Take the chance of late for the held-back rows: the second column."
+      - "Keep the chances above 0.5, and count them."
+    return:
+      text: "Once more, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print how many of the held-back rows got a chance of late above 0.6."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        late_chance = model.predict_proba(X_test)[:, 1]
+        print(len(late_chance[late_chance > 0.6]))
+      output: "256"
+      narration:
+        - "That many rows are above 0.6. A higher bar keeps fewer rows, as it did with any question."
+        - "The chances of late, a question asked of each, the yes rows counted."
+      note: "Return for step 16. Other columns, share and cut-off."
+    note: "A second use of the probabilities, and the link back to `predict`: a guess of True is a chance above a half. It keeps the new column of chances in front of the learner before AUC makes them disappear into one number. The slicing of a numpy row with a yes-or-no question is the same brackets-keep-yes thought on an array."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Which single column knows the most? With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the distance in X, let y be whether a delivery was late, hold back a fifth, and print the AUC of a logistic regression on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.637"
+    narration:
+      - "The distance alone scores a fair way above a coin, and below the three columns together. A single column carries most of what the model knows here."
+      - "One column in a list, for X. Everything else is the pipeline you know."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data['distance_km']
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "X is a table, even with a single column. How many brackets does a table want around its names?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['rain']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which column did I put in X?"
+    walk:
+      - "Build X with the one column, in a list, and y as lateness. Hold back a fifth."
+      - "Make the model and fit it on the training rows."
+      - "Print the AUC from the chance of late on the held-back rows."
+    return:
+      text: "And the bag size on its own. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the bag size in X, let y be whether a delivery was late, hold back a quarter, and print the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['bag_size']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.609"
+      narration:
+        - "The bag size alone is weaker than the distance alone, though still above a coin. A bigger bag went with more late deliveries, as the cold check at the start showed."
+        - "One column for X, and the same pipeline."
+      note: "Return for step 17. Another column and share."
+    note: "A single column in X, as a list, to keep 'X is a table' in view and to show that columns differ in how much they know. It is the setting for ML-2's engineer-then-fit, where the promise is useless alone and useful beside the distance."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Try a different guess: whether it rained. Use `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance, the bag size and the promised minutes, y is the rain column, and a third of the rows are held back. Print the AUC on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size', 'promised_minutes']]
+      y = data['rain']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.621"
+    narration:
+      - "A pipeline that guesses rain from distance, bag size and the promise. The AUC says how well rain can be told from those. Notice that nothing in the three lines changed: only X and y did."
+      - "Same lines, different X and y. The model does not care what the column means."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size', 'promised_minutes']]
+          y = data['rain']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict(X_test)), 3))
+        ask: "Which does AUC want, the model's yes-or-no guesses or a chance for every row?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "What did I ask the model to guess this time?"
+    walk:
+      - "Build X from the three columns, and y as the rain column."
+      - "Hold back a third, make the model and fit it."
+      - "Print the AUC from the chance of the second answer."
+    return:
+      text: "And one more. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: guess whether the courier carried more than one order. X holds the rain, the distance and the promised minutes, and a fifth of the rows are held back. Print the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['rain', 'distance_km', 'promised_minutes']]
+        y = data['bag_size'] > 1
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.596"
+      narration:
+        - "The AUC for guessing a bag of more than one order. Another y, the same pipeline."
+        - "Build X and y, hold back, make, fit, probabilities, metric."
+      note: "Return for step 16. Another target built with a comparison."
+    note: "A second use of the whole pipeline, with a y that is an ordinary column. It keeps X and y, and the three verbs, in one sentence, and it is one step before the closing sentence, so the closing sentence is a recombination."
+
+  # 19
+  - kind: "recap"
+    lang: "python"
+    text: "\nStop there. In one sitting you went from a table to a number a machine earned: split the table into what it learns from and what it guesses, hold some rows back, make, fit and predict, and hold the guesses up against the truth. Three lines, always the same, and a metric to finish. Every one of those words you could now find again by thinking: what goes in, what comes out, in which order.\n\nThe line that brings a tool in is the one thing you are not asked to carry. People look those up. One more sentence, and I won't break it down.\n"
+    note: "Relief after the climb, before the closing sentence (rule C8). It says again that the import lines are looked up."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    friction: true
+    text: "The last one, and I won't break it down. Predict late deliveries and report how good the prediction is. X holds the distance, the rain and the bag size, y is whether a delivery was late, with the rows with no distance dropped. Hold back a fifth. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.697"
+    narration:
+      - "0.697, from the raw files to a number a machine earned: you read two tables, joined them, split them, held rows back, made, fitted, predicted the chances, and scored them. That is the whole of a first machine-learning task, and you wrote it by thinking."
+      - "Everything in it was something you could say in words: what to learn from, what to guess, what to hold back, which model, which score."
+      - "An AUC of 0.697 on 1,098 deliveries it had never seen. Better than 0.5, which is a coin, and not yet good. Next time we make it better."
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict(X_test)), 3))
+        ask: "That is an AUC of yes-or-no guesses. What does the model give that puts the rows in order?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))
+        ask: "Those are the rows the model learned from. Which rows give an honest score?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "What has the model seen so far, when you ask it for probabilities? What comes between making it and predicting?"
+    walk:
+      - "Build X and y, and hold back a fifth."
+      - "Make the model and fit it on the training rows."
+      - "Take the chance of late for the held-back rows, and hold it up against the truth with AUC. Print it rounded."
+    return:
+      text: "Not broken down either. Predict whether a delivery took more than 40 minutes, from the distance, the rain and the bag size, with the rows with no distance dropped and a quarter held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size']]
+        y = data['actual_minutes'] > 40
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.905"
+      narration:
+        - "Read, join, drop, X and y, hold back, make, fit, chances, metric. You found the order yourself."
+        - "The same pipeline with a different thing to guess, and a different share held back."
+      note: "Return for step 18. Not broken down, like the step."
+    note: "The closing sentence of ML-1, as the map has it (pass-bar task 15), with a result of 0.697 on 5,489 rows. Deliberate friction (rule C9). Every line was written in an earlier step. The narration says that the score is better than a coin and not yet good, which plants ML-2."
+
+  # 21
+  - kind: "recap"
+    lang: "python"
+    text: "\nThat is the sitting. You are not fast at it, and you are not meant to be. The aim today was that you could think the pipeline out, and you did. Don't go over it before next time. One question, cold, and then we stop.\n"
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Guess whether a delivery took more than 40 minutes. X holds the distance and the bag size, with the rows with no distance dropped, and 30 percent of the rows are held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'bag_size']]
+      y = data['actual_minutes'] > 40
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.895"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: the whole pipeline on a combination never practised (another target, another share). Never scored (rule F1). A miss tells the script which of X and y, the hold-back, make, fit, predict or the chance of the second answer was absent."

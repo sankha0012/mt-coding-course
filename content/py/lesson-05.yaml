@@ -1,0 +1,1108 @@
+lesson: py-05
+title: "Wrap it as a function"
+strand: py
+stage: 1
+thoughts:
+  def: "`def average(values):` gives a name to some steps. Nothing runs until the name is used."
+  what-goes-in: "The names in the brackets of the `def` line are what goes in."
+  what-comes-out: "`return` hands the result back to the code that used the function."
+  call-it: "`average(fees)` runs the function. A function is a query: something goes in, something comes out."
+  show-or-return: "`print` shows a value to a person. `return` hands it to the code that asked."
+  nothing: "`None` is Python's empty cell. The question is written `is None`, as SQL wrote `IS NULL`."
+  empty-case: "Ask what happens when the list is empty, before someone else does."
+  check-with-assert: "`assert average([2, 4]) == 3` is a check you write yourself. Silence means it held."
+  comment: "A line that starts with `#` is a note for people, and Python skips it."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["from-table", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary", "name-a-result", "keep-before-piles"]
+    ordered: true
+    any_column_order: true
+    text: "Counting only the couriers on bikes, how many are there in each city? Call the count n, and show the biggest first."
+    model: "SELECT city, COUNT(*) AS n FROM couriers WHERE vehicle = 'bike' GROUP BY city ORDER BY n DESC"
+    rows: 4
+    result: [["São Paulo", 33], ["Rio de Janeiro", 18], ["Curitiba", 13], ["Belo Horizonte", 9]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-1 and SQL-2 together: keep, pile, name the count, sort by the name. Never scored. Naming a result, and a query that takes a table in and gives a table out, is the idea a function will give a Python shape to."
+
+  # 2
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "text-in-list", "dict", "get-by-name", "set-by-name", "one-entry-per-pile", "update-the-pile", "get-with-default"]
+    text: "Let's start with where we stopped. Five couriers ride bike, carro, bike, moto and bike. Count the couriers for each vehicle, the short way, and show the dict."
+    model: |-
+      vehicles = ['bike', 'carro', 'bike', 'moto', 'bike']
+      counts = {}
+      for vehicle in vehicles:
+          counts[vehicle] = counts.get(vehicle, 0) + 1
+      print(counts)
+    output: "{'bike': 3, 'carro': 1, 'moto': 1}"
+    narration:
+      - "{'bike': 3, 'carro': 1, 'moto': 1}. Each vehicle found its pile, and get gave a missing pile a zero."
+      - "GROUP BY with a COUNT, by hand, in one line inside the loop."
+      - ""
+    wrong:
+      - code: |-
+          vehicles = ['bike', 'carro', 'bike', 'moto', 'bike']
+          counts = {}
+          for vehicle in vehicles:
+              counts[vehicle] = counts.get(vehicle) + 1
+          print(counts)
+        ask: "Python stopped. What does get hand back for a pile that is not there, when you give it nothing else?"
+      - code: |-
+          vehicles = ['bike', 'carro', 'bike', 'moto', 'bike']
+          counts = {}
+          for vehicle in vehicles:
+              counts[vehicle] = counts.get(vehicle, 0) + 1
+              print(counts)
+        ask: "The dict is shown at every turn. When are the piles ready?"
+    walk:
+      - "Make the list and an empty dict."
+      - "For each vehicle, put under its name: what is there, or 0, and one more."
+      - "Show the dict, after the loop."
+    return:
+      text: "Count the orders for each status, the short way: delivered, delivered and cancelled. Show the dict."
+      model: |-
+        statuses = ['delivered', 'delivered', 'cancelled']
+        counts = {}
+        for status in statuses:
+            counts[status] = counts.get(status, 0) + 1
+        print(counts)
+      output: "{'delivered': 2, 'cancelled': 1}"
+      narration:
+        - "{'delivered': 2, 'cancelled': 1}. Each status found its pile and raised it."
+        - "What is there, or zero, plus one: for each item."
+      note: "Return for step 2."
+    note: "A warm start from PY-4: the piles by hand. In step 21 the learner will wrap exactly this loop in a function, so the loop is fresh in the hand when it is wanted."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["def"]
+    text: |-
+      You have written the same few lines more than once. A function gives a name to some steps, so that you can use the steps again by saying the name. The word is def, then the name, brackets, a colon, and the steps pushed in underneath, as with for and if. Defining it does not run it. The last line below uses the name, and that is what runs the steps:
+
+      ```python
+      def show_total():
+          fees = [8.99, 6.99, 0]
+          print(sum(fees))
+
+      show_total()
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def show_total():
+            fees = [8.99, 6.99, 0]
+            print(sum(fees))
+
+        show_total()
+    after_run: "15.98. The def made a name for the two steps and did nothing else. It was the last line that ran them. Take that line away and nothing is shown, because the steps are waiting. You have used functions since the first lesson: len, sum and print are functions somebody else wrote. Now you can write your own."
+    note: "The colon and the push are used a third time without being re-taught. The call at the bottom is used before it is named: its thought, call-it, is taken after return, where the idea that a function is a query can be said once the learner has seen something come out."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "def"]
+    text: "Write a function called show_average that shows the average of the delivery times 35.2, 24.8 and 31.7 minutes, and then use it."
+    model: |-
+      def show_average():
+          minutes = [35.2, 24.8, 31.7]
+          print(sum(minutes) / len(minutes))
+
+      show_average()
+    output: "30.566666666666666"
+    narration:
+      - "About 30.57. The steps were given a name, and the last line used the name to run them."
+      - "Def, the name, brackets and a colon, then the steps pushed in. Then the name again, to run them."
+      - ""
+    wrong:
+      - code: |-
+          def show_average():
+              minutes = [35.2, 24.8, 31.7]
+              print(sum(minutes) / len(minutes))
+        ask: "Nothing was shown. The steps have a name, but what makes them run?"
+      - code: |-
+          def show_average:
+              minutes = [35.2, 24.8, 31.7]
+              print(sum(minutes) / len(minutes))
+
+          show_average()
+        ask: "Python stopped at the first line. What follows the name in the def line, before the colon?"
+      - code: |-
+          def show_average():
+          minutes = [35.2, 24.8, 31.7]
+          print(sum(minutes) / len(minutes))
+
+          show_average()
+        ask: "Which lines are inside the function? What shows that?"
+    walk:
+      - "Write the def line: def, the name, empty brackets and a colon."
+      - "Pushed in, make the list of times and show their average."
+      - "Back at the left edge, use the function by its name, with brackets."
+    return:
+      text: "Write a function called show_count that shows how many statuses there are: delivered, cancelled, delivered and delivered. Then use it."
+      model: |-
+        def show_count():
+            statuses = ['delivered', 'cancelled', 'delivered', 'delivered']
+            print(len(statuses))
+
+        show_count()
+      output: "4"
+      narration:
+        - "4. The steps were given a name, and the name was used to run them."
+        - "A def, with the steps pushed in, and a line at the left that runs it."
+      note: "Return for step 4."
+    note: "The first function the learner writes: no inputs, so the only new thing is the def and the call. Every line inside is from PY-1."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["what-goes-in"]
+    text: |-
+      A function that always works on the same list is not much use. What goes in can be a name in the brackets of the def line. When you use the function, whatever you put in its brackets takes that name for the moment, as the item of a loop does:
+
+      ```python
+      def show_average(values):
+          print(sum(values) / len(values))
+
+      show_average([2, 4])
+      show_average([10, 20, 60])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def show_average(values):
+            print(sum(values) / len(values))
+
+        show_average([2, 4])
+        show_average([10, 20, 60])
+    after_run: "3.0 and 30.0. One function, used twice, on two lists. The first time, values meant [2, 4]. The second time it meant [10, 20, 60]. The name in the brackets is yours to choose, and it only exists inside the function."
+    note: "The loop's item is the model: a name that stands for whatever it is given at each turn. The name exists only inside the function is said and not tested, because a lucky guess could teach a false generalisation."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "def", "what-goes-in"]
+    text: "Write a function called show_total that takes values, and shows their total. Then use it on the delivery fees 8.99, 6.99, 0 and 4.99."
+    model: |-
+      def show_total(values):
+          print(sum(values))
+
+      show_total([8.99, 6.99, 0, 4.99])
+    output: "20.97"
+    narration:
+      - "20.97. The list went in through the brackets and took the name values inside the function."
+      - "Something in, and a total shown. One name in the def line, and the list itself in the brackets when it was used."
+      - ""
+    wrong:
+      - code: |-
+          def show_total():
+              print(sum(values))
+
+          show_total([8.99, 6.99, 0, 4.99])
+        ask: "Python stopped: the function does not know what to do with a list. Which names are what goes in?"
+      - code: |-
+          def show_total(values):
+              print(sum(values))
+
+          show_total()
+        ask: "The function waits for a list, and none arrived. What goes in the brackets when you use it?"
+      - code: |-
+          def show_total(values):
+              print(sum(values))
+        ask: "Nothing was shown. What makes the steps run?"
+    walk:
+      - "Write the def line, with a name for what goes in, inside its brackets."
+      - "Pushed in, show the total of that name."
+      - "Use the function, with the list of fees inside its brackets."
+    return:
+      text: "Write a function called show_count that takes statuses, and shows how many there are. Then use it on delivered and cancelled."
+      model: |-
+        def show_count(statuses):
+            print(len(statuses))
+
+        show_count(['delivered', 'cancelled'])
+      output: "2"
+      narration:
+        - "2. The list went in through the brackets, and len counted it inside."
+        - "A name for what goes in, and the list itself when it was used."
+      note: "Return for step 6."
+    note: "The learner now writes a function with a parameter, one step after seeing it. The wrong answers are the missing input, the missing argument and the missing call."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["what-comes-out"]
+    text: |-
+      A function that only shows is of no use to other code. What comes out can be handed back, with return. Here the function is used on the right of an equals sign, and what it hands back is given a name:
+
+      ```python
+      def average(values):
+          return sum(values) / len(values)
+
+      result = average([2, 4, 9])
+      print(result)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def average(values):
+            return sum(values) / len(values)
+
+        result = average([2, 4, 9])
+        print(result)
+    after_run: "5.0. The function showed nothing itself. It handed its answer back, and the answer was given the name result, and the last line showed it. A function that returns can be used anywhere a value can: after an equals sign, inside print, in a question."
+    note: "Return before print inside a function is used for contrast, so the difference between showing and handing back is met in the classmate step, where it is the real reason."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "def", "what-goes-in", "what-comes-out"]
+    text: "Write a function called average that takes values, and hands back their average. Then show the average of the delivery fees 8.99, 6.99, 6.99 and 4.99."
+    check: "print(average([2, 4, 9]) + 1)"
+    model: |-
+      def average(values):
+          return sum(values) / len(values)
+
+      print(average([8.99, 6.99, 6.99, 4.99]))
+    output: |-
+      6.99
+      6.0
+    narration:
+      - "6.99. The function handed its answer back, and print showed it from outside."
+      - "Something in, a number out. The average, built from sum and len, now has a name of its own."
+      - "6.99. You did the average by hand in the first lesson. Now it is a function."
+    wrong:
+      - code: |-
+          def average(values):
+              print(sum(values) / len(values))
+
+          average([8.99, 6.99, 6.99, 4.99])
+        ask: "That shows the number from inside the function. It hands nothing back, so nothing outside can use it. Which word hands a result back?"
+      - code: |-
+          def average(values):
+              return sum(values) / len(values)
+        ask: "Nothing was shown for the four fees. What uses the function on them?"
+      - code: |-
+          def average(values):
+              return sum(values)
+
+          print(average([8.99, 6.99, 6.99, 4.99]))
+        ask: "That hands back the total. What do you divide it by?"
+    walk:
+      - "Write the def line, with a name for the list that goes in."
+      - "Pushed in, hand back the total divided by how many: return, then the sum over the len."
+      - "Use the function on the four fees, inside print."
+    return:
+      text: "Write a function called total_of that takes values, and hands back their total. Then show the total of the delivery times 35.2, 24.8 and 31.7."
+      check: "print(total_of([1, 2]) + 1)"
+      model: |-
+        def total_of(values):
+            return sum(values)
+
+        print(total_of([35.2, 24.8, 31.7]))
+      output: |-
+        91.7
+        4
+      narration:
+        - "91.7. The function handed the total back, and print showed it."
+        - "Something in, something out: the list in, the total out."
+      note: "Return for step 8."
+    note: "The hidden check adds one to what the function hands back. A function that only prints hands back nothing, and the check stops with an error. This is how a step can tell showing from handing back, which the checker could not see otherwise."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["call-it"]
+    text: |-
+      A call is replaced by its answer wherever it stands. So average(fees) can sit inside print, or inside a question, or after an equals sign:
+
+      ```python
+      def average(values):
+          return sum(values) / len(values)
+
+      fees = [8.99, 6.99, 0]
+      subtotals = [81.1, 18.85, 84.23]
+      print(average(fees))
+      print(average(subtotals) > 50)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def average(values):
+            return sum(values) / len(values)
+
+        fees = [8.99, 6.99, 0]
+        subtotals = [81.1, 18.85, 84.23]
+        print(average(fees))
+        print(average(subtotals) > 50)
+    after_run: "5.326666666666667 and True. The second line asked a question about the average, and the call was replaced by its answer, 61.39, before the sign was applied. A function is a query: something goes in, something comes out. You have used functions that way since len and sum. This one is yours."
+    note: "The strand's idea made explicit: a function is a query, which is the SQL idea of a table going in and a table coming out, with a value in each place."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "commas", "running-result", "def", "what-goes-in", "what-comes-out", "call-it"]
+    text: "Write a function called count_above that takes values and a limit, with a comma between the two names, and hands back how many of the values are above the limit. Then show how many of the subtotals 81.1, 18.85, 84.23, 91.11 and 31.3 are above 50."
+    check: "print(count_above([4, 9, 12, 20], 5) + 1)"
+    model: |-
+      def count_above(values, limit):
+          count = 0
+          for value in values:
+              if value > limit:
+                  count = count + 1
+          return count
+
+      print(count_above([81.1, 18.85, 84.23, 91.11, 31.3], 50))
+    output: |-
+      3
+      4
+    narration:
+      - "3. The count started inside the function, ran through the values, and was handed back at the end."
+      - "Two things went in, a list and a limit, and one number came out. The function is the loop from the first lesson, with a name."
+      - "3. Something in, something out, and the loop is hidden inside it."
+    wrong:
+      - code: |-
+          def count_above(values, limit):
+              count = 0
+              for value in values:
+                  if value > limit:
+                      count = count + 1
+              print(count)
+
+          count_above([81.1, 18.85, 84.23, 91.11, 31.3], 50)
+        ask: "That shows the count from inside, and hands nothing back. Which word hands a result back?"
+      - code: |-
+          def count_above(values, limit):
+              count = 0
+              for value in values:
+                  if value > limit:
+                      count = count + 1
+                  return count
+
+          print(count_above([81.1, 18.85, 84.23, 91.11, 31.3], 50))
+        ask: "The function handed back its answer after the very first value, and stopped. Where should the return sit, so that the loop finishes first?"
+        why: "return ends the function on the spot. Out at the left of the loop, it runs once the loop is done."
+      - code: |-
+          def count_above(values, limit):
+              count = 0
+              for value in values:
+                  if value > 50:
+                      count = count + 1
+              return count
+
+          print(count_above([81.1, 18.85, 84.23, 91.11, 31.3], 50))
+        ask: "That works for the subtotals and for 50, and for nothing else. What name holds the limit that went in?"
+    walk:
+      - "Write the def line, with two names after it, separated by a comma: the list and the limit."
+      - "Inside, the running count from the first lesson: start at zero, go through the values, add one on each yes."
+      - "Hand the count back after the loop, and use the function inside print."
+    return:
+      text: "Write a function called count_below that takes values and a limit, and hands back how many of the values are below the limit. Then show how many of the delivery times 35.2, 24.8, 31.7 and 28.2 are below 30."
+      check: "print(count_below([4, 9, 12, 20], 10) + 1)"
+      model: |-
+        def count_below(values, limit):
+            count = 0
+            for value in values:
+                if value < limit:
+                    count = count + 1
+            return count
+
+        print(count_below([35.2, 24.8, 31.7, 28.2], 30))
+      output: |-
+        2
+        3
+      narration:
+        - "2. Two things in, a list and a limit, and one number out."
+        - "The loop and the running count from the first lesson, with a name and a return."
+      note: "Return for step 10."
+    note: "The first function with two inputs and a loop, and a climb: the loop of PY-1 wrapped. The second wrong answer is the classic one, the return pushed in too far, and the real reason for it is that return ends the function."
+
+  # 11
+  - kind: "classmate"
+    lang: "python"
+    new: ["show-or-return"]
+    requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "list", "def", "what-goes-in", "what-comes-out", "call-it", "show-or-return"]
+    text: |-
+      Ana wrote a function that was meant to hand back an average, and then added one to what it gave. She wrote:
+
+      ```python
+      def average(values):
+          print(sum(values) / len(values))
+
+      fees = [8.99, 6.99, 0]
+      print(average(fees) + 1)
+      ```
+
+      It showed 5.326666666666667, and then Python stopped: TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'. Ana, what did average hand back to the line that used it? ... Nothing. It showed the number on the screen, which is for a person, but it did not hand it back, which is for the code that asked. print shows. return hands back. Type the function as Ana should have written it, and then the line that adds one and shows it.
+    model: |-
+      def average(values):
+          return sum(values) / len(values)
+
+      fees = [8.99, 6.99, 0]
+      print(average(fees) + 1)
+    output: "6.326666666666667"
+    broken: |-
+      def average(values):
+          print(sum(values) / len(values))
+
+      fees = [8.99, 6.99, 0]
+      print(average(fees) + 1)
+    narration:
+      - "6.326666666666667. The function handed the average back, and the line that used it could add one."
+      - "Print puts a value in front of a person, once. Return gives it to the code that asked, which can do more with it."
+      - "The average, handed back, and one added to it. That is what a function is for."
+    wrong:
+      - code: |-
+          def average(values):
+              print(sum(values) / len(values))
+
+          fees = [8.99, 6.99, 0]
+          print(average(fees) + 1)
+        ask: "That is Ana's again. What is the line that uses average given back?"
+      - code: |-
+          def average(values):
+              print(sum(values) / len(values))
+              return sum(values) / len(values)
+
+          fees = [8.99, 6.99, 0]
+          print(average(fees) + 1)
+        ask: "Two numbers came out. Which of those lines is for a person, and which is for the code that asked? Which one do we need?"
+      - code: |-
+          def average(values):
+              return sum(values) / len(values)
+
+          fees = [8.99, 6.99, 0]
+          print(average(fees))
+        ask: "That hands the average back and shows it, but the one has not been added. What did Ana's last line do with the answer?"
+    walk:
+      - "Ana's function is nearly right. Look at the line inside it."
+      - "Replace the line that shows with the word that hands back."
+      - "Then use the function on the fees: add one to the answer, and show it."
+    return:
+      text: "Write a function called total_of that takes values, and hands back their total. Then show the total of 8.99, 6.99 and 0, plus one."
+      model: |-
+        def total_of(values):
+            return sum(values)
+
+        print(total_of([8.99, 6.99, 0]) + 1)
+      output: "16.98"
+      narration:
+        - "16.98. The function handed the total back, and the line that used it added one."
+        - "Something in, something out, and the answer used by the code that asked."
+      note: "Return for the Ana step."
+    note: "Ana makes the classic slip before the learner can (rule E6), and Python's own message is the real reason. print and return are contrasted here, after the learner has seen both used on their own. The word NoneType in the message prepares the next thought, and the narration does not name it."
+
+  # 12
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. The word function comes from mathematics. In school you may have met f of x equals two x: put a number in, and a number comes out, always the same one for the same input. Mathematicians were saying it long before there were computers. Programmers borrowed the word, and the idea. That is why the picture of something going in and something coming out fits so well, in SQL, in a function, and in a great deal that comes after."
+    note: "Relief after the climb of steps 10 and 11 (rule C8). A real origin of the word, and an import from mathematics (rule B7). It restates something in and something out, which is the strand's idea."
+
+  # 13
+  - kind: "give"
+    lang: "python"
+    new: ["nothing"]
+    text: |-
+      A moment ago Python said NoneType. None is its word for nothing: the empty cell. A name that is not in a dict gives None when you ask get without a second thing. And it is what a function hands back if you never say return. To ask whether a value is empty, the question is written is None, the way SQL wrote IS NULL:
+
+      ```python
+      prices = {'pizza': 40, 'sushi': 60}
+      price = prices.get('acai')
+      print(price)
+      print(price is None)
+      print(prices.get('pizza') is None)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        prices = {'pizza': 40, 'sushi': 60}
+        price = prices.get('acai')
+        print(price)
+        print(price is None)
+        print(prices.get('pizza') is None)
+    after_run: "None, then True, then False. There is no acai in the dict, so get handed back nothing, and the question said yes. Pizza is there, so the question said no. Python has exactly one None, so the question is whether the value is that one, and the word for that is is. In SQL, nothing equals NULL, so IS NULL was a different word. Here it is the same idea."
+    note: "Names the NULL of SQL-3 as the same idea in Python, which the learner owns. The reason for is is the true one: there is only one None. The grade is core: PY-6 and PY-9 need is None and is not None."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "dict", "get-with-default", "nothing"]
+    text: "The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Show True or False: is there no discount for VOLTA15 in it?"
+    model: |-
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      print(discounts.get('VOLTA15') is None)
+    output: "True"
+    narration:
+      - "True. VOLTA15 is not there, so get handed back nothing, and the question said yes."
+      - "Get with no second thing, and is None: the empty cell, asked about."
+      - ""
+    wrong:
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(discounts['VOLTA15'] is None)
+        ask: "Python stopped: it will not guess for a name that is not there. Which way of asking hands back nothing instead of stopping?"
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(discounts.get('VOLTA15', 0) is None)
+        ask: "Get was given a 0 to hand back. Is a 0 the same as nothing?"
+        why: "a 0 is a number, and nothing is nothing. Only a get with no second thing hands back None."
+      - code: |-
+          discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+          print(discounts.get('VOLTA15'))
+        ask: "That shows what get handed back. What did I ask: what is it, or whether it is nothing?"
+    walk:
+      - "Make the dict with its two coupons."
+      - "Ask the dict for VOLTA15 with get, and give it nothing to hand back instead."
+      - "Ask whether that is None, and show the answer."
+    return:
+      text: "The dict prices holds pizza at 40 and sushi at 60. Show True or False: is there no price for pizza in it?"
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60}
+        print(prices.get('pizza') is None)
+      output: "False"
+      narration:
+        - "False. Pizza is there, so get handed back its price and not nothing."
+        - "Get with no second thing, and is None: this time the answer was no."
+      note: "Return for step 14."
+    note: "The wrong answer with 0 is the confusion between zero and nothing, which is the confusion SQL-3 dealt with for NULL. The step is written as a question, not as a recipe, so the learner has to put get and is None together."
+
+  # 15
+  - kind: "give"
+    lang: "python"
+    new: ["empty-case"]
+    text: |-
+      What does average do when the list is empty? Without a check, the total is 0 and the length is 0, and dividing by zero stops the program. Someone will hand you an empty list sooner or later, so ask before they do. A function has an answer for nothing in, and the answer is None. Return ends the function on the spot, so the line after it does not run:
+
+      ```python
+      def average(values):
+          if len(values) == 0:
+              return None
+          return sum(values) / len(values)
+
+      print(average([2, 4]))
+      print(average([]))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def average(values):
+            if len(values) == 0:
+                return None
+            return sum(values) / len(values)
+
+        print(average([2, 4]))
+        print(average([]))
+    after_run: "3.0 and None. For the empty list, the if said yes, and return handed back None, and the division was never reached. SQL answers the same way: the AVG of no rows is NULL, not an error. That is a good answer, and it is the same one."
+    note: "The empty case, as a habit, arrives with its reason: dividing by zero stops the program. It is the first of the three checks that PY-10 names (the ordinary case, the empty case and the awkward case)."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "list", "sorted", "position", "last", "def", "what-goes-in", "what-comes-out", "call-it", "show-or-return", "nothing", "empty-case"]
+    text: "Write a function called biggest that takes values and hands back the biggest one, or None if the list is empty. Sort the list to find it. Then show the biggest of the delivery times 35.2, 24.8 and 43.7, and the biggest of an empty list, one line each."
+    check: "print(biggest([3, 9, 4]) + 1)"
+    model: |-
+      def biggest(values):
+          if len(values) == 0:
+              return None
+          return sorted(values)[-1]
+
+      print(biggest([35.2, 24.8, 43.7]))
+      print(biggest([]))
+    output: |-
+      43.7
+      None
+      10
+    narration:
+      - "43.7 and None. The ordinary case worked, and the empty case had an answer of its own."
+      - "Ask first whether the list is empty, hand back None if so, and otherwise sort and take the last. The same shape as average."
+      - ""
+    wrong:
+      - code: |-
+          def biggest(values):
+              return sorted(values)[-1]
+
+          print(biggest([35.2, 24.8, 43.7]))
+          print(biggest([]))
+        ask: "Python stopped on the empty list: there is no last item of nothing. What do you ask first?"
+      - code: |-
+          def biggest(values):
+              if len(values) == 0:
+                  return None
+              return sorted(values)[0]
+
+          print(biggest([35.2, 24.8, 43.7]))
+          print(biggest([]))
+        ask: "That is the smallest. Which end of a sorted list holds the biggest?"
+      - code: |-
+          def biggest(values):
+              if len(values) == 0:
+                  print(None)
+              print(sorted(values)[-1])
+
+          biggest([35.2, 24.8, 43.7])
+          biggest([])
+        ask: "Those only show things. What should the function hand back, so that other code can use it?"
+    walk:
+      - "Write the def line, with a name for what goes in."
+      - "Ask whether the list is empty, with len and two equals signs, and on a yes hand back None."
+      - "Otherwise sort the list, and hand back its last item. Then use the function twice, once on the times and once on an empty list."
+    return:
+      text: "Write a function called first_or_none that takes values and hands back the first one, or None if the list is empty. Then show the first of the fees 8.99, 6.99 and 0, and the first of an empty list, one line each."
+      check: "print(first_or_none([4, 9]) + 1)"
+      model: |-
+        def first_or_none(values):
+            if len(values) == 0:
+                return None
+            return values[0]
+
+        print(first_or_none([8.99, 6.99, 0]))
+        print(first_or_none([]))
+      output: |-
+        8.99
+        None
+        5
+      narration:
+        - "8.99 and None. The ordinary case worked, and the empty one had its own answer."
+        - "Ask first whether the list is empty, then hand back a position."
+      note: "Return for step 16."
+    note: "The empty case in a new function that the learner writes from nothing. It weaves sorted, position and last from PY-2, and the check requires the function to hand back, not only show."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "show", "text-quotes", "commas", "dict", "get-with-default", "if-question", "otherwise", "block", "def", "what-goes-in", "what-comes-out", "call-it", "nothing"]
+    text: "The dict prices holds pizza at 40 and sushi at 60. Write a function called price_of that takes prices and a dish, and hands back that dish's price, or None if the dish is not in the dict. Then, for the dish acai, show the words not on the list if its price is None, and show the price if it is not."
+    check: "print(price_of({'a': 1}, 'a') + 1)"
+    model: |-
+      def price_of(prices, dish):
+          return prices.get(dish)
+
+      prices = {'pizza': 40, 'sushi': 60}
+      price = price_of(prices, 'acai')
+      if price is None:
+          print('not on the list')
+      else:
+          print(price)
+    output: |-
+      not on the list
+      2
+    narration:
+      - "not on the list. The function handed back None for a name that was not there, and the code that used it asked is None and chose what to do."
+      - "Two jobs, in two places: the function finds the price, and the code outside decides what an empty one means."
+      - "Not on the list. A function handing back nothing, and the if that asked about it."
+    wrong:
+      - code: |-
+          def price_of(prices, dish):
+              return prices[dish]
+
+          prices = {'pizza': 40, 'sushi': 60}
+          price = price_of(prices, 'acai')
+          if price is None:
+              print('not on the list')
+          else:
+              print(price)
+        ask: "Python stopped: asked by name, a missing name is an error. Which way of asking hands back nothing instead?"
+      - code: |-
+          def price_of(prices, dish):
+              return prices.get(dish, 0)
+
+          prices = {'pizza': 40, 'sushi': 60}
+          price = price_of(prices, 'acai')
+          if price is None:
+              print('not on the list')
+          else:
+              print(price)
+        ask: "Zero came out, not the words. Is a 0 the same as nothing?"
+      - code: |-
+          def price_of(prices, dish):
+              return prices.get(dish)
+
+          prices = {'pizza': 40, 'sushi': 60}
+          price = price_of(prices, 'acai')
+          print(price)
+        ask: "None was shown. What did I ask to be shown when the price is None?"
+    walk:
+      - "Write the def line with two names, and hand back the dict asked for the dish, with get and nothing else in its brackets."
+      - "Make the dict, and use the function for acai. Give the answer a name."
+      - "Ask whether the answer is None. On a yes, show the words. Otherwise, show the price."
+    return:
+      text: "Same dict. This time ask for sushi: write price_of again, and then show the words not on the list if its price is None, and show the price if it is not."
+      check: "print(price_of({'a': 1}, 'a') + 1)"
+      model: |-
+        def price_of(prices, dish):
+            return prices.get(dish)
+
+        prices = {'pizza': 40, 'sushi': 60}
+        price = price_of(prices, 'sushi')
+        if price is None:
+            print('not on the list')
+        else:
+            print(price)
+      output: |-
+        60
+        2
+      narration:
+        - "60. The function handed back the price, and the question about None said no."
+        - "A function that hands back nothing when there is nothing, and code that asks."
+      note: "Return for step 17."
+    note: "None from get, handed back by a function, and asked about outside it: three thoughts that arrived separately come together. The dict is passed in, not read from outside, so that the function stays a query: everything it needs goes in."
+
+  # 18
+  - kind: "give"
+    lang: "python"
+    new: ["check-with-assert"]
+    text: |-
+      A function can be off, and you may not notice. So you can write a check of your own, with assert. It says: this should be true. If it is, Python says nothing at all and carries on. If it is not, the program stops, with the word AssertionError:
+
+      ```python
+      def average(values):
+          if len(values) == 0:
+              return None
+          return sum(values) / len(values)
+
+      assert average([2, 4]) == 3
+      print('still here')
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def average(values):
+            if len(values) == 0:
+                return None
+            return sum(values) / len(values)
+
+        assert average([2, 4]) == 3
+        print('still here')
+    after_run: "still here. The assert said nothing, because the check held: the average of 2 and 4 is 3. Silence means it held. If you had written 4, Python would have stopped before the print. You decide what the answer should be before you run the function, and the assert tells you whether the function agrees. This is the habit of writing a check of your own."
+    note: "The testing habit starts here (pass-bar task 12). The two equals signs are the learner's own from PY-1. A failing assert cannot be shown as the step's sentence, because a shown sentence must run, so it is described."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-in-list", "text-quotes", "equals-asks", "running-result", "empty-case", "def", "what-goes-in", "what-comes-out", "call-it", "check-with-assert"]
+    text: "Write a function called count_delivered that takes statuses, and hands back how many of them are delivered. Then write two checks of your own: that for delivered, cancelled and delivered the answer is 2, and that for an empty list it is 0. Finally show the count for delivered, delivered and cancelled."
+    check: "print(count_delivered(['delivered']) + 1)"
+    model: |-
+      def count_delivered(statuses):
+          count = 0
+          for status in statuses:
+              if status == 'delivered':
+                  count = count + 1
+          return count
+
+      assert count_delivered(['delivered', 'cancelled', 'delivered']) == 2
+      assert count_delivered([]) == 0
+      print(count_delivered(['delivered', 'delivered', 'cancelled']))
+    output: |-
+      2
+      2
+    narration:
+      - "2, and no sound from the checks, which means they held. The function handed back the count, and your two asserts agreed with it."
+      - "Two checks written by you, one ordinary and one empty. Silence means they held."
+      - ""
+    wrong:
+      - code: |-
+          def count_delivered(statuses):
+              count = 0
+              for status in statuses:
+                  if status == 'delivered':
+                      count = count + 1
+              return count
+
+          assert count_delivered(['delivered', 'cancelled', 'delivered']) == 3
+          assert count_delivered([]) == 0
+          print(count_delivered(['delivered', 'delivered', 'cancelled']))
+        ask: "Your own check stopped the program: Python says it did not hold. How many are delivered in delivered, cancelled and delivered?"
+      - code: |-
+          def count_delivered(statuses):
+              count = 0
+              for status in statuses:
+                  if status == 'delivered':
+                      count = count + 1
+              print(count)
+
+          assert count_delivered(['delivered', 'cancelled', 'delivered']) == 2
+          assert count_delivered([]) == 0
+          print(count_delivered(['delivered', 'delivered', 'cancelled']))
+        ask: "The function shows its count but hands nothing back, so the check has nothing to compare. Which word hands a result back?"
+      - code: |-
+          def count_delivered(statuses):
+              count = 0
+              for status in statuses:
+                  if status = 'delivered':
+                      count = count + 1
+              return count
+
+          print(count_delivered(['delivered', 'delivered', 'cancelled']))
+        ask: "Python stopped at the question. What do two equals signs do that one does not?"
+    walk:
+      - "Write the function: start a count, go through the statuses, add one for each delivered, and hand the count back."
+      - "Write the first check: assert, the call, two equals signs and the number you expect."
+      - "Write the second check the same way, for the empty list. Then show the count for the last list."
+    return:
+      text: "Write a function called count_cancelled that takes statuses, and hands back how many of them are cancelled. Write two checks of your own: that for cancelled, delivered and cancelled the answer is 2, and that for an empty list it is 0. Finally show the count for cancelled, delivered and delivered."
+      check: "print(count_cancelled(['cancelled']) + 1)"
+      model: |-
+        def count_cancelled(statuses):
+            count = 0
+            for status in statuses:
+                if status == 'cancelled':
+                    count = count + 1
+            return count
+
+        assert count_cancelled(['cancelled', 'delivered', 'cancelled']) == 2
+        assert count_cancelled([]) == 0
+        print(count_cancelled(['cancelled', 'delivered', 'delivered']))
+      output: |-
+        1
+        2
+      narration:
+        - "1, with the checks silent. The function was checked on two lists before it was trusted."
+        - "A function, and two checks of your own: one ordinary and one empty."
+      note: "Return for step 19."
+    note: "The first free attempt at assert. The checker cannot tell whether the asserts were written, only that they do not fail: a learner who leaves them out passes. The note is for the writer, not for the learner. A wrong answer with a false check stops the program, which is how a learner sees an AssertionError for themselves."
+
+  # 20
+  - kind: "give"
+    lang: "python"
+    new: ["comment"]
+    text: |-
+      One more small thing. A line that starts with a hash sign is a note for people, and Python skips it. It is how you say what a function is for, for the next person who reads it, who may well be you:
+
+      ```python
+      # the average of a list, or None when it is empty
+      def average(values):
+          if len(values) == 0:
+              return None
+          return sum(values) / len(values)
+
+      print(average([2, 4]))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        # the average of a list, or None when it is empty
+        def average(values):
+            if len(values) == 0:
+                return None
+            return sum(values) / len(values)
+
+        print(average([2, 4]))
+    after_run: "3.0. The note changed nothing, because Python did not read it. Say what the function is for, in a few words, and not what each line does: the lines can be read already. This is a note for people, and it is where a good habit of naming things, and of checking them, shows."
+    note: "A comment cannot be judged by what the program prints, so it is given here and asked for in the prompts of the steps after it. It is also what PY-10's closing sentence asks for, with the cost of a function in words."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-in-list", "dict", "get-with-default", "one-entry-per-pile", "update-the-pile", "def", "what-goes-in", "what-comes-out", "call-it", "comment"]
+    text: "Write a function called count_items that takes items, and hands back a dict with how many times each item appears, the short way. Put a note above it saying what it is for. Then show the count for bike, moto and bike."
+    check: "print(count_items(['a', 'a'])['a'] + 1)"
+    model: |-
+      # how many times each item appears
+      def count_items(items):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          return counts
+
+      print(count_items(['bike', 'moto', 'bike']))
+    output: |-
+      {'bike': 2, 'moto': 1}
+      3
+    narration:
+      - "{'bike': 2, 'moto': 1}. The piles from the last lesson, wrapped in a function and handed back."
+      - "That was GROUP BY with a COUNT, by hand, and now it has a name: something goes in, and a dict of counts comes out."
+      - "A list in, a dict out. The loop is hidden inside the function."
+    wrong:
+      - code: |-
+          # how many times each item appears
+          def count_items(items):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+              print(counts)
+
+          print(count_items(['bike', 'moto', 'bike']))
+        ask: "The dict is shown from inside, and then None is shown from outside. Which word hands the dict back?"
+      - code: |-
+          # how many times each item appears
+          def count_items(items):
+              for item in items:
+                  counts = {}
+                  counts[item] = counts.get(item, 0) + 1
+              return counts
+
+          print(count_items(['bike', 'moto', 'bike']))
+        ask: "Only the last item's pile survived. Where does the empty dict belong, so that it is made once?"
+      - code: |-
+          # how many times each item appears
+          def count_items(items):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+                  return counts
+
+          print(count_items(['bike', 'moto', 'bike']))
+        ask: "The function handed its dict back after the first item. Where should the return sit?"
+    walk:
+      - "Write the note, then the def line with a name for what goes in."
+      - "Inside: an empty dict, a loop through the items, and the short way of raising each item's pile."
+      - "After the loop, hand the dict back. Then use the function, inside print."
+    return:
+      text: "Same function, on other items. Write count_items again, with its note, and show the count for delivered, cancelled, delivered and delivered."
+      check: "print(count_items(['a', 'a'])['a'] + 1)"
+      model: |-
+        # how many times each item appears
+        def count_items(items):
+            counts = {}
+            for item in items:
+                counts[item] = counts.get(item, 0) + 1
+            return counts
+
+        print(count_items(['delivered', 'cancelled', 'delivered', 'delivered']))
+      output: |-
+        {'delivered': 3, 'cancelled': 1}
+        3
+      narration:
+        - "{'delivered': 3, 'cancelled': 1}. The same function, used on other items."
+        - "A list in, a dict of counts out."
+      note: "Return for step 21."
+    note: "Weaves the piles of PY-4 with the function of this lesson, and requires the note. The empty dict before the loop is the classic place for a slip, as the empty list was in PY-2."
+
+  # 22
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "if-question", "equals-asks", "text-quotes", "def", "what-goes-in", "what-comes-out", "call-it", "show-or-return", "nothing", "empty-case", "check-with-assert", "comment"]
+    friction: true
+    text: "The last one, and I won't break it down. Write the function average: it takes values and hands back their average, or None when the list is empty. Put a note above it saying what it is for, and write two checks of your own: that the average of 2 and 4 is 3, and that the average of an empty list is None. Then show the average of the delivery fees 8.99, 6.99, 0 and 4.99."
+    check: "print(average([4, 6]) + 1, average([]))"
+    model: |-
+      # the average of a list, or None when it is empty
+      def average(values):
+          if len(values) == 0:
+              return None
+          return sum(values) / len(values)
+
+      assert average([2, 4]) == 3
+      assert average([]) is None
+      print(average([8.99, 6.99, 0, 4.99]))
+    output: |-
+      5.2425
+      6.0 None
+    narration:
+      - "5.2425, and silence from the checks. A function with an answer for nothing in, checked twice by you, and noted for the next reader."
+      - "You built it by thinking: something in, something out, an answer for the empty case, and two checks that held. That is how a function is finished."
+      - "5.2425. The first average you ever built by hand, written as a function you can trust."
+    wrong:
+      - code: |-
+          # the average of a list, or None when it is empty
+          def average(values):
+              return sum(values) / len(values)
+
+          assert average([2, 4]) == 3
+          assert average([]) is None
+          print(average([8.99, 6.99, 0, 4.99]))
+        ask: "Python stopped on your own second check. What does the function do with an empty list?"
+      - code: |-
+          # the average of a list, or None when it is empty
+          def average(values):
+              if len(values) == 0:
+                  return None
+              return sum(values) / len(values)
+
+          assert average([2, 4]) == 4
+          assert average([]) is None
+          print(average([8.99, 6.99, 0, 4.99]))
+        ask: "Your own check stopped the program: Python says it did not hold. What is the average of 2 and 4?"
+      - code: |-
+          # the average of a list, or None when it is empty
+          def average(values):
+              if len(values) == 0:
+                  print(None)
+              print(sum(values) / len(values))
+
+          assert average([2, 4]) == 3
+          assert average([]) is None
+          print(average([8.99, 6.99, 0, 4.99]))
+        ask: "This function only shows things. What hands a result back, so that a check can compare it?"
+      - code: |-
+          # the average of a list, or None when it is empty
+          def average(values):
+              if len(values) == 0:
+                  return None
+              return sum(values) / len(values)
+
+          assert average([2, 4]) == 3
+          assert average([]) is None
+        ask: "The checks held, and nothing was shown. What did I ask to be shown at the end?"
+    walk:
+      - "Write the note, then the def line, with a name for what goes in."
+      - "Inside: ask whether the list is empty, and if so hand back None. Otherwise hand back the total over how many."
+      - "Write the first check: assert, the call, two equals signs and the number you expect."
+      - "Write the second check, with is None. Then show the average of the four fees."
+    return:
+      text: "Write a function called total_or_none that takes values and hands back their total, or None when the list is empty. Put a note above it saying what it is for, and write two checks of your own: that the total of 2 and 4 is 6, and that the total of an empty list is None. Then show the total of the delivery fees 8.99, 6.99 and 0."
+      check: "print(total_or_none([4, 6]) + 1, total_or_none([]))"
+      model: |-
+        # the total of a list, or None when it is empty
+        def total_or_none(values):
+            if len(values) == 0:
+                return None
+            return sum(values)
+
+        assert total_or_none([2, 4]) == 6
+        assert total_or_none([]) is None
+        print(total_or_none([8.99, 6.99, 0]))
+      output: |-
+        15.98
+        11 None
+      narration:
+        - "15.98, and silence from the checks. A function with an answer for nothing in, checked twice by you."
+        - "Something in, something out, an empty case, and two checks that held."
+      note: "Return for the closing step. Not broken down, like the step."
+    note: "The closing sentence of the lesson, as in the map. The map's version shows nothing, which is the point of silent checks, but a step must print something to be judged, so the learner also shows the average of four real fees, and a hidden check confirms the function hands back instead of showing. Deliberate friction (rule C9). The note above the function cannot be judged, so it is asked for and not checked."
+
+  # 23
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. Today you wrapped steps up as a function, with a name, something going in and something coming out. You learned that print shows a value to a person and return hands it to the code that asked, that None is Python's empty cell and is asked about with is None, that an empty list needs an answer of its own, and that assert is a check you write yourself, with a note beside it for the next reader. A function is a query: something in, something out.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a program out. And from here on, check it.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3). The last line introduces the habit that later narration asks for: a quick check."
+
+  # 24
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["name-a-value", "list", "show", "how-many", "text-in-list", "text-quotes", "for-each", "block", "if-question", "equals-asks", "running-result", "build-average", "def", "what-goes-in", "what-comes-out", "call-it", "nothing", "empty-case"]
+    text: "Write a function called share_delivered that takes statuses, and hands back the fraction of them that are delivered, or None if the list is empty. Then show the share for delivered, cancelled, delivered and delivered, and for an empty list, one line each."
+    model: |-
+      def share_delivered(statuses):
+          if len(statuses) == 0:
+              return None
+          count = 0
+          for status in statuses:
+              if status == 'delivered':
+                  count = count + 1
+          return count / len(statuses)
+
+      print(share_delivered(['delivered', 'cancelled', 'delivered', 'delivered']))
+      print(share_delivered([]))
+    output: |-
+      0.75
+      None
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check on a combination never practised: a running count handed back as a fraction, with an answer for the empty list. Never scored (rule F1). What a miss tells the script: which of the def, the return, the empty case, the running count or the division was absent. PY-6 opens by rebuilding from that point."

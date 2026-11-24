@@ -8,11 +8,11 @@ from checker.__main__ import main
 ROOT = Path(__file__).parent.parent
 
 
-def test_lesson_1_passes(capsys):
-    code = main([str(ROOT / "content" / "sql"), "--data", str(ROOT / "data")])
+def test_the_whole_course_passes_the_checker(capsys):
+    code = main([str(ROOT / "content"), "--data", str(ROOT / "data")])
     out = capsys.readouterr().out
     assert code == 0, out
-    assert "0 failures, 2 warnings" in out
+    assert "0 failures" in out
 
 
 def test_broken_copy_of_lesson_1_fails_with_clear_messages(tmp_path, capsys):

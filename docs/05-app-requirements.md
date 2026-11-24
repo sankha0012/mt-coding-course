@@ -24,6 +24,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - R5. A plain editor. No autocomplete and no suggestions, so that it behaves like an interview editor. SQL syntax colours are allowed, as in interview editors (decision C8).
 - R6. In Python, indent automatically after a line ending in a colon. Indentation cannot be forgiven by the checker, so the editor must make it easy.
 - R7. Make room for thinking before typing. One option is a short quiet moment before the editor accepts input, with the request to think it out. This needs trying with the learner before it is fixed.
+- R29. A collapsible "Try your own code" panel (decision C19) with SQL and Python tabs. It runs the learner's own code on the data of the step being played, read-only. It shows the result and keeps nothing. It is never judged and never logged, so it cannot change the miss log or the progress file. The core data cannot be changed from it: SQL is `SELECT` only, and Python runs in a folder of read-only links to private copies.
 - R8. Show the result of the learner's code, as a table for SQL and pandas and as output for Python, so they see what they made.
 
 ### Checking
@@ -42,7 +43,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 
 ### What must be absent
 
-- R17. No timer, score, streak, percentage or leaderboard in stages 1 and 2.
+- R17. No timer, score, streak, percentage or leaderboard.
 - R18. No reference panel, cheat sheet, glossary or notes feature. The only help is the ladder.
 - R19. No instructions screen before the first lesson. Rules of engagement appear in the lesson text when they first matter.
 - R20. No multiple choice.
@@ -58,7 +59,9 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - R24. Lessons are plain files, separate from app code.
 - R25. A content checker implements the seven checks in `docs/04-script-format.md` and runs before any lesson is shipped.
 
-### Stage 3 only
+### Not built here
+
+These were planned as a third, timed stage. They moved to `live-coding-gym` on 24 Nov 2026 (decision O6) and are kept only as a record.
 
 - R26. Timed drills on the pass-bar tasks, with the timer visible.
 - R27. A mode where the tables cannot be seen and only a description of their columns is given.
@@ -69,7 +72,7 @@ What the app must do. No implementation is chosen here. The architecture is an o
 - One learner, one machine. Starting it should take one command or one double-click.
 - Works offline once set up.
 - Rough visual finish is fine. The teacher's text must be comfortable to read, because the lesson is a conversation.
-- The teacher's voice is warm. Nothing in the interface should feel like an exam before stage 3.
+- The teacher's voice is warm. Nothing in the interface should feel like an exam.
 
 ## Running the learner's code
 

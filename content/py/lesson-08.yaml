@@ -1,0 +1,973 @@
+lesson: py-08
+title: "Text as pieces"
+strand: py
+stage: 1
+thoughts:
+  split: "`sentence.split()` cuts text at its spaces into a list of words."
+  join-words: "`' '.join(words)` puts a list of words back into text, with the text before the dot put between them."
+  tidy: "`.lower()` makes every letter small and `.strip()` takes spaces off the ends. Text is tidied before it is compared, because `'The'` and `'the'` are different things."
+  positions: "`range(len(words))` gives the positions themselves, for when the loop has to know where it is."
+  neighbours: "`words[i]` and `words[i + 1]` are an item and the one after it. The loop stops one short of the end, so that there is always a next one."
+  pair-as-key: "A pair can be a name in a dict, because a pair cannot change under it."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "sorted", "key-function", "lambda", "tie-rule", "for-each", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `by_fee` that takes the rows of a table and hands back their order_ids, the biggest delivery fee first, and orders with the same fee in order of their id."
+    check: |-
+      print(by_fee([
+          {'order_id': 104843, 'delivery_fee': 8.99},
+          {'order_id': 102388, 'delivery_fee': 4.99},
+          {'order_id': 101248, 'delivery_fee': 4.99},
+          {'order_id': 103434, 'delivery_fee': 6.99},
+      ]))
+    model: |-
+      def by_fee(rows):
+          ranked = sorted(rows, key=lambda row: (-row['delivery_fee'], row['order_id']))
+          ids = []
+          for row in ranked:
+              ids.append(row['order_id'])
+          return ids
+    output: "[104843, 103434, 101248, 102388]"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PY-7: a lambda on rows, a pair for a key with a minus, and a loop to pull a cell out. A combination not practised. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["split"]
+    text: |-
+      Today the things in the lists are words. A sentence is just text, and text can be cut at its spaces into a list of words. The way to ask is `.split()`, written after the text.
+
+      ```python
+      sentence = 'the order was late'
+      words = sentence.split()
+      print(words)
+      print(len(words))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        sentence = 'the order was late'
+        words = sentence.split()
+        print(words)
+        print(len(words))
+    after_run: "A list of four words, and then 4. Split cut the text wherever there was a space. And a list is a list: everything you can do with a list, you can now do with a sentence. Count it, loop through it, sort it, cut it."
+    note: "split. The after_run says plainly what it opens up, so that the next steps are recombinations of PY-1 to PY-7."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "how-many", "sorted", "key-function", "lambda", "last"]
+    text: "Write a function called `longest_word` that takes a sentence and hands back its longest word."
+    check: "print(longest_word('the order was late'))"
+    model: |-
+      def longest_word(sentence):
+          words = sentence.split()
+          return sorted(words, key=lambda w: len(w))[-1]
+    output: "order"
+    narration:
+      - "Order, with five letters. The sentence became a list of words, and then it was a sort by length, taking the last."
+      - "Cut into words, sorted by how long each is, and the last one is the longest."
+      - ""
+    wrong:
+      - code: |-
+          def longest_word(sentence):
+              words = sentence.split()
+              return sorted(words)[-1]
+        ask: "That is the last in alphabetical order. What should the words be sorted by?"
+        why: "with no key, words are sorted by their letters. The key says to look at the length."
+      - code: |-
+          def longest_word(sentence):
+              return sorted(sentence, key=lambda w: len(w))[-1]
+        ask: "Python is sorting something that is not words. What has to be done to the sentence before it can be sorted as words?"
+        why: "text sorts as single letters. split cuts it into a list of words first."
+      - code: |-
+          def longest_word(sentence):
+              words = sentence.split()
+              return sorted(words, key=lambda w: len(w))[0]
+        ask: "That is the shortest. Which end of a sorted list has the longest?"
+        why: "sorting goes upward, so the biggest is at the end."
+    walk:
+      - "Cut the sentence into words."
+      - "Sort the words with a key that says how long each is."
+      - "Hand back the one at the end."
+    return:
+      text: "Write `last_word`, which takes a sentence and hands back its last word."
+      check: "print(last_word('the order was late'))"
+      model: |-
+        def last_word(sentence):
+            words = sentence.split()
+            return words[-1]
+      output: "late"
+      narration:
+        - "Late. Cut into words, take the last. Nothing sorted."
+        - "Split, and then the last item of the list."
+      note: "Return for step 3."
+    note: "split asked at once, with PY-7's key. The sentence 'the order was late' has one longest word, so there is no tie."
+
+  # 4
+  - kind: "give"
+    lang: "python"
+    new: ["join-words"]
+    text: |-
+      Going the other way is just as common: a list of words, put back together as text. The way to ask is `.join()`, and the odd thing is that the text that goes between the words comes first, before the dot.
+
+      ```python
+      words = ['the', 'order', 'was', 'late']
+      print(' '.join(words))
+      print('-'.join(words))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        words = ['the', 'order', 'was', 'late']
+        print(' '.join(words))
+        print('-'.join(words))
+    after_run: "The words, glued with a space, and then glued with a dash. The text in front of the dot is what goes between the words. It reads backwards, and there is no reason for it. It just is, and it comes up in interviews a lot."
+    note: "join. The order (glue first) is the one arbitrary part, and the text says so ('it just is'), which is rule B6 in practice."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "join-words", "sorted"]
+    text: "Write a function called `alphabetical` that takes a sentence and hands back the same words as one text, in alphabetical order, with a space between them."
+    check: "print(alphabetical('the order was late'))"
+    model: |-
+      def alphabetical(sentence):
+          words = sentence.split()
+          return ' '.join(sorted(words))
+    output: "late order the was"
+    narration:
+      - "Late order the was. Cut into a list, sorted, and glued back with a space. Text in, text out, and a list in the middle."
+      - "The sentence went into pieces, was put in order, and came back as a sentence."
+      - ""
+    wrong:
+      - code: |-
+          def alphabetical(sentence):
+              words = sentence.split()
+              return sorted(words)
+        ask: "That is a list. What was I asking to get back?"
+        why: "the answer is text, so the list has to be glued back with join."
+      - code: |-
+          def alphabetical(sentence):
+              words = sentence.split()
+              return words.join(' ')
+        ask: "Python says a list has no join. Which comes first before the dot: the list, or the text that goes between?"
+        why: "the glue is the text before the dot, and the list goes inside the brackets."
+      - code: |-
+          def alphabetical(sentence):
+              return ' '.join(sorted(sentence))
+        ask: "Look at what came back: single letters. What has to happen to the sentence before it is sorted?"
+        why: "sorting text sorts its letters. split cuts it into words first."
+    walk:
+      - "Cut the sentence into words."
+      - "Sort them."
+      - "Put them back together as text, with a space between."
+    return:
+      text: "Write `longest_first_text`, which takes a sentence and hands back its words as one text, longest first, with a space between them."
+      check: "print(longest_first_text('a pizza was late'))"
+      model: |-
+        def longest_first_text(sentence):
+            words = sentence.split()
+            return ' '.join(sorted(words, key=lambda w: len(w), reverse=True))
+      output: "pizza late was a"
+      narration:
+        - "Pizza late was a: the longest first. The same round trip, with a key and a turn-round in the middle."
+        - "Text to list, sort by length, list to text."
+      note: "Return for step 5. The sentence has four different lengths, so there is no tie."
+    note: "split and join together, with PY-2's sorted. The learner builds the whole round trip: text, list, text."
+
+  # 6
+  - kind: "give"
+    lang: "python"
+    new: ["tidy"]
+    text: |-
+      Before you compare words, tidy them. To Python, `'The'` and `'the'` are different. A different capital, a different thing, as `'Delivered'` and `'delivered'` were different to SQL. Two small tools tidy text: `.lower()` makes every letter small, and `.strip()` takes spaces off both ends.
+
+      ```python
+      text = '  The Order Was LATE '
+      print(text.strip())
+      print(text.lower())
+      print(text.strip().lower())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        text = '  The Order Was LATE '
+        print(text.strip())
+        print(text.lower())
+        print(text.strip().lower())
+    after_run: "Three versions of the same text: the spaces gone, the capitals gone, and both. You can put one after the other, left to right, and each works on what the one before it handed over. Tidy first, then compare."
+    note: "tidy. Two small tools, named once. The reason for lower is real, and it is the same trap SQL had."
+
+  # 7
+  - kind: "classmate"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "tidy", "for-each", "if-question", "equals-asks", "running-result"]
+    text: "Davi wanted to know how many times the word the appears in a sentence. He wrote a loop through `sentence.split()`, asking whether each word was equal to 'the'. On 'The order was late and the courier was lost' it said 1. Davi, what is the first word, exactly? ... Capital T, which is not equal to a small t. Write `count_word`, which takes a sentence and a word, and hands back how many times that word appears, whatever the capitals."
+    check: |-
+      print(count_word('The order was late and the courier was lost', 'the'))
+      print(count_word('The order was late and THE courier was lost', 'The'))
+    model: |-
+      def count_word(sentence, word):
+          count = 0
+          for w in sentence.lower().split():
+              if w == word.lower():
+                  count = count + 1
+          return count
+    output: |-
+      2
+      2
+    narration:
+      - "2 now: The and the were both counted. Both sides of the comparison were made small before they were asked."
+      - "Tidy both, then compare. The sentence and the word each had their capitals taken off."
+      - ""
+    wrong:
+      - code: |-
+          def count_word(sentence, word):
+              count = 0
+              for w in sentence.split():
+                  if w == word:
+                      count = count + 1
+              return count
+        ask: "That is Davi's version, and it says 1. What does the first word start with, and what does word start with?"
+        why: "a capital T is not a small t. Words have to be made small before they are compared."
+      - code: |-
+          def count_word(sentence, word):
+              count = 0
+              for w in sentence.lower().split():
+                  if w == word:
+                      count = count + 1
+              return count
+        ask: "Try it with the word The, with a capital. What is left to make small?"
+        why: "both sides of a comparison have to be tidied, or the word you were given can still have a capital."
+      - code: |-
+          def count_word(sentence, word):
+              count = 0
+              for w in sentence.lower().split():
+                  if w == word.lower():
+                      count = count + 1
+                  return count
+        ask: "Check how many words got looked at. Where does the return belong?"
+        why: "the return waits until the loop is finished."
+    walk:
+      - "Make the sentence small and cut it into words."
+      - "Go through the words, and ask of each whether it is equal to the word you were given, also made small."
+      - "Count the yeses, and hand the count back."
+    return:
+      text: "Write `count_long`, which takes a sentence and a number n, and hands back how many of its words have more than n letters."
+      check: "print(count_long('The order was late and the courier was lost', 4))"
+      model: |-
+        def count_long(sentence, n):
+            count = 0
+            for w in sentence.split():
+                if len(w) > n:
+                    count = count + 1
+            return count
+      output: "2"
+      narration:
+        - "2: order and courier. Late and lost have four letters, which is not more than 4. The same loop and count, with a question about each word's length."
+        - "A count of the words that pass a question about their size."
+      note: "Return for step 7."
+    note: "The classmate's slip is a wrong number, not an error, so Davi's own output is the reason. The learner repairs by writing the function. A first use of lower in anger, and a step that needs tidy on both sides. Sample: 'The order was late and the courier was lost' and 'the' counts twice."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "join-words", "tidy"]
+    text: "Write a function called `tidy_sentence` that takes a sentence with stray capitals and extra spaces, and hands it back as small letters, with exactly one space between the words and none at the ends."
+    check: |-
+      result = tidy_sentence('  The  Order was   LATE ')
+      print(result)
+      print(len(result))
+    model: |-
+      def tidy_sentence(text):
+          return ' '.join(text.lower().split())
+    output: |-
+      the order was late
+      18
+    narration:
+      - "The capitals gone and the spaces evened out: 18 characters, and no more. Split ignores any run of spaces, so cutting and gluing back leaves exactly one."
+      - "Small letters, cut into words, glued with a single space."
+      - ""
+    wrong:
+      - code: |-
+          def tidy_sentence(text):
+              return text.lower().strip()
+        ask: "Look at the spaces between the words. Which tool takes spaces off the ends only?"
+        why: "strip works on the two ends. The spaces between the words need the cut and the glue."
+      - code: |-
+          def tidy_sentence(text):
+              return ' '.join(text.split())
+        ask: "The capitals are still there. What was I asking about the letters?"
+        why: "lower is a tidy step of its own."
+      - code: |-
+          def tidy_sentence(text):
+              return text.lower().split()
+        ask: "That is a list of words. What was I asking to get back?"
+        why: "the answer is text, so it is glued back with join."
+    walk:
+      - "Make every letter small."
+      - "Cut it into words. That throws the extra spaces away."
+      - "Glue the words back with one space."
+    return:
+      text: "Write `sorted_tidy`, which takes a sentence and hands back its words as one text, in small letters, in alphabetical order, with one space between."
+      check: "print(sorted_tidy('  The  Order was   LATE '))"
+      model: |-
+        def sorted_tidy(text):
+            return ' '.join(sorted(text.lower().split()))
+      output: "late order the was"
+      narration:
+        - "Late order the was: small letters, cut, sorted, glued. The step you just did, with a sort in the middle."
+        - "Tidy, cut, sort, glue."
+      note: "Return for step 8."
+    note: "A recombination of split, join and tidy in the order lower, split, join. The model does not use strip because split already does its job, which the narration says."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["positions"]
+    text: |-
+      So far a loop has gone through the items, one at a time. Sometimes you need to know where you are in the list. That means going through the positions: `range(len(words))` gives 0, 1, 2 and so on, as far as the last position, and the loop name is a position, not a word.
+
+      ```python
+      words = ['the', 'order', 'was', 'late']
+      for i in range(len(words)):
+          print(i, words[i])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        words = ['the', 'order', 'was', 'late']
+        for i in range(len(words)):
+            print(i, words[i])
+    after_run: "0 the, 1 order, 2 was, 3 late. The loop went through the numbers, and words[i] picked the word at each one. You do this when you need the position itself, or the item beside it, and that is the next step."
+    note: "positions. Range only waits until here because this is its real reason: earlier loops never needed a position."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "positions", "how-many", "new-list-in-loop", "add-to-end", "for-each"]
+    text: "Write a function called `with_lengths` that takes a list of words and hands back a list of pairs: each position, and the length of the word at that position."
+    check: "print(with_lengths(['the', 'order', 'was']))"
+    model: |-
+      def with_lengths(words):
+          result = []
+          for i in range(len(words)):
+              result.append((i, len(words[i])))
+          return result
+    output: "[(0, 3), (1, 5), (2, 3)]"
+    narration:
+      - "Position 0 has 3 letters, position 1 has 5. The loop went through the positions, and each turn built a pair of the position and something about the word at it."
+      - "Positions, a pair for each, collected in a list."
+      - ""
+    wrong:
+      - code: |-
+          def with_lengths(words):
+              result = []
+              for i in range(len(words)):
+                  result.append((i, len(words[i])))
+        ask: "The check got nothing. What does the function have to do after the loop?"
+        why: "it still has to hand the list back."
+      - code: |-
+          def with_lengths(words):
+              result = []
+              for i in range(words):
+                  result.append((i, len(words[i])))
+              return result
+        ask: "Python says a list cannot be an integer here. What does range need to be given: the list, or how long it is?"
+        why: "range takes a number, and len turns the list into the number."
+      - code: |-
+          def with_lengths(words):
+              result = []
+              for i in range(len(words)):
+                  result.append((i, len(i)))
+              return result
+        ask: "i is a position, a number. What has the length: the position, or the word at the position?"
+        why: "the word at position i is words[i], and that is what has a length."
+    walk:
+      - "Go through the positions of the list."
+      - "For each, build a pair: the position, and the length of the word at that position."
+      - "Add each pair to a list, and hand the list back."
+    return:
+      text: "Write `with_words`, which takes a list of words and hands back a list of pairs: each position, and the word at that position."
+      check: "print(with_words(['the', 'order', 'was']))"
+      model: |-
+        def with_words(words):
+            result = []
+            for i in range(len(words)):
+                result.append((i, words[i]))
+            return result
+      output: "[(0, 'the'), (1, 'order'), (2, 'was')]"
+      narration:
+        - "Position 0 with the, then 1 with order. Pairs of a position and the word itself."
+        - "The same loop, with the word and not its length."
+      note: "Return for step 10."
+    note: "positions asked at once, with pair from PY-7 so that two earlier thoughts return. words[i] is the first use of a position inside a loop that names positions."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "tidy", "positions", "if-question", "equals-asks", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `where_is` that takes a sentence and a word, and hands back a list of the positions at which the word appears in the sentence, whatever the capitals. The first word is at position 0."
+    check: "print(where_is('The order was late and the courier was lost', 'the'))"
+    model: |-
+      def where_is(sentence, word):
+          words = sentence.lower().split()
+          result = []
+          for i in range(len(words)):
+              if words[i] == word.lower():
+                  result.append(i)
+          return result
+    output: "[0, 5]"
+    narration:
+      - "Positions 0 and 5: the first word and the sixth. The loop went through the positions, and the position itself was what got collected when the word matched."
+      - "Both sides tidied, then each position asked whether its word matches. The answer is the positions, not the words."
+      - ""
+    wrong:
+      - code: |-
+          def where_is(sentence, word):
+              words = sentence.lower().split()
+              result = []
+              for w in words:
+                  if w == word.lower():
+                      result.append(w)
+              return result
+        ask: "That gives the word each time. What was I asking to collect?"
+        why: "a loop over the words never knows where it is. The positions are what range(len(words)) gives."
+      - code: |-
+          def where_is(sentence, word):
+              words = sentence.split()
+              result = []
+              for i in range(len(words)):
+                  if words[i] == word:
+                      result.append(i)
+              return result
+        ask: "Try it on a sentence that starts with The and ask for the. What does the first word look like to Python?"
+        why: "a capital T is not a small t. Both sides have to be made small."
+      - code: |-
+          def where_is(sentence, word):
+              words = sentence.lower().split()
+              result = []
+              for i in range(len(words)):
+                  if i == word.lower():
+                      result.append(i)
+              return result
+        ask: "You compared a position, which is a number, with a word. Which thing in the loop is the word?"
+        why: "i is a position. The word at position i is words[i]."
+    walk:
+      - "Make the sentence small and cut it into words."
+      - "Go through the positions, and ask of each whether the word at it is the word you were given, also made small."
+      - "On a yes, add the position to a list, and hand the list back."
+    return:
+      text: "Write `long_at`, which takes a sentence and a number n, and hands back the positions of the words that have more than n letters."
+      check: "print(long_at('The order was late and the courier was lost', 4))"
+      model: |-
+        def long_at(sentence, n):
+            words = sentence.split()
+            result = []
+            for i in range(len(words)):
+                if len(words[i]) > n:
+                    result.append(i)
+            return result
+      output: "[1, 6]"
+      narration:
+        - "Positions 1 and 6: order and courier. The same loop, with a question about the word's length."
+        - "Where the long words are."
+      note: "Return for step 10b."
+    note: "positions used for its first purpose, finding where something is. It needs split and tidy together, so the learner is not on autopilot with either."
+
+  # 12
+  - kind: "classmate"
+    lang: "python"
+    new: ["neighbours"]
+    text: |-
+      Ana wants to look at each word and the one after it. She goes through the positions, and writes words[i + 1] for the next one:
+
+      ```python
+      words = ['the', 'order', 'was', 'late']
+      for i in range(len(words)):
+          print(words[i], words[i + 1])
+      ```
+
+      She got three lines, and then Python stopped with: IndexError: list index out of range. Ana, how many words are there, and which position does the last one have? ... Four words, and the last is at position 3. On that turn, i + 1 is 4, and there is no word at 4. The last word has nothing after it, so the loop must stop one short. That is why the range ends at len(words) minus one:
+
+      ```python
+      words = ['the', 'order', 'was', 'late']
+      for i in range(len(words) - 1):
+          print(words[i], words[i + 1])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        words = ['the', 'order', 'was', 'late']
+        for i in range(len(words) - 1):
+            print(words[i], words[i + 1])
+    broken: |-
+      words = ['the', 'order', 'was', 'late']
+      for i in range(len(words)):
+          print(words[i], words[i + 1])
+    after_run: "The order, order was, was late: three pairs from four words. Always one fewer than the words. words[i] and words[i + 1] are a word and its neighbour, and the loop stops early so that there is always a neighbour."
+    note: "neighbours, through the classmate's slip, with Python's real message as the reason (rule E6). The error comes after three lines have printed, which is also the sentence."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "positions", "neighbours", "how-many", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `neighbours` that takes a list of words and hands back a list of pairs: each word with the word after it."
+    check: "print(neighbours(['the', 'order', 'was', 'late']))"
+    model: |-
+      def neighbours(words):
+          result = []
+          for i in range(len(words) - 1):
+              result.append((words[i], words[i + 1]))
+          return result
+    output: "[('the', 'order'), ('order', 'was'), ('was', 'late')]"
+    narration:
+      - "Three pairs from four words, each a word and the next. The loop stopped one short so there was always a next."
+      - "Each position, and the one after it, as a pair. One fewer than the words."
+      - ""
+    wrong:
+      - code: |-
+          def neighbours(words):
+              result = []
+              for i in range(len(words)):
+                  result.append((words[i], words[i + 1]))
+              return result
+        ask: "Python says list index out of range. What does the last word have after it?"
+        why: "the last word has no neighbour, so the loop stops one short of the end."
+      - code: |-
+          def neighbours(words):
+              result = []
+              for i in range(len(words) - 1):
+                  result.append((words[i], words[i]))
+              return result
+        ask: "Each pair has the same word twice. Which position holds the next word?"
+        why: "the next word is one position further on, words[i + 1]."
+      - code: |-
+          def neighbours(words):
+              result = []
+              for i in range(len(words) - 1):
+                  result.append(words[i], words[i + 1])
+              return result
+        ask: "Python says append takes one thing. How many things did you hand it, and what groups two things as one?"
+        why: "a pair is one thing, with round brackets around the two parts."
+    walk:
+      - "Go through the positions, stopping one short of the end."
+      - "For each position, make a pair: the word at it, and the word at the next one."
+      - "Collect the pairs in a list, and hand it back."
+    return:
+      text: "Write `adjacent_sums`, which takes a list of numbers and hands back a list of the sums of each number and the one after it."
+      check: "print(adjacent_sums([1, 2, 5, 4]))"
+      model: |-
+        def adjacent_sums(numbers):
+            result = []
+            for i in range(len(numbers) - 1):
+                result.append(numbers[i] + numbers[i + 1])
+            return result
+      output: "[3, 7, 9]"
+      narration:
+        - "3, 7 and 9, from four numbers. Each number added to its neighbour. One fewer than the numbers."
+        - "The same loop on numbers, with a sum in place of a pair."
+      note: "Return for step 12."
+    note: "The correction in step 11 is now asked of the learner on their own. The three wrong answers are: no stopping short, the same word twice, and append with two arguments."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "positions", "neighbours", "how-many", "if-question", "equals-asks", "running-result"]
+    text: "Write a function called `repeats` that takes a list of words and hands back how many times a word is immediately followed by the same word."
+    check: "print(repeats(['the', 'the', 'order', 'was', 'was', 'was']))"
+    model: |-
+      def repeats(words):
+          count = 0
+          for i in range(len(words) - 1):
+              if words[i] == words[i + 1]:
+                  count = count + 1
+          return count
+    output: "3"
+    narration:
+      - "3: the the, was was and was was. A question asked about each word and its neighbour, and a count that grew on each yes."
+      - "Each position against the next, counted when they match. A run of three same words has two repeats in it."
+      - ""
+    wrong:
+      - code: |-
+          def repeats(words):
+              count = 0
+              for i in range(len(words) - 1):
+                  if words[i] = words[i + 1]:
+                      count = count + 1
+              return count
+        ask: "Python calls that a syntax error. What does a question use, and what does one sign do?"
+        why: "one equals sign gives a name. Two ask."
+      - code: |-
+          def repeats(words):
+              count = 0
+              for i in range(len(words)):
+                  if words[i] == words[i + 1]:
+                      count = count + 1
+              return count
+        ask: "Python says index out of range. Which word has no neighbour?"
+        why: "the last word has nothing after it, so the loop stops one short."
+      - code: |-
+          def repeats(words):
+              count = 0
+              for w in words:
+                  if w == w:
+                      count = count + 1
+              return count
+        ask: "Every word is equal to itself. What should each word be compared with?"
+        why: "the question has to be about a word and the one after it."
+    walk:
+      - "Start a count at zero, and go through the positions, stopping one short."
+      - "Ask of each position: is the word here equal to the word at the next position?"
+      - "On a yes, add one. Then hand the count back."
+    return:
+      text: "Write `rises`, which takes a list of numbers and hands back how many times a number is smaller than the one after it."
+      check: "print(rises([1, 3, 2, 5, 4]))"
+      model: |-
+        def rises(numbers):
+            count = 0
+            for i in range(len(numbers) - 1):
+                if numbers[i] < numbers[i + 1]:
+                    count = count + 1
+            return count
+      output: "2"
+      narration:
+        - "2 rises in 1, 3, 2, 5, 4: 1 to 3, and 2 to 5. A smaller-than question on each number and its neighbour."
+        - "The same count, with a comparison in place of an equal sign."
+      note: "Return for step 13."
+    note: "neighbours used for a question, not a pair. The answer is 3 on the, the, order, was, was, was: the-the, was-was, was-was."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "join-words", "tidy", "positions", "neighbours", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `bigram_texts` that takes a sentence and hands back a list with each pair of neighbouring words written as one text, with a space between them. Capitals do not matter."
+    check: "print(bigram_texts('The order was late'))"
+    model: |-
+      def bigram_texts(sentence):
+          words = sentence.lower().split()
+          result = []
+          for i in range(len(words) - 1):
+              result.append(' '.join([words[i], words[i + 1]]))
+          return result
+    output: "['the order', 'order was', 'was late']"
+    narration:
+      - "Three texts from four words: the order, order was, was late. Each neighbouring pair was put into a small list and glued with a space."
+      - "Split to take the sentence apart, join to put each pair together again. Four tools in one small loop."
+      - ""
+    wrong:
+      - code: |-
+          def bigram_texts(sentence):
+              words = sentence.lower().split()
+              result = []
+              for i in range(len(words) - 1):
+                  result.append(' '.join(words[i], words[i + 1]))
+              return result
+        ask: "Python says join takes one thing. How many things did you hand it, and what holds two things as one?"
+        why: "join takes one list. The two words go in square brackets, as a list."
+      - code: |-
+          def bigram_texts(sentence):
+              words = sentence.lower().split()
+              result = []
+              for i in range(len(words)):
+                  result.append(' '.join([words[i], words[i + 1]]))
+              return result
+        ask: "Python says index out of range. Which word has no neighbour?"
+        why: "the last word has nothing after it, so the loop stops one short."
+      - code: |-
+          def bigram_texts(sentence):
+              words = sentence.split()
+              result = []
+              for i in range(len(words) - 1):
+                  result.append(' '.join([words[i], words[i + 1]]))
+              return result
+        ask: "Try a sentence that starts with a capital. What did the question say about capitals?"
+        why: "capitals are made small before anything is compared or reported."
+    walk:
+      - "Make the sentence small, and cut it into words."
+      - "Go through the positions, stopping one short, and make a small list of the word and the next word."
+      - "Glue that list with a space, add it to the result, and hand the result back."
+    return:
+      text: "Write `dashed_pairs`, which takes a sentence and hands back a list with each pair of neighbouring words written as one text, with a dash between them. Capitals do not matter."
+      check: "print(dashed_pairs('The order was late'))"
+      model: |-
+        def dashed_pairs(sentence):
+            words = sentence.lower().split()
+            result = []
+            for i in range(len(words) - 1):
+                result.append('-'.join([words[i], words[i + 1]]))
+            return result
+      output: "['the-order', 'order-was', 'was-late']"
+      narration:
+        - "the-order, order-was, was-late: the same pairs, glued with a dash this time."
+        - "The glue changes and everything else stays."
+      note: "Return for step 13b."
+    note: "A recombination of split, join, tidy and neighbours, with only one new line to find: the pair as a list inside join. Placed before the aside as the lesson's last easy step before the pairs become names."
+
+  # 16
+  - kind: "aside"
+    text: "Only interesting, and nothing in it to keep. Python has two helpers, called enumerate and zip, that do the work of range(len(...)) and of looking at neighbours. You will see them in other people's code, and they do exactly what you just wrote. Here you write the positions out yourself, so that you can see where the numbers come from."
+
+  # 17
+  - kind: "give"
+    lang: "python"
+    new: ["pair-as-key"]
+    text: |-
+      A pair is a thing that does not change once it is made, and that is what makes it fit as a name in a dict. A word can be a name in a dict, and a number can, and so can a pair.
+
+      ```python
+      counts = {}
+      counts[('the', 'order')] = 1
+      counts[('order', 'was')] = 1
+      print(counts)
+      print(counts[('the', 'order')])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        counts = {}
+        counts[('the', 'order')] = 1
+        counts[('order', 'was')] = 1
+        print(counts)
+        print(counts[('the', 'order')])
+    after_run: "A dict with two names, and each name is a pair of words. And counts[('the', 'order')] found the first one, as any name would. The reason a pair can do it is that a pair cannot be changed once it is made. A list can be changed, so a list cannot be a name."
+    note: "pair-as-key. The reason is real and short, and no extra rule is left behind. Lists as names are mentioned only to say why the pair can."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "positions", "neighbours", "pair-as-key", "how-many", "one-entry-per-pile", "update-the-pile", "get-with-default"]
+    text: "Write a function called `pair_counts` that takes a list of words and hands back a dict with how many times each pair of neighbouring words appears."
+    check: |-
+      counts = pair_counts(['the', 'order', 'was', 'late', 'and', 'the', 'order', 'was', 'cold'])
+      for pair in sorted(counts):
+          print(pair, counts[pair])
+    model: |-
+      def pair_counts(words):
+          counts = {}
+          for i in range(len(words) - 1):
+              pair = (words[i], words[i + 1])
+              counts[pair] = counts.get(pair, 0) + 1
+          return counts
+    output: |-
+      ('and', 'the') 1
+      ('late', 'and') 1
+      ('order', 'was') 2
+      ('the', 'order') 2
+      ('was', 'cold') 1
+      ('was', 'late') 1
+    narration:
+      - "The pair of words is the name of the pile, and each time it comes up, the pile grows. ('order', 'was') appears twice."
+      - "Neighbouring pairs, each one a pile in a dict, counted as they go by."
+      - ""
+    wrong:
+      - code: |-
+          def pair_counts(words):
+              counts = {}
+              for i in range(len(words) - 1):
+                  pair = [words[i], words[i + 1]]
+                  counts[pair] = counts.get(pair, 0) + 1
+              return counts
+        ask: "Python says unhashable type: list. What did the pair get written with, and what cannot be a name?"
+        why: "a list can be changed, so it cannot be a name. A pair, in round brackets, cannot."
+      - code: |-
+          def pair_counts(words):
+              counts = {}
+              for i in range(len(words) - 1):
+                  pair = (words[i], words[i + 1])
+                  counts[pair] = 1
+              return counts
+        ask: "Every pile says 1, even the one that appeared twice. What should a pile hold before one is added?"
+        why: "the pile has to be what it was, plus one. get gives zero for a pile that is not there yet."
+      - code: |-
+          def pair_counts(words):
+              counts = {}
+              for i in range(len(words)):
+                  pair = (words[i], words[i + 1])
+                  counts[pair] = counts.get(pair, 0) + 1
+              return counts
+        ask: "Python says index out of range. Where should the loop stop?"
+        why: "one short of the end, so that every word has a next."
+    walk:
+      - "Start an empty dict, and go through the positions, stopping one short of the end."
+      - "At each position, make the pair of the word and the next word."
+      - "Find that pair's pile, or zero if it is not there, and put it back with one added."
+    return:
+      text: "Write `gap_counts`, which takes a list of numbers and hands back a dict with how many times each difference appears between a number and the one after it."
+      check: "print(gap_counts([1, 2, 4, 5, 7]))"
+      model: |-
+        def gap_counts(numbers):
+            counts = {}
+            for i in range(len(numbers) - 1):
+                gap = numbers[i + 1] - numbers[i]
+                counts[gap] = counts.get(gap, 0) + 1
+            return counts
+      output: "{1: 2, 2: 2}"
+      narration:
+        - "1 twice and 2 twice, from 1, 2, 4, 5, 7. Each difference is a pile, counted as the pairs went by."
+        - "A count of differences between neighbours."
+      note: "Return for step 16."
+    note: "PY-4's count with a pair as the name. The three wrong answers: a list as a name (with Python's own message), a count that does not grow, and the missing stop."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "tidy", "pair", "positions", "neighbours", "pair-as-key", "how-many", "one-entry-per-pile", "update-the-pile", "get-with-default"]
+    friction: true
+    text: "I won't break this one down. Write a function called `bigrams` that takes a sentence and hands back a dict with how many times each pair of neighbouring words appears. Capitals do not matter."
+    check: |-
+      counts = bigrams('The order was late and the order was cold')
+      for pair in sorted(counts):
+          print(pair, counts[pair])
+      print(bigrams('late'))
+      print(bigrams(''))
+    model: |-
+      def bigrams(sentence):
+          words = sentence.lower().split()
+          counts = {}
+          for i in range(len(words) - 1):
+              pair = (words[i], words[i + 1])
+              counts[pair] = counts.get(pair, 0) + 1
+          return counts
+    output: |-
+      ('and', 'the') 1
+      ('late', 'and') 1
+      ('order', 'was') 2
+      ('the', 'order') 2
+      ('was', 'cold') 1
+      ('was', 'late') 1
+      {}
+      {}
+    narration:
+      - "That is a real interview question. Text made small, cut into words, a loop over positions with a pair of neighbours, and a pile for each pair. Order was and the order are in there twice."
+      - "Every piece was one you had used: split, lower, range, a neighbour, a pair for a name, and a count. A bigram is just a pair of neighbours."
+      - "Nine words make eight pairs, and two of the pairs appear twice."
+    wrong:
+      - code: |-
+          def bigrams(sentence):
+              words = sentence.split()
+              counts = {}
+              for i in range(len(words) - 1):
+                  pair = (words[i], words[i + 1])
+                  counts[pair] = counts.get(pair, 0) + 1
+              return counts
+        ask: "Try a sentence that starts with The, and has the again later. Are they counted as the same word?"
+        why: "capitals make different words. The sentence has to be made small before it is cut."
+      - code: |-
+          def bigrams(sentence):
+              words = sentence.lower().split()
+              counts = {}
+              for i in range(len(words) - 1):
+                  pair = (words[i], words[i + 1])
+                  counts[pair] = counts.get(pair, 0) + 1
+        ask: "The check received nothing. What does the function owe whoever called it?"
+        why: "the work is done, and it still has to be handed back."
+      - code: |-
+          def bigrams(sentence):
+              words = sentence.lower().split()
+              counts = {}
+              for i in range(len(words)):
+                  pair = (words[i], words[i + 1])
+                  counts[pair] = counts.get(pair, 0) + 1
+              return counts
+        ask: "Python says index out of range. Which word has no neighbour?"
+        why: "the last word has nothing after it."
+    walk:
+      - "Make the sentence small and cut it into words."
+      - "Go through the positions, stopping one short, and make a pair of each word and the next."
+      - "Keep a dict where each pair is a pile and its count is what the pile holds."
+    return:
+      text: "Write `length_pairs`, which takes a sentence and hands back a dict with how many times each pair of lengths appears: the length of a word and the length of the word after it."
+      check: |-
+        counts = length_pairs('the order was late')
+        for pair in sorted(counts):
+            print(pair, counts[pair])
+      model: |-
+        def length_pairs(sentence):
+            words = sentence.split()
+            counts = {}
+            for i in range(len(words) - 1):
+                pair = (len(words[i]), len(words[i + 1]))
+                counts[pair] = counts.get(pair, 0) + 1
+            return counts
+      output: |-
+        (3, 4) 1
+        (3, 5) 1
+        (5, 3) 1
+      narration:
+        - "(3, 5), (5, 3) and (3, 4), once each, from the order was late. The names of the piles are pairs of lengths."
+        - "A pair as the name, built from numbers this time."
+      note: "Return for step 17."
+    note: "The closing sentence of PY-8 and pass-bar task 9, unbroken (friction). The check includes a one-word sentence and the empty sentence: range(len(words) - 1) is range(-1) or range(0), which is empty, so no special case is needed. A classmate would miss that it works without one."
+
+  # 20
+  - kind: "give"
+    lang: "python"
+    text: |-
+      Put it together with what you wrote last time. Here are the most common pairs in that sentence, with ties in alphabetical order, using the same sort as before. The pairs themselves are the names, and they sort like any pair: by the first word, then the second.
+
+      ```python
+      def bigrams(sentence):
+          words = sentence.lower().split()
+          counts = {}
+          for i in range(len(words) - 1):
+              pair = (words[i], words[i + 1])
+              counts[pair] = counts.get(pair, 0) + 1
+          return counts
+
+      counts = bigrams('the order was late and the order was cold')
+      ranked = sorted(counts.items(), key=lambda p: (-p[1], p[0]))
+      print(ranked[:2])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def bigrams(sentence):
+            words = sentence.lower().split()
+            counts = {}
+            for i in range(len(words) - 1):
+                pair = (words[i], words[i + 1])
+                counts[pair] = counts.get(pair, 0) + 1
+            return counts
+
+        counts = bigrams('the order was late and the order was cold')
+        ranked = sorted(counts.items(), key=lambda p: (-p[1], p[0]))
+        print(ranked[:2])
+    after_run: "Order was and the order, twice each. A pair of words is itself a pair, so the key made from it sorts by the first word and then the second, as the tie rule said. Sorting by count, then by what is counted, is something you do again and again."
+    note: "Integration: top_k's sort on bigrams. The nested pairs sort as the tie rule predicts, so nothing new is introduced."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today you cut text into words, and glued words back into text. You tidied text before comparing it, and you went through the positions of a list to look at a word beside another. A pair of words became a name in a dict, and that was enough to count them.
+
+      You are not fast at this, and you are not meant to be. This is acquisition. Don't go over any of it before next time. One question, cold, and then we stop.
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "tidy", "positions", "neighbours", "if-question", "equals-asks", "running-result"]
+    text: "Write a function called `repeated_words` that takes a sentence and hands back how many times a word is immediately followed by the same word. Capitals do not matter."
+    check: "print(repeated_words('Very very late and and cold'))"
+    model: |-
+      def repeated_words(sentence):
+          words = sentence.lower().split()
+          count = 0
+          for i in range(len(words) - 1):
+              if words[i] == words[i + 1]:
+                  count = count + 1
+          return count
+    output: "2"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: split, tidy, positions and neighbours, in a combination not yet practised. Never scored."

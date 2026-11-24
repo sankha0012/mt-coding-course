@@ -1,0 +1,566 @@
+lesson: sql-06
+title: "A number beside each row"
+strand: sql
+stage: 2
+thoughts:
+  beside-each-row: "`AVG(subtotal) OVER ()` writes the summary beside every row. The rows do not collapse."
+  piles-that-stay: "`OVER (PARTITION BY restaurant_id)` writes each pile's summary beside the rows of that pile."
+  row-against-pile: "A row can be compared with its own pile's summary, now that the two sit on the same row."
+  beside-comes-late: "The number beside the row is written after the keeping is done. To keep by it, name the result and query it again."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "summary-column", "name-a-result", "name-a-table", "one-number-from-a-query", "keep-rows", "compare-signs"]
+    any_column_order: true
+    text: "The customers who placed more orders than the average customer, each with how many orders they placed."
+    model: "WITH counts AS (SELECT customer_id, COUNT(*) AS n FROM orders GROUP BY customer_id) SELECT customer_id, n FROM counts WHERE n > (SELECT AVG(n) FROM counts)"
+    rows: 549
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-5: name a table, then use a one-number query beside it, on customers and not on restaurants as the SQL-5 closing sentence did. It also points straight at the first step here, which replaces the bracketed query with something else. Never scored."
+
+  # 2
+  - kind: "give"
+    new: ["beside-each-row"]
+    text: |-
+      Last time you answered "above the average" by putting a second query in brackets. Now look at what piles do to a table. They squeeze: many rows go in, one row per pile comes out. Sometimes you want every row to stay, with a summary written beside it. For that, put OVER () straight after the summary:
+
+      ```sql
+      SELECT order_id, subtotal, AVG(subtotal) OVER () FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, subtotal, AVG(subtotal) OVER () FROM orders"
+    after_run: "Six thousand rows, none squeezed away, and the same number beside every one: 60.40, the average of all the subtotals. OVER is the word that says: don't collapse, write it beside the row. The empty brackets say which rows the average is taken over, and with nothing inside, that means all of them."
+    note: "The one truly new thought of the strand, shown in use before it is explained (rule B3). It arrives as a contrast with piles, which the learner owns, and it is not a new kind of sentence: the table that comes out is still a table. The learner is told what the empty brackets mean, so that PARTITION BY in step 5 is a filling of a slot they have seen."
+
+  # 3
+  - kind: "ask"
+    requires: ["beside-each-row", "count-rows", "from-table", "choose-columns", "commas"]
+    text: "Show each courier's id and city, with the number of couriers in total beside every row."
+    model: "SELECT courier_id, city, COUNT(*) OVER () FROM couriers"
+    rows: 200
+    narration:
+      - "200 rows, and 200 beside every one of them. The count sat where the average sat, with OVER () after it."
+      - "Every courier is still there, each with the same count beside it. The rows did not collapse."
+      - ""
+    wrong:
+      - sql: "SELECT courier_id, city, COUNT(*) FROM couriers"
+        ask: "How many rows came back? Which word tells the count to sit beside the rows and not squeeze them into one?"
+        why: "a summary on its own squeezes the table into one row. OVER is what asks for it to be written beside the rows."
+      - sql: "SELECT courier_id, city, COUNT(*) OVER FROM couriers"
+        ask: "OVER needs something straight after it, even when there is nothing to say. What are the brackets for?"
+        why: "the brackets say which rows to count over, and empty means all of them."
+      - sql: "SELECT COUNT(*) OVER () FROM couriers"
+        ask: "That is 200 rows of 200 and nothing else. Where are the ids and cities I asked for?"
+    walk:
+      - "Show me the id and city of every courier."
+      - "Now add the count of couriers, written beside each row: the summary, then OVER and its brackets."
+    return:
+      text: "Show each restaurant's name and city, with the number of restaurants in total beside every row."
+      model: "SELECT name, city, COUNT(*) OVER () FROM restaurants"
+      rows: 60
+      narration:
+        - "60 rows, and 60 beside every one. The same count as before, over a different table."
+        - "Each restaurant keeps its own row, with the total written beside it."
+      note: "Return for step 3. Only the table and columns change, early in the lesson."
+    note: "First typed use. COUNT is used because the learner knows it best, and the data has no empty cells in couriers, so nothing distracts."
+
+  # 4
+  - kind: "ask"
+    requires: ["beside-each-row", "summary-column", "from-table", "choose-columns", "commas", "keep-rows", "text-quotes", "compare-signs", "keep-before-piles"]
+    text: "Show each delivered order's id and subtotal, with the average subtotal of the delivered orders beside every row."
+    model: "SELECT order_id, subtotal, AVG(subtotal) OVER () FROM orders WHERE status = 'delivered'"
+    rows: 5601
+    narration:
+      - "5,601 rows, and 60.43 beside every one. The cancelled orders were dropped first, so they are not in the average either."
+      - "Keep the delivered rows, then write the average beside each of them. The keeping came first, and the average is of what was kept."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, subtotal, AVG(subtotal) OVER () FROM orders"
+        ask: "6,000 rows came out, and the average is 60.40. Which orders did I ask about, and where does that question go?"
+        why: "the keeping has to come first, or the cancelled orders are counted in the average."
+      - sql: "SELECT order_id, subtotal, AVG(subtotal) FROM orders WHERE status = 'delivered'"
+        ask: "Only one row came back. Which words keep every row and write the average beside it?"
+      - sql: "SELECT order_id, subtotal, AVG(subtotal) OVER () FROM orders WHERE status = delivered"
+        ask: "Is delivered a column, or a word we are looking for?"
+        why: "a bare word is read as a column's name."
+    walk:
+      - "Show me the id and subtotal of every order."
+      - "Add the average subtotal beside each row."
+      - "Now keep only the delivered ones, after the table."
+    return:
+      text: "Show each bike courier's id, with the number of bike couriers in total beside every row."
+      model: "SELECT courier_id, COUNT(*) OVER () FROM couriers WHERE vehicle = 'bike'"
+      rows: 73
+      narration:
+        - "73 rows, and 73 beside each. Only the bikes were kept, and the count is of the bikes."
+        - "Keep the bike rows first, then write the count beside them."
+      note: "Return for step 4. A count in place of an average, a different table, and the keeping is on a column of words."
+    note: "Keeping before the number is written is the order of events again, and step 13 depends on it. The average moves from 60.40 to 60.43 because the cancelled orders are gone, so the learner can see that the keeping came first."
+
+  # 5
+  - kind: "give"
+    new: ["piles-that-stay"]
+    text: |-
+      Now suppose each row should get the summary of its own pile, and not one number for everybody. Inside the brackets, say how the piles are made: PARTITION BY and a column.
+
+      ```sql
+      SELECT order_id, restaurant_id, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY restaurant_id) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, restaurant_id, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY restaurant_id) FROM orders"
+    after_run: "Still six thousand rows. Pick out the rows of one restaurant: they all carry the same number, that restaurant's average delivery fee. The piles are made as GROUP BY makes them, one for each restaurant, but nothing is squeezed. The brackets said which rows to take the average over. Empty meant all of them, and PARTITION BY restaurant_id means the rows that share this row's restaurant."
+    note: "The slot learned in step 2 is filled. The example uses delivery_fee, and the learner's first typed use asks for vehicle on couriers, so nothing is a copy. Real reason for the word: a partition is a division into parts."
+
+  # 6
+  - kind: "ask"
+    requires: ["piles-that-stay", "count-rows", "from-table", "choose-columns", "commas"]
+    text: "Show each courier's id and vehicle, with the number of couriers who ride that same vehicle beside it."
+    model: "SELECT courier_id, vehicle, COUNT(*) OVER (PARTITION BY vehicle) FROM couriers"
+    rows: 200
+    narration:
+      - "Every courier has the size of their own vehicle pile beside them: 73 for a bike, 110 for a moto, 17 for a carro."
+      - "200 rows and nothing squeezed. The piles are by vehicle, and each row sees only its own pile."
+      - ""
+    wrong:
+      - sql: "SELECT courier_id, vehicle, COUNT(*) OVER () FROM couriers"
+        ask: "Every row says 200. Which rows should each count be taken over?"
+        why: "empty brackets mean all the rows. To count within a pile, the brackets have to say how the piles are made."
+      - sql: "SELECT vehicle, COUNT(*) FROM couriers GROUP BY vehicle"
+        ask: "Three rows. I asked for each courier. Which way of making piles keeps every row?"
+      - sql: "SELECT courier_id, vehicle, COUNT(*) OVER (vehicle) FROM couriers"
+        ask: "Which two words come before the column, inside the brackets?"
+    walk:
+      - "Show me the id and vehicle of every courier."
+      - "Add a count beside each row."
+      - "Make that count be taken within each vehicle: PARTITION BY, and the column."
+    return:
+      text: "Show each restaurant's id and cuisine, with the number of restaurants that share that cuisine beside it."
+      model: "SELECT restaurant_id, cuisine, COUNT(*) OVER (PARTITION BY cuisine) FROM restaurants"
+      rows: 60
+      narration:
+        - "60 rows, each with the size of its own cuisine beside it: 8 for pizza, 13 for hamburguer."
+        - "The brackets named the pile, and every row saw only its own."
+      note: "Return for step 6. Another table and another pile."
+    note: "The pile's column is chosen with a word of everyday English (that same vehicle), so the learner translates it into PARTITION BY."
+
+  # 7
+  - kind: "ask"
+    requires: ["piles", "one-row-per-pile", "pile-name", "summary-column", "summary-per-pile", "commas", "from-table"]
+    text: "One line for each restaurant: its id, and the average subtotal of its orders."
+    model: "SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id"
+    rows: 60
+    narration:
+      - "60 lines, one for each restaurant. This time the piles were squeezed, which is what GROUP BY does."
+      - "One row per pile, with the pile's name and a summary of it."
+      - ""
+    wrong:
+      - sql: "SELECT restaurant_id, AVG(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+        ask: "6,000 lines came back, with each restaurant repeated. I asked for one line each. Which way of making piles squeezes them?"
+        why: "PARTITION BY keeps every row and writes the summary beside it. GROUP BY gives one row per pile."
+      - sql: "SELECT restaurant_id, AVG(subtotal) FROM orders"
+        ask: "Only one row, and a restaurant picked at random. What makes a pile for each restaurant?"
+    walk:
+      - "From orders, the average subtotal."
+      - "Now make a pile for each restaurant, and show the pile's name with it."
+    return:
+      text: "One line for each promised time: the promise, and the average actual_minutes of its orders."
+      model: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes"
+      rows: 3
+      narration:
+        - "3 lines, one for each promise: 30, 40 and 50. The averages climb with the promise."
+        - "Piles, a name for each, a summary of each: and the rows were squeezed."
+      note: "Return for step 7. Another column makes the piles."
+    note: "Confusable pair (rule C6): GROUP BY and PARTITION BY make the same piles, one squeezes and one keeps. Both are comfortable by now, so they meet here, once, on purpose. The next step is the opposite request. Order matters: the learner has to decide each time which one a sentence is asking for."
+
+  # 8
+  - kind: "ask"
+    requires: ["piles-that-stay", "more-summaries", "summary-column", "from-table", "choose-columns", "commas"]
+    text: "Now every order again: its id, its customer and its subtotal, with the biggest subtotal that customer ever had beside it."
+    model: "SELECT order_id, customer_id, subtotal, MAX(subtotal) OVER (PARTITION BY customer_id) FROM orders"
+    rows: 6000
+    narration:
+      - "6,000 rows, each with its customer's biggest order beside it. MAX sat where AVG sat, and the pile was the customer."
+      - "Look at a customer's rows together: the same biggest subtotal on every one of them."
+      - ""
+    wrong:
+      - sql: "SELECT customer_id, MAX(subtotal) FROM orders GROUP BY customer_id"
+        ask: "That is one line per customer. I asked for every order. Which way of making piles keeps the rows?"
+      - sql: "SELECT order_id, customer_id, subtotal, MAX(subtotal) OVER () FROM orders"
+        ask: "The same number is beside every row. Which rows should each MAX be taken over?"
+      - sql: "SELECT order_id, customer_id, subtotal, MAX(subtotal) OVER (PARTITION BY order_id) FROM orders"
+        ask: "Every row's biggest is its own subtotal. What is the pile supposed to be?"
+        why: "partitioning by a column that is different on every row gives piles of one."
+    walk:
+      - "Show me the id, customer and subtotal of every order."
+      - "Beside each, the biggest subtotal: which summary finds the biggest?"
+      - "Taken within each customer: PARTITION BY and the column."
+    return:
+      text: "Show each order's id, restaurant and subtotal, with the total of that restaurant's subtotals beside it."
+      model: "SELECT order_id, restaurant_id, subtotal, SUM(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+      rows: 6000
+      narration:
+        - "6,000 rows, each with its restaurant's total beside it. SUM in place of MAX, and the pile is the restaurant."
+        - "Every row of a restaurant shows the same total."
+      note: "Return for step 8. Another summary and another pile."
+    note: "Follows the GROUP BY step on purpose: the request is for every order, so the learner must choose PARTITION BY. A customer has about four orders, so the repeated number is easy to see. MAX returns from SQL-2."
+
+  # 9
+  - kind: "ask"
+    requires: ["piles-that-stay", "more-summaries", "summary-column", "from-table", "choose-columns", "commas", "keep-rows", "text-quotes", "compare-signs", "keep-before-piles"]
+    text: "Show each delivered order's id, restaurant and subtotal, with the total of the delivered subtotals of that restaurant beside it."
+    model: "SELECT order_id, restaurant_id, subtotal, SUM(subtotal) OVER (PARTITION BY restaurant_id) FROM orders WHERE status = 'delivered'"
+    rows: 5601
+    narration:
+      - "5,601 rows. The cancelled orders went first, and then each restaurant's total was written beside the rows that were left."
+      - "Keep, then write the number beside: restaurant 1's rows all show 6,675.92, the total of its delivered orders only."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, restaurant_id, subtotal, SUM(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+        ask: "6,000 rows, and the totals include the cancelled orders. Where do we drop them, and when?"
+        why: "the keeping happens before the number beside is written, so a row that was kept out is not in it."
+      - sql: "SELECT restaurant_id, SUM(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id"
+        ask: "60 lines. I asked for each order. Which way of making piles keeps the rows?"
+      - sql: "SELECT order_id, restaurant_id, subtotal, SUM(subtotal) OVER () FROM orders WHERE status = 'delivered'"
+        ask: "One total beside every row. Which rows should each total be taken over?"
+    walk:
+      - "Show the id, restaurant and subtotal of every order."
+      - "Write each restaurant's total beside its rows."
+      - "Now keep only the delivered orders."
+    return:
+      text: "Show each delivered order's id, courier and delivery fee, with the average delivery fee of that courier's delivered orders beside it."
+      model: "SELECT order_id, courier_id, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY courier_id) FROM orders WHERE status = 'delivered'"
+      rows: 5601
+      narration:
+        - "5,601 rows, each with its courier's average fee beside it. Keep the delivered, then write the average of each courier's pile."
+        - "The cancelled orders have no courier, and they were gone before the averages were written."
+      note: "Return for step 9. Another pile and another summary."
+    note: "Combines piles that stay with keeping, with the keeping first. It prepares step 13, where the order of events is the whole point."
+
+  # 10
+  - kind: "aside"
+    text: "Something that is only interesting. These sentences with OVER have a name: window functions. The window is the set of rows each row looks at when it works out its number. For the empty brackets it is every row, and for PARTITION BY it is the row's own pile. When an interviewer says window function, this is what they mean. The name is for talking about it. The thought you already have is what you will use."
+    note: "Real name, given once and marked as an aside (rule D4). It is useful in interviews and carries nothing to remember. No mnemonic: the window really is the set of rows that each row looks at. Relief after four typed sentences."
+
+  # 11
+  - kind: "give"
+    new: ["row-against-pile"]
+    text: |-
+      There is something else you can do now. The number beside a row sits on the same row as the thing it summarises, so the two can be compared, with the signs you know. Ask each row a question about its own pile:
+
+      ```sql
+      SELECT order_id, subtotal, subtotal > AVG(subtotal) OVER (PARTITION BY restaurant_id) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, subtotal, subtotal > AVG(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+    after_run: "A 1 for yes and a 0 for no: that is how SQL writes the answer to a yes-or-no question. Every row was asked: are you above the average of your own restaurant? A few rows are empty: those are the orders with no subtotal, and nothing is bigger than an empty cell. A row can now be compared with its own pile."
+    note: "Row against pile, before the keeping (which is the next step's discovery). The comparison sign is in the SELECT, where the learner has already seen the 1 and 0 in lesson 1 step 6's wrong answer. It is the only way to compare without arithmetic, which arrives in SQL-9."
+
+  # 12
+  - kind: "ask"
+    requires: ["row-against-pile", "beside-each-row", "piles-that-stay", "summary-column", "from-table", "choose-columns", "commas", "compare-signs", "empty-cells"]
+    text: "Show each order's id and actual minutes, and whether it took longer than the average for orders promised the same time."
+    model: "SELECT order_id, actual_minutes, actual_minutes > AVG(actual_minutes) OVER (PARTITION BY promised_minutes) FROM orders"
+    rows: 6000
+    narration:
+      - "6,000 rows, each with a 1 or a 0, except the 399 cancelled orders: they have no actual minutes, so their answer is empty. 2,534 got a 1."
+      - "You compared each row with its own pile: the actual minutes against the average of orders promised the same time."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, actual_minutes, actual_minutes > AVG(actual_minutes) OVER () FROM orders"
+        ask: "That compares every order with the average of all of them. Which orders should each one be compared with?"
+        why: "a 30-minute promise and a 50-minute promise have different averages, so the pile is the promise."
+      - sql: "SELECT order_id, actual_minutes, AVG(actual_minutes) OVER (PARTITION BY promised_minutes) FROM orders"
+        ask: "That puts the average beside each row, but I asked for a yes or no. What do you put between the two numbers?"
+      - sql: "SELECT order_id, actual_minutes, actual_minutes > AVG(actual_minutes) OVER (PARTITION BY promised_minutes) FROM orders WHERE status = 'delivered'"
+        ask: "5,601 rows. I asked about every order. What did you drop, and did I ask you to?"
+    walk:
+      - "Show the id and actual minutes of each order."
+      - "Write the average actual minutes beside each, taken within each promised time."
+      - "Now, in place of the average, the yes or no: is the row's own number above it?"
+    return:
+      text: "Show each order's id and delivery fee, and whether the fee is above the average delivery fee of all the orders."
+      model: "SELECT order_id, delivery_fee, delivery_fee > AVG(delivery_fee) OVER () FROM orders"
+      rows: 6000
+      narration:
+        - "6,000 rows, each with a 1 or a 0. Every order was asked about the same average, the whole table's."
+        - "A comparison sign between the row's own number and the summary beside it."
+      note: "Return for step 12. Empty brackets this time, and a different column."
+    note: "Row against pile, asked. The empty answers for cancelled orders pay a small debt from SQL-3 (empty cells), and the answer has a column of 1 and 0 that step 13's classmate would like to keep by."
+
+  # 13
+  - kind: "classmate"
+    new: ["beside-comes-late"]
+    requires: ["piles-that-stay", "name-a-table", "name-a-result", "keep-rows", "compare-signs"]
+    text: |-
+      Davi wanted the orders whose delivery fee was above the average fee of their own restaurant. He took the comparison from a moment ago and put it where the keeping goes:
+
+      ```sql
+      SELECT order_id, delivery_fee FROM orders WHERE delivery_fee > AVG(delivery_fee) OVER (PARTITION BY restaurant_id)
+      ```
+
+      SQL answered: misuse of window function AVG(). Davi, WHERE does its keeping before the number beside each row is written, or after? ... Before. WHERE decides which rows stay, and only then are the numbers written beside the ones left. When WHERE looks at a row, the average he is asking about does not exist yet. So the number has to be written first, in a table of its own, and then asked about. You know how to name a table and ask it a question from last time:
+
+      ```sql
+      WITH f AS (SELECT order_id, restaurant_id, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY restaurant_id) AS avg_fee FROM orders)
+      SELECT order_id, delivery_fee, avg_fee FROM f WHERE delivery_fee > avg_fee
+      ```
+
+      Run it.
+    shows:
+      - "WITH f AS (SELECT order_id, restaurant_id, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY restaurant_id) AS avg_fee FROM orders) SELECT order_id, delivery_fee, avg_fee FROM f WHERE delivery_fee > avg_fee"
+    broken: "SELECT order_id, delivery_fee FROM orders WHERE delivery_fee > AVG(delivery_fee) OVER (PARTITION BY restaurant_id)"
+    after_run: "3,313 orders paid more in delivery than the average for their restaurant. The number beside the row is written after the keeping is done. To keep by it, write it first, name the table, and keep from that. A table goes in, a table comes out: the table with the number beside each row came out, and went into the next query."
+    note: "Davi makes the slip before the learner can (rule E6), and the database's own message carries part of the reason. The rest is the order of events from lesson 1, which the learner has been told five times: keep, pile, sort, cut. The number beside the row comes after keeping, so it is a discovery and not a rule. The fix is the learner's own WITH from SQL-5, so it costs little. The step is given, not asked, as in SQL-1 step 8, because the repair is the longest sentence yet seen and the learner has not met the reason."
+
+  # 14
+  - kind: "ask"
+    requires: ["beside-comes-late", "row-against-pile", "piles-that-stay", "name-a-table", "name-a-result", "summary-column", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    text: "Show the id, customer and subtotal of every order that came to more than the average subtotal of its own customer."
+    model: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders) SELECT order_id, customer_id, subtotal FROM c WHERE subtotal > cust_avg"
+    rows: 2690
+    narration:
+      - "2,690 orders were above their own customer's average. You wrote the number beside each row first, named the table, and then kept from it."
+      - "The number beside the row came first, in the WITH, and the keeping came after, in the sentence below it."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, customer_id, subtotal FROM orders WHERE subtotal > AVG(subtotal) OVER (PARTITION BY customer_id)"
+        ask: "SQL refuses. When does WHERE do its keeping, compared with when the number beside each row is written?"
+        why: "the keeping is done before the number exists, so it must be written into a table first."
+      - sql: "SELECT order_id, customer_id, subtotal FROM orders WHERE subtotal > (SELECT AVG(subtotal) FROM orders)"
+        ask: "That compares every order with the average of everybody. Whose average should each order be compared with?"
+      - sql: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders) SELECT order_id, customer_id, subtotal FROM c"
+        ask: "Every order is here. Which words keep only the bigger ones?"
+    walk:
+      - "Write the table with each order's customer average beside it, and give it a name."
+      - "Now, from that table, show the order, the customer and the subtotal."
+      - "Keep only the rows where the subtotal is above the average beside it."
+    return:
+      text: "Show the id and vehicle of the couriers who ride a vehicle that fewer than 20 couriers ride."
+      model: "WITH v AS (SELECT courier_id, vehicle, COUNT(*) OVER (PARTITION BY vehicle) AS n FROM couriers) SELECT courier_id, vehicle FROM v WHERE n < 20"
+      rows: 17
+      narration:
+        - "17 couriers, all of them on a carro. The count of each vehicle was written first, and then kept from."
+        - "Write the number beside each row, name the table, then keep from it."
+      note: "Return for step 14. A count and a smaller table, with the same order of events."
+    note: "Beside-comes-late, asked for the first time. A customer has about four orders, so the average of the pile is easy to picture. The WITH shape is the one from SQL-5."
+
+  # 15
+  - kind: "ask"
+    requires: ["beside-comes-late", "row-against-pile", "piles-that-stay", "name-a-table", "name-a-result", "summary-column", "keep-rows", "text-quotes", "compare-signs", "from-table", "choose-columns", "commas", "keep-before-piles"]
+    text: "Among the delivered orders, show the id and actual minutes of those that took longer than the average for orders promised the same time."
+    model: "WITH t AS (SELECT order_id, actual_minutes, AVG(actual_minutes) OVER (PARTITION BY promised_minutes) AS typical FROM orders WHERE status = 'delivered') SELECT order_id, actual_minutes FROM t WHERE actual_minutes > typical"
+    rows: 2534
+    narration:
+      - "2,534 orders: the same number of 1s you saw a few minutes ago. The yes or no became a keeping."
+      - "The delivered orders were kept first, inside the WITH, then the average was written beside each. Then the number beside was used to keep again."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, actual_minutes FROM orders WHERE status = 'delivered' AND actual_minutes > AVG(actual_minutes) OVER (PARTITION BY promised_minutes)"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+      - sql: "WITH t AS (SELECT order_id, actual_minutes, AVG(actual_minutes) OVER () AS typical FROM orders WHERE status = 'delivered') SELECT order_id, actual_minutes FROM t WHERE actual_minutes > typical"
+        ask: "That is the average of all the delivered orders. Which orders should each one be compared with?"
+    walk:
+      - "Write the table of delivered orders with the average beside each row, taken within each promised time. Name it."
+      - "From that table, show the id and actual minutes."
+      - "Keep the rows above the average beside them."
+    return:
+      text: "Show the id and city of the couriers who work in a city with fewer than 35 couriers."
+      model: "WITH c AS (SELECT courier_id, city, COUNT(*) OVER (PARTITION BY city) AS n FROM couriers) SELECT courier_id, city FROM c WHERE n < 35"
+      rows: 62
+      narration:
+        - "62 couriers, from Belo Horizonte and Curitiba. Write the count beside each row, name the table, keep from it."
+        - "The same order of events, with a count and a city."
+      note: "Return for step 15. A different table and summary, and no keeping inside."
+    note: "Row against pile (step 12) meets beside-comes-late (step 14): the 1s of step 12 become a keeping. The same 2,534 appears in both, on purpose, so the learner can see the two sentences are the same thought. The cancelled orders have no actual minutes, so leaving out the inner WHERE gives the same rows, and that answer is accepted without comment."
+
+  # 16
+  - kind: "ask"
+    requires: ["beside-comes-late", "beside-each-row", "row-against-pile", "piles-that-stay", "name-a-table", "name-a-result", "count-rows", "summary-column", "keep-rows", "compare-signs", "from-table"]
+    text: "How many orders came to more than the average subtotal of their own customer?"
+    model: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders) SELECT COUNT(*) FROM c WHERE subtotal > cust_avg"
+    rows: 1
+    result: [[2690]]
+    narration:
+      - "2,690. The table with the number beside each row was written and named first, and then counted."
+      - "The same orders you listed before, this time counted. A table goes in, a table of one number comes out."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE subtotal > (SELECT AVG(subtotal) FROM orders)"
+        ask: "That counts the orders above the average of everybody. Whose average should each one be compared with?"
+      - sql: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders) SELECT COUNT(*) FROM c"
+        ask: "That counts every order. Which words keep only the ones above their own customer's average?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE subtotal > AVG(subtotal) OVER (PARTITION BY customer_id)"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+    walk:
+      - "Write the table with each order's customer average beside it, and name it."
+      - "Keep the rows above the average beside them."
+      - "Now, in place of showing them, count them."
+    return:
+      text: "How many orders came to more than the average subtotal of all the orders? Write the average beside each row first."
+      model: "WITH a AS (SELECT subtotal, AVG(subtotal) OVER () AS avg_all FROM orders) SELECT COUNT(*) FROM a WHERE subtotal > avg_all"
+      rows: 1
+      result: [[2574]]
+      narration:
+        - "2,574. The same average beside every row this time, with empty brackets, and then the rows above it counted."
+        - "Write the number beside, name the table, keep from it, count what is left."
+      note: "Return for step 16. Empty brackets, so the first thought of the lesson returns in the new order of events. 2,574 matches the answer to the SQL-5 sentence with a query in brackets."
+    note: "The answer is a single number, so a learner who lists the orders instead is told at once. Step 14's table is counted: nothing new, so the step is easy relief after step 15."
+
+  # 17
+  - kind: "ask"
+    requires: ["beside-comes-late", "piles-that-stay", "name-a-table", "name-a-result", "count-rows", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    text: "Show the id and customer of every order placed by a customer who has placed more than 8 orders."
+    model: "WITH c AS (SELECT order_id, customer_id, COUNT(*) OVER (PARTITION BY customer_id) AS n FROM orders) SELECT order_id, customer_id FROM c WHERE n > 8"
+    rows: 285
+    narration:
+      - "285 orders, from the customers who have placed more than 8. The count of each customer's orders was written beside every row, and then kept from."
+      - "A pile's size, written beside the row, and then used to keep."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, customer_id FROM orders GROUP BY customer_id HAVING COUNT(*) > 8"
+        ask: "That shows one order per customer, picked for you. I asked for every order. Which way of making piles keeps all the rows?"
+      - sql: "SELECT order_id, customer_id FROM orders WHERE COUNT(*) OVER (PARTITION BY customer_id) > 8"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+      - sql: "WITH c AS (SELECT order_id, customer_id, COUNT(*) OVER () AS n FROM orders) SELECT order_id, customer_id FROM c WHERE n > 8"
+        ask: "Every row has 6,000 beside it. Which rows should each count be taken over?"
+    walk:
+      - "Write the table with the number of each customer's orders beside every order. Name it."
+      - "Show the order and the customer from it."
+      - "Keep only the rows where that number is above 8."
+    return:
+      text: "Show the name and city of every restaurant in a city that has more than 20 restaurants."
+      model: "WITH r AS (SELECT name, city, COUNT(*) OVER (PARTITION BY city) AS n FROM restaurants) SELECT name, city FROM r WHERE n > 20"
+      rows: 25
+      narration:
+        - "25 restaurants, all in São Paulo. The size of each city's pile was written beside the rows, then kept from."
+        - "Write the number beside, name the table, keep from it."
+      note: "Return for step 17. Another table and pile."
+    note: "GROUP BY with HAVING cannot give every row of a big pile without a join, so the learner meets a reason to use the piles that stay. The HAVING wrong answer runs, because SQLite lets a bare column ride along, and it returns a different, smaller table."
+
+  # 18
+  - kind: "aside"
+    text: "Only interesting, and nothing to keep. Having to name a table first, just to keep by a window number, annoys people so much that a few databases added a word for it. In Snowflake, BigQuery and DuckDB you can write QUALIFY, and it keeps by a window number directly, as WHERE keeps by a column. Most other databases do not have it. So the way you have just learned, name the table and ask it again, is the one that works everywhere."
+    note: "Real, and a fair warning about what the learner might see elsewhere. Name only in the sense of grade: it is not in the thought list, it is never asked, and no step requires it. It is honest about the cost of beside-comes-late. Relief after four typed steps."
+
+  # 19
+  - kind: "ask"
+    requires: ["piles-that-stay", "more-summaries", "summary-column", "from-table", "choose-columns", "commas"]
+    text: "Show each order's id and restaurant, with the average subtotal of that restaurant beside it, and then the biggest subtotal of that restaurant beside that."
+    model: "SELECT order_id, restaurant_id, AVG(subtotal) OVER (PARTITION BY restaurant_id), MAX(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+    rows: 6000
+    narration:
+      - "Two numbers beside every row: the restaurant's average and its biggest. Each summary carried its own OVER."
+      - "6,000 rows. A list of columns can have as many summaries as you like, each separated by a comma and each with its own OVER."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, restaurant_id, AVG(subtotal), MAX(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+        ask: "The average has no OVER of its own. What does a summary do to the rows when it has none?"
+      - sql: "SELECT order_id, restaurant_id, AVG(subtotal), MAX(subtotal) FROM orders OVER (PARTITION BY restaurant_id)"
+        ask: "Where does OVER go: after the table, or right after each summary?"
+      - sql: "SELECT order_id, restaurant_id, AVG(subtotal) OVER (PARTITION BY restaurant_id) FROM orders"
+        ask: "That has the average only. Where is the biggest?"
+    walk:
+      - "Show me the order id and the restaurant of every order."
+      - "Add the average subtotal of the restaurant beside each row."
+      - "Add the biggest subtotal of the restaurant after that, with its own OVER."
+    return:
+      text: "Show each courier's id, with the number of couriers who share its vehicle beside it, and then the number who share its city beside that."
+      model: "SELECT courier_id, COUNT(*) OVER (PARTITION BY vehicle), COUNT(*) OVER (PARTITION BY city) FROM couriers"
+      rows: 200
+      narration:
+        - "200 rows, each with two counts: the size of its vehicle pile and the size of its city pile."
+        - "Two summaries in one list, each with its own OVER and its own pile."
+      note: "Return for step 19. Two different piles in one sentence."
+    note: "Each summary in the list has its own OVER and its own PARTITION BY. It is a recombination of what is owned (commas, summaries and piles that stay), with the learner free to choose a different pile for each summary. In the return they do."
+
+  # 20
+  - kind: "ask"
+    requires: ["beside-comes-late", "piles-that-stay", "name-a-table", "name-a-result", "count-rows", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    text: "Show the id and cuisine of the restaurants whose cuisine is shared by more than 12 restaurants."
+    model: "WITH r AS (SELECT restaurant_id, cuisine, COUNT(*) OVER (PARTITION BY cuisine) AS n FROM restaurants) SELECT restaurant_id, cuisine FROM r WHERE n > 12"
+    rows: 13
+    narration:
+      - "13 restaurants, all of them hamburguer, the only cuisine with more than 12. The pile's size was written beside each row and then kept from."
+      - "Write the number beside, name the table, keep from it. The same order of events, on a different table."
+      - ""
+    wrong:
+      - sql: "SELECT restaurant_id, cuisine FROM restaurants WHERE COUNT(*) OVER (PARTITION BY cuisine) > 12"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+      - sql: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine HAVING COUNT(*) > 12"
+        ask: "One line for the cuisine, with its count. I asked for each restaurant. Which way of making piles keeps the rows?"
+      - sql: "WITH r AS (SELECT restaurant_id, cuisine, COUNT(*) OVER (PARTITION BY cuisine) AS n FROM restaurants) SELECT restaurant_id, cuisine FROM r WHERE n > 10"
+        ask: "That keeps cuisines with more than 10. Check the number I asked for."
+    walk:
+      - "Write the table with the size of each restaurant's cuisine beside it. Name it."
+      - "Show the id and cuisine from it."
+      - "Keep only the rows where the size is above 12."
+    return:
+      text: "Show the id and vehicle of the couriers who ride a vehicle that more than 100 couriers ride."
+      model: "WITH v AS (SELECT courier_id, vehicle, COUNT(*) OVER (PARTITION BY vehicle) AS n FROM couriers) SELECT courier_id, vehicle FROM v WHERE n > 100"
+      rows: 110
+      narration:
+        - "110 couriers, all on a moto, the only vehicle ridden by more than 100."
+        - "The size of each vehicle pile was written beside the rows, and then kept from."
+      note: "Return for step 20. Another table, pile and number."
+    note: "Hamburguer is the only cuisine with 13 restaurants, so the answer is stable. The learner should now write the whole WITH sentence without the walk, which is the goal before the closing sentence."
+
+  # 21
+  - kind: "ask"
+    requires: ["beside-each-row", "piles-that-stay", "row-against-pile", "beside-comes-late", "name-a-table", "name-a-result", "summary-column", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    friction: true
+    any_column_order: true
+    text: "The last one, and I won't break it down. The orders that came to more than their own restaurant's average, with that average beside each."
+    model: "WITH o AS (SELECT order_id, restaurant_id, subtotal, AVG(subtotal) OVER (PARTITION BY restaurant_id) AS rest_avg FROM orders) SELECT order_id, restaurant_id, subtotal, rest_avg FROM o WHERE subtotal > rest_avg"
+    rows: 2588
+    narration:
+      - "2,588 orders came to more than their own restaurant's average. That is a real interview question, and you built it from the parts: the average written beside each row, taken within each restaurant, named, and then kept from."
+      - "Write the number beside, name the table, keep from it. You did not need a walk."
+      - "2,588 rows, each with its restaurant's average beside it, and every subtotal above it."
+    wrong:
+      - sql: "SELECT order_id, restaurant_id, subtotal, AVG(subtotal) OVER (PARTITION BY restaurant_id) FROM orders WHERE subtotal > AVG(subtotal) OVER (PARTITION BY restaurant_id)"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+      - sql: "WITH o AS (SELECT order_id, restaurant_id, subtotal, AVG(subtotal) OVER () AS rest_avg FROM orders) SELECT order_id, restaurant_id, subtotal, rest_avg FROM o WHERE subtotal > rest_avg"
+        ask: "That compares every order with the average of everybody. Which orders should each one be compared with?"
+      - sql: "WITH o AS (SELECT order_id, restaurant_id, subtotal, AVG(subtotal) OVER (PARTITION BY restaurant_id) AS rest_avg FROM orders) SELECT order_id, restaurant_id, subtotal, rest_avg FROM o"
+        ask: "Every order is here. Which words keep only the bigger ones?"
+      - sql: "SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id"
+        ask: "That is one line per restaurant. I asked for the orders above it. Which way of making piles keeps the rows?"
+    walk:
+      - "Write the table with the average of each order's restaurant beside it. Name the table."
+      - "From it, show the order, the restaurant, the subtotal and the average."
+      - "Keep only the rows where the subtotal is above the average."
+    return:
+      text: "Among the delivered orders, show the id, customer and subtotal of those that came to less than their own customer's average, with that average beside each."
+      model: "WITH c AS (SELECT order_id, customer_id, subtotal, AVG(subtotal) OVER (PARTITION BY customer_id) AS cust_avg FROM orders WHERE status = 'delivered') SELECT order_id, customer_id, subtotal, cust_avg FROM c WHERE subtotal < cust_avg"
+      rows: 2945
+      narration:
+        - "2,945 delivered orders were below their own customer's average. Keep the delivered, write the average beside each, name it, keep the lower ones."
+        - "The same sentence as before, with a customer's pile, a smaller-than sign and a keeping inside."
+      note: "Return for step 21. Another pile, the other sign, and a keeping inside the WITH."
+    note: "The surprise sentence, from the approved map: all four thoughts of the lesson in one answer (result 2,588 rows, checked). Friction: no walk offered in the text, though the walk exists for the ladder. Columns are compared in any order because the learner may place rest_avg anywhere."
+
+  # 22
+  - kind: "recap"
+    text: |-
+      Stop there. Today you met one new thing, and it did a lot. You can write a summary beside every row without squeezing the rows. You can say which pile it is taken over. You can compare a row with its own pile. And you found, with Davi, that the number beside the row comes after the keeping, so to keep by it you write it first, name the table and ask again.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 23
+  - kind: "cold-check"
+    requires: ["beside-comes-late", "piles-that-stay", "name-a-table", "name-a-result", "count-rows", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    any_column_order: true
+    text: "The id and cuisine of the restaurants whose cuisine is shared by more than 10 restaurants."
+    model: "WITH r AS (SELECT restaurant_id, cuisine, COUNT(*) OVER (PARTITION BY cuisine) AS n FROM restaurants) SELECT restaurant_id, cuisine FROM r WHERE n > 10"
+    rows: 24
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a pile's size written beside each row, named and kept from, with only the number changed from step 20. Never scored (rule F1). Two cuisines, brasileira with 11 and hamburguer with 13, meet it."

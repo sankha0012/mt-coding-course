@@ -1,0 +1,568 @@
+lesson: sql-09
+title: "Dates and buckets"
+strand: sql
+stage: 2
+thoughts:
+  date-to-month: {text: "Cut a date down to its month. In SQLite it is spelled `strftime('%Y-%m', created_at)`, and every database spells it differently.", grade: shape}
+  pile-by-computed: "You can pile by something you worked out, once it has a name: `AS month`, then `GROUP BY month`."
+  previous-row: "`LAG(total) OVER (ORDER BY month)` writes the previous row's value beside this row."
+  column-arithmetic: "Columns can be added and subtracted, cell by cell, row by row, with `+` and `-`."
+  buckets: "`CASE WHEN ... THEN ... ELSE ... END` writes a label on each row, by a question about the row."
+  conditional-count: "`SUM(CASE WHEN ... THEN 1 ELSE 0 END)` counts only some of the rows in each pile."
+  running-total: {text: "`SUM(total) OVER (ORDER BY month)` adds up as it goes, row by row, in the order given.", grade: shape}
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["keep-the-empties", "keep-all-of-first", "empty-side", "piles", "one-row-per-pile", "pile-name", "count-rows", "empty-cells", "join", "join-on", "whose-column", "short-names"]
+    any_column_order: true
+    text: "For each promised time, how many orders have no delivery? Show the promised time and the count."
+    model: "SELECT o.promised_minutes, COUNT(*) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL GROUP BY o.promised_minutes"
+    rows: 3
+    result: [[30, 117], [40, 140], [50, 142]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-8: keep every order, keep the empties, and make piles, on a combination not practised there (no-delivery orders by promised time). Never scored."
+
+  # 2
+  - kind: "give"
+    new: ["date-to-month"]
+    text: |-
+      The dates in this data are written as text, like 2026-08-01 00:00:00. Often you want only the month, so that you can say something about each month. This one you would look up. The thought is: cut a date down to its month. Here it is spelled `strftime('%Y-%m', created_at)`.
+
+      ```sql
+      SELECT order_id, created_at, strftime('%Y-%m', created_at) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, created_at, strftime('%Y-%m', created_at) FROM orders"
+    after_run: "2026-08, 2026-09, 2026-10: each date cut down to its year and month. The thought is the same in every database, and only the spelling changes from one to the next, which is why people look it up and nobody minds. Here you will always be given the spelling, and your job is the thinking."
+    note: "Shape thought, as the map grades it (decision C10). The spelling arrives in the teacher's voice at the moment it is needed, with the plain statement that this is something people look up. Every step that needs it carries it in its text and lists it in `supplies`."
+
+  # 3
+  - kind: "ask"
+    requires: ["date-to-month", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    text: "Show the id of each of customer 7's orders, with the month it was created in. The month is `strftime('%Y-%m', created_at)`."
+    model: "SELECT order_id, strftime('%Y-%m', created_at) FROM orders WHERE customer_id = 7"
+    rows: 8
+    narration:
+      - "Eight orders, each with its month. The month was cut from the date, and the rows were kept to customer 7."
+      - "The spelling was given, and you placed it where a column goes."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, created_at FROM orders WHERE customer_id = 7"
+        ask: "That is the whole date, and I asked for the month. What do you put where the column goes?"
+      - sql: "SELECT order_id, strftime('%Y-%m', created_at) FROM orders"
+        ask: "6,000 rows. I asked for one customer. Where does that question go?"
+      - sql: "SELECT order_id, strftime('%Y', created_at) FROM orders WHERE customer_id = 7"
+        ask: "That cuts the date down to the year only. Look at the spelling in the prompt."
+    walk:
+      - "Show me the id of each order, only for customer 7."
+      - "Add the month: the spelling in the prompt goes where a column's name goes."
+    return:
+      text: "Show the id of each of customer 24's orders, with the month it was created in. The month is `strftime('%Y-%m', created_at)`."
+      model: "SELECT order_id, strftime('%Y-%m', created_at) FROM orders WHERE customer_id = 24"
+      rows: 9
+      narration:
+        - "Nine orders, each with its month, for customer 24."
+        - "The spelling went where a column goes, and the rows were kept to one customer."
+      note: "Return for step 3. Another customer."
+    note: "The first typed use of the shape thought, deliberately easy so that the spelling is a thing to place and not a thing to remember."
+
+  # 4
+  - kind: "give"
+    new: ["pile-by-computed"]
+    text: |-
+      Now the month can make piles. Give it a name with AS, as you did for a count in lesson 2, and then pile by that name:
+
+      ```sql
+      SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders GROUP BY month
+      ```
+
+      Run it.
+    shows:
+      - "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders GROUP BY month"
+    after_run: "Three piles, one for each month, with 2,068, 1,946 and 1,986 orders. The month did not exist in the table. It was worked out, given a name, and the name made the piles. You can pile by something you worked out, once it has a name."
+    note: "Pile-by-computed. The learner owns AS from SQL-2 and GROUP BY from SQL-1, so the new thought is only that the pile may be a worked-out value. Naming comes first, as with the count in lesson 2."
+
+  # 5
+  - kind: "ask"
+    requires: ["date-to-month", "pile-by-computed", "name-a-result", "piles", "one-row-per-pile", "pile-name", "count-rows", "keep-rows", "text-quotes", "compare-signs", "keep-before-piles", "from-table", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    text: "For each month, show the month and how many delivered orders there were. The month is `strftime('%Y-%m', created_at)`."
+    model: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY month"
+    rows: 3
+    result: [["2026-08", 1929], ["2026-09", 1813], ["2026-10", 1859]]
+    narration:
+      - "1,929 in August, 1,813 in September and 1,859 in October. Keep the delivered orders, pile by month, count each pile."
+      - "The month was worked out and named, then used for the piles."
+      - ""
+    wrong:
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders GROUP BY month"
+        ask: "2,068, 1,946 and 1,986. Which orders did I ask about, and where does that question go?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders WHERE status = 'delivered'"
+        ask: "One row. What makes a pile for each month?"
+      - sql: "SELECT created_at, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY created_at"
+        ask: "That has a pile for every moment. What cuts the date down to the month?"
+    walk:
+      - "Show how many delivered orders there are."
+      - "Make the piles by month: give the month a name with AS, and pile by that name."
+    return:
+      text: "For each month, show the month and how many cancelled orders there were. The month is `strftime('%Y-%m', created_at)`."
+      model: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders WHERE status = 'cancelled' GROUP BY month"
+      rows: 3
+      result: [["2026-08", 139], ["2026-09", 133], ["2026-10", 127]]
+      narration:
+        - "139 in August, 133 in September and 127 in October. The cancelled orders kept, then piled by month and counted."
+        - "Keep, then pile by the month, then count."
+      note: "Return for step 5. The other status."
+    note: "Three months in the data, 2026-08 to 2026-10, so each answer has three rows. Keeping happens before piling (lesson 1), and the learner does not have to be told so."
+
+  # 6
+  - kind: "ask"
+    requires: ["date-to-month", "pile-by-computed", "name-a-result", "piles", "one-row-per-pile", "pile-name", "more-summaries", "summary-column", "sort", "sort-direction", "sort-by-summary", "from-table", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    ordered: true
+    text: "For each month, show the month and the total of the delivery fees, the smallest total first. The month is `strftime('%Y-%m', created_at)`."
+    model: "SELECT strftime('%Y-%m', created_at) AS month, SUM(delivery_fee) AS fees FROM orders GROUP BY month ORDER BY fees"
+    rows: 3
+    narration:
+      - "October first, with 10,189.38 in fees. The month was named and piled, the fees were added up in each pile, and the piles were sorted by the total."
+      - "Pile by month, add up each pile, sort the totals from the smallest."
+      - ""
+    wrong:
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, SUM(delivery_fee) AS fees FROM orders GROUP BY month"
+        ask: "All three months are here, but in the order of the month. Which words put the smallest total first?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, SUM(delivery_fee) AS fees FROM orders GROUP BY month ORDER BY fees DESC"
+        ask: "Sorted by the total, but which end comes first?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, AVG(delivery_fee) AS fees FROM orders GROUP BY month ORDER BY fees DESC"
+        ask: "Look at the summary. Did I ask for an average?"
+    walk:
+      - "For each month, show the month and the total of the delivery fees."
+      - "Sort those totals, the smallest first, which is what you get when you say nothing."
+    return:
+      text: "For each month, show the month and the average subtotal, the biggest average first. The month is `strftime('%Y-%m', created_at)`."
+      model: "SELECT strftime('%Y-%m', created_at) AS month, AVG(subtotal) AS typical FROM orders GROUP BY month ORDER BY typical DESC"
+      ordered: true
+      rows: 3
+      narration:
+        - "September first, with the biggest average at 60.56, and then October and August."
+        - "Pile by month, average each pile, sort from the biggest."
+      note: "Return for step 6. The other summary and the other end."
+    note: "The three totals differ, so the order is stable. Sorting by a name, from lesson 2, comes back with the pile that has a name."
+
+  # 7
+  - kind: "give"
+    new: ["previous-row"]
+    text: |-
+      Now something new about the number beside a row. A summary can sit beside the row, as you saw a few lessons ago, and so can the value of a different row. LAG writes the previous row's value beside this one, and the order inside the brackets says which row is previous:
+
+      ```sql
+      WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month)
+      SELECT month, total, LAG(total) OVER (ORDER BY month) FROM monthly
+      ```
+
+      Run it.
+    shows:
+      - "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month) SELECT month, total, LAG(total) OVER (ORDER BY month) FROM monthly"
+    after_run: "Each month has the previous month's total beside it. August is first, so there is nothing before it, and its cell is empty. LAG is the number beside the row that you need when something is to be compared with what came just before. The table of monthly totals was written and named first, as in the last lessons."
+    note: "Previous-row: the third kind of number beside a row (a summary, then a count, now another row's value). The WITH is the learner's own from SQL-5 and the OVER is from SQL-6 and SQL-7, so nothing is new but LAG. The month is spelled in the text because it is part of the shown sentence."
+
+  # 8
+  - kind: "ask"
+    requires: ["previous-row", "date-to-month", "pile-by-computed", "count-rows", "name-a-table", "name-a-result", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    text: "For each month, show the month, how many orders there were, and how many there were the month before. The month is `strftime('%Y-%m', created_at)`."
+    model: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, LAG(n) OVER (ORDER BY month) FROM m"
+    rows: 3
+    narration:
+      - "August has 2,068 and nothing before it, September 1,946 beside 2,068, and October 1,986 beside 1,946. The counts were written and named first, then LAG wrote the previous one beside each."
+      - "The month's count, and the count of the row before it."
+      - ""
+    wrong:
+      - sql: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, LEAD(n) OVER (ORDER BY month) FROM m"
+        ask: "That has the next month's count beside each row. Which row did I ask for?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders GROUP BY month"
+        ask: "That is the monthly counts alone. How do you write the previous month's beside each?"
+      - sql: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, LAG(n) OVER (ORDER BY month DESC) FROM m"
+        ask: "Now each month has the month after it beside it. Which way should the months be in order?"
+    walk:
+      - "Write the table of months with the number of orders in each, and give it a name."
+      - "From it, show the month and the count."
+      - "Add the count of the row before, with LAG and the order of the months inside the brackets."
+    return:
+      text: "For each month, show the month, the average delivery fee, and the average delivery fee of the month before. The month is `strftime('%Y-%m', created_at)`."
+      model: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, AVG(delivery_fee) AS fee FROM orders GROUP BY month) SELECT month, fee, LAG(fee) OVER (ORDER BY month) FROM m"
+      rows: 3
+      narration:
+        - "August has 5.25 and nothing before it, September 5.26 beside 5.25, and October 5.13 beside 5.26."
+        - "The average of each month, and the previous month's beside it."
+      note: "Return for step 8. Another summary, and the same previous-row."
+    note: "Previous-row asked. LAG over a table of three rows keeps the answer stable, since the months are different."
+
+  # 9
+  - kind: "aside"
+    text: "Only interesting, and nothing to keep. LAG has a mirror, called LEAD, that writes the next row's value beside this one in place of the previous. It is used exactly the same way, with the same brackets. Everything that works for LAG works for LEAD, and the words mean what they say in English: one looks back, one looks ahead."
+    note: "Real, a name the learner will meet. Marked as an aside (rule D4). LEAD is not a thought id and is never asked. The English meaning of the words is real and not a mnemonic. Relief after the first LAG."
+
+  # 10
+  - kind: "give"
+    new: ["column-arithmetic"]
+    text: |-
+      One more thing, and it is plain. Columns can be added and subtracted, row by row, with + and -, as in maths. Put the sum where a column's name would go:
+
+      ```sql
+      SELECT order_id, subtotal, delivery_fee, subtotal + delivery_fee FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, subtotal, delivery_fee, subtotal + delivery_fee FROM orders"
+    after_run: "A new column, one sum for each row: what the customer paid in all. The arithmetic is done cell by cell, in each row. Where one cell was empty, the answer is empty too: the 25 orders with no subtotal have no sum."
+    note: "Column arithmetic, imported from maths (B7) and said so. The remark about empty cells follows from lesson 3 (nothing plus an empty cell is empty) and is not a new rule. Subtraction is the one the closing sentence needs, and it is asked next."
+
+  # 11
+  - kind: "ask"
+    requires: ["column-arithmetic", "keep-rows", "text-quotes", "compare-signs", "from-table", "choose-columns", "commas"]
+    text: "For each delivered order, show its id and how many minutes it took beyond the promise: the actual minutes minus the promised minutes."
+    model: "SELECT order_id, actual_minutes - promised_minutes FROM orders WHERE status = 'delivered'"
+    rows: 5601
+    narration:
+      - "5,601 rows, each with a number of minutes: below 0 for an early delivery and above 0 for a late one. The subtraction was done row by row."
+      - "A column minus a column, for each delivered order."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, promised_minutes - actual_minutes FROM orders WHERE status = 'delivered'"
+        ask: "A late delivery shows as a minus number. Which one did I ask to take away from which?"
+      - sql: "SELECT order_id, actual_minutes - promised_minutes FROM orders"
+        ask: "6,000 rows, and the cancelled ones are empty. Which orders did I ask about?"
+      - sql: "SELECT order_id, actual_minutes, promised_minutes FROM orders WHERE status = 'delivered'"
+        ask: "Those are the two numbers, and I asked for the difference. What goes between two columns?"
+    walk:
+      - "Show the id, the actual minutes and the promised minutes of each delivered order."
+      - "In place of the two columns, one: the first take away the second."
+    return:
+      text: "For each delivered order, show its id and how many minutes it had to spare: the promised minutes minus the actual minutes."
+      model: "SELECT order_id, promised_minutes - actual_minutes FROM orders WHERE status = 'delivered'"
+      rows: 5601
+      narration:
+        - "5,601 rows, each with a number of minutes: above 0 for an early delivery. The sign is the opposite of before."
+        - "The promise minus what it took, row by row."
+      note: "Return for step 11. The subtraction the other way."
+    note: "Arithmetic asked once, plainly. Shape check: it differs from step 10 (a given sum on all orders) in table-wide kept rows and in the operator."
+
+  # 12
+  - kind: "give"
+    new: ["buckets"]
+    text: |-
+      Now a different kind of column. Sometimes you want a label on each row, chosen by a question about the row. CASE WHEN writes one. The question is the kind you know from WHERE, and each row answers it:
+
+      ```sql
+      SELECT order_id, subtotal, CASE WHEN subtotal > 100 THEN 'big' ELSE 'small' END AS size FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, subtotal, CASE WHEN subtotal > 100 THEN 'big' ELSE 'small' END AS size FROM orders"
+    after_run: "A label on each row. WHEN asks the question, THEN says what to write when the answer is yes, ELSE says what to write when it is not, and END closes it. It is the keep-rows question again, used to write on rows and not to drop them. A row whose subtotal is empty does not answer yes, so it gets the ELSE label."
+    note: "Buckets. The question is the learner's WHERE question and the label is a quoted word, both owned. END closes the sentence for the same reason brackets close: it just is."
+
+  # 13
+  - kind: "ask"
+    requires: ["buckets", "keep-rows", "text-quotes", "compare-signs", "from-table", "choose-columns", "commas"]
+    text: "For each delivered order of restaurant 5, show its id and a label: late if it took longer than promised, and on time if not."
+    model: "SELECT order_id, CASE WHEN actual_minutes > promised_minutes THEN 'late' ELSE 'on time' END AS timing FROM orders WHERE status = 'delivered' AND restaurant_id = 5"
+    rows: 90
+    narration:
+      - "90 labels: 39 late and 51 on time. The question was asked of each row, and the label written beside it."
+      - "A column against a column, as the question, and two words in quotes as the answers."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, CASE WHEN actual_minutes < promised_minutes THEN 'late' ELSE 'on time' END AS timing FROM orders WHERE status = 'delivered' AND restaurant_id = 5"
+        ask: "Look at the sign. Which way round is a late delivery?"
+      - sql: "SELECT order_id, CASE WHEN actual_minutes > promised_minutes THEN 'late' ELSE 'on time' END AS timing FROM orders WHERE restaurant_id = 5"
+        ask: "That has 95 rows, and the cancelled orders are labelled on time. Which orders did I ask about?"
+        why: "an empty cell does not answer yes to a question, so the cancelled orders fall to ELSE."
+      - sql: "SELECT order_id, CASE WHEN actual_minutes > promised_minutes THEN late ELSE on time END AS timing FROM orders WHERE status = 'delivered' AND restaurant_id = 5"
+        ask: "Is late a column, or a word we are writing?"
+        why: "a bare word is read as a column's name."
+    walk:
+      - "Show the id of each delivered order of restaurant 5."
+      - "Add a label: CASE WHEN, with the question about the two columns, then the word for yes."
+      - "Add the other word after ELSE, close it with END, and name the column."
+    return:
+      text: "Show each order's id and a label: free if the delivery fee is 0, and paid if not."
+      model: "SELECT order_id, CASE WHEN delivery_fee = 0 THEN 'free' ELSE 'paid' END AS kind FROM orders"
+      rows: 6000
+      narration:
+        - "6,000 labels, 1,511 of them free and 4,489 paid. The question about the fee was asked of each row."
+        - "WHEN, THEN, ELSE and END, with two words in quotes."
+      note: "Return for step 13. Another column and another pair of words."
+    note: "Buckets asked. A label on a delivered order is judged by its rows, so the order of rows does not matter. The cancelled orders are kept out by the WHERE, since an empty actual time would make them 'on time'."
+
+  # 14
+  - kind: "ask"
+    requires: ["buckets", "pile-by-computed", "count-rows", "keep-rows", "text-quotes", "compare-signs", "name-a-result", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    text: "How many delivered orders were late, and how many were on time? Show each label with its count."
+    model: "SELECT CASE WHEN actual_minutes > promised_minutes THEN 'late' ELSE 'on time' END AS timing, COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY timing"
+    rows: 2
+    result: [["late", 2386], ["on time", 3215]]
+    narration:
+      - "2,386 late and 3,215 on time. The label was written on each row, given a name, and the name made the piles."
+      - "A worked-out label for the piles, and a count of each."
+      - ""
+    wrong:
+      - sql: "SELECT CASE WHEN actual_minutes > promised_minutes THEN 'late' ELSE 'on time' END AS timing FROM orders WHERE status = 'delivered'"
+        ask: "That has the labels but 5,601 rows. What makes one row for each label?"
+      - sql: "SELECT CASE WHEN actual_minutes > promised_minutes THEN 'late' ELSE 'on time' END AS timing, COUNT(*) FROM orders GROUP BY timing"
+        ask: "The cancelled orders have been counted as on time. Which orders did I ask about?"
+      - sql: "SELECT status, COUNT(*) FROM orders GROUP BY status"
+        ask: "That counts by status. Which question makes the label?"
+    walk:
+      - "Write the label on each delivered order, and name it."
+      - "Make a pile for each label."
+      - "Show each label with the number in its pile."
+    return:
+      text: "How many orders came to more than 100 and how many did not? Show a label, big or small, with its count."
+      model: "SELECT CASE WHEN subtotal > 100 THEN 'big' ELSE 'small' END AS size, COUNT(*) FROM orders GROUP BY size"
+      rows: 2
+      result: [["big", 632], ["small", 5368]]
+      narration:
+        - "632 big and 5,368 small. The label was written on each row, named, and used to make the piles."
+        - "A worked-out label for the piles, and a count of each."
+      note: "Return for step 14. Another label, with no keeping."
+    note: "A label as the pile's name: pile-by-computed with a CASE in place of the month. The cancelled orders would be counted on time without the WHERE, which is the predictable slip and the second wrong answer."
+
+  # 15
+  - kind: "give"
+    new: ["conditional-count"]
+    text: |-
+      There is another way to use CASE, and it is the neat one. Write a 1 for the rows you want to count and a 0 for the others, and add the column up. Only the 1s add anything:
+
+      ```sql
+      SELECT COUNT(*), SUM(CASE WHEN subtotal > 100 THEN 1 ELSE 0 END) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT COUNT(*), SUM(CASE WHEN subtotal > 100 THEN 1 ELSE 0 END) FROM orders"
+    after_run: "6,000 orders, and 632 of them above 100. The CASE wrote a 1 or a 0 on each row, and SUM added them up, so the total is the number of 1s. This counts only some of the rows, and it can do that inside each pile, which a WHERE cannot do, since a WHERE would drop the rows from every other count too."
+    note: "Conditional count. The reason is real: WHERE removes rows from the whole sentence, and this keeps the rows and counts a part of them. The learner owns CASE (step 12) and SUM (SQL-2)."
+
+  # 16
+  - kind: "ask"
+    requires: ["conditional-count", "buckets", "more-summaries", "count-rows", "keep-rows", "text-quotes", "compare-signs", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    text: "For each promised time, show how many delivered orders there were and how many of them were late, with actual minutes above the promised minutes."
+    model: "SELECT promised_minutes, COUNT(*), SUM(CASE WHEN actual_minutes > promised_minutes THEN 1 ELSE 0 END) FROM orders WHERE status = 'delivered' GROUP BY promised_minutes"
+    rows: 3
+    result: [[30, 1902, 788], [40, 1863, 804], [50, 1836, 794]]
+    narration:
+      - "30 minutes: 1,902 delivered and 788 late. 40: 1,863 and 804. 50: 1,836 and 794. The count of all the rows of each pile, and a count of only the late ones, side by side."
+      - "COUNT(*) counted every row in the pile. The SUM of 1s and 0s counted the late ones."
+      - ""
+    wrong:
+      - sql: "SELECT promised_minutes, COUNT(*), COUNT(*) FROM orders WHERE status = 'delivered' GROUP BY promised_minutes"
+        ask: "The two counts are the same. Which one should count only the late ones?"
+      - sql: "SELECT promised_minutes, COUNT(*) FROM orders WHERE status = 'delivered' AND actual_minutes > promised_minutes GROUP BY promised_minutes"
+        ask: "That counts only the late ones, and I asked for both counts. What keeps the late rows in one count and not the other?"
+        why: "a WHERE removes rows from every count in the sentence."
+      - sql: "SELECT promised_minutes, COUNT(*), SUM(CASE WHEN actual_minutes > promised_minutes THEN 1 ELSE 0 END) FROM orders GROUP BY promised_minutes"
+        ask: "The counts include the cancelled orders. Which orders did I ask about?"
+    walk:
+      - "For each promised time, how many delivered orders are there?"
+      - "Add a second count, of the late ones: a CASE that writes 1 for late and 0 for not, and add it up with SUM."
+    return:
+      text: "For each promised time, show how many orders there were and how many had a delivery fee of 0."
+      model: "SELECT promised_minutes, COUNT(*), SUM(CASE WHEN delivery_fee = 0 THEN 1 ELSE 0 END) FROM orders GROUP BY promised_minutes"
+      rows: 3
+      result: [[30, 2019, 514], [40, 2003, 508], [50, 1978, 489]]
+      narration:
+        - "30 minutes: 2,019 orders and 514 with no fee. 40: 2,003 and 508. 50: 1,978 and 489."
+        - "All the rows of each pile, and a count of only the free ones."
+      note: "Return for step 16. The same piles, and another condition."
+    note: "Conditional count asked, with the keeping outside the CASE. The second wrong answer is the reason the thought exists. The return changes the condition and keeps the piles."
+
+  # 17
+  - kind: "classmate"
+    requires: ["conditional-count", "date-to-month", "pile-by-computed", "buckets", "summaries-skip-empties", "count-rows", "text-quotes", "name-a-result", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    text: |-
+      Davi wanted, for each month, how many orders there were and how many were cancelled. For the second count he wrote COUNT where you would write SUM:
+
+      ```sql
+      SELECT strftime('%Y-%m', created_at) AS month, COUNT(*), COUNT(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY month
+      ```
+
+      Both counts came back the same: 2,068, 1,946 and 1,986. Davi, COUNT counts the cells that are not empty. Is a 0 an empty cell? ... No. A 0 is a value, so every row got counted. What adds up the 1s and leaves the 0s as nothing? What should he have written? The month is `strftime('%Y-%m', created_at)`.
+    model: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*), SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY month"
+    rows: 3
+    result: [["2026-08", 2068, 139], ["2026-09", 1946, 133], ["2026-10", 1986, 127]]
+    shows:
+      - "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*), COUNT(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY month"
+    narration:
+      - "August: 2,068 orders and 139 cancelled. September: 1,946 and 133. October: 1,986 and 127. SUM added up the 1s and the 0s added nothing."
+      - "A count of some of the rows: a CASE that writes a 1 for the ones you want, added up."
+      - ""
+    wrong:
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*), COUNT(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY month"
+        ask: "That is Davi's sentence again, and both counts say the same thing. Which summary adds up the column of 1s and 0s?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*), SUM(CASE WHEN status = 'cancelled' THEN 0 ELSE 1 END) FROM orders GROUP BY month"
+        ask: "That counts the rows that are not cancelled. Which rows should get the 1?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders WHERE status = 'cancelled' GROUP BY month"
+        ask: "That has the cancelled ones only. Where is the count of all of them?"
+    walk:
+      - "For each month, how many orders were there?"
+      - "Add a second count: a CASE that writes 1 for a cancelled order and 0 for the others."
+      - "Add up that column with SUM."
+    return:
+      text: "For each promised time, show how many orders there were and how many were cancelled."
+      model: "SELECT promised_minutes, COUNT(*), SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY promised_minutes"
+      rows: 3
+      result: [[30, 2019, 117], [40, 2003, 140], [50, 1978, 142]]
+      narration:
+        - "30 minutes: 2,019 orders and 117 cancelled. 40: 2,003 and 140. 50: 1,978 and 142."
+        - "All the rows of each pile, and the count of only the cancelled ones."
+      note: "Return for step 17. A pile by promised time, and the same condition."
+    note: "Davi's COUNT slip, made before the learner can (rule E6): a 0 is not an empty cell, so COUNT counts it, and the real reason comes from lesson 3 (summaries skip empties). The repair is the thought from step 15, so it is typed. (COUNT of a CASE with no ELSE would work too and gives the same rows.)"
+
+  # 18
+  - kind: "give"
+    new: ["running-total"]
+    text: |-
+      One more, and again one you would look up: adding up as you go, so that each row shows the total so far. The thought is: a running total. Here it is spelled `SUM(total) OVER (ORDER BY month)`. It is SUM with the OVER you know, and the order inside it says what comes before what.
+
+      ```sql
+      WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month)
+      SELECT month, total, SUM(total) OVER (ORDER BY month) FROM monthly
+      ```
+
+      Run it.
+    shows:
+      - "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month) SELECT month, total, SUM(total) OVER (ORDER BY month) FROM monthly"
+    after_run: "August's running total is its own 124,179.67. September's is August's plus its own, 241,609.34. October's is 360,885.35, which is the total of all the subtotals from lesson 2. Each row adds up the rows before it and itself, and the order inside the brackets says what before means."
+    note: "Running total, a shape thought (decision C10): the teacher supplies the spelling and says plainly that it is a lookup. The learner already owns every part: SUM, OVER and ORDER BY inside it. The last row equals the total of lesson 2 step 6, which is a small check that it is right."
+
+  # 19
+  - kind: "ask"
+    requires: ["running-total", "date-to-month", "pile-by-computed", "count-rows", "name-a-table", "name-a-result", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)", "SUM(n) OVER (ORDER BY month)"]
+    text: "For each month, show the month, the number of orders called n, and the running number of orders so far. The month is `strftime('%Y-%m', created_at)`, and the running number is `SUM(n) OVER (ORDER BY month)`."
+    model: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, SUM(n) OVER (ORDER BY month) FROM m"
+    rows: 3
+    result: [["2026-08", 2068, 2068], ["2026-09", 1946, 4014], ["2026-10", 1986, 6000]]
+    narration:
+      - "2,068, then 4,014, then 6,000: the whole table by October. The counts were written and named, and then the running number was added beside each."
+      - "Each month's count, and the sum of the counts so far."
+      - ""
+    wrong:
+      - sql: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, SUM(n) OVER () FROM m"
+        ask: "Every row shows 6,000. What should say that the adding up goes in the order of the months?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) FROM orders GROUP BY month"
+        ask: "That has the counts but no running number. Where is the second number beside each row?"
+      - sql: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, LAG(n) OVER (ORDER BY month) FROM m"
+        ask: "That has the previous month's count, and I asked for the sum so far. Which spelling adds up as it goes?"
+    walk:
+      - "Write the table of months with the number of orders in each, called n, and give it a name."
+      - "From it, show the month and n."
+      - "Add the running number, with the spelling in the prompt."
+    return:
+      text: "For each month, show the month, the total of the delivery fees called fees, and the running total of the fees so far. The month is `strftime('%Y-%m', created_at)`, and the running total is `SUM(fees) OVER (ORDER BY month)`."
+      model: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(delivery_fee) AS fees FROM orders GROUP BY month) SELECT month, fees, SUM(fees) OVER (ORDER BY month) FROM m"
+      rows: 3
+      result: [["2026-08", 10858.48, 10858.48], ["2026-09", 10230.25, 21088.73], ["2026-10", 10189.38, 31278.11]]
+      narration:
+        - "10,858.48, then 21,088.73, then 31,278.11. Each month's fees, and all the fees so far."
+        - "A summary written beside each month, adding up as it goes."
+      note: "Return for step 19. Another summary, and the same running total."
+    note: "Running total asked, with its spelling in the text because it is a shape thought. The three months make the answer stable. Months come out in order whatever the database does, since the window's ORDER BY decides the adding up."
+
+  # 20
+  - kind: "ask"
+    requires: ["conditional-count", "buckets", "date-to-month", "pile-by-computed", "name-a-result", "more-summaries", "compare-signs", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    text: "For each month, show the month and how many of its orders were big, meaning a subtotal above 100. The month is `strftime('%Y-%m', created_at)`."
+    model: "SELECT strftime('%Y-%m', created_at) AS month, SUM(CASE WHEN subtotal > 100 THEN 1 ELSE 0 END) FROM orders GROUP BY month"
+    rows: 3
+    result: [["2026-08", 216], ["2026-09", 198], ["2026-10", 218]]
+    narration:
+      - "216 big orders in August, 198 in September and 218 in October. Piles by month, and in each a count of only the big ones."
+      - "A worked-out pile, and a count of only some of its rows."
+      - ""
+    wrong:
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, COUNT(CASE WHEN subtotal > 100 THEN 1 ELSE 0 END) FROM orders GROUP BY month"
+        ask: "Every pile counts all its rows. Is a 0 an empty cell, and what should add up the ones?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, SUM(CASE WHEN subtotal > 100 THEN 1 ELSE 0 END) FROM orders"
+        ask: "One row. What makes the piles?"
+    walk:
+      - "Write the 1 or 0 for each order: a CASE that writes 1 for a subtotal above 100."
+      - "Add it up, with SUM."
+      - "Make a pile for each month, and show the month."
+    return:
+      text: "For each month, show the month and how many of its delivered orders were late, with actual minutes above promised minutes. The month is `strftime('%Y-%m', created_at)`."
+      model: "SELECT strftime('%Y-%m', created_at) AS month, SUM(CASE WHEN actual_minutes > promised_minutes THEN 1 ELSE 0 END) FROM orders WHERE status = 'delivered' GROUP BY month"
+      rows: 3
+      result: [["2026-08", 802], ["2026-09", 776], ["2026-10", 808]]
+      narration:
+        - "802 late in August, 776 in September and 808 in October. Keep the delivered, pile by month, count only the late ones."
+        - "A worked-out pile, with a keeping before it and a count of only some of its rows."
+      note: "Return for step 20. A different condition, and a keeping first."
+    note: "Conditional count meets the month, a lesson after the classmate's slip. Counting the big orders with a WHERE gives the same rows as the model when there is only one count, so that answer is accepted and is not listed as wrong."
+
+  # 21
+  - kind: "ask"
+    requires: ["date-to-month", "pile-by-computed", "previous-row", "column-arithmetic", "more-summaries", "summary-column", "name-a-table", "name-a-result", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)"]
+    friction: true
+    text: "The last one, and I won't break it down. For each month, show the month and the total of its subtotals, with the change from the month before. The month is `strftime('%Y-%m', created_at)`."
+    model: "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month) SELECT month, total, total - LAG(total) OVER (ORDER BY month) AS change FROM monthly"
+    rows: 3
+    result: [["2026-08", 124179.67, null], ["2026-09", 117429.67, -6750.0], ["2026-10", 119276.01, 1846.34]]
+    narration:
+      - "August has nothing to compare with, so its change is empty. September fell by 6,750.00 and October rose by 1,846.34. That is a real interview question, and you built it from the parts."
+      - "Pile by month, add up each pile, write the previous month's total beside each, and take one from the other. You put it together without a walk."
+      - "Three months, with the change from the month before."
+    wrong:
+      - sql: "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month) SELECT month, total, LAG(total) OVER (ORDER BY month) FROM monthly"
+        ask: "That has the previous month's total beside each, but not the change. What do you do with the two numbers?"
+      - sql: "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month) SELECT month, total, LAG(total) OVER (ORDER BY month) - total AS change FROM monthly"
+        ask: "September shows 6,750 where it fell. Which number should be taken away from which?"
+      - sql: "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month) SELECT month, total, total - LEAD(total) OVER (ORDER BY month) AS change FROM monthly"
+        ask: "That compares each month with the month after. Which row should it be compared with?"
+      - sql: "SELECT strftime('%Y-%m', created_at) AS month, SUM(subtotal) AS total FROM orders GROUP BY month"
+        ask: "That is the totals alone. How do you compare a row with the one before it?"
+    walk:
+      - "Write the table of months with the total of the subtotals in each, and name it."
+      - "From it, show the month and the total, and beside them the previous month's total."
+      - "Now, in place of that, the total minus the previous month's total."
+    return:
+      text: "For each month, show the month and the number of orders, with the change from the month before. The month is `strftime('%Y-%m', created_at)`."
+      model: "WITH monthly AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders GROUP BY month) SELECT month, n, n - LAG(n) OVER (ORDER BY month) AS change FROM monthly"
+      rows: 3
+      result: [["2026-08", 2068, null], ["2026-09", 1946, -122], ["2026-10", 1986, 40]]
+      narration:
+        - "August's change is empty. September had 122 fewer orders than August, and October had 40 more than September."
+        - "Pile by month, count each pile, write the previous month's count beside it, take one from the other."
+      note: "Return for step 21. A count in place of a total, and the same previous-row and subtraction."
+    note: "The closing sentence of the map and pass-bar task 6: three months, with an empty change for August, minus 6,750.00 for September and plus 1,846.34 for October (checked). Friction: the learner puts together the month, the pile, the name, LAG and the subtraction with no walk in the text. The results compare to two places."
+
+  # 22
+  - kind: "recap"
+    text: |-
+      Stop there. Today you looked at dates and at things that change from row to row. You cut a date down to its month, and made piles from it. You wrote the previous row's value beside a row, and took one column from another. You put a label on each row with CASE, and counted only some of the rows with a SUM of 1s and 0s. And you added up as you went. Two of those you were given the spelling for, and that is how it should be: the thought is yours, and the spelling is what people look up.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3). Names the shape thoughts honestly."
+
+  # 23
+  - kind: "cold-check"
+    requires: ["running-total", "date-to-month", "pile-by-computed", "count-rows", "keep-rows", "text-quotes", "compare-signs", "name-a-table", "name-a-result", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    supplies: ["strftime('%Y-%m', created_at)", "SUM(n) OVER (ORDER BY month)"]
+    any_column_order: true
+    text: "For each month, show the month, the number of delivered orders called n, and the running number of delivered orders so far. The month is `strftime('%Y-%m', created_at)`, and the running number is `SUM(n) OVER (ORDER BY month)`."
+    model: "WITH m AS (SELECT strftime('%Y-%m', created_at) AS month, COUNT(*) AS n FROM orders WHERE status = 'delivered' GROUP BY month) SELECT month, n, SUM(n) OVER (ORDER BY month) FROM m"
+    rows: 3
+    result: [["2026-08", 1929, 1929], ["2026-09", 1813, 3742], ["2026-10", 1859, 5601]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: the month, a keeping, a count and a running total, on a combination never practised (delivered orders). Both spellings are given, as for every use of a shape thought. Never scored (rule F1)."

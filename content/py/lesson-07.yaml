@@ -1,0 +1,881 @@
+lesson: py-07
+title: "Sort by a rule"
+strand: py
+stage: 1
+thoughts:
+  pair: "`('pizza', 3)` is a pair: two values that travel together, in round brackets, reached by position like a list."
+  dict-as-pairs: "`counts.items()` hands a dict over as pairs, a name and its value together."
+  key-function: "`sorted(pairs, key=f)`: the function `f` is handed each item and says what to sort by. It is written without brackets after it."
+  lambda: "`lambda pair: pair[1]` is a small function written where it is used: what comes in, a colon, what comes out."
+  tie-rule: "A key that returns a pair sorts by the first part, then by the second when the first parts tie. A minus sign turns a number's order round without turning the rest."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["conditional-count", "buckets", "piles", "one-row-per-pile", "pile-name", "commas"]
+    any_column_order: true
+    text: "For each promised time, how many of the orders were cancelled?"
+    model: "SELECT promised_minutes, SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY promised_minutes"
+    rows: 3
+    result: [[30, 117], [40, 140], [50, 142]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-9: a count of only some of the rows in each pile, on a combination not practised. Never scored. SQL, so no lang."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["pair"]
+    text: |-
+      Back to Python. Your dicts hold things under names. Sometimes two values simply belong together, and have no name between them: a dish and how many times it was ordered. Python calls two values that travel together a pair, and writes it in round brackets.
+
+      ```python
+      pair = ('pizza', 3)
+      print(pair[0])
+      print(pair[1])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        pair = ('pizza', 3)
+        print(pair[0])
+        print(pair[1])
+    after_run: "pizza, then 3. A pair is reached the way a list is: by position, from zero. The one difference is the brackets. Round for a pair, square for a list. Nobody chose it for a reason you could use. It just is."
+    note: "pair. Reuses position from PY-2. The 'it just is' is for the round brackets: no invented hook."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "position"]
+    text: "Write a function called `swap` that takes a pair and hands back a new pair with the two parts the other way round."
+    check: "print(swap(('pizza', 3)))"
+    model: |-
+      def swap(pair):
+          return (pair[1], pair[0])
+    output: "(3, 'pizza')"
+    narration:
+      - "The count first and the dish second. You took each part by its position and built a new pair, with a comma between and round brackets round both."
+      - "Second part, first part, in round brackets. A new pair, handed back."
+      - ""
+    wrong:
+      - code: |-
+          def swap(pair):
+              return [pair[1], pair[0]]
+        ask: "Look at the brackets around what came back. What is a pair written with?"
+        why: "square brackets build a list. A pair wears round ones."
+      - code: |-
+          def swap(pair):
+              return (pair[1])
+        ask: "How many things came back? What is between the two parts that makes it a pair?"
+        why: "round brackets around one thing are only brackets. A pair needs a comma between its parts."
+      - code: |-
+          def swap(pair):
+              return (pair[0], pair[1])
+        ask: "Check the order of the two parts in what came back. Which one should be first?"
+        why: "the new pair starts with the second part of the old one."
+    walk:
+      - "Take the second part of the pair, by its position."
+      - "Take the first part."
+      - "Put both in round brackets with a comma between them, the second part first, and hand that back."
+    return:
+      text: "Write `bump`, which takes a pair of a name and a count, and hands back a pair with the same name and the count one higher."
+      check: "print(bump(('pizza', 3)))"
+      model: |-
+        def bump(pair):
+            return (pair[0], pair[1] + 1)
+      output: "('pizza', 4)"
+      narration:
+        - "('pizza', 4): the name stayed in front, and the count had one added."
+        - "A new pair, built from the old one's parts."
+      note: "Return for step 3."
+    note: "pair, asked straight after it was given. The three wrong answers are the real slips: a list, one thing in brackets, and the original order."
+
+  # 4
+  - kind: "give"
+    lang: "python"
+    new: ["dict-as-pairs"]
+    text: |-
+      Here is where pairs turn up on their own. When you go through a dict with a loop, each turn can hand you the name and its value together, as a pair. The way to ask is `.items()`.
+
+      ```python
+      counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+      for pair in counts.items():
+          print(pair)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+        for pair in counts.items():
+            print(pair)
+    after_run: "Three pairs, a name and its count in each. Before, you gave each half its own name at once. Here you kept the pair whole, and pair[0] and pair[1] reach its parts. The dict was handed over as pairs, which is all .items() ever did."
+    note: "dict-as-pairs. The same loop as two-names in PY-3, with one name for the whole pair. It is what makes pairs matter: they are how a dict is sorted."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "position", "dict-as-pairs", "for-each", "if-question", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `pairs_over` that takes a dict of counts and a number, and hands back a list of the pairs whose count is above that number."
+    check: "print(pairs_over({'pizza': 3, 'coca': 2, 'sushi': 1}, 1))"
+    model: |-
+      def pairs_over(counts, n):
+          result = []
+          for pair in counts.items():
+              if pair[1] > n:
+                  result.append(pair)
+          return result
+    output: "[('pizza', 3), ('coca', 2)]"
+    narration:
+      - "Two pairs came back whole, name and count together. The question was asked of the second part of each."
+      - "Go through the pairs, keep the ones whose count passes, collect them. Keep rows, by hand, on a dict."
+      - ""
+    wrong:
+      - code: |-
+          def pairs_over(counts, n):
+              result = []
+              for pair in counts:
+                  if pair[1] > n:
+                      result.append(pair)
+              return result
+        ask: "Going through the dict itself gives you one thing each turn. What is it, and what is its second letter doing there?"
+        why: "a loop over a dict gives only the names. .items() is what hands over the pairs."
+      - code: |-
+          def pairs_over(counts, n):
+              result = []
+              for pair in counts.items():
+                  if pair[1] > n:
+                      result.append(pair[0])
+              return result
+        ask: "Those are the names only. What did I ask to get back?"
+        why: "the whole pair is kept, so that the count is still beside the name."
+      - code: |-
+          def pairs_over(counts, n):
+              result = []
+              for pair in counts.items():
+                  if pair[0] > n:
+                      result.append(pair)
+              return result
+        ask: "Python says it cannot compare text with a number. Which part of the pair is the count?"
+        why: "the name is the first part, at position 0. The count is the second part, at position 1."
+    walk:
+      - "Start an empty list and go through the dict as pairs."
+      - "Ask of each pair: is its count, the second part, above the number?"
+      - "On a yes, add the whole pair to the list. Then hand the list back."
+    return:
+      text: "Write `pairs_under`, which takes a dict of counts and a number, and hands back a list of the pairs whose count is below that number."
+      check: "print(pairs_under({'pizza': 3, 'coca': 2, 'sushi': 1}, 2))"
+      model: |-
+        def pairs_under(counts, n):
+            result = []
+            for pair in counts.items():
+                if pair[1] < n:
+                    result.append(pair)
+            return result
+      output: "[('sushi', 1)]"
+      narration:
+        - "Only sushi is below 2, so one pair. The same loop with the question the other way up."
+        - "A smaller-than question on the count, and the pair kept whole."
+      note: "Return for step 5."
+    note: "dict-as-pairs asked at once. A recombination of PY-2's keep-rows loop with pairs."
+
+  # 6
+  - kind: "give"
+    lang: "python"
+    new: ["key-function"]
+    text: |-
+      Now to sort pairs. Plain sorted puts pairs in order of their first part, the name. To sort by the count instead, you hand sorted a small function that says what to look at, and it is called on each pair. The function goes in as `key=`, and it is written with no brackets after it.
+
+      ```python
+      def second(pair):
+          return pair[1]
+
+      counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+      print(sorted(counts.items()))
+      print(sorted(counts.items(), key=second))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def second(pair):
+            return pair[1]
+
+        counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+        print(sorted(counts.items()))
+        print(sorted(counts.items(), key=second))
+    after_run: "The first line is by name: coca, pizza, sushi. The second is by count: sushi has 1, coca 2, pizza 3. Sorted called second on each pair, and sorted by what came back. That is ORDER BY in SQL: the thing after the words is now a function, because Python has no other way to say what to look at."
+    note: "key-function. The SQL import is named out loud. The give shows both sorts in one run, so that the difference is visible."
+
+  # 7
+  - kind: "classmate"
+    lang: "python"
+    text: |-
+      Ana tried the same sort, and wrote a pair of brackets after second:
+
+      ```python
+      def second(pair):
+          return pair[1]
+
+      counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+      print(sorted(counts.items(), key=second()))
+      ```
+
+      Python stopped with: TypeError: second() missing 1 required positional argument: 'pair'. Ana, with brackets, is second being handed over, or run right now? ... Run right now, with nothing to look at. Without brackets it is handed over, and sorted runs it on each pair when it needs to. Take the brackets off:
+
+      ```python
+      def second(pair):
+          return pair[1]
+
+      counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+      print(sorted(counts.items(), key=second))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def second(pair):
+            return pair[1]
+
+        counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+        print(sorted(counts.items(), key=second))
+    broken: |-
+      def second(pair):
+          return pair[1]
+
+      counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+      print(sorted(counts.items(), key=second()))
+    after_run: "The same sort as before, smallest count first. The function is handed over to sorted, and sorted does the calling."
+    note: "Ana makes the commonest slip with key= before the learner can (rule E6), with Python's own message as the real reason."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "position", "dict-as-pairs", "sorted", "reverse", "key-function"]
+    text: "Write a function called `by_count` that takes a dict of counts and hands back its pairs, with the most common first. You will need a small function that says what to sort by."
+    check: "print(by_count({'pizza': 3, 'coca': 2, 'sushi': 1}))"
+    model: |-
+      def second(pair):
+          return pair[1]
+
+      def by_count(counts):
+          return sorted(counts.items(), key=second, reverse=True)
+    output: "[('pizza', 3), ('coca', 2), ('sushi', 1)]"
+    narration:
+      - "The most common first. A small function to say what to look at, then sorted, with key= and the turn-round from the first lesson on sorting."
+      - "Pairs in, sorted by their second part, biggest first."
+      - ""
+    wrong:
+      - code: |-
+          def second(pair):
+              return pair[1]
+
+          def by_count(counts):
+              return sorted(counts.items(), key=second)
+        ask: "Which end of the list is the most common on? What turns the order round?"
+        why: "sorted goes from smallest up. reverse=True turns it round."
+      - code: |-
+          def second(pair):
+              return pair[1]
+
+          def by_count(counts):
+              return sorted(counts, key=second, reverse=True)
+        ask: "Those came back as names only, and sorted by a letter. What did sorted go through?"
+        why: "sorting a dict goes through its names. .items() hands over the pairs, and the pairs are what second needs."
+      - code: |-
+          def second(pair):
+              return pair[1]
+
+          def by_count(counts):
+              return sorted(counts.items(), key=second(), reverse=True)
+        ask: "Python says second is missing something. Brackets after a name do what?"
+        why: "with brackets the function runs now. Without, it is handed over to sorted."
+    walk:
+      - "Write the small function that takes a pair and hands back its second part."
+      - "Turn the dict into pairs with .items()."
+      - "Sort them with that function as the key, and turn the order round."
+    return:
+      text: "Write `cheapest_first`, which takes a dict of prices and hands back its pairs with the cheapest first."
+      check: "print(cheapest_first({'pizza': 40, 'sushi': 60, 'acai': 25}))"
+      model: |-
+        def second(pair):
+            return pair[1]
+
+        def cheapest_first(prices):
+            return sorted(prices.items(), key=second)
+      output: "[('acai', 25), ('pizza', 40), ('sushi', 60)]"
+      narration:
+        - "Acai at 25, then pizza at 40, then sushi at 60. Pairs sorted by their price, smallest first."
+        - "The same key, and no turn-round."
+      note: "Return for step 8."
+    note: "Asked, not given: the learner has had the pieces twice. Three wrong answers: the order, the dict itself, and brackets after the key."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["lambda"]
+    text: |-
+      That small function is only ever used once, and it takes three lines. Python lets you write a function right where you use it, with no name and no def. It is written `lambda`, then what comes in, a colon, and what comes out.
+
+      ```python
+      counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+      print(sorted(counts.items(), key=lambda pair: pair[1]))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        counts = {'pizza': 3, 'coca': 2, 'sushi': 1}
+        print(sorted(counts.items(), key=lambda pair: pair[1]))
+    after_run: "The same result as with second. The lambda is the whole of def second(pair): return pair[1], squeezed into one small piece. Pair is what comes in, and pair[1] is what comes out, with no return word. The word lambda comes from mathematics, and that is the whole story. It just is."
+    note: "lambda: core, typed from memory later (owner's decision of 24 Nov 2026). Its origin is real (Church), and the step says 'it just is' for the word, with no invented hook."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "how-many", "sorted", "reverse", "key-function", "lambda"]
+    text: "Write a function called `longest_first` that takes a list of words and hands back the words, longest first."
+    check: "print(longest_first(['pizza', 'coca', 'burger', 'bao']))"
+    model: |-
+      def longest_first(words):
+          return sorted(words, key=lambda w: len(w), reverse=True)
+    output: "['burger', 'pizza', 'coca', 'bao']"
+    narration:
+      - "Burger, pizza, coca, bao. The key was the length of each word, and the key function is the one that decides the order, whatever the thing being sorted is."
+      - "A lambda in the key, with len inside it. What comes out of the lambda is what is sorted by."
+      - ""
+    wrong:
+      - code: |-
+          def longest_first(words):
+              return sorted(words, key=len(words), reverse=True)
+        ask: "Python says it cannot call an integer. What does the key get handed: the length of the list, or a function?"
+        why: "key wants a function that is called on each word, such as a lambda."
+      - code: |-
+          def longest_first(words):
+              return sorted(words, key=lambda w: len(w))
+        ask: "That is shortest first. What turns the order round?"
+        why: "sorted goes upward. reverse=True turns the order round."
+      - code: |-
+          def longest_first(words):
+              return sorted(words, reverse=True)
+        ask: "Those are sorted from Z to A. What does the key say to look at?"
+        why: "with no key a word is sorted by its letters. The key says to look at its length."
+    walk:
+      - "What is each word sorted by? Write a lambda that takes a word and hands back that."
+      - "Put it in sorted as the key."
+      - "Turn the order round, so the biggest comes first."
+    return:
+      text: "Write `shortest_first`, which takes a list of words and hands back the words, shortest first."
+      check: "print(shortest_first(['pizza', 'coca', 'burger', 'bao']))"
+      model: |-
+        def shortest_first(words):
+            return sorted(words, key=lambda w: len(w))
+      output: "['bao', 'coca', 'pizza', 'burger']"
+      narration:
+        - "Bao, coca, pizza, burger. The same key as before, the other way up."
+        - "A lambda for the length, and no turn-round."
+      note: "Return for step 10."
+    note: "The first lambda written by the learner, on words and not on pairs, so that key is seen to work on anything. Lengths 5, 4, 6, 3 are all different, so there is no tie to settle."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "sorted", "reverse", "position", "key-function", "lambda"]
+    text: "Rows are dicts, so a lambda can reach into a row. Write a function called `priciest` that takes the rows of a table and hands back the order_id of the one with the biggest subtotal."
+    check: |-
+      print(priciest([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23},
+      ]))
+    model: |-
+      def priciest(rows):
+          ranked = sorted(rows, key=lambda row: row['subtotal'], reverse=True)
+          return ranked[0]['order_id']
+    output: "103434"
+    narration:
+      - "Order 103434, with 84.23. The lambda took a row and handed back one of its cells, and the rows were sorted by it. That is ORDER BY subtotal DESC LIMIT 1."
+      - "The key reached into each row for its subtotal. Then the first of the sorted rows, and its id."
+      - ""
+    wrong:
+      - code: |-
+          def priciest(rows):
+              ranked = sorted(rows, key=lambda row: row['subtotal'], reverse=True)
+              return ranked[0]
+        ask: "That is the whole row. What did I ask to get back from it?"
+        why: "the row is a dict, and a cell of it is asked for by name."
+      - code: |-
+          def priciest(rows):
+              ranked = sorted(rows, key=lambda row: row['subtotal'])
+              return ranked[0]['order_id']
+        ask: "That is the cheapest one. Which way round did you sort, and which end did you take?"
+        why: "sorting upward puts the smallest first. Biggest first needs the order turned round."
+      - code: |-
+          def priciest(rows):
+              ranked = sorted(rows, key=lambda row: 'subtotal', reverse=True)
+              return ranked[0]['order_id']
+        ask: "Every row gets the same key there. What is the lambda handing back: the word subtotal, or the row's subtotal?"
+        why: "the quoted word is the same for every row, so nothing is decided by it. The cell has to be asked of the row."
+    walk:
+      - "Write a lambda that takes a row and hands back its subtotal."
+      - "Sort the rows with it as the key, biggest first."
+      - "Take the first row, and from it the order_id."
+    return:
+      text: "Write `cheapest`, which takes the rows of a table and hands back the order_id of the one with the smallest subtotal."
+      check: |-
+        print(cheapest([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23},
+        ]))
+      model: |-
+        def cheapest(rows):
+            ranked = sorted(rows, key=lambda row: row['subtotal'])
+            return ranked[0]['order_id']
+      output: "102388"
+      narration:
+        - "Order 102388, with 31.3. The other end of the same sort."
+        - "Smallest first this time, so the first one is the cheapest."
+      note: "Return for step 11."
+    note: "The lambda reaches into a row. This is sort_values in pandas, by hand. The learner meets sorted + lambda + rows without a tie, because subtotals are all different here."
+
+  # 12
+  - kind: "give"
+    lang: "python"
+    new: ["tie-rule"]
+    text: |-
+      What if two things tie? Put them in a dict of counts where pizza and coca each appear twice. The key does not have to be one number. It can be a pair, and Python compares two pairs by their first part, and by the second only when the first parts are equal.
+
+      ```python
+      counts = {'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}
+      print(sorted(counts.items(), key=lambda pair: (pair[1], pair[0])))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        counts = {'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}
+        print(sorted(counts.items(), key=lambda pair: (pair[1], pair[0])))
+    after_run: "Smallest count first, and where two counts are the same, by name: acai before sushi, coca before pizza. The key was a pair: count, then name. In SQL that is ORDER BY count, name."
+    note: "tie-rule, first half: a key can be a pair. The second half, the minus sign, comes with the classmate."
+
+  # 13
+  - kind: "classmate"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "position", "dict-as-pairs", "sorted", "key-function", "lambda", "tie-rule"]
+    text: |-
+      Davi wants the most common first, and where two are equally common, alphabetical. He tried this:
+
+      ```python
+      sorted(counts.items(), key=lambda pair: (pair[1], pair[0]), reverse=True)
+      ```
+
+      and got pizza before coca, because reverse turned the names round as well as the counts. A minus sign in front of a number turns only that number's order round: the biggest count becomes the smallest key. Write `ranked`, which takes a dict of counts and hands back its pairs, the most common first and ties in alphabetical order.
+    check: "print(ranked({'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}))"
+    model: |-
+      def ranked(counts):
+          return sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+    output: "[('coca', 2), ('pizza', 2), ('acai', 1), ('sushi', 1)]"
+    narration:
+      - "Biggest counts first, and coca before pizza where they tied. The minus turned the counts round and left the names alone."
+      - "The key is a pair: minus the count, then the name. Smaller keys come first, so a big count, made negative, comes first."
+      - ""
+    wrong:
+      - code: |-
+          def ranked(counts):
+              return sorted(counts.items(), key=lambda pair: (pair[1], pair[0]), reverse=True)
+        ask: "Look at the two that tie. Which comes first, and which should?"
+        why: "reverse turns the whole order round, names included."
+      - code: |-
+          def ranked(counts):
+              return sorted(counts.items(), key=lambda pair: (pair[0], -pair[1]))
+        ask: "Which part of the key is looked at first? What are the pairs sorted by, mostly?"
+        why: "the first part of the key decides, and the second only breaks ties. The count has to come first."
+      - code: |-
+          def ranked(counts):
+              return sorted(counts.items(), key=lambda pair: -pair[1])
+        ask: "Coca and pizza are equal there, so who decides which of them comes first?"
+        why: "with no second part to the key, equal items stay in the order they came in. The question asked for alphabetical."
+    walk:
+      - "Sort the pairs, with a lambda as the key."
+      - "The key is a pair of two things. The first is the count, turned round with a minus."
+      - "The second is the name, which only matters when the counts tie."
+    return:
+      text: "Write `rarest`, which takes a dict of counts and hands back its pairs, the least common first and ties in alphabetical order."
+      check: "print(rarest({'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}))"
+      model: |-
+        def rarest(counts):
+            return sorted(counts.items(), key=lambda pair: (pair[1], pair[0]))
+      output: "[('acai', 1), ('sushi', 1), ('coca', 2), ('pizza', 2)]"
+      narration:
+        - "Acai and sushi, with 1 each and in alphabetical order, then coca and pizza. A pair for a key, and no minus needed."
+        - "Smallest count first, ties by name: the plain pair, as it was first shown."
+      note: "Return for step 13."
+    note: "Classmate with the learner repairing: the Davi story is in the text. Python raises no message here, so the real reason is the wrong tie order, which is stated. Both halves of tie-rule are now in use. 'Smaller keys first' is the real reason for the minus."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "sorted", "key-function", "lambda", "tie-rule", "for-each", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `by_city` that takes a list of restaurants, each a dict with a name and a city, and hands back their names: first by city, then by name within each city."
+    check: "print(by_city([{'name': 'Rest 05', 'city': 'Sao Paulo'}, {'name': 'Rest 03', 'city': 'Curitiba'}, {'name': 'Rest 02', 'city': 'Sao Paulo'}]))"
+    model: |-
+      def by_city(restaurants):
+          ordered = sorted(restaurants, key=lambda r: (r['city'], r['name']))
+          names = []
+          for r in ordered:
+              names.append(r['name'])
+          return names
+    output: "['Rest 03', 'Rest 02', 'Rest 05']"
+    narration:
+      - "Curitiba first, then the two in Sao Paulo in name order. A pair of cells was the key: city, then name."
+      - "The same two-part key, with both parts taken from the row. Then the names pulled out, one by one."
+      - ""
+    wrong:
+      - code: |-
+          def by_city(restaurants):
+              ordered = sorted(restaurants, key=lambda r: (r['name'], r['city']))
+              names = []
+              for r in ordered:
+                  names.append(r['name'])
+              return names
+        ask: "Which of the two parts should decide first? What is the list sorted by?"
+        why: "the first part of a key decides, and the second only breaks ties."
+      - code: |-
+          def by_city(restaurants):
+              ordered = sorted(restaurants, key=lambda r: r['city'])
+              names = []
+              for r in ordered:
+                  names.append(r['name'])
+              return names
+        ask: "Look at the two restaurants in the same city. Who decides which comes first?"
+        why: "with the city alone, equal cities stay in the order they came in. The name is the second part of the key."
+      - code: |-
+          def by_city(restaurants):
+              return sorted(restaurants, key=lambda r: (r['city'], r['name']))
+        ask: "That gives the whole rows. What did I ask to get back from each?"
+        why: "the rows are sorted, and the name of each is then taken out of it."
+    walk:
+      - "Sort the restaurants. The key takes a restaurant and hands back a pair: its city, then its name."
+      - "Start an empty list for the names."
+      - "Go through the sorted restaurants, add each one's name, and hand the list back."
+    return:
+      text: "Write `by_cuisine`, which takes a list of restaurants, each a dict with a name and a cuisine, and hands back their names: first by cuisine, then by name."
+      check: "print(by_cuisine([{'name': 'Rest 05', 'cuisine': 'pizza'}, {'name': 'Rest 07', 'cuisine': 'arabe'}, {'name': 'Rest 02', 'cuisine': 'pizza'}]))"
+      model: |-
+        def by_cuisine(restaurants):
+            ordered = sorted(restaurants, key=lambda r: (r['cuisine'], r['name']))
+            names = []
+            for r in ordered:
+                names.append(r['name'])
+            return names
+      output: "['Rest 07', 'Rest 02', 'Rest 05']"
+      narration:
+        - "The arabe one first, then the two pizza ones in name order. The same pair of cells, with another column first."
+        - "A two-part key on a different column."
+      note: "Return for step 14."
+    note: "tie-rule on rows from the restaurants table, with no minus. The city names are real. Combines the lambda, the pair key, the cell and a loop."
+
+  # 15
+  - kind: "aside"
+    text: "Only interesting, with nothing in it to keep. Python's sort is stable: when two items tie, they stay in the order they came in. It is a promise Python makes, not an accident. That is why the earlier answers were not random when the tie was left alone. They were only not what we asked for."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "how-many", "sorted", "key-function", "lambda", "tie-rule"]
+    text: "Write a function called `ranked_words` that takes a list of words and hands them back, longest first, and words of the same length in alphabetical order."
+    check: "print(ranked_words(['sushi', 'coca', 'pizza', 'burger']))"
+    model: |-
+      def ranked_words(words):
+          return sorted(words, key=lambda w: (-len(w), w))
+    output: "['burger', 'pizza', 'sushi', 'coca']"
+    narration:
+      - "Burger first, then pizza and sushi in alphabetical order, then coca. Minus the length turned the lengths round, and the word broke the ties."
+      - "A pair for a key: how long, negated, then the word itself."
+      - ""
+    wrong:
+      - code: |-
+          def ranked_words(words):
+              return sorted(words, key=lambda w: (-len(w), w), reverse=True)
+        ask: "Look at pizza and sushi. Which comes first, and which should?"
+        why: "the minus has already put the longest first. Reverse would turn everything round again, the names too."
+      - code: |-
+          def ranked_words(words):
+              return sorted(words, key=lambda w: (len(w), w), reverse=True)
+        ask: "Look at pizza and sushi, which tie. Which of them comes first in your answer, and which should?"
+        why: "reverse turns the order of the ties as well. The minus turns the lengths only."
+      - code: |-
+          def ranked_words(words):
+              return sorted(words, key=lambda w: -len(w))
+        ask: "Pizza and sushi tie. Who decides which comes first?"
+        why: "with no second part, ties stay in the order they came in."
+    walk:
+      - "The key says how long a word is, and the longest should come first. Which sign turns a length round?"
+      - "Make the key a pair, so that words of the same length are told apart."
+      - "The second part is the word itself."
+    return:
+      text: "Write `shortest_ranked`, which takes a list of words and hands them back shortest first, and words of the same length in alphabetical order."
+      check: "print(shortest_ranked(['sushi', 'coca', 'pizza', 'burger']))"
+      model: |-
+        def shortest_ranked(words):
+            return sorted(words, key=lambda w: (len(w), w))
+      output: "['coca', 'pizza', 'sushi', 'burger']"
+      narration:
+        - "Coca, then pizza and sushi in alphabetical order, then burger. A pair for a key, and no minus, because the lengths already go the way we want."
+        - "The length, then the word: a pair, plain."
+      note: "Return for step 16."
+    note: "tie-rule on words, with the minus, in a new setting. The wrong answers are the two real slips: reverse instead of the minus, and no second part."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "for-each", "one-entry-per-pile", "update-the-pile", "get-with-default"]
+    text: "Counting comes back. Write a function called `count_items` that takes a list of items and hands back a dict with how many times each item appears."
+    check: "print(count_items(['pizza', 'coca', 'sushi', 'pizza', 'coca', 'acai']))"
+    model: |-
+      def count_items(items):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          return counts
+    output: "{'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}"
+    narration:
+      - "Pizza 2, coca 2, sushi 1, acai 1. A pile for each different dish, and a count that grew with each one."
+      - "Each item found its pile, and the pile grew by one. The same loop as the average of a pile, with a count only."
+      - ""
+    wrong:
+      - code: |-
+          def count_items(items):
+              counts = {}
+              for item in items:
+                  counts[item] = counts[item] + 1
+              return counts
+        ask: "Python says KeyError on the first item. What is in a pile that is not there yet, and which method gives a starting number?"
+        why: "a pile that is not there has to start at zero. get(item, 0) says: what is there, or zero."
+      - code: |-
+          def count_items(items):
+              counts = {}
+              for item in items:
+                  counts[item] = 1
+              return counts
+        ask: "Pizza says 1, and it came twice. What should the pile hold before the new item is added?"
+        why: "the pile has to be what it was, plus one."
+      - code: |-
+          def count_items(items):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+        ask: "The check received nothing. What does the function still have to do?"
+        why: "the work is done, and it still has to be handed back."
+    walk:
+      - "Start an empty dict, and go through the items."
+      - "For each item, find its pile in the dict, or zero if it is not there yet."
+      - "Put the pile back with one added, and hand the dict back at the end."
+    return:
+      text: "Write `count_lengths`, which takes a list of words and hands back a dict with how many words there are of each length."
+      check: "print(count_lengths(['pizza', 'coca', 'sushi']))"
+      model: |-
+        def count_lengths(words):
+            counts = {}
+            for word in words:
+                counts[len(word)] = counts.get(len(word), 0) + 1
+            return counts
+      output: "{5: 2, 4: 1}"
+      narration:
+        - "Two words of length 5, one of 4. The pile is named by the length this time."
+        - "The same loop, with something worked out from each item to name the pile."
+      note: "Return for step 17."
+    note: "PY-4's pile-by-hand, asked cold for the first time since, because top_k needs it. Spacing: first return of get-with-default in this lesson."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "position", "dict-as-pairs", "sorted", "key-function", "lambda", "tie-rule", "first-few"]
+    text: "Write a function called `top_pairs` that takes a dict of counts and a number k, and hands back the k most common pairs, with ties in alphabetical order."
+    check: "print(top_pairs({'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}, 2))"
+    model: |-
+      def top_pairs(counts, k):
+          ordered = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+          return ordered[:k]
+    output: "[('coca', 2), ('pizza', 2)]"
+    narration:
+      - "Coca and pizza, the two with 2, in alphabetical order. Sort, then cut: that is ORDER BY and LIMIT."
+      - "The ranked pairs, then the first k of them."
+      - ""
+    wrong:
+      - code: |-
+          def top_pairs(counts, k):
+              ordered = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+              return ordered[k]
+        ask: "One pair came back, not a list. What does [k] on its own do, and what takes the first k?"
+        why: "[k] picks the item at position k. [:k] takes everything up to it."
+      - code: |-
+          def top_pairs(counts, k):
+              ordered = sorted(counts.items(), key=lambda pair: (pair[1], pair[0]))
+              return ordered[:k]
+        ask: "Those are the two least common. Which sign turns the counts round, so that the biggest comes first?"
+        why: "sorting goes upward, so the biggest count has to be made the smallest key, with a minus."
+      - code: |-
+          def top_pairs(counts, k):
+              return counts.items()[:k]
+        ask: "Python says dict_items cannot be cut. What must happen to the pairs before you take the first few?"
+        why: "items are handed over unsorted, and cannot be cut like a list. They are sorted first, which gives a list."
+    walk:
+      - "Sort the pairs, most common first, ties in alphabetical order."
+      - "Keep them in a name."
+      - "Hand back the first k of them."
+    return:
+      text: "Write `bottom_pairs`, which takes a dict of counts and a number k, and hands back the k least common pairs, with ties in alphabetical order."
+      check: "print(bottom_pairs({'pizza': 2, 'coca': 2, 'sushi': 1, 'acai': 1}, 2))"
+      model: |-
+        def bottom_pairs(counts, k):
+            ordered = sorted(counts.items(), key=lambda pair: (pair[1], pair[0]))
+            return ordered[:k]
+      output: "[('acai', 1), ('sushi', 1)]"
+      narration:
+        - "Acai and sushi, with 1 each, in alphabetical order. The same cut, on a sort that goes upward."
+        - "The rarest first, then the first k."
+      note: "Return for step 18."
+    note: "Sort, then cut. ranked from step 13 and first-few from PY-2 together. The wrong answers are the wrong end, the plain way up, and a cut on something that is not a list yet."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "for-each", "one-entry-per-pile", "update-the-pile", "get-with-default", "pair", "dict-as-pairs", "sorted", "key-function", "lambda", "tie-rule", "first-few"]
+    friction: true
+    text: "I won't break this one down. Write a function called `top_k` that takes a list of items and a number k, and hands back the k most common items with their counts. Items that tie come in alphabetical order."
+    check: |-
+      print(top_k(['pizza', 'coca', 'sushi', 'pizza', 'coca', 'acai'], 2))
+      print(top_k([], 3))
+    model: |-
+      def top_k(items, k):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+          return ranked[:k]
+    output: |-
+      [('coca', 2), ('pizza', 2)]
+      []
+    narration:
+      - "That is an interview question, and you built it by thinking: count each item, turn the counts into pairs, sort by minus the count and then the name, cut to k. Piles, order, limit, the way SQL would."
+      - "Coca and pizza, in alphabetical order, each with 2. Every word of it was one you had already used."
+      - "Count, sort, cut. In SQL: GROUP BY, ORDER BY count DESC then the name, LIMIT k."
+    wrong:
+      - code: |-
+          def top_k(items, k):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+              ranked = sorted(counts.items(), key=lambda pair: pair[1], reverse=True)
+              return ranked[:k]
+        ask: "Look at which of the two tied dishes came first. Who decides that, when the key is the count alone?"
+        why: "with the count alone, tied items stay in the order they first appeared. The question asked for alphabetical."
+      - code: |-
+          def top_k(items, k):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+              ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+              return ranked
+        ask: "That is every dish. Which step of the sentence is missing at the end?"
+        why: "the sort makes the list in order, and the cut keeps k of it."
+      - code: |-
+          def top_k(items, k):
+              ranked = sorted(items, key=lambda item: (-items.count(item), item))
+              return ranked[:k]
+        ask: "Those are items, repeated, not pairs. What was never made from the list before sorting?"
+        why: "the counts have to be made first, one per different item. The sort is of those pairs."
+    walk:
+      - "Count the items into a dict, as before."
+      - "Turn it into pairs and sort them, most common first, ties by name."
+      - "Hand back the first k."
+    return:
+      text: "Write `bottom_k`, which takes a list of items and a number k, and hands back the k least common items with their counts. Ties come in alphabetical order."
+      check: "print(bottom_k(['pizza', 'coca', 'sushi', 'pizza', 'coca', 'acai'], 2))"
+      model: |-
+        def bottom_k(items, k):
+            counts = {}
+            for item in items:
+                counts[item] = counts.get(item, 0) + 1
+            ranked = sorted(counts.items(), key=lambda pair: (pair[1], pair[0]))
+            return ranked[:k]
+      output: "[('acai', 1), ('sushi', 1)]"
+      narration:
+        - "Acai and sushi, once each. The same three parts, with the sort the plain way up."
+        - "Count, sort the other way, cut."
+      note: "Return for step 19."
+    note: "The closing sentence of PY-7 and pass-bar task 7, unbroken (friction). count_items, ranked and first-few, joined. On the six dishes top_k(items, 2) gives coca and pizza, which tied at 2."
+
+  # 20
+  - kind: "give"
+    lang: "python"
+    text: |-
+      Now the real thing. Here are the restaurants' cuisines, counted with the function you just wrote, run on the whole file.
+
+      ```python
+      import csv
+
+      def top_k(items, k):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+          return ranked[:k]
+
+      cuisines = []
+      for row in csv.DictReader(open('restaurants.csv')):
+          cuisines.append(row['cuisine'])
+      print(top_k(cuisines, 3))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import csv
+
+        def top_k(items, k):
+            counts = {}
+            for item in items:
+                counts[item] = counts.get(item, 0) + 1
+            ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+            return ranked[:k]
+
+        cuisines = []
+        for row in csv.DictReader(open('restaurants.csv')):
+            cuisines.append(row['cuisine'])
+        print(top_k(cuisines, 3))
+    after_run: "Hamburguer with 13, brasileira with 11, and japonesa with 10. Japonesa and saudavel both have 10, and japonesa is first because it comes first in the alphabet. That is SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine ORDER BY COUNT(*) DESC, cuisine LIMIT 3, written out by hand."
+    note: "The sentence on real data. Numbers checked: hamburguer 13, brasileira 11, japonesa 10 and saudavel 10 (so the tie is real). The SQL equivalent was run against the same data."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today a pair went inside a dict's items, a function went in as the thing to sort by, and a lambda was that function, written where you use it. A key can be a pair, and a minus turns a number round without turning the rest.
+
+      You are not fast at this, and you are not meant to be. This is acquisition. Don't go over any of it before next time. One question, cold, and then we stop.
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "table-is-list-of-rows", "cell", "sorted", "reverse", "first-few", "key-function", "lambda"]
+    text: "Write a function called `top_three_ids` that takes the rows of a table and hands back the order_id of the three rows with the biggest subtotals, the biggest first."
+    check: |-
+      print(top_three_ids([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23},
+      ]))
+    model: |-
+      def top_three_ids(rows):
+          ranked = sorted(rows, key=lambda row: row['subtotal'], reverse=True)
+          result = []
+          for row in ranked[:3]:
+              result.append(row['order_id'])
+          return result
+    output: "[103434, 104843, 101248]"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: sorted with a lambda on rows, a cut, and a loop to pull a cell out. A combination not yet practised. Never scored."

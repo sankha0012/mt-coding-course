@@ -1,0 +1,942 @@
+lesson: py-02
+title: "Lists that grow"
+strand: py
+stage: 1
+thoughts:
+  position: "`fees[0]` takes one item by its position. Positions count from 0, and that just is."
+  last: "`fees[-1]` is the last item."
+  add-to-end: "`fees.append(4.99)` adds one item to the end of the list."
+  new-list-in-loop: "Start with an empty list before the loop and add to it inside the loop. That is keeping rows, by hand."
+  and-or: "Two questions are joined with `and`, where both must say yes, or `or`, where either may, as in SQL."
+  otherwise: "`else:` holds what happens on a no."
+  sorted: "`sorted(fees)` gives a sorted copy, smallest first. The original list is untouched."
+  reverse: "`reverse=True` inside the brackets turns the order round, as `DESC` did."
+  first-few: "`[:3]` takes the first three. That is `LIMIT`."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "The two cities with the most restaurants, and how many restaurants each has."
+    model: "SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC LIMIT 2"
+    rows: 2
+    result: [["São Paulo", 25], ["Belo Horizonte", 15]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-2: piles, a sort by the count and a cut, on restaurants, which the lesson's own cold checks did not use. Never scored. PY-2 is itself sort and cut by hand, so the SQL sentence is the one it will echo."
+
+  # 2
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "show", "for-each", "block", "if-question", "compare-signs"]
+    text: "Let's start with where we stopped. Five order subtotals: 28.04, 57.72, 39.91, 46.82 and 59.1. Go through them and show only the ones above 50."
+    model: |-
+      subtotals = [28.04, 57.72, 39.91, 46.82, 59.1]
+      for subtotal in subtotals:
+          if subtotal > 50:
+              print(subtotal)
+    output: |-
+      57.72
+      59.1
+    narration:
+      - "57.72 and 59.1. Each subtotal was asked the question, and only the yes ones were shown."
+      - "A list, a loop, a question inside it, a print pushed in twice. That is WHERE, by hand."
+      - ""
+    wrong:
+      - code: |-
+          subtotals = [28.04, 57.72, 39.91, 46.82, 59.1]
+          for subtotal in subtotals:
+              print(subtotal)
+        ask: "Every subtotal is here. Where is the question that keeps only some?"
+      - code: |-
+          subtotals = [28.04, 57.72, 39.91, 46.82, 59.1]
+          for subtotal in subtotals:
+              if subtotal > 50:
+              print(subtotal)
+        ask: "What shows that the print belongs to the if, and runs only on a yes?"
+    walk:
+      - "Make the list, and go through it: for each subtotal."
+      - "Ask the question inside the loop: if, the name, a sign, 50, and a colon."
+      - "Show the subtotal, pushed in once more."
+    return:
+      text: "The delivery fees were 8.99, 6.99, 4.99 and 0. Show only the ones under 5."
+      model: |-
+        fees = [8.99, 6.99, 4.99, 0]
+        for fee in fees:
+            if fee < 5:
+                print(fee)
+      output: |-
+        4.99
+        0
+      narration:
+        - "4.99 and 0. Each fee was asked the question, and only the yes ones were shown."
+        - "A loop with a question inside it: WHERE fee < 5, by hand."
+      note: "Return for step 2."
+    note: "A warm start from PY-1: the loop and the question that PY-2's closing sentence is built on. Cold checks are one blank-page sentence, so this is where Python restarts."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["position"]
+    text: |-
+      A list keeps its items in order, so each one has a position, and you can take one out by it. Square brackets after the list's name, with a number inside:
+
+      ```python
+      fees = [8.99, 6.99, 0, 4.99]
+      print(fees[0])
+      print(fees[2])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0, 4.99]
+        print(fees[0])
+        print(fees[2])
+    after_run: "8.99 and 0. Positions count from 0, so the first fee is number 0 and the third is number 2. That one just is. There is a real reason, and I will tell you it in a little while. For now, the first is 0."
+    note: "Marked as a rule that has no hook. Rule B5 and B6: say early that this just is, and promise the real reason (the aside at step 7) rather than invent a trick. The square brackets are used again for dicts in PY-3 and for columns in pandas, and always mean get from inside."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "position"]
+    text: "Four subtotals: 81.1, 18.85, 84.23 and 91.11. Put them in a list called subtotals, and show the third one."
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11]
+      print(subtotals[2])
+    output: "84.23"
+    narration:
+      - "84.23. The third item is number 2, because the first is number 0."
+      - "A position in square brackets, after the name of the list."
+      - "84.23, the third one."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(subtotals[3])
+        ask: "That is the fourth. What number does the first item have?"
+        why: "counting starts at 0, so the third item is number 2."
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(subtotals[1])
+        ask: "That is the second. What number does the first item have, and so what has the third?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11]
+          print(subtotals(2))
+        ask: "Look at the brackets after the name. Which kind took the position in the sentence we ran?"
+    walk:
+      - "Make the list of four subtotals."
+      - "The first item is number 0. Count along to the third."
+      - "Show it: print, with the list's name and the position in square brackets."
+    return:
+      text: "The delivery times were 35.2, 24.8, 31.7, 28.2 and 43.7 minutes. Show the second one."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+        print(minutes[1])
+      output: "24.8"
+      narration:
+        - "24.8. The second item is number 1."
+        - "The name of the list, and the position in square brackets."
+      note: "Return for step 4."
+    note: "The first position the learner has to work out. The wrong answers are the off-by-one slip and the brackets slip. The off-by-one slip is the expected one and the question leads to the rule without restating it."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["last"]
+    text: |-
+      To take the last item, you do not need to know how long the list is. A minus sign counts from the other end:
+
+      ```python
+      fees = [8.99, 6.99, 0, 4.99]
+      print(fees[-1])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0, 4.99]
+        print(fees[-1])
+    after_run: "4.99. Minus one is the last, minus two the one before it. It saves you counting, and it keeps working however long the list grows."
+    note: "The count from the end is given and not asked, because a lucky guess could teach a false generalisation (rule B4)."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "position", "last"]
+    text: "The four delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. Make the list, and show the last one."
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2]
+      print(minutes[-1])
+    output: "28.2"
+    narration:
+      - "28.2. A minus one, and you did not have to count."
+      - "The last item, from the end."
+      - ""
+    wrong:
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2]
+          print(minutes[0])
+        ask: "That is the first. Which end do we want?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2]
+          print(minutes[-2])
+        ask: "That is the one before the last. What does minus one mean?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2]
+          print(minutes[4])
+        ask: "Python says there is no number 4. How many items are there, and what number does the last one carry?"
+    walk:
+      - "Make the list of four times."
+      - "Show one item by its position, counting from the end: minus one."
+    return:
+      text: "Show the last of these subtotals: 81.1, 18.85 and 84.23."
+      model: |-
+        subtotals = [81.1, 18.85, 84.23]
+        print(subtotals[-1])
+      output: "84.23"
+      narration:
+        - "84.23. Minus one is the last, whatever the length."
+        - "The last item, with a minus sign in the brackets."
+      note: "Return for step 6."
+    note: "The position thought and the minus-one thought are not edited from each other: the previous answer used a plain number and this one a minus sign."
+
+  # 7
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. Why does counting start at 0? Because a position is really a distance from the start. The first item is no steps from the start, the second is one step along, and so on. The early programming languages worked that way on the computer's memory, and nearly every language since has copied them. So the odd rule has a real reason, even if it does not feel natural."
+    note: "The real reason promised in step 3 (rules B5 and B6). It is labelled as an aside, so it does not add to the load. It relieves the learner after two positions in a row."
+
+  # 8
+  - kind: "give"
+    lang: "python"
+    new: ["add-to-end"]
+    text: |-
+      A list can also grow. To add one item to the end, say which list, then a dot, then append, with the new item in brackets:
+
+      ```python
+      fees = [8.99, 6.99, 0]
+      fees.append(4.99)
+      print(fees)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0]
+        fees.append(4.99)
+        print(fees)
+    after_run: "[8.99, 6.99, 0, 4.99]. The new fee went on the end. The dot is new: it says, do this to that list. The list itself grew where it stood, which is why the print shows it longer."
+    note: "The dot meets the learner for the first time. It is read as 'do this to that', which is also how pandas methods will read in PD-1."
+
+  # 9
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "add-to-end"]
+    text: "A list called fees holds 8.99 and 6.99. Add 0 to the end of it, and then show the list."
+    model: |-
+      fees = [8.99, 6.99]
+      fees.append(0)
+      print(fees)
+    output: "[8.99, 6.99, 0]"
+    narration:
+      - "[8.99, 6.99, 0]. The 0 went on the end, and the list showed it."
+      - "The list, a dot, append, and the new item in brackets."
+      - ""
+    wrong:
+      - code: |-
+          fees = [8.99, 6.99]
+          fees.append(0)
+        ask: "The list has grown, but nothing appeared. What shows it?"
+      - code: |-
+          fees = [8.99, 6.99]
+          print(fees.append(0))
+        ask: "That shows what append handed back, which is nothing. Where is the list that grew?"
+        why: "append changes the list where it stands. Show the list afterwards, by its own name."
+      - code: |-
+          fees = [8.99, 6.99]
+          fees.append[0]
+          print(fees)
+        ask: "Look at the brackets after append. Which kind carry what is being added: the ones after a list's name, or the ones after a word like len?"
+    walk:
+      - "Make the list with the two fees."
+      - "Add to it: the list's name, a dot, append, and the new item in brackets."
+      - "Show the list."
+    return:
+      text: "A list called minutes holds 35.2 and 24.8. Add 31.7 to it, and then show the list."
+      model: |-
+        minutes = [35.2, 24.8]
+        minutes.append(31.7)
+        print(minutes)
+      output: "[35.2, 24.8, 31.7]"
+      narration:
+        - "[35.2, 24.8, 31.7]. The new time went on the end."
+        - "A dot, append, and the new item in brackets."
+      note: "Return for step 9."
+    note: "A list is grown by hand before it is grown in a loop (rule C4), so the loop step expands something familiar."
+
+  # 10
+  - kind: "give"
+    lang: "python"
+    new: ["new-list-in-loop"]
+    text: |-
+      Now the two together. We want the fees above 5 in a list of their own. Start with an empty list, which is just two brackets with nothing inside, and inside the loop add each yes to it:
+
+      ```python
+      fees = [8.99, 6.99, 0, 4.99, 6.99]
+      high = []
+      for fee in fees:
+          if fee > 5:
+              high.append(fee)
+      print(high)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0, 4.99, 6.99]
+        high = []
+        for fee in fees:
+            if fee > 5:
+                high.append(fee)
+        print(high)
+    after_run: "[8.99, 6.99, 6.99]. Last time the running result was a number: it started at 0 and grew by adding. This time it is a list: it starts empty and grows by append. The empty list is made before the loop and the print is after it, just as the count was. This is keeping the rows, by hand: SELECT * FROM fees WHERE fee > 5."
+    note: "Marked as essential. The running result is the same idea as PY-1's count, now holding a list. The empty list before the loop is the place where the classmate will slip."
+
+  # 11
+  - kind: "classmate"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop"]
+    text: |-
+      Ana was asked to collect the delivery times that were over 30 minutes into a list. The times were 35.2, 24.8, 31.7, 28.2 and 43.7. She wrote:
+
+      ```python
+      minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+      for minute in minutes:
+          slow = []
+          if minute > 30:
+              slow.append(minute)
+      print(slow)
+      ```
+
+      It ran, and showed [43.7]. Ana, how many of the times were over 30? ... Three. And her list holds one. Each time round the loop, the line slow = [] made a fresh empty list and threw the earlier ones away. Where should the empty list be made? Type the whole program as she should have written it.
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+      slow = []
+      for minute in minutes:
+          if minute > 30:
+              slow.append(minute)
+      print(slow)
+    output: "[35.2, 31.7, 43.7]"
+    shows:
+      - |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+        for minute in minutes:
+            slow = []
+            if minute > 30:
+                slow.append(minute)
+        print(slow)
+    narration:
+      - "[35.2, 31.7, 43.7]. The empty list was made once, before the loop, and every yes was added to it."
+      - "Everything inside the loop happens again at each turn. A list that should survive the turns has to be made outside it."
+      - "Three times over 30, three in the list. The same place as the count started in the last lesson."
+    wrong:
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+          for minute in minutes:
+              slow = []
+              if minute > 30:
+                  slow.append(minute)
+          print(slow)
+        ask: "That is Ana's again, and it keeps only the last. What happens to slow at each turn?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+          slow = []
+          for minute in minutes:
+              if minute > 30:
+                  slow.append(minute)
+              print(slow)
+        ask: "The list is shown at every turn. When is it complete?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+          for minute in minutes:
+              if minute > 30:
+                  slow.append(minute)
+          print(slow)
+        ask: "Python stopped: slow means nothing yet. Where is it made, and when?"
+    walk:
+      - "Ana's loop and her question are right. Look at where slow = [] sits."
+      - "Make the empty list before the loop starts, so that it is made only once."
+    return:
+      text: "Collect the subtotals above 50 into a list, and show it. The subtotals: 57.72, 39.91, 46.82, 29.05 and 59.1."
+      model: |-
+        subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]
+        big = []
+        for subtotal in subtotals:
+            if subtotal > 50:
+                big.append(subtotal)
+        print(big)
+      output: "[57.72, 59.1]"
+      narration:
+        - "[57.72, 59.1]. The empty list was made once, before the loop, and each yes was added."
+        - "A list that starts empty, grows inside the loop and is shown after it."
+      note: "Return for the classmate step."
+    note: "Ana makes the slip the learner is most likely to make, before the learner can (rule E6). The program runs, so the reason is stated by the teacher from what happened, not by a Python message. The step introduces nothing new: it is the repair of the thought just given."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop"]
+    text: "Your turn from the start. The delivery fees were 8.99, 4.99, 6.99, 0 and 4.99. Collect the ones under 5 into a list called cheap, and show it."
+    thinking_order: "Make the list. Make an empty list called cheap. For each fee, if it is under 5, add it to cheap. Then show cheap."
+    model: |-
+      fees = [8.99, 4.99, 6.99, 0, 4.99]
+      cheap = []
+      for fee in fees:
+          if fee < 5:
+              cheap.append(fee)
+      print(cheap)
+    output: "[4.99, 0, 4.99]"
+    narration:
+      - "[4.99, 0, 4.99]. An empty list before the loop, a question inside it, and an append on each yes."
+      - "Three fees under 5, kept in the order they came. That is WHERE again, with the rows kept this time."
+      - "[4.99, 0, 4.99]."
+    wrong:
+      - code: |-
+          fees = [8.99, 4.99, 6.99, 0, 4.99]
+          for fee in fees:
+              cheap = []
+              if fee < 5:
+                  cheap.append(fee)
+          print(cheap)
+        ask: "Only the last fee survived. Where does the empty list belong?"
+      - code: |-
+          fees = [8.99, 4.99, 6.99, 0, 4.99]
+          cheap = []
+          for fee in fees:
+              if fee < 5:
+                  cheap = fee
+          print(cheap)
+        ask: "Cheap holds one number, the last one. What adds an item to a list, and leaves the others there?"
+      - code: |-
+          fees = [8.99, 4.99, 6.99, 0, 4.99]
+          cheap = []
+          for fee in fees:
+              if fee > 5:
+                  cheap.append(fee)
+          print(cheap)
+        ask: "Those are the dear ones. Which way does the sign point for under?"
+    walk:
+      - "Make the list of fees, and an empty list called cheap."
+      - "Go through the fees. If a fee is under 5, add it to cheap."
+      - "Show cheap, after the loop."
+    return:
+      text: "Collect the delivery times under 30 minutes into a list, and show it. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+        quick = []
+        for minute in minutes:
+            if minute < 30:
+                quick.append(minute)
+        print(quick)
+      output: "[24.8, 28.2]"
+      narration:
+        - "[24.8, 28.2]. The two quick deliveries, in the order they came."
+        - "Empty list, loop, question, append: the rows were kept, by hand."
+      note: "Return for step 12."
+    note: "The first time the learner writes the whole shape from nothing, one step after the classmate. Both lists of numbers are real values from the orders table."
+
+  # 13
+  - kind: "give"
+    lang: "python"
+    new: ["and-or"]
+    text: |-
+      Two questions about the same item can be joined, as AND and OR joined them in SQL. With and, both questions must say yes. With or, one yes is enough:
+
+      ```python
+      fees = [8.99, 6.99, 0, 4.99]
+      for fee in fees:
+          if fee > 5 and fee < 8:
+              print(fee)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0, 4.99]
+        for fee in fees:
+            if fee > 5 and fee < 8:
+                print(fee)
+    after_run: "6.99. Only that one is both above 5 and under 8. Each side of and has its own question, with its own name, sign and number. With or in its place, a fee would be kept if either said yes."
+    note: "Imports the thought from SQL-2 (two-questions) and says so in the text. The or half is described and not run, so a lucky guess cannot teach a false generalisation: it is asked in the next step, where the learner has to think out which of the two words is wanted."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "equals-asks", "and-or"]
+    text: "Five delivery fees: 8.99, 6.99, 0, 4.99 and 8.99. Go through them and show the ones that are either free, that is 0, or above 8."
+    thinking_order: "Make the list. For each fee, if it is 0 or it is above 8, show it."
+    model: |-
+      fees = [8.99, 6.99, 0, 4.99, 8.99]
+      for fee in fees:
+          if fee == 0 or fee > 8:
+              print(fee)
+    output: |-
+      8.99
+      0
+      8.99
+    narration:
+      - "8.99, 0 and 8.99. Either question saying yes was enough, and or joined them."
+      - "Each side of or asks its own question about the fee. A free one, or a dear one."
+      - "Three kept: the two dear ones and the free one."
+    wrong:
+      - code: |-
+          fees = [8.99, 6.99, 0, 4.99, 8.99]
+          for fee in fees:
+              if fee == 0 and fee > 8:
+                  print(fee)
+        ask: "Nothing came back. Could one fee be free and also above 8?"
+        why: "and wants both questions to say yes for the same item. Either one calls for or."
+      - code: |-
+          fees = [8.99, 6.99, 0, 4.99, 8.99]
+          for fee in fees:
+              if fee == 0 or 8:
+                  print(fee)
+        ask: "Every fee came back. Read the second half on its own: just 8. Does that ask anything about the fee?"
+        why: "each side of or is a whole question, with the name, the sign and the value."
+      - code: |-
+          fees = [8.99, 6.99, 0, 4.99, 8.99]
+          for fee in fees:
+              if fee = 0 or fee > 8:
+                  print(fee)
+        ask: "Python stopped at the first question. What do two equals signs do that one does not?"
+    walk:
+      - "Make the list, and go through it."
+      - "Write the first question: the fee is 0."
+      - "Join a second question with or: the fee is above 8. Then show the fee."
+    return:
+      text: "Show the delivery times between 30 and 40 minutes: both above 30 and under 40. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+        for minute in minutes:
+            if minute > 30 and minute < 40:
+                print(minute)
+      output: |-
+        35.2
+        31.7
+      narration:
+        - "35.2 and 31.7. Both questions said yes for those two."
+        - "And wants both. Each side has its own name, sign and number."
+      note: "Return for step 14."
+    note: "The or is asked and the and is given, so the learner has to think out which word is wanted. The second wrong answer is the same slip as SQL-2 step 11's second wrong answer, and the question is a deliberate echo of it."
+
+  # 15
+  - kind: "give"
+    lang: "python"
+    new: ["otherwise"]
+    text: |-
+      So far a question has only had a yes branch. To say what happens on a no, add else, with its own colon and its own pushed-in lines. Here the fees are split into two lists, the high ones and the rest:
+
+      ```python
+      fees = [8.99, 6.99, 0, 4.99]
+      high = []
+      low = []
+      for fee in fees:
+          if fee > 5:
+              high.append(fee)
+          else:
+              low.append(fee)
+      print(high)
+      print(low)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0, 4.99]
+        high = []
+        low = []
+        for fee in fees:
+            if fee > 5:
+                high.append(fee)
+            else:
+                low.append(fee)
+        print(high)
+        print(low)
+    after_run: "[8.99, 6.99] and then [0, 4.99]. The yes rows went one way and the no rows the other. SQL had no word for this: WHERE simply threw the no rows away. Here you can keep them. The else sits level with the if it belongs to."
+    note: "Without a SQL equivalent, so it is given and then asked. The picture of two lists is the one a learner will need for the closing thought of the strand: a question splits the rows."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "otherwise"]
+    text: "Split these subtotals into two lists: big for the ones above 50, and small for the rest. Then show big, and then small. The subtotals: 57.72, 39.91, 46.82, 29.05 and 59.1."
+    model: |-
+      subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]
+      big = []
+      small = []
+      for subtotal in subtotals:
+          if subtotal > 50:
+              big.append(subtotal)
+          else:
+              small.append(subtotal)
+      print(big)
+      print(small)
+    output: |-
+      [57.72, 59.1]
+      [39.91, 46.82, 29.05]
+    narration:
+      - "[57.72, 59.1] and [39.91, 46.82, 29.05]. Each subtotal went into one list or the other, and none was lost."
+      - "Two empty lists before the loop, a question inside it, and else for the no rows."
+      - "Every subtotal is in exactly one list: the yes ones in big, and the others in small."
+    wrong:
+      - code: |-
+          subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]
+          big = []
+          small = []
+          for subtotal in subtotals:
+              if subtotal > 50:
+                  big.append(subtotal)
+              else:
+                  small.append(subtotal)
+          print(big)
+        ask: "Both lists were made, but I asked for both to be shown."
+      - code: |-
+          subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]
+          big = []
+          small = []
+          for subtotal in subtotals:
+              if subtotal > 50:
+                  big.append(subtotal)
+          else:
+              small.append(subtotal)
+          print(big)
+          print(small)
+        ask: "Python stopped at the else. Which question does an else belong to, and what shows that?"
+    walk:
+      - "Make the list, and two empty lists, big and small."
+      - "Go through the subtotals. If one is above 50, add it to big."
+      - "Else, add it to small. Then show big, and show small."
+    return:
+      text: "Split the delivery times into quick, under 30 minutes, and slow, the rest, and show quick and then slow. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+        quick = []
+        slow = []
+        for minute in minutes:
+            if minute < 30:
+                quick.append(minute)
+            else:
+                slow.append(minute)
+        print(quick)
+        print(slow)
+      output: |-
+        [24.8, 28.2]
+        [35.2, 31.7, 43.7]
+      narration:
+        - "[24.8, 28.2] and [35.2, 31.7, 43.7]. Each time went into exactly one list."
+        - "A question, and else for the others: nothing is lost."
+      note: "Return for step 16."
+    note: "Two lists are filled by one loop. A learner who asks a second question (if subtotal < 50) instead of using else gets the same lists on this data, so that is not listed as a wrong answer, and the narration is what says that every subtotal went into exactly one list."
+
+  # 17
+  - kind: "give"
+    lang: "python"
+    new: ["sorted"]
+    text: |-
+      Python sorts a list for you: sorted. The list goes inside its brackets, as it did for len and sum, and what comes out is a new list in order, smallest first, as ORDER BY gave:
+
+      ```python
+      fees = [8.99, 0, 6.99, 4.99]
+      print(sorted(fees))
+      print(fees)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 0, 6.99, 4.99]
+        print(sorted(fees))
+        print(fees)
+    after_run: "[0, 4.99, 6.99, 8.99], and then the original, still in its old order. Sorted hands you a sorted copy and leaves the list alone, as ORDER BY left the table alone."
+    note: "The after_run says what is unchanged (rule B3). A learner who knows list.sort() from elsewhere is not helped here: it is left out on purpose, because it changes the list where it stands and returns nothing, and that is a confusion of its own."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "sorted"]
+    text: "The delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. Show them in order, the shortest first."
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2]
+      print(sorted(minutes))
+    output: "[24.8, 28.2, 31.7, 35.2]"
+    narration:
+      - "[24.8, 28.2, 31.7, 35.2]. The list went inside sorted, and the smallest came first."
+      - "A sorted copy, as ORDER BY gave a sorted table."
+      - ""
+    wrong:
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2]
+          print(minutes)
+        ask: "That is the list as it was. Which word puts it in order?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2]
+          sorted(minutes)
+          print(minutes)
+        ask: "The sorting happened, but you showed the old list. What did sorted hand back, and where did it go?"
+        why: "sorted gives a new list and leaves the old one alone, so the new one has to be shown, or given a name."
+    walk:
+      - "Make the list of four times."
+      - "Show it in order: print, with sorted inside it, and the list's name inside that."
+    return:
+      text: "Show these subtotals in order, the smallest first: 81.1, 18.85, 84.23 and 31.3."
+      model: |-
+        subtotals = [81.1, 18.85, 84.23, 31.3]
+        print(sorted(subtotals))
+      output: "[18.85, 31.3, 81.1, 84.23]"
+      narration:
+        - "[18.85, 31.3, 81.1, 84.23]. Sorted, smallest first."
+        - "Sorted, with the list inside its brackets: ORDER BY, by hand."
+      note: "Return for step 18."
+    note: "An easy step after the give, so the thought is placed before the climb of the next two."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    new: ["reverse"]
+    requires: ["list", "show", "sorted", "reverse"]
+    text: "To turn the order round, as DESC did, put a comma after the list inside the brackets, and then reverse=True. Show the delivery times with the longest first: 35.2, 24.8, 31.7, 28.2 and 43.7."
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+      print(sorted(minutes, reverse=True))
+    output: "[43.7, 35.2, 31.7, 28.2, 24.8]"
+    narration:
+      - "[43.7, 35.2, 31.7, 28.2, 24.8]. Sorted, with reverse=True after a comma: ORDER BY ... DESC."
+      - "Reverse=True turned the order round, so the biggest came first."
+      - "The longest at the front."
+    wrong:
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+          print(sorted(minutes))
+        ask: "That is smallest first. What turns it round?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+          print(sorted(minutes, True))
+        ask: "Python stopped: it does not know what the True is for. What is the name of the thing we are turning on?"
+        why: "inside the brackets a name is given to what it sets: reverse=True says it out loud."
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
+          print(sorted(minutes), reverse=True)
+        ask: "Python stopped: reverse is not for print. Look where the closing bracket of sorted is."
+    walk:
+      - "Make the list of five times."
+      - "Show it sorted: print, sorted, the list inside."
+      - "Turn the order round: after the list, a comma, then reverse=True, still inside the brackets of sorted."
+    return:
+      text: "Show these fees with the dearest first: 8.99, 6.99, 0 and 4.99."
+      model: |-
+        fees = [8.99, 6.99, 0, 4.99]
+        print(sorted(fees, reverse=True))
+      output: "[8.99, 6.99, 4.99, 0]"
+      narration:
+        - "[8.99, 6.99, 4.99, 0]. Sorted, then turned round."
+        - "Reverse=True after a comma: DESC in Python."
+      note: "Return for step 19."
+    note: "reverse=True is given inline in the prompt because spelling a keyword argument cannot be built from anything the learner owns. It is core, not shape, and it comes back in the closing sentence and the closing cold check. The wrong answers show where the closing bracket sits."
+
+  # 20
+  - kind: "give"
+    lang: "python"
+    new: ["first-few"]
+    text: |-
+      To keep just the first few, put a colon and a number in square brackets after the list. That is the LIMIT of Python: [:3] takes the first three.
+
+      ```python
+      fees = [8.99, 6.99, 0, 4.99, 6.99]
+      print(sorted(fees, reverse=True)[:3])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        fees = [8.99, 6.99, 0, 4.99, 6.99]
+        print(sorted(fees, reverse=True)[:3])
+    after_run: "[8.99, 6.99, 6.99]. Sorted, turned round, cut to three: ORDER BY fee DESC LIMIT 3, by hand. The colon means from the start, and the 3 means up to but not including position 3, so you get positions 0, 1 and 2: three items."
+    note: "The square brackets are the same ones as for a position, with a colon. The real reason for the 3 is given. Sort then cut: the order of events one more time, as in SQL-2."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "sorted", "reverse", "first-few"]
+    text: "The delivery times were 35.2, 24.8, 31.7, 28.2, 43.7 and 45.2 minutes. Show the three longest, the longest first."
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+      print(sorted(minutes, reverse=True)[:3])
+    output: "[45.2, 43.7, 35.2]"
+    narration:
+      - "[45.2, 43.7, 35.2]. Sorted, turned round, and cut to the first three."
+      - "Sort, then cut: the order they happen in. That is a top three."
+      - "The three longest deliveries, longest first."
+    wrong:
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+          print(sorted(minutes)[:3])
+        ask: "Those are the three shortest. What turns the order round?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+          print(sorted(minutes, reverse=True))
+        ask: "All six are in order. Which part keeps only the first few?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+          print(sorted(minutes, reverse=True)[3])
+        ask: "That is one item, the fourth. What does a colon in the brackets do?"
+    walk:
+      - "Make the list of six times."
+      - "Sort them with the longest first."
+      - "Cut the sorted list down to the first three: square brackets, a colon, and the number."
+    return:
+      text: "Show the two biggest subtotals, the biggest first: 81.1, 18.85, 84.23, 91.11 and 31.3."
+      model: |-
+        subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+        print(sorted(subtotals, reverse=True)[:2])
+      output: "[91.11, 84.23]"
+      narration:
+        - "[91.11, 84.23]. Sorted, turned round, cut to two."
+        - "ORDER BY DESC and LIMIT, by hand."
+      note: "Return for step 21."
+    note: "Three words in one sentence, as SQL-2 step 17 was for ORDER BY, DESC and LIMIT. The returns are the strand's version of the top-k tasks."
+
+  # 22
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "sorted", "position", "last"]
+    text: "Show just the longest of the delivery times, as a single number and not a list. Sort them first, then take the one you want. The times: 35.2, 24.8, 31.7, 28.2, 43.7 and 45.2."
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+      print(sorted(minutes)[-1])
+    output: "45.2"
+    narration:
+      - "45.2. Sorted, smallest first, so the longest is at the end, and minus one reaches it."
+      - "A sorted list, and one item taken out of it by its position."
+      - ""
+    wrong:
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+          print(sorted(minutes)[0])
+        ask: "That is the shortest. Which end of a sorted list holds the longest?"
+      - code: |-
+          minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+          print(sorted(minutes, reverse=True)[:1])
+        ask: "That is a list holding one item. Which of the two kinds of square brackets takes the item itself?"
+        why: "a position gives the item, and a colon gives a smaller list."
+    walk:
+      - "Make the list and sort it."
+      - "Take one item from the sorted list by its position: which end is the longest at?"
+    return:
+      text: "Show just the smallest of the subtotals, as a single number and not a list. The subtotals: 81.1, 18.85, 84.23 and 31.3."
+      model: |-
+        subtotals = [81.1, 18.85, 84.23, 31.3]
+        print(sorted(subtotals)[0])
+      output: "18.85"
+      narration:
+        - "18.85. The sorted list starts with the smallest, so position 0 is the one."
+        - "Sorted, and then one item by its position."
+      note: "Return for step 22."
+    note: "Weaves position and last, a few steps old, with sorted. A reminder that the position brackets and the cut brackets are two different things in the same place, which is where a mistake is most likely."
+
+  # 23
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "and-or", "sorted", "reverse", "first-few"]
+    friction: true
+    text: "The last one, and I won't break it down. Eight order subtotals: 81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72 and 117.91. Show the three biggest of the ones that are above 50 and under 100, the biggest first."
+    model: |-
+      subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]
+      kept = []
+      for subtotal in subtotals:
+          if subtotal > 50 and subtotal < 100:
+              kept.append(subtotal)
+      print(sorted(kept, reverse=True)[:3])
+    output: "[91.11, 84.23, 81.1]"
+    narration:
+      - "[91.11, 84.23, 81.1]. Keep the right rows, sort them biggest first, cut to three: WHERE, ORDER BY DESC and LIMIT 3, written out by hand, and you built it by thinking."
+      - "Every part of the lesson in one program: an empty list, a loop, two questions joined, an append, a sort, a turn-round and a cut. The sentence ran in the order things happen."
+      - "Three kept subtotals, biggest first. The same sentence as SQL's, one word at a time."
+    wrong:
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]
+          print(sorted(subtotals, reverse=True)[:3])
+        ask: "Those include subtotals over 100. Where do we drop the ones we are not allowed to keep?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]
+          kept = []
+          for subtotal in subtotals:
+              if subtotal > 50 and subtotal < 100:
+                  kept.append(subtotal)
+          print(sorted(kept)[:3])
+        ask: "Those are the three smallest of the kept ones. What turns the order round?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]
+          kept = []
+          for subtotal in subtotals:
+              if subtotal > 50 and subtotal < 100:
+                  kept.append(subtotal)
+          print(sorted(kept, reverse=True))
+        ask: "Four came back. Which part keeps only the first three?"
+      - code: |-
+          subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]
+          kept = []
+          for subtotal in subtotals:
+              if subtotal > 50 or subtotal < 100:
+                  kept.append(subtotal)
+          print(sorted(kept, reverse=True)[:3])
+        ask: "Every subtotal passes that question. Should a subtotal need both to be kept, or only one?"
+    walk:
+      - "Make the list of eight, and an empty list for the ones we keep."
+      - "Go through the subtotals. Keep one if it is above 50 and under 100."
+      - "After the loop, sort the kept ones with the biggest first."
+      - "Cut the sorted list to the first three, and show it."
+    return:
+      text: "The delivery times were 35.2, 24.8, 31.7, 28.2, 43.7, 45.2 and 77 minutes. Show the two longest of the ones under 50 minutes, the longest first."
+      model: |-
+        minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2, 77]
+        kept = []
+        for minute in minutes:
+            if minute < 50:
+                kept.append(minute)
+        print(sorted(kept, reverse=True)[:2])
+      output: "[45.2, 43.7]"
+      narration:
+        - "[45.2, 43.7]. Keep the ones under 50, sort them longest first, cut to two."
+        - "Keep, sort, cut: written in the order they happen."
+      note: "Return for the closing step. Not broken down, like the step."
+    note: "The closing sentence of the lesson. The map's sentence was the three biggest subtotals above 50. With the map's list the question above 50 does nothing, because the three biggest subtotals are all above 50, and a learner who left it out would get the right answer, so the checker could not tell. The sentence here adds and under 100, with a list that has subtotals over 100, so that the question is needed, and it uses and. Reported to the owner in the lesson report. Deliberate friction (rule C9)."
+
+  # 24
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. Today you took items out of a list by their position, grew a list inside a loop, joined two questions with and or or, said what happens on a no, and then sorted a list, turned it round and cut it. That is the same sentence as SQL's: keep the rows, sort them, cut them. Only now you wrote each piece out.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a program out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 25
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "otherwise", "sorted", "reverse"]
+    text: "The delivery times were 35.2, 24.8, 31.7, 28.2, 43.7 and 45.2 minutes. Split them into two lists, quick for the ones under 30 and slow for the rest. Then show the slow ones, longest first."
+    model: |-
+      minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
+      quick = []
+      slow = []
+      for minute in minutes:
+          if minute < 30:
+              quick.append(minute)
+          else:
+              slow.append(minute)
+      print(sorted(slow, reverse=True))
+    output: "[45.2, 43.7, 35.2, 31.7]"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check on a combination never practised: two lists made in one loop with an else, then one of them sorted and turned round. Never scored (rule F1). What a miss tells the script: which of the empty list, the else, append, sorted or reverse was absent."

@@ -2,6 +2,8 @@ import re
 import sqlite3
 
 from .data import run, same_rows
+from .env import as_env
+from .pyrun import run_python, same_output
 
 
 def _flags(step):
@@ -9,70 +11,102 @@ def _flags(step):
             "any_column_order": step.get("any_column_order", False)}
 
 
-def _try(conn, sql):
-    """Return (rows, None), or (None, error message) if the sentence fails."""
+def _is_python(step):
+    return step.get("lang", "sql") == "python"
+
+
+def _code(entry):
+    """The sentence of a wrong-answer entry: `sql` in an SQL step, `code` in a Python one."""
+    return entry.get("sql") or entry.get("code")
+
+
+def _run(env, step, code, check=True):
+    """Run one sentence of a step. Returns (value, None) or (None, error message).
+    SQL gives its rows. Python gives its output, with the step's hidden `check` code added after it."""
+    dataset = step.get("data", "")
+    if _is_python(step):
+        full = code + ("\n" + step["check"] if check and step.get("check") else "")
+        r = run_python(full, env.path(dataset), timeout=120)
+        return (r.output, None) if r.error is None else (None, r.error)
+    if not env.available(dataset):
+        return None, f"The data folder was not found: {dataset}"
     try:
-        return run(conn, sql), None
+        return run(env.sql(dataset), code), None
     except sqlite3.Error as e:
         return None, str(e)
 
 
-def _model_problems(conn, step):
-    """Run a step's model answer. Return (rows, or None if it fails to run; list of problems)."""
-    rows, err = _try(conn, step["model"])
+def _empty(step, value):
+    return not value.strip() if _is_python(step) else not value
+
+
+def _same(step, a, b, **flags):
+    return same_output(a, b) if _is_python(step) else same_rows(a, b, **flags)
+
+
+def _model_problems(env, step):
+    """Run a step's model answer. Return (its value, or None if it fails to run; list of problems)."""
+    value, err = _run(env, step, step["model"])
     if err:
         return None, [f"model answer does not run: {err}"]
     problems = []
-    if not rows:
-        problems.append("model answer returns no rows")
-    if "rows" in step and len(rows) != step["rows"]:
-        problems.append(f"model answer returns {len(rows)} rows, expected {step['rows']}")
-    if "result" in step and not same_rows(rows, step["result"], ndigits=2, **_flags(step)):
-        problems.append(f"model result {rows[:4]} differs from expected result {step['result']}")
-    return rows, problems
+    if _empty(step, value):
+        problems.append("model answer prints nothing" if _is_python(step) else "model answer returns no rows")
+    if _is_python(step):
+        if "output" in step and not same_output(value, step["output"]):
+            problems.append(f"model output {value.strip()!r} differs from expected output {step['output']!r}")
+        return value, problems
+    if "rows" in step and len(value) != step["rows"]:
+        problems.append(f"model answer returns {len(value)} rows, expected {step['rows']}")
+    if "result" in step and not same_rows(value, step["result"], ndigits=2, **_flags(step)):
+        problems.append(f"model result {value[:4]} differs from expected result {step['result']}")
+    return value, problems
 
 
-def _accept_problems(conn, step):
+def _accept_problems(env, step):
     problems = []
-    for sql in step.get("accepts", []):
-        got, err = _try(conn, sql)
-        if err or not got:
-            problems.append(f"accepted answer does not run or returns no rows ({err or 'no rows'}): {sql}")
+    for code in step.get("accepts", []):
+        got, err = _run(env, step, code)
+        if err or _empty(step, got):
+            problems.append(f"accepted answer does not run or returns no rows ({err or 'no rows'}): {code}")
     return problems
 
 
-def check_sql(conn, lesson, steps):
-    """Checks 1 and 1b: every SQL sentence in the lesson runs, or fails, as the step says."""
+def check_sql(env, lesson, steps):
+    """Checks 1 and 1b: every sentence in the lesson runs, or fails, as the step says.
+    (The name is older than Python steps. It checks both languages.)"""
+    env = as_env(env)
     fails = []
 
     def fail(n, msg):
         fails.append(f"FAIL {lesson} step {n}: {msg}")
 
     for n, s in enumerate(steps, 1):
-        for sql in s.get("shows", []):
-            _, err = _try(conn, sql)
+        for code in s.get("shows", []):
+            _, err = _run(env, s, code, check=False)
             if err:
-                fail(n, f"shown sentence does not run: {err}: {sql}")
-        if "broken" in s and _try(conn, s["broken"])[1] is None:
+                fail(n, f"shown sentence does not run: {err}: {code}")
+        if "broken" in s and _run(env, s, s["broken"], check=False)[1] is None:
             fail(n, f"broken sentence runs without error: {s['broken']}")
         if "model" not in s:
             continue
-        rows, problems = _model_problems(conn, s)
+        value, problems = _model_problems(env, s)
         for p in problems:
             fail(n, p)
-        if rows is None:
+        if value is None:
             continue
-        for p in _accept_problems(conn, s):
+        for p in _accept_problems(env, s):
             fail(n, p)
         for w in s.get("wrong", []):
             if "ask" not in w and "tell" not in w:
-                fail(n, f"wrong answer needs ask or tell: {w.get('sql')}")
-            if "sql" not in w:
+                fail(n, f"wrong answer needs ask or tell: {_code(w)}")
+            if _code(w) is None:
                 fail(n, "wrong answer has no sql")
                 continue
-            got, err = _try(conn, w["sql"])
-            if err is None and same_rows(got, rows, **_flags(s)):
-                fail(n, f"wrong answer gives the model result: {w['sql']}")
+            got, err = _run(env, s, _code(w))
+            if err is None and _same(s, got, value, **_flags(s)):
+                what = "output" if _is_python(s) else "result"
+                fail(n, f"wrong answer gives the model {what}: {_code(w)}")
     return fails
 
 
@@ -87,8 +121,13 @@ def check_narration(lesson, steps):
     return fails
 
 
-def check_returns(conn, lesson, steps):
+def _norm_code(step, code):
+    return " ".join(code.split()) if _is_python(step) else _tokens(code)
+
+
+def check_returns(env, lesson, steps):
     """Check 8: a return sentence runs, differs from its step, and has narration."""
+    env = as_env(env)
     fails = []
     for n, s in enumerate(steps, 1):
         r = s.get("return")
@@ -104,16 +143,21 @@ def check_returns(conn, lesson, steps):
         if "model" not in r:
             fail("has no model")
             continue
-        rows, problems = _model_problems(conn, r)
-        for p in problems + _accept_problems(conn, r):
+        if _is_python(s) and s.get("check") and not r.get("check"):
+            fail("needs its own check, because its step has one")
+            continue
+        # a return runs in the same language and data folder as its step
+        ret = {**{k: s[k] for k in ("lang", "data") if k in s}, **r}
+        value, problems = _model_problems(env, ret)
+        for p in problems + _accept_problems(env, ret):
             fail(p)
-        if rows is not None:
-            if _tokens(r["model"]) == _tokens(s["model"]):
+        if value is not None:
+            if _norm_code(s, r["model"]) == _norm_code(s, s["model"]):
                 fail("model is the same sentence as the step's")
             else:
-                original, err = _try(conn, s["model"])
+                original, err = _run(env, s, s["model"])
                 flags = {k: r.get(k, False) or s.get(k, False) for k in ("ordered", "any_column_order")}
-                if err is None and same_rows(rows, original, **flags):
+                if err is None and _same(s, value, original, **flags):
                     fail("gives the same result as the step's answer")
         lines = [x for x in r.get("narration", []) if x.strip()]
         if len(lines) < 2:
@@ -180,13 +224,32 @@ def _changed_clauses(a, b):
     return sum(1 for k in ca.keys() | cb.keys() if ca.get(k) != cb.get(k))
 
 
+def _code_tokens(code):
+    return re.findall(r"'[^']*'|\"[^\"]*\"|\w+|[^\s\w]", code)
+
+
+def _changed_runs(a, b):
+    """How many separate runs of tokens differ between two programs. A run is a slot."""
+    from difflib import SequenceMatcher
+    ops = SequenceMatcher(None, _code_tokens(a), _code_tokens(b), autojunk=False).get_opcodes()
+    return sum(1 for tag, *_ in ops if tag != "equal")
+
+
+def _slots_changed(a, b):
+    if _is_python(a) != _is_python(b):
+        return 99
+    if _is_python(a):
+        return _changed_runs(a["model"], b["model"])
+    return _changed_clauses(a["model"], b["model"])
+
+
 def check_shapes(lessons):
     """Check 4: two consecutive typed steps must not differ in one slot only."""
     fails = []
     for lesson, steps in lessons:
         typed = [(n, s) for n, s in enumerate(steps, 1) if "model" in s]
         for (n1, a), (n2, b) in zip(typed, typed[1:]):
-            if _changed_clauses(a["model"], b["model"]) <= 1:
+            if _slots_changed(a, b) <= 1:
                 fails.append(f"FAIL {lesson} step {n2}: same shape as step {n1}; the answers differ in one place only")
     return fails
 
@@ -233,11 +296,43 @@ def report_load(lessons):
     return lines, warns
 
 
-def check_all(conn, thoughts, lessons):
+def check_all(env, thoughts, lessons):
+    env = as_env(env)
+    fails, skipped = [], []
+    for lesson, steps in lessons:
+        missing = sorted({s["data"] for s in steps if s.get("data") and not env.available(s["data"])})
+        if missing:
+            skipped += [f"WARN {lesson}: the data folder '{d}' was not found, so its answers were not run" for d in missing]
+            fails += check_narration(lesson, steps)
+            continue
+        fails += (check_sql(env, lesson, steps) + check_narration(lesson, steps)
+                  + check_returns(env, lesson, steps))
+    fails += (check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
+              + check_shape(thoughts, lessons))
+    load, warns = report_load(lessons)
+    return fails, skipped + warns, report_spacing(thoughts, lessons), load
+
+
+def _grade(thoughts, thought):
+    """A thought is core unless thoughts.yaml gives it a grade: {text: ..., grade: shape | name-only}."""
+    entry = thoughts.get(thought)
+    return entry.get("grade", "core") if isinstance(entry, dict) else "core"
+
+
+def check_shape(thoughts, lessons):
+    """Check 9: a shape thought is only asked in a step that supplies its spelling in its own text,
+    and a name-only thought is never asked."""
     fails = []
     for lesson, steps in lessons:
-        fails += (check_sql(conn, lesson, steps) + check_narration(lesson, steps)
-                  + check_returns(conn, lesson, steps))
-    fails += check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
-    load, warns = report_load(lessons)
-    return fails, warns, report_spacing(thoughts, lessons), load
+        for n, s in enumerate(steps, 1):
+            where = f"FAIL {lesson} step {n}:"
+            for spelling in s.get("supplies", []):
+                if spelling not in s.get("text", ""):
+                    fails.append(f"{where} supplies \"{spelling}\" but its text does not contain it")
+            for t in s.get("requires", []):
+                grade = _grade(thoughts, t)
+                if grade == "name-only":
+                    fails.append(f"{where} requires the name-only thought '{t}', which is never asked")
+                elif grade == "shape" and not s.get("supplies"):
+                    fails.append(f"{where} requires the shape thought '{t}', so it must list what it supplies")
+    return fails

@@ -15,7 +15,7 @@ def test_a_run_keeps_its_state_items_and_events(tmp_path):
     s.apply(run_id, {"pos": 1}, [{"type": "teacher", "text": "Next"}], [EVENT])
     assert s.latest("sql-01") == (run_id, {"pos": 1})
     assert [i["text"] for i in s.items(run_id)] == ["Hi", "Next"]
-    assert s.events() == [{**EVENT, "run_id": run_id, "id": 1, "ts": s.events()[0]["ts"]}]
+    assert s.events() == [{**EVENT, "run_id": run_id, "id": 1, "ts": s.events()[0]["ts"], "lesson": "sql-01"}]
 
 
 def test_progress_survives_reopening_the_file(tmp_path):
@@ -53,3 +53,20 @@ def test_lessons_have_separate_runs(tmp_path):
 def test_the_store_never_deletes_or_drops():
     source = (Path(__file__).parent.parent / "player" / "store.py").read_text().upper()
     assert "DELETE" not in source and "DROP" not in source
+
+
+def test_latest_any_is_the_newest_run_of_any_lesson(tmp_path):
+    s = Store(tmp_path)
+    assert s.latest_any() is None
+    s.new_run("sql-01", {"n": 1}, [], finished=True)
+    second = s.new_run("sql-02", {"n": 2}, [])
+    assert s.latest_any() == (second, "sql-02", {"n": 2})
+
+
+def test_events_say_which_lesson_they_belong_to(tmp_path):
+    s = Store(tmp_path)
+    a = s.new_run("sql-01", {}, [])
+    b = s.new_run("sql-02", {}, [])
+    s.apply(a, {}, [], [EVENT])
+    s.apply(b, {}, [], [{**EVENT, "step": 5}])
+    assert [(e["lesson"], e["step"]) for e in s.events()] == [("sql-01", 2), ("sql-02", 5)]
