@@ -1,0 +1,1570 @@
+lesson: ml-02
+title: "The same shape, any model"
+strand: ml
+stage: 2
+thoughts:
+  engineer-then-fit: "A better column beats a better model. Add the promised time and the score moves."
+  swap-the-model: "Change the first line and nothing else. Every model has the same three verbs."
+  fit-on-train-only: "Anything learned from the data, even a median to fill with, is learned from the training rows only."
+  pick-the-metric: "When one answer is rare, accuracy flatters. Say which metric you chose and why."
+  read-and-criticise: "Reading someone else's pandas and finding what leaks."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Predict whether a delivery took more than 35 minutes. X holds the rain and the bag size, the rows with no distance are dropped, and 30 percent of the rows are held back. Fit a logistic regression and print its AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['rain', 'bag_size']]
+      y = data['actual_minutes'] > 35
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.599"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from ML-1: the whole pipeline, on a combination never practised (other target, other columns, other share). Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["engineer-then-fit"]
+    text: |
+      Last time the model scored 0.697, and I said it was not yet good. The easy thing to do now is to reach for a fancier model. The better thing is to look at the data and ask what the model cannot know. Think about a delivery 6 kilometres away. If the restaurant promised 50 minutes, that is fine. If it promised 30, it is going to be late. The model has the distance, but it does not have the promise. So give it the promise: add the promised time as a fourth column and change nothing else.
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    after_run: |
+      0.792, up from 0.697, with the same model and the same rows. Only one column was added. A better column beats a better model, and the way to find the column is to ask what the model cannot know, and to look at the data for it. Nobody reached for anything fancy.
+    note: "Engineer-then-fit. The learner knows the same line from last time, so only the new column changes, and the reason to add it is a real reason from the data (README: distance depends on the promise). The numbers are for the rows with a distance, as in ML-1: 0.697 becomes 0.792. The map quotes 0.805, which is the same model on all 5,601 rows with the missing distances filled from the training rows (it appears later in this lesson)."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Is the promise enough on its own? Using `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, put only the promised minutes in X, drop the rows with no distance, hold back a fifth, and print the AUC of a logistic regression on the held-back rows, rounded to three places. y is whether a delivery was late."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.492"
+    narration:
+      - "0.492, which is a coin. On its own the promise tells you nothing about lateness, because a long promise is no more likely to be late than a short one. It only matters beside the distance."
+      - "A column can be useless alone and valuable beside another. The model needs to see both to work out that a long distance is fine when the promise was long."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data['promised_minutes']
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "X has to be a table, even with a single column. How many brackets does a table want around its names?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which column did I say X holds?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict(X_test)), 3))
+        ask: "That fed AUC yes-or-no guesses. Which of the model's answers puts the rows in order?"
+    walk:
+      - "Build X with one column, in a list, and y as before. Hold back a fifth."
+      - "Make the model and fit it on the training rows."
+      - "Take the chance of late for the held-back rows, and print the AUC rounded."
+    return:
+      text: "And the distance on its own? With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, put only the distance in X, drop the rows with no distance, hold back a fifth, and print the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.637"
+      narration:
+        - "The distance alone is better than a coin, but well short of the pair: a long distance is late only if the promise was short."
+        - "One column alone, and the same pipeline."
+      note: "Return for step 3. The other column alone."
+    note: "A column alone, to make the point of step 2 from the other side. The result 0.492 is a surprise on purpose: the promise, alone, has no signal in this data (the README says distance was built from the promise and the delay). A typed step with a new X of one column."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Now put the two together. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, let X hold the distance and the promised minutes. Drop the rows with no distance, hold back 25 percent, and print the AUC of a logistic regression on the held-back rows, rounded to three places. y is whether a delivery was late."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.779"
+    narration:
+      - "Two columns that were weak alone, a model that is good beside them: 0.779 here, against 0.49 and 0.64 for the two columns alone. Together they say how far the delivery is, for the time it was given."
+      - "The pair carries most of the signal. The rest, rain and the bag, add a little more."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "What share of the rows did I ask you to hold back?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which two columns did I put in X?"
+    walk:
+      - "Build X from the two columns in a list, and hold back a quarter."
+      - "Make the model, fit it on the training rows."
+      - "Print the AUC from the chance of late on the held-back rows."
+    return:
+      text: "Try the bag size beside the promise, instead. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the bag size and the promised minutes, drop the rows with no distance, hold back a fifth, and print the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.596"
+      narration:
+        - "Not as good as the distance and the promise: the bag size carries something, but not what the distance carries."
+        - "Another pair, the same pipeline."
+      note: "Return for step 4. Another pair."
+    note: "Two weak columns together, then a pair that does less. It uses the pipeline typed in full once more, a step after the first four-column give, with no one-slot change from step 3 (the share, the columns and the print all differ)."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["swap-the-model"]
+    text: |
+      Now the fancier model, since you asked for it. Remember make, fit, predict? Every model in scikit-learn answers to the same three verbs. So to swap one model for another, you change the line that makes the model, and nothing else. This one is gradient boosting, a model that builds many small decision trees, each correcting the one before. Its line to bring it in is another one to look up: `from sklearn.ensemble import GradientBoostingClassifier`. `random_state=0` fixes the model's own shuffling, as it fixed the split's.
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = GradientBoostingClassifier(random_state=0)
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    after_run: |
+      0.787, a little under the plain model's 0.792. The only line that changed is the one that makes the model, and nothing after it needed to know. A fancier model is not a better model by itself. It has to have something the simple one cannot do, and here the simple one was already doing it.
+    note: "swap-the-model. Everything after the model line is word for word the previous step. GradientBoostingClassifier is the owner's choice (decision of 24 Nov). The surprise is that it scores below the plain model. 'Builds many small trees' is the one-line description, and the learner is not asked for more."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    text: "Swap it yourself. With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, the rows with no distance are dropped, a quarter of the rows are held back, and the model is gradient boosting. Print its AUC on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.786"
+    narration:
+      - "Gradient boosting on three columns, scored on a quarter of the rows. The model line is the only one that is not the plain logistic pipeline."
+      - "The same make, fit, predict, score, with another model's name on the first line."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict(X_test)), 3))
+        ask: "That fed AUC yes-or-no guesses. Which answer puts the rows in order?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which model did I ask for?"
+    walk:
+      - "Build X, y and the split as before. A quarter is held back."
+      - "Change the line that makes the model. Nothing after it changes."
+      - "Print the AUC from the chance of late."
+    return:
+      text: "Once more, with `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`. X holds the distance, the bag size and the promised minutes, the rows with no distance are dropped, a fifth of the rows are held back, and the model is gradient boosting. Print the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = GradientBoostingClassifier(random_state=0)
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.779"
+      narration:
+        - "Gradient boosting again, with the bag size in place of the rain."
+        - "The same four lines, with another model on the first."
+      note: "Return for step 6. Other columns and share."
+    note: "The learner swaps the model once. A learner who also writes `.predict` is caught by the wrong answer. The import line is in the text as `supplies`."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    text: "Put the two models side by side on the very same split. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, the rows with no distance are dropped, and a fifth of the rows are held back. Fit a logistic regression and a gradient boosting model, and print the AUC of each on the held-back rows, rounded to three places, the plain one first."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      plain = LogisticRegression()
+      plain.fit(X_train, y_train)
+      boosted = GradientBoostingClassifier(random_state=0)
+      boosted.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, plain.predict_proba(X_test)[:, 1]), 3))
+      print(round(roc_auc_score(y_test, boosted.predict_proba(X_test)[:, 1]), 3))
+    output: |-
+      0.792
+      0.787
+    narration:
+      - "0.792 for the plain model and 0.787 for the boosted one. Same rows, same split, one line apart. On this table the simple model is at least as good as the fancy one."
+      - "Two models, each with its own name, because they are two things. Everything else is shared."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          plain = LogisticRegression()
+          plain.fit(X_train, y_train)
+          boosted = GradientBoostingClassifier(random_state=0)
+          boosted.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, boosted.predict_proba(X_test)[:, 1]), 3))
+          print(round(roc_auc_score(y_test, plain.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which one did I ask to see first?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          model2 = LogisticRegression()
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Both numbers are from the same model, and the second one was never fitted. How many models did I ask for, and how many are fitted?"
+    walk:
+      - "Build X, y and the split once."
+      - "Make and fit the plain model, then make and fit the boosted one, each with a name of its own."
+      - "Print the AUC of each, the plain one first."
+    return:
+      text: "Again both models, on another table. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, the rows with no distance are dropped, and a quarter of the rows are held back. Print the AUC of the logistic regression and then of gradient boosting, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        plain = LogisticRegression()
+        plain.fit(X_train, y_train)
+        boosted = GradientBoostingClassifier(random_state=0)
+        boosted.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, plain.predict_proba(X_test)[:, 1]), 3))
+        print(round(roc_auc_score(y_test, boosted.predict_proba(X_test)[:, 1]), 3))
+      output: |-
+        0.791
+        0.786
+      narration:
+        - "Two numbers again, the plain one first. Close together, as they were."
+        - "The same split for both models, and one line for each."
+      note: "Return for step 7. Other columns and share."
+    note: "The comparison that ML-2 is about: the learner sees that two models share a split and a metric, and that a fancier model is not better. Both are on the dropna rows here, so that the 0.792 and 0.787 from steps 2 and 5 come back as the learner's own answer."
+
+  # 8
+  - kind: "aside"
+    lang: "python"
+    text: "\nSomething that is only interesting, with nothing in it to keep. In competitions on tables of data, many of the winning entries have used gradient boosting, so it has a reputation. But the practice data here was made up from a smooth rule: how late a delivery is was turned into a distance, a bag size and the rain by gentle curves. A plain model suits a smooth rule, and so the fancy one finds nothing extra. On real data with sharp edges and odd corners, the order can flip. That is why people try both, on the same split, and look.\n"
+    note: "Honest and real: data/README.md says the three columns were generated from the delay by smooth functions. It keeps the learner from taking 'plain beats fancy' as a rule, which would be mental debris (rule B5)."
+
+  # 9
+  - kind: "classmate"
+    lang: "python"
+    new: ["fit-on-train-only"]
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fill-or-drop", "mean-of-yes-no"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "\nWe have been dropping the 112 deliveries that have no distance, which throws their other columns away. Ana did not want to. She filled the empty distances with the median, as you did in the cleaning lesson, and then ran the pipeline:\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id')\ndata['distance_km'] = data['distance_km'].fillna(data['distance_km'].median())\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\nprint(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))\n```\n\nIt ran and printed 0.805. Ana, which rows did that median come from? ... Every row, including the ones that will be held back for the test. So a number worked out from the held-back rows went into the table before the model saw anything. The model never saw their answers, but it has seen something about them. Here the median is 4.3 either way, so the score cannot show it, and that is exactly what makes it dangerous: it will not announce itself. The rule is one sentence. Anything learned from the data, even a median to fill with, is learned from the training rows only. So split first, work the median out from the training part, and fill both parts with it:\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id')\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)\nfill = X_train['distance_km'].median()\nX_train['distance_km'] = X_train['distance_km'].fillna(fill)\nX_test['distance_km'] = X_test['distance_km'].fillna(fill)\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\nprint(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))\n```\n\nRun it.\n"
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    after_run: "\n0.805 again, and now it is honest. Look at what changed: the split moved before the fill, and the median came from X_train alone, and then it was used on both parts. The held-back rows got a number they did not help to make. And notice that 0.805 is a little more than the 0.792 from the dropped-rows pipeline: the 112 rows are back, and the test set is bigger.\n"
+    note: "The classmate (Ana) makes the predictable leak before the learner can (rule E6). Her sentence runs without error and the number is the same either way, so the teacher says plainly that the score cannot show it. The learner is asked, in the narration, what the model has now seen. The repair is shown and run, and step 10 asks for it typed. The numbers 0.805 and 0.795 on the map are this fill world."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "summary-follows"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Now keep the rows with no distance, and do it honestly. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, a fifth of the rows are held back, and the empty distances are filled with the mean of the training rows. Print that mean, rounded to four places, and then the AUC of a logistic regression on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].mean()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(fill, 4))
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: |-
+      4.4174
+      0.804
+    narration:
+      - "The mean of the training rows' distances is 4.4174, and the AUC is 0.804, with all 5,601 rows in use. You split first, learned the number from the training part, and gave both parts the same one."
+      - "The order was the lesson: split, learn the filler from the training rows, fill both parts, then fit."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X['distance_km'].mean()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(fill, 4))
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which rows did that mean come from? Is every one of them a training row?"
+        why: "the mean of all of X includes the held-back rows. The number printed, 4.439, differs from the training rows' 4.4174, and that difference is the leak."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(fill, 4))
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which summary of the training distances did I ask you to fill with?"
+    walk:
+      - "Merge, without dropping any rows. Build X and y, and hold back a fifth."
+      - "Work out the mean of the distance from the training part, and name it."
+      - "Fill the empty distances of the training part and of the test part with it. Then make and fit the model, and print the number and the AUC."
+    return:
+      text: "And with gradient boosting. With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, 30 percent of the rows are held back, and the empty distances are filled with the mean of the training rows. Print that mean, rounded to four places, then the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        fill = X_train['distance_km'].mean()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = GradientBoostingClassifier(random_state=0)
+        model.fit(X_train, y_train)
+        print(round(fill, 4))
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: |-
+        4.412
+        0.791
+      narration:
+        - "The mean of the training rows' distances, and the AUC of a boosted model that never saw the held-back rows' distances before it was fitted."
+        - "Split first, the filler from the training rows, both parts filled, then make and fit."
+      note: "Return for step 10. Other model, share and print."
+    note: "The honest fill, typed. Printing the mean of the training rows lets the output tell a leak from the right way: the whole table's mean is 4.4390, the training rows' 4.4174. The median would not show it, since both are 4.3, which is why the mean is asked for here and the median in the classmate and the closing sentence."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Same honesty, a different table. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the bag size and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression and print its AUC on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.786"
+    narration:
+      - "The plain model on three columns, with every row in use. The median came from the training part and went to both."
+      - "Split first, the median from the training rows, both parts filled, then make and fit."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That dropped the rows with no distance. What did I ask you to do with them?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which model did I ask for?"
+    walk:
+      - "Merge, keep every row, build X and y, and hold back a quarter."
+      - "Work out the median of the distance from the training part, name it, and fill both parts with it."
+      - "Make the plain model, fit it, and print its AUC on the held-back rows."
+    return:
+      text: "And boosted. With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: keep all the rows, X holds the distance, the rain and the promised minutes, 30 percent of the rows are held back, and the empty distances are filled with the median of the training rows. Fit gradient boosting and print its AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = GradientBoostingClassifier(random_state=0)
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.781"
+      narration:
+        - "Gradient boosting on three columns, every row kept, and the fill learned from the training part."
+        - "The first line decides the model, and the rest is the honest pipeline."
+      note: "Return for step 11. The boosted model, other columns and share."
+    note: "The honest pipeline typed a second time, without a printed filler, with the swap made in the return. A learner who goes back to dropping rows is caught by the wrong answer."
+
+  # 12
+  - kind: "give"
+    lang: "python"
+    new: ["pick-the-metric"]
+    text: |
+      Now a different kind of question. Not "was it late?" but "was it very late?", more than 15 minutes late. That is rare: about 7 percent of deliveries. We will score the model two ways, and add a third number, which is what you would score if you did no work at all, and answered "no" for every row. Accuracy comes from `from sklearn.metrics import accuracy_score`:
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import accuracy_score
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 15
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(round(accuracy_score(y_test, predictions), 3))
+      print(round(1 - y_test.mean(), 3))
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 15
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(round(accuracy_score(y_test, predictions), 3))
+        print(round(1 - y_test.mean(), 3))
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    after_run: |
+      Accuracy is 0.938, which sounds excellent. The second number is the share of held-back rows that were not very late: 0.926. A model that answered "no" every single time would be right that often. So the model beat doing nothing by about a point. When one answer is rare, accuracy flatters. The third number, the AUC, asks a different question: does the model put the very late deliveries above the others? It says 0.891, which is a good deal more useful. Neither number is the right one. You choose the one that answers your question, and you say which you chose and why.
+    note: "pick-the-metric. The learner knows both metrics by now, so the new thought is the choice, and the baseline, `1 - y_test.mean()`, is just column arithmetic and a mean they own. The numbers match the map: 7.3 percent very late, accuracy 0.938, answering no 0.926."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "column-sums", "mean-of-yes-no"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
+    text: "Before you trust a score on a rare question, look at how rare it is. Keep all the rows. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`: X holds all four columns, y is whether a delivery was more than 15 minutes late, a fifth of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression. Print how many of the held-back rows were very late, and then how many of the held-back rows the model guessed were very late."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 15
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(y_test.sum())
+      print(predictions.sum())
+    output: |-
+      83
+      40
+    narration:
+      - "83 of the 1,121 held-back rows were very late, and the model guessed that only 40 would be. It is cautious: with so few late ones to learn from, it says no most of the time."
+      - "Two counts from the held-back rows: the truth, and the guesses. The gap between them is why accuracy has little to say here."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 15
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(y.sum())
+          print(predictions.sum())
+        ask: "That counted the very late rows in all of y. Which piece of y holds the held-back rows?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 15
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(y_test.sum())
+          print(len(predictions))
+        ask: "That is how many guesses there are, not how many of them said very late. What do you add up?"
+    walk:
+      - "Fit the pipeline as before, with the target of more than 15 minutes late."
+      - "Predict the held-back rows."
+      - "The truth first: add up the yes answers in y_test. Then add up the yes guesses."
+    return:
+      text: "The same for more than 10 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`: X holds the distance, the rain and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression. Print how many of the held-back rows were more than 10 minutes late, and then how many the model guessed were."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 10
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(y_test.sum())
+        print(predictions.sum())
+      output: |-
+        195
+        111
+      narration:
+        - "More late rows this time, and the model guesses fewer than there are. The rarer the answer, the more cautious the guesses."
+        - "The truth and the guesses, side by side."
+      note: "Return for step 13. Another threshold, columns and share."
+    note: "The rare answer made concrete, with two counts the learner already knows how to make (`sum` on a column of yes and no). It prepares the narration of the next step: accuracy hides how seldom the model says yes."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "column-sums", "mean-of-yes-no"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import accuracy_score"]
+    text: "A rarer question: more than 20 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`: X holds all four columns, a fifth of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression. Print its accuracy on the held-back rows, and then the accuracy you would get by answering no every time, each rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import accuracy_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 20
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      predictions = model.predict(X_test)
+      print(round(accuracy_score(y_test, predictions), 3))
+      print(round(1 - y_test.mean(), 3))
+    output: |-
+      0.979
+      0.964
+    narration:
+      - "0.979 for the model, and 0.964 for answering no every time. About 1.5 points for all that work. Only 3.6 percent of deliveries were this late, so accuracy has almost nothing left to say."
+      - "The model beat the do-nothing answer by a little. When the answer you care about is rare, put the do-nothing answer next to the score, or choose another score."
+      - ""
+    wrong:
+      - code: |
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import accuracy_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 20
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(round(accuracy_score(y_test, predictions), 3))
+          print(round(y_test.mean(), 3))
+        ask: "The second number is the share that were more than 20 minutes late. What share did I ask for: the late ones, or the ones where the answer no is right?"
+        why: "answering no is right for every row that was not very late, which is 1 minus the share that was."
+      - code: |
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import accuracy_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 20
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_test)
+          print(round(accuracy_score(y_test, predictions), 3))
+          print(round(1 - y_test.mean(), 3))
+        ask: "The model refuses to fit, because some distances are empty. Which step makes the empty cells safe, and which rows is its number learned from?"
+      - code: |
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import accuracy_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 20
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          predictions = model.predict(X_train)
+          print(round(accuracy_score(y_train, predictions), 3))
+          print(round(1 - y_train.mean(), 3))
+        ask: "Those are the rows the model learned from. Which rows give the honest score?"
+    walk:
+      - "Merge, keep every row, build X and a y of more than 20 minutes late, and hold back a fifth."
+      - "Fill from the training rows, then make and fit the model."
+      - "Print the accuracy on the held-back rows, then 1 minus the share of yes in y_test."
+    return:
+      text: "And more than 10 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`: X holds the distance, the rain and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Print the model's accuracy on the held-back rows, and then the accuracy of answering no every time, each rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 10
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        print(round(accuracy_score(y_test, predictions), 3))
+        print(round(1 - y_test.mean(), 3))
+      output: |-
+        0.882
+        0.861
+      narration:
+        - "A little over 13 percent were this late, so doing nothing already scores about 0.86, and the model adds a little to that."
+        - "The model's accuracy next to the do-nothing accuracy."
+      note: "Return for step 13. Another threshold, columns and share."
+    note: "The baseline is part of the answer, so a model that is only a little better than 'no' shows in the output. The wrong answer that prints the share of late rows, and not its complement, is the commonest slip."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "column-sums"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Now ask a different question of the same model. For more than 20 minutes late, keep all the rows, fill the empty distances with the median of the training rows, and hold back a fifth. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, fit a logistic regression on all four columns and print its AUC on the held-back rows, rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 20
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.95"
+    narration:
+      - "0.95. The same model whose accuracy was 0.979 against 0.964 for saying no. The accuracy looked as though the model did almost nothing, and the AUC says it ranks the very late deliveries high. Both numbers are true. They answer different questions."
+      - "Two metrics, one model. Which one you quote depends on what you were asked, and you say which, and why."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 20
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict(X_test)), 3))
+        ask: "That fed AUC the yes-or-no guesses. What puts the rows in order?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] - data['promised_minutes'] > 15
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "How many minutes late was the question?"
+    walk:
+      - "Merge, keep every row, build the y of more than 20 minutes late, hold back a fifth."
+      - "Fill from the training rows, make the model and fit it."
+      - "Print the AUC from the chance of late on the held-back rows."
+    return:
+      text: "And the AUC for more than 10 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Print the AUC on the held-back rows, rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 10
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.846"
+      narration:
+        - "The AUC for a less rare question, a little lower than for the rarer one: the very late deliveries are easier to pick out."
+        - "Fill, fit, the chance of late, the metric."
+      note: "Return for step 14. Another threshold, columns and share."
+    note: "The same model scored by the other metric, so the learner sees that the choice changes the verdict. No word of 'which is better'. The learner is only told to say which one and why."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    new: ["read-and-criticise"]
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "fill-or-drop"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    text: |
+      Davi sent you a script, pleased with the number. Read it as you would read a classmate's code in a review: one line at a time, asking of each line what the model has seen by then. It runs, and it prints 0.807.
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X, y)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      One line lets the model see rows it will be graded on. Find it, and write the whole script again so that the number can be trusted. Print the AUC on the held-back rows, rounded to three places.
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.787"
+    narration:
+      - "0.787, and it is honest. The model was being fitted on all the rows, including the ones held back for the test, so it was graded on questions it had already seen. Fitting on X_train and y_train, and nothing else, gave the true figure."
+      - "Davi's 0.807 was a score on the model's own memory. Reading the code line by line, asking what it has seen, is how you find that."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X, y)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That is Davi's script, and it prints his 0.807. Which line fits the model, and which rows does it hand over?"
+        why: "fit takes the rows the model is allowed to learn from, and those are the training rows only."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))
+        ask: "You fitted on the right rows, but now which rows are you scoring?"
+        why: "a score on the rows the model learned from is the model's memory again."
+    walk:
+      - "Read each line and say which rows it uses. Where is the model fitted, and on what?"
+      - "Fit the model on the training part only: the features, then the answers."
+      - "Score it on the held-back rows, and print the AUC rounded."
+    return:
+      text: "\nHere is another script from Davi. It runs, it prints 0.806, and he is very pleased with it.\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\nprint(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))\n```\n\nRead it, find what the model has seen that it should not have, and write the whole script again so that the number can be trusted. Print the AUC on the held-back rows, rounded to three places.\n"
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.792"
+      narration:
+        - "0.792 is the honest figure. The model was fitted rightly, but it was being scored on the rows it had learned from, and Davi's 0.806 was its memory."
+        - "Fit on the training rows, score on the held-back rows: the two halves of the split each have their own job."
+      note: "Return for step 15. The leak is in the scoring, and the model is the plain one."
+    note: "read-and-criticise: the learner reads a script, finds the line that leaks, and writes it right. Davi's score is higher than the truth by 0.02, so the number differs and the checker can tell. This is Nubank's code review round in small. The second leak, in the scoring, is in the return and in the wrong answers."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "read-and-criticise"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: |
+      Ana sent a script that keeps every row and fills the empty distances with the mean. It prints a mean of 4.439 and an AUC of 0.804.
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X['distance_km'].mean()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(fill, 4))
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      Read it a line at a time, and ask where each number came from. Write the whole script again so that nothing learned from the held-back rows reaches the model. Print the mean you fill with, rounded to four places, and then the AUC on the held-back rows, rounded to three places.
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].mean()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(fill, 4))
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: |-
+      4.4174
+      0.804
+    narration:
+      - "4.4174, not 4.439. The number you fill with has to come from the training rows alone, so it has to be worked out after the split, from X_train. The AUC barely moves, and that is the point: a leak does not always change the score, and you cannot see it there."
+      - "Ana's mean was the mean of everything. Yours is the mean of the training part, and it is used on both parts."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X['distance_km'].mean()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(fill, 4))
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That is Ana's script again, and it prints her 4.439. Where does the mean come from, and has the split happened yet?"
+        why: "the split has to come first, so that the mean can be learned from the training part alone."
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].mean()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(X_test['distance_km'].mean(), 4))
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That is the mean of the test rows after filling. Which number did I ask for: the one you fill with?"
+    walk:
+      - "Merge, build X and y, and split. Nothing is filled yet."
+      - "Work out the mean from the training part only, and name it."
+      - "Fill both parts with that name, make and fit the model, and print the number and the AUC."
+    return:
+      text: "\nAnd one more from Ana. She uses gradient boosting this time and holds back a quarter. It prints a mean of 4.439 and an AUC of 0.792.\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import GradientBoostingClassifier\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id')\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)\nfill = X['distance_km'].mean()\nX_train['distance_km'] = X_train['distance_km'].fillna(fill)\nX_test['distance_km'] = X_test['distance_km'].fillna(fill)\nmodel = GradientBoostingClassifier(random_state=0)\nmodel.fit(X_train, y_train)\nprint(round(fill, 4))\nprint(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))\n```\n\nWrite the whole script again so that nothing learned from the held-back rows reaches the model. Print the mean you fill with, rounded to four places, and then the AUC on the held-back rows, rounded to three places.\n"
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        fill = X_train['distance_km'].mean()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = GradientBoostingClassifier(random_state=0)
+        model.fit(X_train, y_train)
+        print(round(fill, 4))
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: |-
+        4.408
+        0.792
+      narration:
+        - "The mean of the training rows alone, and an honest AUC. Split first, learn the number from the training part, give both parts the same one."
+        - "The same repair, with a different model and a different share held back."
+      note: "Return for step 16."
+    note: "The classmate's leak from step 9, now met as code to be read. The printed mean makes the leak visible in the output, which the AUC alone does not. The wrong answer that is Ana's script itself is listed so that a copy fails."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "read-and-criticise"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    text: "How much does a score on the rows the model learned from flatter it? With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, the rows with no distance are dropped, and a fifth of the rows are held back. Fit gradient boosting on the training rows. Print its AUC on the training rows, and then its AUC on the held-back rows, each rounded to three places."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: |-
+      0.817
+      0.787
+    narration:
+      - "0.817 on the rows it learned from, and 0.787 on the rows it did not. A model scores better on its own memory, and the more flexible the model, the bigger the gap."
+      - "A score on the rows it learned from is the model's memory. The honest one is the second, and the gap between them is the size of the flattery."
+      - ""
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+          print(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))
+        ask: "Which one did I ask for first, the rows it learned from or the rows it did not?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))
+        ask: "That shows only the first number. What is the second?"
+    walk:
+      - "Build X and y, split, make the model and fit it on the training rows."
+      - "Take the chance of late for the training rows, and the metric against y_train."
+      - "Then the same for the held-back rows, and print both."
+    return:
+      text: "And the plain model. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, the rows with no distance are dropped, and a quarter of the rows are held back. Fit a logistic regression on the training rows. Print its AUC on the training rows, and then on the held-back rows, each rounded to three places."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: |-
+        0.793
+        0.791
+      narration:
+        - "The two numbers are close, because the plain model has little room to memorise anything. The more flexible the model, the bigger the gap."
+        - "The rows it learned from first, the rows it did not second."
+      note: "Return for step 16. The plain model, other columns and share."
+    note: "A learner who has just read Davi's code now measures the flattery. It shows the real reason for holding rows back (the score on the training rows is the model's memory) and why a fancier model needs the check more."
+
+  # 19
+  - kind: "recap"
+    lang: "python"
+    text: "\nStop there. Today the pipeline stayed the same and four things around it changed. A better column beat a better model. Swapping the model was one line. The fancier model was no better than the plain one, and a number learned from the held-back rows spoilt the score without showing. And one score can flatter, while another tells you more. Each time the question was the same: what has the model seen, and what is the score really about?\n\nYou can read someone else's code that way too, and that is most of what a code review is. One more sentence, and I won't break it down.\n"
+    note: "Relief before the closing sentence, and it states the one question that connects the five thoughts (rule C8)."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "read-and-criticise"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    friction: true
+    text: "The last one. Write one script that reads its own files and goes from the raw tables to a number you can trust. Keep every delivery. X holds all four columns, y is whether a delivery was late, and a fifth of the rows are held back. Fill the empty distances with the median of the training rows only. Use gradient boosting in place of the plain model, and print its AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.795"
+    narration:
+      - "0.795. From the raw files to a number you can trust: every row kept, the filler learned from the training rows alone, a fancier model, scored on rows it never saw. And the plain model scored 0.805 on the very same rows. You know now that the fancier model did not earn its place here."
+      - "Every line is one you wrote an earlier step. The skill was putting them in the order that does not leak."
+      - "0.795, with the split first, the fill second, and the model last."
+    wrong:
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          fill = X['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X, y)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That fits on X and y, all the rows. Which rows is the model allowed to learn from?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          model = GradientBoostingClassifier(random_state=0)
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That drops the rows with no distance. What did I ask you to do with them instead?"
+      - code: |-
+          from sklearn.model_selection import train_test_split
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+          fill = X_train['distance_km'].median()
+          X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+          X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which model did I ask for?"
+    walk:
+      - "Merge, keep every row, build X and y, and split."
+      - "Work out the median of the distance from the training part, and fill both parts with it."
+      - "Make the boosted model, fit it on the training part, and print the AUC on the held-back rows."
+    return:
+      text: "And not broken down either. The same script, but the question is whether a delivery was more than 15 minutes late. Keep every row, hold back a fifth, fill the empty distances with the median of the training rows only, use gradient boosting, and print the AUC on the held-back rows, rounded to three places. Say to yourself which metric you chose, and why. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`."
+      model: |
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id')
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 15
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
+        fill = X_train['distance_km'].median()
+        X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+        X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+        model = GradientBoostingClassifier(random_state=0)
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.887"
+      narration:
+        - "The AUC for the rare question, with the honest pipeline. For a rare answer, AUC was the better of the two scores, and you chose it."
+        - "The same order that does not leak, with another thing to guess."
+      note: "Return for step 18. Not broken down, like the step."
+    note: "The closing sentence of ML-2, as the map has it: raw tables to a metric in one script that reads its own files, missing distances filled from the training rows, gradient boosting in place of the plain model. The plain model's 0.805 on the same rows was met in step 10, so the learner knows the fancier model did not win. Deliberate friction (rule C9)."
+
+  # 21
+  - kind: "recap"
+    lang: "python"
+    text: "\nThat is the sitting. The models are the easy part and the order of the lines is the hard part, and you did the order by thinking. You are not fast at it, and you are not meant to be. Don't go over it before next time. One question, cold, and then we stop.\n"
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Keep every delivery. Guess whether a delivery was more than 10 minutes late. X holds all four columns and 30 percent of the rows are held back. Fill the empty distances with the median of the training rows only, fit a logistic regression, and print its AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 10
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.856"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: the honest pipeline from raw tables, on a combination never practised (another threshold and share, the plain model). Never scored (rule F1). A miss tells the script whether the order of the split and the fill, the training-only rule, or the metric was absent."

@@ -1,0 +1,618 @@
+lesson: sql-04
+title: "Look things up in another table"
+strand: sql
+stage: 1
+thoughts:
+  join: "`JOIN` sticks each order's restaurant onto the end of the order's row."
+  join-on: "`ON` says which column in one table matches which column in the other. Without it, every row is stuck to every row."
+  whose-column: "When both tables have a column of that name, say whose it is: `orders.restaurant_id`."
+  short-names: "A table can be given a short name straight after its own, and from then on its columns are called by it: `o.subtotal`."
+  pile-by-looked-up: "Once it is on the row, a column from the other table can make the piles."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles", "rows-or-piles"]
+    any_column_order: true
+    text: "In São Paulo, which vehicles are ridden by more than 20 couriers? Show each vehicle with its count."
+    model: "SELECT vehicle, COUNT(*) FROM couriers WHERE city = 'São Paulo' GROUP BY vehicle HAVING COUNT(*) > 20"
+    rows: 2
+    result: [["bike", 33], ["moto", 48]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from lesson 3: exact text, keeping rows, piles, and keeping piles, with a question about rows and one about piles in the same sentence. Never scored."
+
+  # 2
+  - kind: "give"
+    new: ["join"]
+    text: |-
+      Here is a question we cannot answer yet: how many orders came from each city? Look at what orders holds. It has a restaurant_id, and no city. The city is a fact about the restaurant, and it lives in the restaurants table, where each row has the restaurant_id and the city side by side. What we want is to look the city up.
+
+      JOIN does that. It sticks each order's restaurant onto the end of the order's row. The part after ON says how to find the right restaurant, and it gets its reason in a moment:
+
+      ```sql
+      SELECT * FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+      ```
+
+      Run it.
+    shows:
+      - "SELECT * FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id"
+    after_run: "Look along the end of any row: the restaurant's name, city, cuisine and signup date now sit on the order's own row. Still 6,000 rows, one for each order, but each one is wider. A table went in, a wider table came out."
+    note: "Opens on the need, as the map says. Use first, explain second (rule B3): ON and the dotted names are shown and are given their reasons in steps 3 and 4."
+
+  # 3
+  - kind: "give"
+    new: ["join-on"]
+    text: |-
+      Now the reason for the part after ON. Run these two counts, one after the other. The first has no ON:
+
+      ```sql
+      SELECT COUNT(*) FROM orders JOIN restaurants
+      ```
+
+      ```sql
+      SELECT COUNT(*) FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+      ```
+    shows:
+      - "SELECT COUNT(*) FROM orders JOIN restaurants"
+      - "SELECT COUNT(*) FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id"
+    after_run: "360,000, and then 6,000. With nothing to say which restaurant belongs to which order, every order was stuck to every restaurant: 6,000 times 60. ON says which column in one table must equal which column in the other. Here the order's restaurant_id must equal the restaurant's restaurant_id, and only the pairs that match stay."
+    note: "The reason for ON is a real one, seen as a number, so there is nothing to memorise (rule B5). The learner has not typed a join yet."
+
+  # 4
+  - kind: "classmate"
+    new: ["whose-column"]
+    requires: ["count-rows", "from-table", "choose-columns", "commas", "join", "join-on"]
+    any_column_order: true
+    text: |-
+      Davi wanted each order's restaurant_id, with the city of that restaurant beside it. He wrote:
+
+      ```sql
+      SELECT restaurant_id, city FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id
+      ```
+
+      SQLite answered: ambiguous column name: restaurant_id. Davi, how many tables have a column called restaurant_id now? ... Two: orders has one and restaurants has one, and the join has put both on the row. SQL cannot guess which one he means. The way to say it is the table's name, a dot, and the column's name, which is what ON has been doing all along. When two tables have a column of the same name, say whose it is. What should he have written?
+    model: "SELECT orders.restaurant_id, city FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id"
+    rows: 6000
+    broken: "SELECT restaurant_id, city FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id"
+    narration:
+      - "6,000 rows, each with its restaurant_id and its city. The restaurant_id was named with its table, orders dot restaurant_id, so SQL knew which one."
+      - "Whose column? Orders'. The city needed no table in front, because only restaurants has one."
+      - ""
+    wrong:
+      - sql: "SELECT restaurant_id, city FROM orders JOIN restaurants ON restaurant_id = restaurant_id"
+        ask: "That is the same problem, now in the ON as well. Which restaurant_id is meant, each time?"
+      - sql: "SELECT orders.restaurant_id FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id"
+        ask: "The id is fine. What happened to the city?"
+      - sql: "SELECT orders.restaurant_id, city FROM orders"
+        ask: "Where does the city come from, if the restaurants table is not in the sentence?"
+    walk:
+      - "Davi's sentence has the right parts. Which word in it do both tables have?"
+      - "Put the table's name and a dot in front of that word, as the ON part does."
+    return:
+      text: "Show each order's courier_id and the vehicle that courier rides. Both the orders table and the couriers table have a courier_id."
+      model: "SELECT orders.courier_id, vehicle FROM orders JOIN couriers ON orders.courier_id = couriers.courier_id"
+      any_column_order: true
+      rows: 5601
+      narration:
+        - "5,601 rows, one for each order that has a courier. The courier_id was named with its table."
+        - "Both tables have the column, so it needed its owner's name."
+      note: "Return for step 4. A join on another pair of tables."
+    note: "Davi makes the slip just before the learner could (rule E6), with the database's own message as the real reason. The learner has already seen the dotted form in steps 2 and 3."
+
+  # 5
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "choose-columns", "commas", "join", "join-on", "whose-column"]
+    any_column_order: true
+    text: "Show each order's id with the vehicle its courier rides."
+    thinking_order: "From orders, stuck to couriers where the order's courier_id equals the courier's, the order id and the vehicle."
+    model: "SELECT order_id, vehicle FROM orders JOIN couriers ON orders.courier_id = couriers.courier_id"
+    rows: 5601
+    narration:
+      - "5,601 rows, each order with the vehicle of its courier. The courier was looked up and stuck on, and the vehicle was picked from it."
+      - "Orders, stuck to couriers, matched by courier_id, and then the two columns you wanted."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, vehicle FROM orders JOIN couriers"
+        ask: "With nothing to say which courier goes with which order, what comes out? What says it?"
+      - sql: "SELECT order_id, vehicle FROM orders"
+        ask: "Which table has the vehicle? What brings it onto the order's row?"
+      - sql: "SELECT order_id, vehicle FROM orders JOIN couriers ON courier_id = courier_id"
+        ask: "Which courier_id is whose, on each side of the equals sign?"
+    walk:
+      - "Show me everything from orders, stuck to couriers with a JOIN."
+      - "Say how they match: the order's courier_id equals the courier's courier_id."
+      - "Now ask for just the order id and the vehicle."
+    return:
+      text: "Show each order's id with the city of its restaurant."
+      model: "SELECT order_id, city FROM orders JOIN restaurants ON orders.restaurant_id = restaurants.restaurant_id"
+      any_column_order: true
+      rows: 6000
+      narration:
+        - "6,000 rows, each order with the city it came from."
+        - "The restaurants were stuck on, matched by restaurant_id, and the two columns were picked."
+      note: "Return for step 5. Other table."
+    note: "The first join the learner types. The sentence is long, and long on purpose: every part of it has been given. Orders with no courier have nobody to be stuck to, so 399 are missing: step 6 asks about them and step 14 explains."
+
+  # 6
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "empty-cells"]
+    text: "Before we go on, an easy one. How many orders have no courier? The courier_id column is empty for those."
+    thinking_order: "From orders, keeping the ones where the courier_id is empty, how many?"
+    model: "SELECT COUNT(*) FROM orders WHERE courier_id IS NULL"
+    rows: 1
+    result: [[399]]
+    narration:
+      - "399. An empty cell is asked with IS NULL, and the equals sign never says yes to it."
+      - "From orders, keep the ones with an empty courier_id, count them: 399, the same as the cancelled ones."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE courier_id = NULL"
+        ask: "Does anything equal an empty cell? What is the question for an empty one?"
+      - sql: "SELECT COUNT(courier_id) FROM orders"
+        ask: "A count of the column skips the empty cells. So which ones did that count?"
+      - sql: "SELECT COUNT(*) FROM orders"
+        ask: "That counts every order. Which ones did I ask about?"
+    walk:
+      - "How many orders are there?"
+      - "Keep only the ones where the courier_id is an empty cell."
+    return:
+      text: "How many orders did not use a coupon?"
+      model: "SELECT COUNT(*) FROM orders WHERE coupon_code IS NULL"
+      rows: 1
+      result: [[4116]]
+      narration:
+        - "4,116. Keep the empty coupon cells, and count them."
+        - "An empty cell is asked with IS NULL."
+      note: "Return for step 6."
+    note: "Relief after a long sentence (rule C8), and it keeps empty-cells close. It sets up the aside in step 14: the 399 orders without a courier are the ones a join to couriers drops."
+
+  # 7
+  - kind: "give"
+    new: ["short-names"]
+    text: |-
+      Those sentences are getting long, and the long table names are most of it. A table can be given a short name, written straight after its own. Here orders becomes o and restaurants becomes r, and then every column is called by that name:
+
+      ```sql
+      SELECT o.order_id, r.city FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+      ```
+
+      Run it.
+    shows:
+      - "SELECT o.order_id, r.city FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+    after_run: "The same table as before, in a shorter sentence. The names o and r are yours: you could have chosen any. People use the first letter, so you will see o and r nearly everywhere. Once a table has its short name, that is what it is called in the whole sentence, even in the part before FROM."
+    note: "Taught as a core thought because interview answers nearly always write o and r (decision 2 in the map). The names are the learner's choice, so there is no rule to remember beyond using the name once it is given."
+
+  # 8
+  - kind: "classmate"
+    requires: ["count-rows", "from-table", "choose-columns", "commas", "join", "join-on", "whose-column", "short-names"]
+    any_column_order: true
+    text: |-
+      Ana liked the short names and tried them. She wrote:
+
+      ```sql
+      SELECT orders.order_id, r.city FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id
+      ```
+
+      SQLite answered: no such column: orders.order_id. Ana, what is orders called in this sentence? ... o. She gave the table a new name, and from then on the old name is not used. What should she have written?
+    model: "SELECT o.order_id, r.city FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+    rows: 6000
+    broken: "SELECT orders.order_id, r.city FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+    narration:
+      - "6,000 rows. Once orders was called o, it was o everywhere, including in front of the column that was being shown."
+      - "o for the orders, r for the restaurants, in every place a table is named."
+      - ""
+    wrong:
+      - sql: "SELECT orders.order_id, restaurants.city FROM orders o JOIN restaurants r ON orders.restaurant_id = restaurants.restaurant_id"
+        ask: "What did we call orders and restaurants in the sentence? Do the old names still work?"
+    walk:
+      - "What is orders called in this sentence?"
+      - "Use that name in front of order_id."
+    return:
+      text: "Show each order's id with the name of its restaurant, giving the tables the short names o and r."
+      model: "SELECT o.order_id, r.name FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+      any_column_order: true
+      rows: 6000
+      narration:
+        - "6,000 rows, with o and r used everywhere a table is named."
+        - "Short names given once, then used in front of every column."
+      note: "Return for step 8."
+    note: "Ana makes the likely slip just after the give (rule E6): she gives the short name and keeps using the long one. A learner who drops the owner of order_id altogether still gets the right rows, and that is accepted."
+
+  # 9
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "choose-columns", "commas", "keep-rows", "compare-signs", "join", "join-on", "whose-column", "short-names"]
+    any_column_order: true
+    text: "Show the id of each order that came to more than 150, with the cuisine of its restaurant. Call the tables o and r."
+    thinking_order: "From orders o, stuck to restaurants r where the restaurant_ids match, keeping the ones above 150, the order id and the cuisine."
+    model: "SELECT o.order_id, r.cuisine FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.subtotal > 150"
+    rows: 60
+    narration:
+      - "60 big orders, each with its cuisine. The tables were joined first, the big ones kept, and then two columns were picked."
+      - "The question about the subtotal is about the order, so it was o.subtotal."
+      - ""
+    wrong:
+      - sql: "SELECT o.order_id, r.cuisine FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+        ask: "Every order is here. Where do we keep only the big ones?"
+      - sql: "SELECT o.order_id, r.cuisine FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE subtotal > 100"
+        ask: "Is that the line I asked for? Which number was it?"
+      - sql: "SELECT o.order_id, r.cuisine FROM orders o JOIN restaurants r WHERE o.subtotal > 150"
+        ask: "With nothing to say which restaurant goes with which order, what comes out? What says it?"
+    walk:
+      - "Show each order's id and its restaurant's cuisine, with the join."
+      - "Now keep only the orders with a subtotal above 150, after the join."
+    return:
+      text: "Show the id of each order that came to more than 150, with the vehicle its courier rides. Call the tables o and c."
+      model: "SELECT o.order_id, c.vehicle FROM orders o JOIN couriers c ON o.courier_id = c.courier_id WHERE o.subtotal > 150"
+      any_column_order: true
+      rows: 55
+      narration:
+        - "55 big orders have a courier, each with its vehicle."
+        - "Join, keep the big ones, pick two columns."
+      note: "Return for step 9."
+    note: "A join and keep-rows in one sentence, with the short names in use. The model differs from step 8 in the SELECT and the WHERE."
+
+  # 10
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "count-rows", "keep-rows", "compare-signs", "text-quotes", "text-is-exact", "two-questions", "join", "join-on", "whose-column", "short-names"]
+    text: "How many orders from restaurants in São Paulo came to more than 100?"
+    thinking_order: "From orders o, stuck to restaurants r, keeping the ones where the city is São Paulo and the subtotal is above 100, how many?"
+    model: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'São Paulo' AND o.subtotal > 100"
+    rows: 1
+    result: [[247]]
+    narration:
+      - "247. One question is about the restaurant, the other about the order, and the join put both on the same row so that one WHERE could ask them together."
+      - "Joined, kept by two questions with AND, counted."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'Sao Paulo' AND o.subtotal > 100"
+        ask: "Zero. Is the city spelled in your sentence exactly as in the table?"
+      - sql: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.subtotal > 100"
+        ask: "That is every city. Where does the city go?"
+      - sql: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'São Paulo' OR o.subtotal > 100"
+        ask: "Would an order have to pass both questions, or only one of them?"
+    walk:
+      - "How many orders are there, joined to their restaurants?"
+      - "Keep the ones in São Paulo."
+      - "Add the second question, joined with the word for both."
+    return:
+      text: "How many cancelled orders came from restaurants in Curitiba?"
+      model: "SELECT COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'Curitiba' AND o.status = 'cancelled'"
+      rows: 1
+      result: [[41]]
+      narration:
+        - "41. A question about the restaurant and one about the order, in the same WHERE."
+        - "Once the city is on the order's row, it is asked like any other column."
+      note: "Return for step 10."
+    note: "Two questions about two tables in one WHERE, which is the reason the join is useful at all. Exact text with an accent returns."
+
+  # 11
+  - kind: "give"
+    new: ["pile-by-looked-up"]
+    text: |-
+      And now the question we started with: how many orders came from each city? Once the city is on the order's row, it is a column like any other, so it can make the piles:
+
+      ```sql
+      SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city
+      ```
+
+      Run it.
+    shows:
+      - "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+    after_run: "Four cities, with São Paulo the biggest at 2,492. There is the answer to the question we could not ask an hour ago. Nothing about piles changed: the join made the table wider first, and the piles were made from the wider table."
+    note: "The payoff of the lesson, given. The order of events again: join, keep, pile, and so on, all after the table."
+
+  # 12
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "count-rows", "piles", "one-row-per-pile", "pile-name", "commas", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    any_column_order: true
+    text: "For each cuisine, how many orders were there?"
+    thinking_order: "From orders o, stuck to restaurants r, a pile per cuisine, the cuisine and how many."
+    model: "SELECT r.cuisine, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.cuisine"
+    rows: 6
+    result: [["arabe", 802], ["brasileira", 1133], ["hamburguer", 1290], ["japonesa", 961], ["pizza", 845], ["saudavel", 969]]
+    narration:
+      - "Six cuisines, hamburguer the biggest with 1,290. The cuisine came from the other table, and still made the piles."
+      - "Join first, then the piles, then the count of each."
+      - ""
+    wrong:
+      - sql: "SELECT r.cuisine, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+        ask: "One row, or a complaint. What makes the piles?"
+      - sql: "SELECT cuisine, COUNT(*) FROM orders GROUP BY cuisine"
+        ask: "Which table has the cuisine? What brings it onto the order's row?"
+      - sql: "SELECT r.cuisine, COUNT(*) FROM restaurants r GROUP BY r.cuisine"
+        ask: "That counts the restaurants of each cuisine. I asked about the orders."
+    walk:
+      - "Join orders to restaurants, with the short names o and r."
+      - "Pile by the cuisine and count each pile, with the pile's name in front."
+    return:
+      text: "Show each of the restaurant cities with how many orders it had, the number you saw earlier."
+      model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+      any_column_order: true
+      rows: 4
+      result: [["Belo Horizonte", 1494], ["Curitiba", 639], ["Rio de Janeiro", 1375], ["São Paulo", 2492]]
+      narration:
+        - "Four cities, from São Paulo with 2,492 to Curitiba with 639."
+        - "The city came from the other table, and made the piles."
+      note: "Return for step 12. This is the sentence the learner was given in step 11."
+    note: "pile-by-looked-up asked. The model differs from step 10 in the SELECT and in the WHERE and GROUP BY."
+
+  # 13
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "count-rows", "piles", "one-row-per-pile", "pile-name", "commas", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    any_column_order: true
+    text: "How many orders did the couriers carry on each kind of vehicle? Call the tables o and c."
+    thinking_order: "From orders o, stuck to couriers c, a pile per vehicle, the vehicle and how many orders."
+    model: "SELECT c.vehicle, COUNT(*) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle"
+    rows: 3
+    result: [["bike", 2038], ["carro", 488], ["moto", 3075]]
+    narration:
+      - "Moto 3,075, bike 2,038, carro 488. Look at the total: they add up to 5,601, not 6,000."
+      - "The couriers were looked up for each order, and the vehicle made the piles."
+      - ""
+    wrong:
+      - sql: "SELECT c.vehicle, COUNT(*) FROM couriers c GROUP BY c.vehicle"
+        ask: "That counts the couriers on each vehicle. I asked about the orders they carried."
+      - sql: "SELECT vehicle, COUNT(*) FROM orders o JOIN couriers c GROUP BY vehicle"
+        ask: "What says which courier carried which order?"
+      - sql: "SELECT c.vehicle, COUNT(*) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id"
+        ask: "One row, or a complaint. What makes the piles?"
+    walk:
+      - "Join orders to couriers, with the short names o and c, matching the courier_id."
+      - "Pile by the vehicle and count each pile."
+    return:
+      text: "How many orders were carried by couriers in each city? Call the tables o and c."
+      model: "SELECT c.city, COUNT(*) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.city"
+      any_column_order: true
+      rows: 4
+      result: [["Belo Horizonte", 881], ["Curitiba", 835], ["Rio de Janeiro", 1347], ["São Paulo", 2538]]
+      narration:
+        - "Four cities: the city of the courier, looked up for each order."
+        - "Joined to couriers, piled by their city, counted."
+      note: "Return for step 13."
+    note: "The first sentence where the total is not 6,000, which sets up the aside. Couriers have a city column too, so the learner meets two tables each with a city."
+
+  # 14
+  - kind: "aside"
+    text: "Something that is only interesting, with nothing in it to keep. Did you notice the vehicles added up to 5,601 and not 6,000? The 399 cancelled orders have an empty courier_id, so there is no courier to stick on. A JOIN keeps only the rows that find a partner, and those orders simply vanished from the answer. There is a kind of join that keeps them, and we will meet it later. For now it is enough that you saw it happen."
+    note: "Pre-inserts the background for LEFT JOIN, the thought of SQL-8 (rule C4), at the moment the learner has the evidence in front of them. It is marked as an aside and asks for nothing."
+
+  # 15
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "how-many-different", "join", "join-on", "whose-column", "short-names"]
+    text: "How many different customers have ordered from a restaurant in Curitiba?"
+    thinking_order: "From orders o, stuck to restaurants r, keeping the ones in Curitiba, how many different customers?"
+    model: "SELECT COUNT(DISTINCT o.customer_id) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'Curitiba'"
+    rows: 1
+    result: [[530]]
+    narration:
+      - "530 different customers. Join, keep the Curitiba restaurants, count each customer once."
+      - "The city was looked up, and the customer was counted once however often they ordered."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(o.customer_id) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'Curitiba'"
+        ask: "That counts orders, so a customer who ordered twice counts twice. Which word counts each customer once?"
+      - sql: "SELECT COUNT(DISTINCT o.customer_id) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id"
+        ask: "That is every customer in every city. Where does the city go?"
+      - sql: "SELECT COUNT(DISTINCT o.customer_id) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.city = 'curitiba'"
+        ask: "Zero. Is the city written in your sentence exactly as in the table?"
+    walk:
+      - "How many orders came from restaurants in Curitiba?"
+      - "Now count each customer once, not each order."
+    return:
+      text: "How many different customers have ordered from a pizza restaurant?"
+      model: "SELECT COUNT(DISTINCT o.customer_id) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE r.cuisine = 'pizza'"
+      rows: 1
+      result: [[643]]
+      narration:
+        - "A count of different customers, once the cuisine was looked up and kept."
+        - "Joined, kept by cuisine, each customer counted once."
+      note: "Return for step 15."
+    note: "DISTINCT from lesson 3, with a looked-up question and exact text. Different shape from step 13: SELECT, FROM and GROUP BY all differ."
+
+  # 16
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "empty-cells", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    any_column_order: true
+    text: "For each city, how many orders have no subtotal?"
+    model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.subtotal IS NULL GROUP BY r.city"
+    rows: 4
+    result: [["Belo Horizonte", 7], ["Curitiba", 3], ["Rio de Janeiro", 8], ["São Paulo", 7]]
+    narration:
+      - "Rio has 8, Belo Horizonte and São Paulo 7 each, Curitiba 3. Join, keep the empty subtotals, pile by the city, count."
+      - "The empty cells were found as before, and the city was looked up to pile by."
+      - ""
+    wrong:
+      - sql: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+        ask: "Those are all the orders in each city. Where do we keep only the empty subtotals?"
+      - sql: "SELECT r.city, COUNT(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+        ask: "A count of the column skips the empty cells. Is that what we want to count?"
+      - sql: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.subtotal = NULL GROUP BY r.city"
+        ask: "Does anything equal an empty cell? What is the question for an empty one?"
+    walk:
+      - "Join orders to restaurants."
+      - "Keep only the orders with an empty subtotal."
+      - "Pile by the city, and show each city with its count."
+    return:
+      text: "For each cuisine, how many orders had no coupon?"
+      model: "SELECT r.cuisine, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.coupon_code IS NULL GROUP BY r.cuisine"
+      any_column_order: true
+      rows: 6
+      result: [["arabe", 547], ["brasileira", 778], ["hamburguer", 893], ["japonesa", 659], ["pizza", 589], ["saudavel", 650]]
+      narration:
+        - "Six cuisines, each with the orders that had no coupon."
+        - "Join, keep the empty coupons, pile by the cuisine."
+      note: "Return for step 16."
+    note: "Empty cells met a join and piles by a looked-up column, three lessons' worth in one sentence. The numbers are small, so a wrong sentence shows at once."
+
+  # 17
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles", "rows-or-piles", "sort", "sort-direction", "sort-by-summary", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    ordered: true
+    any_column_order: true
+    text: "Among the delivered orders, which cities had more than 1,000 of them? Show each city with its count, the biggest first."
+    thinking_order: "From orders o, stuck to restaurants r, keeping the delivered ones, a pile per city, the city and how many, keeping the piles above 1,000, the biggest first."
+    model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.city HAVING COUNT(*) > 1000 ORDER BY COUNT(*) DESC"
+    rows: 3
+    result: [["São Paulo", 2332], ["Belo Horizonte", 1405], ["Rio de Janeiro", 1266]]
+    narration:
+      - "São Paulo 2,332, Belo Horizonte 1,405, Rio 1,266. Curitiba is too small. Everything in the order it happens: join, keep, pile, keep piles, sort."
+      - "The question about the order's status went in WHERE and the one about the pile's size in HAVING."
+      - ""
+    wrong:
+      - sql: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.city ORDER BY COUNT(*) DESC"
+        ask: "Curitiba is still here. Which word keeps only the big piles?"
+      - sql: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city HAVING COUNT(*) > 1000 ORDER BY COUNT(*) DESC"
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+      - sql: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.city HAVING COUNT(*) > 1000"
+        ask: "The right piles. Which words put the biggest first?"
+      - sql: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' AND COUNT(*) > 1000 GROUP BY r.city ORDER BY COUNT(*) DESC"
+        ask: "Is 'more than 1,000' a question about one order or about a pile? Where does that go?"
+    walk:
+      - "Join orders to restaurants and keep the delivered ones."
+      - "Count the orders in each city."
+      - "Keep the piles above 1,000, and sort them, the biggest first."
+    return:
+      text: "Among the delivered orders, which cuisines had more than 900 of them? Show each cuisine with its count, the biggest first."
+      model: "SELECT r.cuisine, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.cuisine HAVING COUNT(*) > 900 ORDER BY COUNT(*) DESC"
+      ordered: true
+      any_column_order: true
+      rows: 3
+      result: [["hamburguer", 1206], ["brasileira", 1053], ["saudavel", 913]]
+      narration:
+        - "Hamburguer 1,206, brasileira 1,053 and saudavel 913. The rest are below 900."
+        - "Join, keep, pile, keep piles, sort."
+      note: "Return for step 17."
+    note: "The longest sentence so far, built from parts that are all owned: lesson 2's order of events with a join in front. 2,332, 1,405 and 1,266 leave no tie."
+
+  # 18
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "sort", "sort-direction", "cut", "sort-by-summary", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    friction: true
+    ordered: true
+    any_column_order: true
+    text: "This one I won't break down. The two restaurants with the most delivered orders, shown by their names and not their ids, with how many each had."
+    model: "SELECT r.name, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.name ORDER BY COUNT(*) DESC LIMIT 2"
+    rows: 2
+    result: [["Rest 02", 113], ["Rest 24", 112]]
+    narration:
+      - "Rest 02 with 113 and Rest 24 with 112. Names, not numbers: that is what the join is for. Join, keep, pile, sort, cut, every part in the order it happens."
+      - "The name came from the other table and made the piles. Restaurants 59 and 3 are tied for third, which is why we asked for only two."
+      - "Two rows, each with a name and a count, the busiest first."
+    wrong:
+      - sql: "SELECT r.name, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.name ORDER BY COUNT(*) DESC"
+        ask: "Every restaurant is here. Which word keeps only the first two?"
+      - sql: "SELECT r.name, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.name ORDER BY COUNT(*) LIMIT 2"
+        ask: "Those are the two with the fewest. Which end do we want?"
+      - sql: "SELECT o.restaurant_id, COUNT(*) FROM orders o WHERE o.status = 'delivered' GROUP BY o.restaurant_id ORDER BY COUNT(*) DESC LIMIT 2"
+        ask: "That is the right pair, but which name does each number belong to? Where do names live?"
+      - sql: "SELECT r.name, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.name ORDER BY COUNT(*) DESC LIMIT 2"
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+    walk:
+      - "Join orders to restaurants, and keep the delivered ones."
+      - "Pile by the restaurant's name and count each pile."
+      - "Sort, the biggest first, and cut to two."
+    return:
+      text: "Among the delivered orders, show the two restaurants with the biggest total of subtotals, by name, with each total."
+      model: "SELECT r.name, SUM(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.name ORDER BY SUM(o.subtotal) DESC LIMIT 2"
+      ordered: true
+      any_column_order: true
+      rows: 2
+      result: [["Rest 24", 7245.43], ["Rest 03", 6761.38]]
+      narration:
+        - "Rest 24 first, with about 7,245, and Rest 03 after it."
+        - "Join, keep, pile by name, add up, sort, cut."
+      note: "Return for step 18. Uses SUM, which is from lesson 2."
+    note: "Friction (rule C9). The names are the reason a learner looks things up at all. The wrong answer without the join is a clean slip: the ids are right and the names are missing."
+
+  # 19
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles", "keep-piles", "rows-or-piles", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    any_column_order: true
+    text: "Among the delivered orders, which cuisines have an average subtotal above 60.5? Show each with its average."
+    thinking_order: "From orders o, stuck to restaurants r, keeping the delivered ones, a pile per cuisine, the cuisine and its average subtotal, keeping the piles whose average is above 60.5."
+    model: "SELECT r.cuisine, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.cuisine HAVING AVG(o.subtotal) > 60.5"
+    rows: 4
+    result: [["brasileira", 61.07], ["japonesa", 61.88], ["pizza", 61.62], ["saudavel", 60.62]]
+    narration:
+      - "Four cuisines: japonesa about 61.9, pizza 61.6, brasileira 61.1 and saudavel 60.6. The average of each pile was the question, so it went in HAVING."
+      - "Join, keep the delivered rows, pile by the cuisine, keep the piles by their average."
+      - ""
+    wrong:
+      - sql: "SELECT r.cuisine, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.cuisine"
+        ask: "All six cuisines are here. Which word keeps only the piles above 60.5?"
+      - sql: "SELECT r.cuisine, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' AND o.subtotal > 60.5 GROUP BY r.cuisine"
+        ask: "That keeps the big orders and then averages them. Is 'above 60.5' about one order or about a pile's average?"
+      - sql: "SELECT r.cuisine, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.cuisine HAVING AVG(o.subtotal) > 60.5"
+        ask: "Those averages include the cancelled orders. Where do we drop them?"
+    walk:
+      - "Join orders to restaurants, keep the delivered ones, and show the average subtotal for each cuisine."
+      - "Keep only the piles whose average is above 60.5."
+    return:
+      text: "Across all the orders that have a courier, which vehicles have an average subtotal above 60.5? Show each with its average."
+      model: "SELECT c.vehicle, AVG(o.subtotal) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle HAVING AVG(o.subtotal) > 60.5"
+      any_column_order: true
+      rows: 2
+      result: [["carro", 60.6], ["moto", 60.51]]
+      narration:
+        - "Carro and moto, only just above 60.5, each with its average."
+        - "Join, pile by the vehicle, keep the piles by their average."
+      note: "Return for step 19."
+    note: "A HAVING on an average, after a join. The thresholds are close to the averages on purpose, so a missing or misplaced question shows in the rows."
+
+  # 20
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    friction: true
+    any_column_order: true
+    text: "The last one, and I won't break it down. Among the delivered orders, the average subtotal in each city. Use o and r for the tables, and think about what happens first."
+    model: "SELECT r.city, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.city"
+    rows: 4
+    result: [["Belo Horizonte", 59.83], ["Curitiba", 61.37], ["Rio de Janeiro", 60.98], ["São Paulo", 60.25]]
+    narration:
+      - "That is a real interview question, and you built it by thinking: from orders, stuck to restaurants to find each city, keep the delivered ones, pile by the city, average each pile. Every part in the order it happens."
+      - "Four cities, each close to 60. The city lives in another table, and you went and got it."
+      - "Join, keep, pile, average: after the table, the sentence ran in the order of events."
+    wrong:
+      - sql: "SELECT r.city, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+        ask: "Those averages include the cancelled orders. Where do we drop them?"
+      - sql: "SELECT r.city, AVG(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city WHERE o.status = 'delivered'"
+        ask: "Which happens first, keeping rows or making piles? Write them in that order."
+      - sql: "SELECT r.city, AVG(o.subtotal) FROM orders o JOIN restaurants r WHERE o.status = 'delivered' GROUP BY r.city"
+        ask: "What says which restaurant goes with which order?"
+      - sql: "SELECT city, AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY city"
+        ask: "Which table has the city? What brings it onto the order's row?"
+    walk:
+      - "From orders o, stuck to restaurants r, show everything."
+      - "Keep only the delivered orders."
+      - "Pile by the city, and show each city with the average subtotal."
+    return:
+      text: "Among the cancelled orders, the average delivery fee for each cuisine. Use o and r for the tables."
+      model: "SELECT r.cuisine, AVG(o.delivery_fee) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'cancelled' GROUP BY r.cuisine"
+      any_column_order: true
+      rows: 6
+      result: [["arabe", 5.23], ["brasileira", 5.39], ["hamburguer", 5.65], ["japonesa", 5.47], ["pizza", 5.3], ["saudavel", 4.97]]
+      narration:
+        - "Six cuisines, each with the average delivery fee of its cancelled orders."
+        - "Join, keep the cancelled ones, pile by the cuisine, average each pile."
+      note: "Return for step 20. Not broken down, like the step."
+    note: "The surprise sentence and pass-bar task 2. Result: four cities, each close to 60 (59.8 to 61.4). The wrong answers cover a missing join, a missing keep, the wrong order of WHERE and GROUP BY, and a table with no city in it."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today you learned to look things up. A table was missing a column, so we went to the table that had it, stuck it on, and then treated it like any other column: asked questions of it, piled by it, counted by it. Everything after that was the sentence you already had, in the order things happen: join, keep, pile, keep piles, sort, cut.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    any_column_order: true
+    text: "For each kind of vehicle, what was the average delivery fee of the orders its couriers carried? Use o and c for the tables."
+    model: "SELECT c.vehicle, AVG(o.delivery_fee) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle"
+    rows: 3
+    result: [["bike", 5.1], ["carro", 5.23], ["moto", 5.27]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a join to the couriers table, which has been used less than restaurants, and an average of a column that is not the subtotal. Never scored (rule F1)."

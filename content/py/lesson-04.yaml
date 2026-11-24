@@ -1,0 +1,1064 @@
+lesson: py-04
+title: "Piles by hand"
+strand: py
+stage: 1
+thoughts:
+  one-entry-per-pile: "A dict can hold the piles: one name per pile, holding that pile's running result."
+  pile-starts-at-zero: "A pile that is not there yet has to be started at zero before it can grow."
+  update-the-pile: "For each item, find its pile and update that pile. That is `GROUP BY`, by hand."
+  get-with-default: "`counts.get(dish, 0)` is what is there, or zero if nothing is. It replaces the check."
+  total-per-pile: "The same shape with a total where the count was."
+  average-from-two-dicts: "A total per pile and a count per pile give an average per pile."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["from-table", "more-summaries", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "For each promised time, what was the longest real delivery time? Show the longest first."
+    model: "SELECT promised_minutes, MAX(actual_minutes) FROM orders GROUP BY promised_minutes ORDER BY MAX(actual_minutes) DESC"
+    rows: 3
+    result: [[50, 109.9], [40, 95.5], [30, 63.9]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-2: MAX in place of a count, piles, and a sort by the summary. Never scored. A summary per pile with the pile's name beside it is what the dicts of PY-4 hold, so the SQL sentence is the one the lesson will echo."
+
+  # 2
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names"]
+    text: "Let's start with where we stopped. The dict counts holds bike at 73, moto at 110 and carro at 17. Show each vehicle with its count, but only the ones that have more than 50."
+    model: |-
+      counts = {'bike': 73, 'moto': 110, 'carro': 17}
+      for vehicle, n in counts.items():
+          if n > 50:
+              print(vehicle, n)
+    output: |-
+      bike 73
+      moto 110
+    narration:
+      - "bike 73 and moto 110. The loop named both halves of each pair, and the question was about the count."
+      - "A dict, gone through by pairs, with a question inside it."
+      - ""
+    wrong:
+      - code: |-
+          counts = {'bike': 73, 'moto': 110, 'carro': 17}
+          for vehicle in counts:
+              if vehicle > 50:
+                  print(vehicle, counts[vehicle])
+        ask: "Python stopped. Is it the name that is above 50, or the value that goes with it?"
+      - code: |-
+          counts = {'bike': 73, 'moto': 110, 'carro': 17}
+          for vehicle, n in counts.items():
+              print(vehicle, n)
+        ask: "Carro is here, with only 17. Where is the question?"
+    walk:
+      - "Make the dict with its three vehicles."
+      - "Go through its pairs: two names after for, and a dot and items after the dict."
+      - "Ask the question about the count, and show the vehicle and the count."
+    return:
+      text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Show each dish with its price, but only the dishes that cost less than 50."
+      model: |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        for dish, price in prices.items():
+            if price < 50:
+                print(dish, price)
+      output: |-
+        pizza 40
+        acai 25
+      narration:
+        - "pizza 40 and acai 25. The question was asked of each price."
+        - "Both halves named, and a question about the value."
+      note: "Return for step 2."
+    note: "A warm start from PY-3: the pairs of a dict and a question about a value. The dict is the one the next step turns into piles, with real counts from the couriers table."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["one-entry-per-pile"]
+    text: |-
+      In SQL, GROUP BY sorted the rows into piles and one row came out for each pile. A dict can hold the piles by hand: one name for each pile, and under it that pile's running result. This dict holds a count for each vehicle. When a new bike courier joins, we raise the bike pile by one:
+
+      ```python
+      counts = {'bike': 73, 'moto': 110, 'carro': 17}
+      counts['bike'] = counts['bike'] + 1
+      print(counts)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        counts = {'bike': 73, 'moto': 110, 'carro': 17}
+        counts['bike'] = counts['bike'] + 1
+        print(counts)
+    after_run: "{'bike': 74, 'moto': 110, 'carro': 17}. The bike pile went from 73 to 74. The pile's name is the name in the dict, and its running result is the value. To update a pile you read its value, change it, and put it back under the same name. That is count = count + 1, with the count kept under a name."
+    note: "The thought, given on a dict of finished piles whose numbers are the real ones from SQL-1 (73, 110 and 17). The learner has already used both halves: reading by name and setting by name."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "show", "one-entry-per-pile"]
+    text: "The dict counts holds bike at 73, moto at 110 and carro at 17. Two new carro couriers join. Raise the carro pile by 2, and show the dict."
+    model: |-
+      counts = {'bike': 73, 'moto': 110, 'carro': 17}
+      counts['carro'] = counts['carro'] + 2
+      print(counts)
+    output: "{'bike': 73, 'moto': 110, 'carro': 19}"
+    narration:
+      - "{'bike': 73, 'moto': 110, 'carro': 19}. The carro pile was read, raised by 2, and put back under its own name."
+      - "Read the pile, change it, put it back."
+      - ""
+    wrong:
+      - code: |-
+          counts = {'bike': 73, 'moto': 110, 'carro': 17}
+          counts['carro'] + 2
+          print(counts)
+        ask: "The sum was worked out, but where did it go? What puts a value under a name?"
+      - code: |-
+          counts = {'bike': 73, 'moto': 110, 'carro': 17}
+          counts['carro'] = 2
+          print(counts)
+        ask: "That put a 2 in place of the 17. What should the new value be made from?"
+      - code: |-
+          counts = {'bike': 73, 'moto': 110, 'carro': 17}
+          counts[carro] = counts[carro] + 2
+          print(counts)
+        ask: "Is carro a name you made, or a word we are looking for?"
+    walk:
+      - "Make the dict."
+      - "Read the carro pile: the dict's name, and carro in square brackets. Add 2."
+      - "Put the result back under carro with an equals sign, then show the dict."
+    return:
+      text: "The dict counts holds bike at 73, moto at 110 and carro at 17. A new moto courier joins. Raise the moto pile by 1, and show the dict."
+      model: |-
+        counts = {'bike': 73, 'moto': 110, 'carro': 17}
+        counts['moto'] = counts['moto'] + 1
+        print(counts)
+      output: "{'bike': 73, 'moto': 111, 'carro': 17}"
+      narration:
+        - "{'bike': 73, 'moto': 111, 'carro': 17}. The moto pile was read, raised and put back."
+        - "A pile is a value under a name, and updating it is read, change and put back."
+      note: "Return for step 4."
+    note: "Updates a pile that exists. The next step is the pile that does not, which is the reason for the thought after it."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["pile-starts-at-zero"]
+    text: |-
+      But a pile that is not there yet cannot be raised: there is nothing under its name to read. First it has to be started, at zero. The question is whether the name is not in the dict, and not in is just in turned round, as in English:
+
+      ```python
+      counts = {}
+      dish = 'pizza'
+      if dish not in counts:
+          counts[dish] = 0
+      print(counts)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        counts = {}
+        dish = 'pizza'
+        if dish not in counts:
+            counts[dish] = 0
+        print(counts)
+    after_run: "{'pizza': 0}. The dict started empty, so there was no pizza pile. The if saw that and started one at zero. Now the pile can be raised. An empty dict is two curly brackets with nothing in them, as an empty list was two square ones."
+    note: "Taught first with an explicit check, so that .get arrives later as a shorter way to say something already understood and not as a rule (the map's note). not in is introduced as vocabulary in the same breath: the learner owns in from PY-3."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "show", "if-question", "block", "is-it-there", "pile-starts-at-zero"]
+    text: "An empty dict called counts, and a courier who rides a bike. If bike has no pile in counts yet, start one at zero. Then show the dict."
+    model: |-
+      counts = {}
+      vehicle = 'bike'
+      if vehicle not in counts:
+          counts[vehicle] = 0
+      print(counts)
+    output: "{'bike': 0}"
+    narration:
+      - "{'bike': 0}. The dict had no bike pile, so the if started one at zero."
+      - "Not in asked the question, and the pile was started under the vehicle's name."
+      - ""
+    wrong:
+      - code: |-
+          counts = {}
+          vehicle = 'bike'
+          counts[vehicle] = counts[vehicle] + 1
+          print(counts)
+        ask: "Python stopped: there is nothing under bike to read yet. What has to happen to the pile first?"
+      - code: |-
+          counts = {}
+          vehicle = 'bike'
+          if vehicle in counts:
+              counts[vehicle] = 0
+          print(counts)
+        ask: "Nothing was started. Does the question say yes when the dict is empty? What is the question we want?"
+      - code: |-
+          counts = {}
+          vehicle = 'bike'
+          if vehicle not in counts:
+              counts[vehicle] = 1
+          print(counts)
+        ask: "A pile that has only just been started, before anything is counted: what is its value?"
+    walk:
+      - "Make an empty dict called counts, and name the vehicle."
+      - "Ask whether the vehicle is not in counts."
+      - "On a yes, put a zero under the vehicle's name. Then show the dict."
+    return:
+      text: "An empty dict called counts, and a courier who rides a moto. If moto has no pile yet, start one at zero. Then show the dict."
+      model: |-
+        counts = {}
+        vehicle = 'moto'
+        if vehicle not in counts:
+            counts[vehicle] = 0
+        print(counts)
+      output: "{'moto': 0}"
+      narration:
+        - "{'moto': 0}. No moto pile existed, so one was started."
+        - "A name that is not in the dict gets a pile at zero."
+      note: "Return for step 6."
+    note: "An easy step after the give. The wrong answers lead to the reason: a pile has to exist before it can be raised, and a new pile has counted nothing."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["update-the-pile"]
+    text: |-
+      Put the two together, inside a loop. For each item, find its pile, starting it at zero if it is not there, and raise that pile by one:
+
+      ```python
+      dishes = ['pizza', 'coca', 'pizza', 'sushi']
+      counts = {}
+      for dish in dishes:
+          if dish not in counts:
+              counts[dish] = 0
+          counts[dish] = counts[dish] + 1
+      print(counts)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        dishes = ['pizza', 'coca', 'pizza', 'sushi']
+        counts = {}
+        for dish in dishes:
+            if dish not in counts:
+                counts[dish] = 0
+            counts[dish] = counts[dish] + 1
+        print(counts)
+    after_run: "{'pizza': 2, 'coca': 1, 'sushi': 1}. That is SELECT dish, COUNT(*) FROM dishes GROUP BY dish, by hand. The loop went through each row, and each row went to its pile and raised it. One name per pile, one count under it: one row per pile, in SQL's words."
+    note: "Marked as essential. This is the commonest shape in plain-Python interview tasks, and the strand's version of the piles from SQL-1."
+
+  # 8
+  - kind: "classmate"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "is-it-there", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile"]
+    text: |-
+      Ana was asked to count the statuses of three orders: delivered, cancelled and delivered. She wrote:
+
+      ```python
+      statuses = ['delivered', 'cancelled', 'delivered']
+      counts = {}
+      for status in statuses:
+          counts[status] = counts[status] + 1
+      print(counts)
+      ```
+
+      Python answered: KeyError: 'delivered'. Ana, was there a delivered pile the first time round? ... No. She raised a pile that did not exist. What does a pile need before it can grow? Type the whole program as she should have written it.
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      counts = {}
+      for status in statuses:
+          if status not in counts:
+              counts[status] = 0
+          counts[status] = counts[status] + 1
+      print(counts)
+    output: "{'delivered': 2, 'cancelled': 1}"
+    broken: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      counts = {}
+      for status in statuses:
+          counts[status] = counts[status] + 1
+      print(counts)
+    narration:
+      - "{'delivered': 2, 'cancelled': 1}. Each status found its pile, started it at zero if it was new, and raised it."
+      - "The if before the update is what Ana left out. Without it, the first status of each kind has nothing to read."
+      - "Two delivered and one cancelled: GROUP BY status with a COUNT, by hand."
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts[status] + 1
+          print(counts)
+        ask: "That is Ana's again. What has to exist before a pile can be raised?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          counts = {}
+          for status in statuses:
+              if status not in counts:
+                  counts[status] = 1
+              counts[status] = counts[status] + 1
+          print(counts)
+        ask: "Delivered is counted as 3. What is a new pile worth before the first item is counted?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          counts = {}
+          for status in statuses:
+              if status not in counts:
+                  counts[status] = 0
+          counts[status] = counts[status] + 1
+          print(counts)
+        ask: "The raise has been pushed out of the loop. Which lines belong inside it, for each status?"
+    walk:
+      - "Ana's loop is right except for one thing: the pile does not exist the first time."
+      - "Before the raise, ask whether the status is not in counts yet, and if so start it at zero."
+    return:
+      text: "Count how many couriers ride each vehicle: bike, moto, bike, carro and bike. Show the dict."
+      model: |-
+        vehicles = ['bike', 'moto', 'bike', 'carro', 'bike']
+        counts = {}
+        for vehicle in vehicles:
+            if vehicle not in counts:
+                counts[vehicle] = 0
+            counts[vehicle] = counts[vehicle] + 1
+        print(counts)
+      output: "{'bike': 3, 'moto': 1, 'carro': 1}"
+      narration:
+        - "{'bike': 3, 'moto': 1, 'carro': 1}. Each vehicle found its pile, started it if it was new, and raised it."
+        - "Check, start at zero, raise: the three lines for every pile."
+      note: "Return for the classmate step."
+    note: "Ana makes the slip the learner is most likely to make, before the learner can (rule E6), and Python's KeyError is the real reason. The learner repairs it by typing the whole program, so the thought is exercised before the first free attempt."
+
+  # 9
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. People were making piles by hand long before computers. Counting votes, or counting sheep in a field, you make a mark for each one under its own heading and then read off the marks. The tally marks you may have seen, four strokes and a fifth across them, are the same idea: one pile for each kind of thing, and a count that goes up by one. What you just wrote is a tally, kept in a dict."
+    note: "Relief after the climb of steps 7 and 8 (rule C8). A real thing, not a mnemonic. It makes the pile idea concrete and can be skipped without loss."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "is-it-there", "go-through-dict", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile"]
+    text: "Six restaurants serve these cuisines: pizza, japonesa, pizza, arabe, japonesa and pizza. Count the restaurants for each cuisine in a dict, and then show each cuisine with its count, one line each."
+    thinking_order: "Make the list, and an empty dict. For each cuisine, start its pile if it is new, and raise it. Then go through the piles and show each with its count."
+    model: |-
+      cuisines = ['pizza', 'japonesa', 'pizza', 'arabe', 'japonesa', 'pizza']
+      counts = {}
+      for cuisine in cuisines:
+          if cuisine not in counts:
+              counts[cuisine] = 0
+          counts[cuisine] = counts[cuisine] + 1
+      for cuisine in counts:
+          print(cuisine, counts[cuisine])
+    output: |-
+      pizza 3
+      japonesa 2
+      arabe 1
+    narration:
+      - "pizza 3, japonesa 2, arabe 1. One loop made the piles, and a second one read them out."
+      - "Make the piles, then show them: two loops, one after the other."
+      - "Three piles, one for each cuisine, each with its count."
+    wrong:
+      - code: |-
+          cuisines = ['pizza', 'japonesa', 'pizza', 'arabe', 'japonesa', 'pizza']
+          counts = {}
+          for cuisine in cuisines:
+              counts[cuisine] = counts[cuisine] + 1
+          for cuisine in counts:
+              print(cuisine, counts[cuisine])
+        ask: "Python stopped on the first cuisine. What has to be true of a pile before it can be raised?"
+      - code: |-
+          cuisines = ['pizza', 'japonesa', 'pizza', 'arabe', 'japonesa', 'pizza']
+          counts = {}
+          for cuisine in cuisines:
+              if cuisine not in counts:
+                  counts[cuisine] = 1
+              counts[cuisine] = counts[cuisine] + 1
+          for cuisine in counts:
+              print(cuisine, counts[cuisine])
+        ask: "Every count is one too many. What does a pile hold before anything has been counted?"
+      - code: |-
+          cuisines = ['pizza', 'japonesa', 'pizza', 'arabe', 'japonesa', 'pizza']
+          counts = {}
+          for cuisine in cuisines:
+              if cuisine not in counts:
+                  counts[cuisine] = 0
+              counts[cuisine] = counts[cuisine] + 1
+          print(counts)
+        ask: "The piles are made, but I asked for one line for each. What goes through them to show each?"
+    walk:
+      - "Make the list of cuisines and an empty dict called counts."
+      - "For each cuisine: if it is not in counts, start it at zero. Then raise it by one."
+      - "After that loop, go through counts, and show each cuisine with its count."
+    return:
+      text: "Seven couriers ride bike, moto, bike, carro, bike, moto and bike. Count the couriers for each vehicle in a dict, and show each vehicle with its count, one line each."
+      model: |-
+        vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto', 'bike']
+        counts = {}
+        for vehicle in vehicles:
+            if vehicle not in counts:
+                counts[vehicle] = 0
+            counts[vehicle] = counts[vehicle] + 1
+        for vehicle in counts:
+            print(vehicle, counts[vehicle])
+      output: |-
+        bike 4
+        moto 2
+        carro 1
+      narration:
+        - "bike 4, moto 2, carro 1. Piles made in one loop and read out in a second."
+        - "The piles, then the showing: two loops, one after the other."
+      note: "Return for step 10."
+    note: "The first free attempt at the whole shape, after the classmate. Showing the piles with a second loop is the thing the closing sentence needs too. The cuisine names are real ones from restaurants.csv."
+
+  # 11
+  - kind: "give"
+    lang: "python"
+    new: ["get-with-default"]
+    text: |-
+      That check and that starting at zero are written so often that dicts have a shorter way to say them: get. counts.get(dish, 0) means: what is under dish in counts, or 0 if the name is not there. The three lines of the loop become one:
+
+      ```python
+      dishes = ['pizza', 'coca', 'pizza', 'sushi']
+      counts = {}
+      for dish in dishes:
+          counts[dish] = counts.get(dish, 0) + 1
+      print(counts)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        dishes = ['pizza', 'coca', 'pizza', 'sushi']
+        counts = {}
+        for dish in dishes:
+            counts[dish] = counts.get(dish, 0) + 1
+        print(counts)
+    after_run: "{'pizza': 2, 'coca': 1, 'sushi': 1}, the same as before. The check and the starting at zero went inside the get: look for the pile, and if it is not there, use zero. Same idea, fewer words. The dot and the brackets are as with append: do this to that dict."
+    note: "Arrives as a shorter way to say something already understood (the map's note), so it is a labour saved and not a rule to remember."
+
+  # 12
+  - kind: "classmate"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
+    text: |-
+      Davi counted the statuses of three orders the short way, and wrote:
+
+      ```python
+      statuses = ['delivered', 'cancelled', 'delivered']
+      counts = {}
+      for status in statuses:
+          counts[status] = counts.get(status) + 1
+      print(counts)
+      ```
+
+      Python answered: TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'. Davi, what does get hand back when the name is not there, and you have given it nothing to hand back instead? ... Nothing at all, which Python calls None. And you cannot add one to nothing. The second thing in the brackets is what get hands back for a pile that is not there yet. Type the whole program as Davi should have written it.
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      counts = {}
+      for status in statuses:
+          counts[status] = counts.get(status, 0) + 1
+      print(counts)
+    output: "{'delivered': 2, 'cancelled': 1}"
+    broken: |-
+      statuses = ['delivered', 'cancelled', 'delivered']
+      counts = {}
+      for status in statuses:
+          counts[status] = counts.get(status) + 1
+      print(counts)
+    narration:
+      - "{'delivered': 2, 'cancelled': 1}. The 0 inside the get is what a missing pile counts as."
+      - "Without the second thing in the brackets, get hands back nothing, and there is nothing to add to."
+      - "The same piles as before, with one line doing the work of three."
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts.get(status) + 1
+          print(counts)
+        ask: "That is Davi's again. What goes in the brackets after the name, to say what a missing pile counts as?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts.get(status, 1) + 1
+          print(counts)
+        ask: "Delivered comes out as 3. What does a pile count as before anything is counted?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts[status, 0] + 1
+          print(counts)
+        ask: "Python stopped. Which word means what is there, or this if nothing is?"
+    walk:
+      - "Davi's loop is right. Look at the get."
+      - "Inside its brackets, after the name, put what a missing pile should count as."
+    return:
+      text: "Count how many couriers ride each vehicle the short way: bike, bike and moto. Show the dict."
+      model: |-
+        vehicles = ['bike', 'bike', 'moto']
+        counts = {}
+        for vehicle in vehicles:
+            counts[vehicle] = counts.get(vehicle, 0) + 1
+        print(counts)
+      output: "{'bike': 2, 'moto': 1}"
+      narration:
+        - "{'bike': 2, 'moto': 1}. A missing pile counted as zero, and was raised."
+        - "Get with a zero: what is there, or nothing counted yet."
+      note: "Return for the Davi step."
+    note: "Davi makes the slip before the learner can (rule E6). None appears here for the first time, as the real reason for the zero. PY-5 gives it a proper step as 'nothing' with the question is None. Nothing is asked about it yet, and the narration says only that it is nothing."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
+    text: "Orders came back with these statuses: delivered, cancelled, delivered, delivered and cancelled. Count the orders for each status in a dict, the short way, and then show each status with its count, one line each."
+    model: |-
+      statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled']
+      counts = {}
+      for status in statuses:
+          counts[status] = counts.get(status, 0) + 1
+      for status in counts:
+          print(status, counts[status])
+    output: |-
+      delivered 3
+      cancelled 2
+    narration:
+      - "delivered 3 and cancelled 2. One line inside the loop did the work of three, and a second loop read the piles out."
+      - "That was SELECT status, COUNT(*) FROM orders GROUP BY status, by hand."
+      - ""
+    wrong:
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts.get(status) + 1
+          for status in counts:
+              print(status, counts[status])
+        ask: "Python stopped. What is the second thing in the brackets of get for?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts.get(status, 0)
+          for status in counts:
+              print(status, counts[status])
+        ask: "Every pile is 0. What happens to the pile at each item?"
+      - code: |-
+          statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled']
+          counts = {}
+          for status in statuses:
+              counts[status] = counts.get(status, 0) + 1
+              print(status, counts[status])
+        ask: "The piles are shown at every turn. When are they ready?"
+    walk:
+      - "Make the list and an empty dict."
+      - "For each status, put under its name: what is there, or 0, and one more."
+      - "After that loop, go through the piles and show each status with its count."
+    return:
+      text: "Count the orders for each coupon, the short way: FRETEGRATIS, BEMVINDO10, FRETEGRATIS, FRETEGRATIS and PIZZA20. Show each coupon with its count, one line each."
+      model: |-
+        codes = ['FRETEGRATIS', 'BEMVINDO10', 'FRETEGRATIS', 'FRETEGRATIS', 'PIZZA20']
+        counts = {}
+        for code in codes:
+            counts[code] = counts.get(code, 0) + 1
+        for code in counts:
+            print(code, counts[code])
+      output: |-
+        FRETEGRATIS 3
+        BEMVINDO10 1
+        PIZZA20 1
+      narration:
+        - "FRETEGRATIS 3, BEMVINDO10 1 and PIZZA20 1. Each code found its pile and raised it."
+        - "What is there, or zero, plus one: for each item. Then the piles read out."
+      note: "Return for step 13."
+    note: "The first free attempt at the short way, after the classmate. It adds the second loop that step 10 asked for, so it is not the repair of Davi's program with other words. The codes in the return are real ones from the orders table."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
+    text: "Six couriers ride bike, moto, bike, carro, bike and moto. Count them for each vehicle, and show only the vehicles that have more than one courier, each with its count."
+    model: |-
+      vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto']
+      counts = {}
+      for vehicle in vehicles:
+          counts[vehicle] = counts.get(vehicle, 0) + 1
+      for vehicle, n in counts.items():
+          if n > 1:
+              print(vehicle, n)
+    output: |-
+      bike 3
+      moto 2
+    narration:
+      - "bike 3 and moto 2. The piles were made first, and the question was asked of the finished piles."
+      - "That is HAVING, by hand: a question asked of the piles, after they have been made."
+      - "Carro has only one courier, so it was left out."
+    wrong:
+      - code: |-
+          vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto']
+          counts = {}
+          for vehicle in vehicles:
+              counts[vehicle] = counts.get(vehicle, 0) + 1
+              if counts[vehicle] > 1:
+                  print(vehicle, counts[vehicle])
+        ask: "Bike is shown twice. When is a pile finished, ready to be asked about?"
+      - code: |-
+          vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto']
+          counts = {}
+          for vehicle in vehicles:
+              counts[vehicle] = counts.get(vehicle, 0) + 1
+          for vehicle, n in counts.items():
+              print(vehicle, n)
+        ask: "Carro is here, with only one. Where is the question?"
+    walk:
+      - "Make the piles with get, as before."
+      - "After the loop, go through the piles by pairs."
+      - "Ask the question about the count: more than one. Show the vehicle and its count."
+    return:
+      text: "Five orders have the statuses delivered, cancelled, delivered, cancelled and delivered. Count them for each status, and show only the statuses that have more than two orders, each with its count."
+      model: |-
+        statuses = ['delivered', 'cancelled', 'delivered', 'cancelled', 'delivered']
+        counts = {}
+        for status in statuses:
+            counts[status] = counts.get(status, 0) + 1
+        for status, n in counts.items():
+            if n > 2:
+                print(status, n)
+      output: "delivered 3"
+      narration:
+        - "delivered 3. Only that pile had more than two."
+        - "The question was asked of the finished piles: HAVING, by hand."
+      note: "Return for step 14."
+    note: "Weaves PY-3's pairs and PY-2's question with the piles. The question after the loop, and not inside it, is the same distinction as WHERE and HAVING in SQL-3: a question about a row, and a question about a pile. The narration names it."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    new: ["total-per-pile"]
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile"]
+    text: "A pile does not have to count. It can hold a total. Here each order is a pair: its status and its subtotal. A for line can name both halves of a pair, as it did with items(). The orders: delivered 81.1, cancelled 31.3, delivered 18.85, cancelled 44.67 and delivered 84.23. What did each status add up to? Show each status with its total, one line each."
+    model: |-
+      sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+      totals = {}
+      for status, subtotal in sales:
+          totals[status] = totals.get(status, 0) + subtotal
+      for status in totals:
+          print(status, totals[status])
+    output: |-
+      delivered 184.18
+      cancelled 75.97
+    narration:
+      - "delivered 184.18 and cancelled 75.97. The same shape as a count, with the subtotal added where the one was."
+      - "That is SELECT status, SUM(subtotal) FROM orders GROUP BY status, by hand."
+      - "A total in place of a count, and nothing else changed."
+    wrong:
+      - code: |-
+          sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+          totals = {}
+          for status, subtotal in sales:
+              totals[status] = totals.get(status, 0) + 1
+          for status in totals:
+              print(status, totals[status])
+        ask: "That counts the orders. What do we want to add to each pile?"
+      - code: |-
+          sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+          totals = {}
+          for status, subtotal in sales:
+              totals[status] = subtotal
+          for status in totals:
+              print(status, totals[status])
+        ask: "Each pile holds only its last subtotal. What should the new value be made from?"
+      - code: |-
+          sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+          totals = {}
+          for status in sales:
+              totals[status] = totals.get(status, 0) + subtotal
+          for status in totals:
+              print(status, totals[status])
+        ask: "Python stopped. Each item is a pair. How many names go after for?"
+    walk:
+      - "Make the list of five pairs, and an empty dict called totals."
+      - "Go through the pairs, naming both halves. Under the status, put what is there or 0, plus the subtotal."
+      - "After the loop, go through the totals and show each status with its total."
+    return:
+      text: "The delivery fees of five orders were: delivered 8.99, delivered 6.99, cancelled 4.99, delivered 6.99 and cancelled 8.99. What did each status add up to? Show each status with its total, one line each."
+      model: |-
+        fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]
+        totals = {}
+        for status, fee in fees:
+            totals[status] = totals.get(status, 0) + fee
+        for status in totals:
+            print(status, totals[status])
+      output: |-
+        delivered 22.97
+        cancelled 13.98
+      narration:
+        - "delivered 22.97 and cancelled 13.98. A total for each pile, found by adding."
+        - "The same shape as counting, with the fee added where the one was."
+      note: "Return for step 15."
+    note: "The thought, as the map has it: the same shape with a total where the count was. The pairs in a list are given inline in the prompt, with the reason that the for line can name both halves. The cancelled subtotals are real ones, from rows of the orders table."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "equals-asks", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
+    text: "Now keep first, then pile, as in SQL. Six orders came with a coupon and a status: FRETEGRATIS delivered, PIZZA20 cancelled, FRETEGRATIS delivered, BEMVINDO10 delivered, FRETEGRATIS cancelled and PIZZA20 delivered. For each coupon, count only the delivered orders. Show each coupon with its count, one line each."
+    model: |-
+      orders = [['FRETEGRATIS', 'delivered'], ['PIZZA20', 'cancelled'], ['FRETEGRATIS', 'delivered'], ['BEMVINDO10', 'delivered'], ['FRETEGRATIS', 'cancelled'], ['PIZZA20', 'delivered']]
+      counts = {}
+      for code, status in orders:
+          if status == 'delivered':
+              counts[code] = counts.get(code, 0) + 1
+      for code in counts:
+          print(code, counts[code])
+    output: |-
+      FRETEGRATIS 2
+      BEMVINDO10 1
+      PIZZA20 1
+    narration:
+      - "FRETEGRATIS 2, BEMVINDO10 1 and PIZZA20 1. The question kept the delivered orders, and only those were piled."
+      - "That is WHERE, then GROUP BY: keep first, pile second. The order of the lines is the order of events."
+      - ""
+    wrong:
+      - code: |-
+          orders = [['FRETEGRATIS', 'delivered'], ['PIZZA20', 'cancelled'], ['FRETEGRATIS', 'delivered'], ['BEMVINDO10', 'delivered'], ['FRETEGRATIS', 'cancelled'], ['PIZZA20', 'delivered']]
+          counts = {}
+          for code, status in orders:
+              counts[code] = counts.get(code, 0) + 1
+          for code in counts:
+              print(code, counts[code])
+        ask: "Those include the cancelled orders. Where do we drop them, before they are piled?"
+      - code: |-
+          orders = [['FRETEGRATIS', 'delivered'], ['PIZZA20', 'cancelled'], ['FRETEGRATIS', 'delivered'], ['BEMVINDO10', 'delivered'], ['FRETEGRATIS', 'cancelled'], ['PIZZA20', 'delivered']]
+          counts = {}
+          for code, status in orders:
+              counts[code] = counts.get(code, 0) + 1
+              if status == 'delivered':
+                  print(code, counts[code])
+        ask: "Piled first and asked after. Which happens first, keeping or piling?"
+      - code: |-
+          orders = [['FRETEGRATIS', 'delivered'], ['PIZZA20', 'cancelled'], ['FRETEGRATIS', 'delivered'], ['BEMVINDO10', 'delivered'], ['FRETEGRATIS', 'cancelled'], ['PIZZA20', 'delivered']]
+          counts = {}
+          for code, status in orders:
+              if status = 'delivered':
+                  counts[code] = counts.get(code, 0) + 1
+          for code in counts:
+              print(code, counts[code])
+        ask: "Python stopped at the question. What do two equals signs do that one does not?"
+    walk:
+      - "Make the list of six pairs, and an empty dict."
+      - "Go through the pairs, and ask first: is the status delivered?"
+      - "Only on a yes, raise the coupon's pile. Then, after the loop, show each pile."
+    return:
+      text: "Six orders came with a status and a subtotal: delivered 81.1, cancelled 31.3, delivered 18.85, cancelled 74.19, delivered 84.23 and cancelled 44.67. For each status, count only the orders above 50. Show each status with its count, one line each."
+      model: |-
+        sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 74.19], ['delivered', 84.23], ['cancelled', 44.67]]
+        counts = {}
+        for status, subtotal in sales:
+            if subtotal > 50:
+                counts[status] = counts.get(status, 0) + 1
+        for status in counts:
+            print(status, counts[status])
+      output: |-
+        delivered 2
+        cancelled 1
+      narration:
+        - "delivered 2 and cancelled 1. Only the big orders were piled."
+        - "Keep, then pile: the question first, then the raise."
+      note: "Return for step 16."
+    note: "Echoes SQL-1 step 21 (keep-before-piles) in Python. Keeping happens before the pile is touched, which is the same order of events. The coupons and statuses are real values, and their pairing is illustrative."
+
+  # 17
+  - kind: "give"
+    lang: "python"
+    new: ["average-from-two-dicts"]
+    text: |-
+      A total for each pile and a count for each pile make an average for each pile: the total divided by how many, as it was for a plain list. Build both in the same loop:
+
+      ```python
+      sales = [['pizza', 40], ['sushi', 60], ['pizza', 50]]
+      totals = {}
+      counts = {}
+      for dish, price in sales:
+          totals[dish] = totals.get(dish, 0) + price
+          counts[dish] = counts.get(dish, 0) + 1
+      for dish in totals:
+          print(dish, totals[dish] / counts[dish])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        sales = [['pizza', 40], ['sushi', 60], ['pizza', 50]]
+        totals = {}
+        counts = {}
+        for dish, price in sales:
+            totals[dish] = totals.get(dish, 0) + price
+            counts[dish] = counts.get(dish, 0) + 1
+        for dish in totals:
+            print(dish, totals[dish] / counts[dish])
+    after_run: "pizza 45.0 and sushi 60.0. Pizza was sold twice, for 40 and 50, so its total is 90 and its count is 2. That is SELECT dish, AVG(price) FROM sales GROUP BY dish, by hand. AVG did two jobs for you, the total and the count, and here you do them one at a time. The averaging happens after the first loop, when the piles are complete."
+    note: "Two dicts are built in one loop and read in a second. The learner owns both halves: a count per pile and a total per pile, and the average of a plain list from PY-1."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "build-average", "average-from-two-dicts"]
+    text: "Five orders used these coupons, with these subtotals: FRETEGRATIS 18.85, BEMVINDO10 91.11, FRETEGRATIS 39.91, PIZZA20 29.05 and BEMVINDO10 74.38. What was the average subtotal for each coupon? Show each coupon with its average, one line each."
+    model: |-
+      sales = [['FRETEGRATIS', 18.85], ['BEMVINDO10', 91.11], ['FRETEGRATIS', 39.91], ['PIZZA20', 29.05], ['BEMVINDO10', 74.38]]
+      totals = {}
+      counts = {}
+      for code, subtotal in sales:
+          totals[code] = totals.get(code, 0) + subtotal
+          counts[code] = counts.get(code, 0) + 1
+      for code in totals:
+          print(code, totals[code] / counts[code])
+    output: |-
+      FRETEGRATIS 29.38
+      BEMVINDO10 82.745
+      PIZZA20 29.05
+    narration:
+      - "FRETEGRATIS 29.38, BEMVINDO10 82.745 and PIZZA20 29.05. A total for each pile, a count for each pile, and the one divided by the other."
+      - "Two dicts built in one loop, then an average for each pile: AVG with a GROUP BY, written out."
+      - ""
+    wrong:
+      - code: |-
+          sales = [['FRETEGRATIS', 18.85], ['BEMVINDO10', 91.11], ['FRETEGRATIS', 39.91], ['PIZZA20', 29.05], ['BEMVINDO10', 74.38]]
+          totals = {}
+          counts = {}
+          for code, subtotal in sales:
+              totals[code] = totals.get(code, 0) + subtotal
+              counts[code] = counts.get(code, 0) + 1
+          for code in totals:
+              print(code, totals[code])
+        ask: "Those are the totals. What do we divide each one by, to get an average?"
+      - code: |-
+          sales = [['FRETEGRATIS', 18.85], ['BEMVINDO10', 91.11], ['FRETEGRATIS', 39.91], ['PIZZA20', 29.05], ['BEMVINDO10', 74.38]]
+          totals = {}
+          counts = {}
+          for code, subtotal in sales:
+              totals[code] = totals.get(code, 0) + subtotal
+              counts[code] = counts.get(code, 0) + 1
+          for code in totals:
+              print(code, counts[code] / totals[code])
+        ask: "Total over how many, or how many over the total?"
+      - code: |-
+          sales = [['FRETEGRATIS', 18.85], ['BEMVINDO10', 91.11], ['FRETEGRATIS', 39.91], ['PIZZA20', 29.05], ['BEMVINDO10', 74.38]]
+          totals = {}
+          counts = {}
+          for code, subtotal in sales:
+              totals[code] = totals.get(code, 0) + subtotal
+              counts[code] = counts.get(code, 0) + 1
+              print(code, totals[code] / counts[code])
+        ask: "That divides at every turn, before a pile is complete. When is a pile's average ready?"
+    walk:
+      - "Make the list of five pairs, and two empty dicts: totals and counts."
+      - "In one loop, for each pair, raise the code's total by the subtotal and its count by one."
+      - "After the loop, go through the totals and show each code with its total divided by its count."
+    return:
+      text: "The delivery fees of five orders were: delivered 8.99, delivered 6.99, cancelled 4.99, delivered 6.99 and cancelled 8.99. What was the average fee for each status? Show each status with its average, one line each."
+      model: |-
+        fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]
+        totals = {}
+        counts = {}
+        for status, fee in fees:
+            totals[status] = totals.get(status, 0) + fee
+            counts[status] = counts.get(status, 0) + 1
+        for status in totals:
+            print(status, totals[status] / counts[status])
+      output: |-
+        delivered 7.656666666666666
+        cancelled 6.99
+      narration:
+        - "delivered about 7.66 and cancelled 6.99. Total over count, for each status."
+        - "Two dicts, one loop, one division each."
+      note: "Return for step 18."
+    note: "The first free attempt at the thought, with real pairs: the coupon and its order's subtotal come from consecutive coupon rows of the orders table. The third wrong answer is the one most likely from a learner who writes it inside the loop."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "average-from-two-dicts"]
+    text: "Same five orders: delivered 81.1, cancelled 31.3, delivered 18.85, cancelled 44.67 and delivered 84.23. This time, for each status, show how many orders there were and what they added up to: the status, the count and then the total, one line each."
+    model: |-
+      sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+      totals = {}
+      counts = {}
+      for status, subtotal in sales:
+          totals[status] = totals.get(status, 0) + subtotal
+          counts[status] = counts.get(status, 0) + 1
+      for status in totals:
+          print(status, counts[status], totals[status])
+    output: |-
+      delivered 3 184.18
+      cancelled 2 75.97
+    narration:
+      - "delivered 3 184.18 and cancelled 2 75.97. Two summaries for each pile, from one loop."
+      - "That is COUNT(*) and SUM(subtotal) in the same sentence, by hand."
+      - ""
+    wrong:
+      - code: |-
+          sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+          totals = {}
+          counts = {}
+          for status, subtotal in sales:
+              totals[status] = totals.get(status, 0) + subtotal
+              counts[status] = counts.get(status, 0) + 1
+          for status in totals:
+              print(status, totals[status], counts[status])
+        ask: "Both are here, but which did I ask for first?"
+      - code: |-
+          sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
+          totals = {}
+          for status, subtotal in sales:
+              totals[status] = totals.get(status, 0) + subtotal
+          for status in totals:
+              print(status, totals[status])
+        ask: "Where is the count of orders for each status?"
+    walk:
+      - "Make the list, and two empty dicts: totals and counts."
+      - "In one loop, raise each status's total by the subtotal and its count by one."
+      - "After the loop, show each status, then its count, then its total."
+    return:
+      text: "The delivery fees were: delivered 8.99, delivered 6.99, cancelled 4.99, delivered 6.99 and cancelled 8.99. For each status, show the status, how many orders there were and the total fee, one line each."
+      model: |-
+        fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]
+        totals = {}
+        counts = {}
+        for status, fee in fees:
+            totals[status] = totals.get(status, 0) + fee
+            counts[status] = counts.get(status, 0) + 1
+        for status in totals:
+            print(status, counts[status], totals[status])
+      output: |-
+        delivered 3 22.97
+        cancelled 2 13.98
+      narration:
+        - "delivered 3 22.97 and cancelled 2 13.98. A count and a total for each pile."
+        - "Two dicts, one loop: COUNT and SUM together."
+      note: "Return for step 19."
+    note: "A recombination after the climb: two dicts, no division. It is the closing shape without its one new idea, so the closing sentence cannot be reached by changing one slot of this one."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "build-average", "average-from-two-dicts"]
+    friction: true
+    text: "The last one, and I won't break it down. Five dishes were sold, in this order: pizza at 40, sushi at 60, pizza at 50, acai at 25 and sushi at 70. What was the average price for each dish? Show each dish with its average, one line each."
+    model: |-
+      sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]
+      totals = {}
+      counts = {}
+      for dish, price in sales:
+          totals[dish] = totals.get(dish, 0) + price
+          counts[dish] = counts.get(dish, 0) + 1
+      for dish in totals:
+          print(dish, totals[dish] / counts[dish])
+    output: |-
+      pizza 45.0
+      sushi 65.0
+      acai 25.0
+    narration:
+      - "pizza 45.0, sushi 65.0 and acai 25.0. That is SELECT dish, AVG(price) FROM sales GROUP BY dish, written out by hand. You made piles, kept a total and a count in each, and divided."
+      - "Every part of the lesson: a list of pairs, two dicts of piles, the short way of starting them, and an average for each. You built it by thinking."
+      - "Three piles, three averages. The first SQL sentence about piles you ever wrote, written out in full."
+    wrong:
+      - code: |-
+          sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]
+          totals = {}
+          counts = {}
+          for dish, price in sales:
+              totals[dish] = totals.get(dish, 0) + price
+              counts[dish] = counts.get(dish, 0) + 1
+          for dish in totals:
+              print(dish, totals[dish])
+        ask: "Those are totals. What turns a total into an average?"
+      - code: |-
+          sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]
+          totals = {}
+          counts = {}
+          for dish, price in sales:
+              totals[dish] = totals[dish] + price
+              counts[dish] = counts[dish] + 1
+          for dish in totals:
+              print(dish, totals[dish] / counts[dish])
+        ask: "Python stopped on the first dish. What does a pile that is not there yet count as?"
+      - code: |-
+          sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]
+          totals = {}
+          counts = {}
+          for dish, price in sales:
+              totals[dish] = totals.get(dish, 0) + price
+              counts[dish] = counts.get(dish, 0) + price
+          for dish in totals:
+              print(dish, totals[dish] / counts[dish])
+        ask: "Every average is 1. What should a count go up by?"
+      - code: |-
+          sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]
+          total = 0
+          for dish, price in sales:
+              total = total + price
+          print(total / len(sales))
+        ask: "That is one average for all the dishes. What did I ask for each dish to have?"
+    walk:
+      - "Make the list of five pairs, and two empty dicts."
+      - "In one loop, for each pair, raise the dish's total by the price and its count by one, the short way."
+      - "After the loop, go through the totals and show each dish with its total divided by its count."
+    return:
+      text: "Five orders used these coupons and had these delivery fees: FRETEGRATIS 6.99, BEMVINDO10 4.99, FRETEGRATIS 8.99, PIZZA20 0 and BEMVINDO10 6.99. What was the average fee for each coupon? Show each coupon with its average, one line each."
+      model: |-
+        fees = [['FRETEGRATIS', 6.99], ['BEMVINDO10', 4.99], ['FRETEGRATIS', 8.99], ['PIZZA20', 0], ['BEMVINDO10', 6.99]]
+        totals = {}
+        counts = {}
+        for code, fee in fees:
+            totals[code] = totals.get(code, 0) + fee
+            counts[code] = counts.get(code, 0) + 1
+        for code in totals:
+            print(code, totals[code] / counts[code])
+      output: |-
+        FRETEGRATIS 7.99
+        BEMVINDO10 5.99
+        PIZZA20 0.0
+      narration:
+        - "FRETEGRATIS 7.99, BEMVINDO10 5.99 and PIZZA20 0. Total over count, for each pile."
+        - "Two dicts, one loop, one division for each pile."
+      note: "Return for the closing step. Not broken down, like the step."
+    note: "The closing sentence of the lesson, exactly as in the map. Deliberate friction (rule C9). The dish names are invented, as in the map: dishes are not in the data."
+
+  # 21
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. Today you made piles by hand: a dict with one name for each pile and a running result under it, started at zero, and updated for each item. Then the short way, get, and a total in place of a count, and two dicts together for an average. That is GROUP BY, written out, and it is the commonest shape in the programs people are asked to write.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a program out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["list", "text-in-list", "text-quotes", "show", "for-each", "block", "if-question", "compare-signs", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names", "one-entry-per-pile", "update-the-pile", "get-with-default"]
+    text: "Six orders came with a status and a subtotal: cancelled 58.66, delivered 46.82, delivered 91.11, cancelled 49.29, delivered 59.1 and cancelled 74.19. For each status, count only the orders above 50. Show each status with its count, one line each."
+    model: |-
+      sales = [['cancelled', 58.66], ['delivered', 46.82], ['delivered', 91.11], ['cancelled', 49.29], ['delivered', 59.1], ['cancelled', 74.19]]
+      counts = {}
+      for status, subtotal in sales:
+          if subtotal > 50:
+              counts[status] = counts.get(status, 0) + 1
+      for status in counts:
+          print(status, counts[status])
+    output: |-
+      cancelled 2
+      delivered 2
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check on a combination never practised: keep on a number, then pile with the short way, on pairs of status and subtotal that no step used. Never scored (rule F1). What a miss tells the script: which of the pairs, the question, get with a default or the second loop was absent. The subtotals are real ones from the orders table."

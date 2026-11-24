@@ -40,6 +40,8 @@ Done when: lesson 1 has been revised once and the open questions it could answer
 
 The milestones below replaced the earlier 6 to 11 on 24 Nov 2026, when the goal was restated as fluency (decision C9) and the lesson map in `docs/03-curriculum.md` was agreed. Code is written only with the owner's go-ahead, one piece at a time.
 
+**Status, 24 Nov 2026.** Milestones 6 to 13 are built: the maps are approved, the player plays a course, SQL, Python and pandas run in the checker and the player, a try-it panel exists (decision C19), and all 27 lessons and both cold sittings are written and pass the checker and the gate tests. What is not done is the learning from use: the owner has sat none of it. Each remaining "done when" below, which says the owner has sat a lesson or can do a task, is for the owner's sittings to settle, and milestone 5 comes first.
+
 ## 6. Approve the strand maps
 
 The owner reads `docs/maps/sql.md`, `docs/maps/python.md` and `docs/maps/pandas-ml.md` and answers the questions at the end of each.

@@ -23,8 +23,10 @@ def main(argv=None):
     p.add_argument("--content", default="content")
     p.add_argument("--data", default="data")
     p.add_argument("--progress", default="progress")
+    p.add_argument("--skip-check", action="store_true",
+                   help="start at once, without running the checker on every lesson first (about 25 seconds)")
     args = p.parse_args(argv)
-    fails = preflight(args.content, args.data)
+    fails = [] if args.skip_check else preflight(args.content, args.data)
     if fails:
         print("\n".join(fails))
         print("\nThe lesson fails the checker, so it will not be played.")

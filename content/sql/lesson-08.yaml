@@ -1,0 +1,544 @@
+lesson: sql-08
+title: "Rows with no match"
+strand: sql
+stage: 2
+thoughts:
+  keep-all-of-first: "`LEFT JOIN` keeps every row of the first table, whether or not a row of the second table matches it."
+  empty-side: "Where a row found no match, the columns that came from the other table are empty."
+  keep-the-empties: "A row with no match is found with the question you already know, `IS NULL`, asked of a column from the other table."
+  count-matches: "`COUNT(o.order_id)` counts only real matches, because summaries skip empty cells, so a row with no match counts zero. `COUNT(*)` would count that row as one."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["top-n-per-pile", "number-inside-pile", "sort-direction", "compare-signs", "name-a-table", "name-a-result", "beside-comes-late", "from-table", "choose-columns", "commas"]
+    any_column_order: true
+    text: "Each customer's second biggest order: the customer, the order id and the subtotal."
+    model: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn = 2"
+    rows: 1370
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-7: number inside the piles from the biggest and keep one number that is not 1, on a combination not practised there (biggest, number 2). A customer's subtotals never tie. Never scored."
+
+  # 2
+  - kind: "give"
+    text: |-
+      Two tables are new today. One is coupons, a list of the coupon codes a customer can use. The other is deliveries, with one row for each order that was delivered: how far it went, whether it rained, and how many orders the courier was carrying. Look at both:
+
+      ```sql
+      SELECT * FROM coupons
+      ```
+
+      ```sql
+      SELECT * FROM deliveries
+      ```
+
+      Run them.
+    shows:
+      - "SELECT * FROM coupons"
+      - "SELECT * FROM deliveries"
+    after_run: "Four coupons, each with a discount. The deliveries table has an order_id, like the orders table, so each delivery can be matched to its order. A delivery row exists only for an order that was delivered. Keep that in mind. We will come back to it."
+    note: "Two new tables, shown in use (rule B3). The last sentence plants the thing the closing sentence finds, without saying it: 5,601 rows in deliveries and 6,000 in orders, so the 399 are there to be noticed. No new thought."
+
+  # 3
+  - kind: "ask"
+    requires: ["join", "join-on", "whose-column", "short-names", "count-rows", "piles", "one-row-per-pile", "pile-name", "from-table", "choose-columns", "commas"]
+    text: "Join the coupons table to the orders table, and show each coupon code with the number of orders that used it."
+    model: "SELECT c.coupon_code, COUNT(*) FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+    rows: 3
+    narration:
+      - "Three coupons, each with its count: 631, 932 and 321. You matched each order to its coupon, made a pile for each code and counted it."
+      - "From coupons joined to orders, a pile for each code, and a count of each pile."
+      - ""
+    wrong:
+      - sql: "SELECT coupon_code, COUNT(*) FROM orders GROUP BY coupon_code"
+        ask: "That has a row for orders with no coupon at all, and it never looked at the coupons table. Which words bring the coupons table in?"
+      - sql: "SELECT c.coupon_code, COUNT(*) FROM coupons c JOIN orders o GROUP BY c.coupon_code"
+        ask: "How does SQL know which order belongs to which coupon? What says which column matches which?"
+        why: "ON says which column in one table matches which in the other."
+      - sql: "SELECT coupon_code, COUNT(*) FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY coupon_code"
+        ask: "SQL does not know whose coupon_code you mean, since both tables have one. What goes in front of it?"
+        why: "when both tables have a column of that name, say whose it is."
+    walk:
+      - "Join coupons to orders, matching the code in one with the code in the other."
+      - "Make a pile for each coupon code."
+      - "Show each pile's code and how many are in it."
+    return:
+      text: "Join the deliveries table to the orders table, and show each promised time with the number of deliveries."
+      model: "SELECT o.promised_minutes, COUNT(*) FROM orders o JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.promised_minutes"
+      rows: 3
+      result: [[30, 1902], [40, 1863], [50, 1836]]
+      narration:
+        - "Three promises, 30, 40 and 50, with 1,902, 1,863 and 1,836 deliveries. Each order was matched to its delivery, then piled by its promise and counted."
+        - "A join, a pile for each promise, a count of each."
+      note: "Return for step 3. Another pair of tables."
+    note: "A join the learner owns from SQL-4, used on a table that looks new. It is also the setup: the answer has three rows and the coupons table has four, which the next step makes the learner see. The coupons are joined on the shared code column."
+
+  # 4
+  - kind: "give"
+    new: ["keep-all-of-first"]
+    text: |-
+      Count the rows of coupons: there were four. The join gave us three. A join keeps a row only when the other table has a match for it, and VOLTA15 matched no order at all, so it disappeared. A coupon that nobody used is exactly the one you may want to see. To keep every row of the first table, whether or not it has a match, say LEFT JOIN:
+
+      ```sql
+      SELECT c.coupon_code, c.discount_pct, o.order_id FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code
+      ```
+
+      Run it.
+    shows:
+      - "SELECT c.coupon_code, c.discount_pct, o.order_id FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code"
+    after_run: "1,885 rows: the 1,884 that matched, and one more, for VOLTA15. LEFT JOIN keeps every row of the first table, the one written on the left of the word JOIN. Everything else in the sentence is as it was."
+    note: "Keep-all-of-first. It arrives as the answer to a gap the learner has just seen in step 3 (four coupons, three rows), so it is a reason and not a rule. LEFT means the table written first, on the left of JOIN, which is the real reason for the name."
+
+  # 5
+  - kind: "give"
+    new: ["empty-side"]
+    text: |-
+      What does VOLTA15's row look like? Ask for just that one:
+
+      ```sql
+      SELECT c.coupon_code, o.order_id, o.subtotal FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code WHERE c.coupon_code = 'VOLTA15'
+      ```
+
+      Run it.
+    shows:
+      - "SELECT c.coupon_code, o.order_id, o.subtotal FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code WHERE c.coupon_code = 'VOLTA15'"
+    after_run: "One row. The code is there, and the order id and the subtotal are empty. It is the empty cell from lesson 3: there is no order to take them from, so the columns that came from the orders table have nothing in them. A row with no match is kept, with the other table's side left empty."
+    note: "Empty-side, a thought of its own: what a no-match row looks like. It pays the debt in lesson 3 (empty cells) with a first practical use. The quoted code is given in the prompt."
+
+  # 6
+  - kind: "ask"
+    requires: ["keep-all-of-first", "empty-side", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "Show every coupon's code and discount, with the id of each order that used it. Keep every coupon."
+    model: "SELECT c.coupon_code, c.discount_pct, o.order_id FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code"
+    rows: 1885
+    narration:
+      - "1,885 rows. Every coupon is there, and VOLTA15 has an empty order id because it has none."
+      - "The coupons came first, so every coupon was kept. Whatever had no order got an empty cell."
+      - ""
+    wrong:
+      - sql: "SELECT c.coupon_code, c.discount_pct, o.order_id FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code"
+        ask: "1,884 rows, and VOLTA15 is not among them. What word keeps a row that found no match?"
+      - sql: "SELECT c.coupon_code, c.discount_pct, o.order_id FROM orders o LEFT JOIN coupons c ON c.coupon_code = o.coupon_code"
+        ask: "Look at which table is written first. Which table's rows do we want all of?"
+        why: "LEFT JOIN keeps every row of the table written before it, so that table has to be the one with the unmatched rows."
+      - sql: "SELECT c.coupon_code, c.discount_pct, o.order_id FROM coupons c LEFT JOIN orders o"
+        ask: "How does SQL know which order goes with which coupon?"
+    walk:
+      - "Show the coupon code, the discount and the order id, joining coupons to orders on the code."
+      - "Now say you want to keep every coupon, matched or not: LEFT JOIN."
+    return:
+      text: "Show every restaurant's name, with the id of each order it had. Keep every restaurant."
+      model: "SELECT r.name, o.order_id FROM restaurants r LEFT JOIN orders o ON r.restaurant_id = o.restaurant_id"
+      rows: 6000
+      narration:
+        - "6,000 rows, since every restaurant has orders and none needed an empty cell."
+        - "The restaurants came first, and every one was kept. All of them found matches this time."
+      note: "Return for step 6. Another pair of tables, with nothing unmatched."
+    note: "First asked LEFT JOIN, with the first table the one that has the unmatched rows. The second wrong answer is the swap: it keeps all the orders, which is 6,000 rows and is not the model result. The return has no empty cells, deliberately: LEFT JOIN is harmless when everything matches."
+
+  # 7
+  - kind: "ask"
+    requires: ["keep-all-of-first", "empty-side", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "Show the id, status and distance of every order, keeping every order. The distance is in deliveries."
+    model: "SELECT o.order_id, o.status, d.distance_km FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id"
+    rows: 6000
+    narration:
+      - "6,000 rows, one for each order. The cancelled ones have no delivery, so their distance is empty."
+      - "Every order was kept, and the distance came from deliveries where there was a delivery."
+      - ""
+    wrong:
+      - sql: "SELECT o.order_id, o.status, d.distance_km FROM orders o JOIN deliveries d ON o.order_id = d.order_id"
+        ask: "5,601 rows. Which orders are missing, and what word keeps them?"
+      - sql: "SELECT o.order_id, o.status, d.distance_km FROM deliveries d LEFT JOIN orders o ON o.order_id = d.order_id"
+        ask: "That keeps every delivery. Which table has the rows we want all of?"
+      - sql: "SELECT order_id, status, distance_km FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id"
+        ask: "Both tables have an order_id. Which one do you mean?"
+        why: "when both tables have a column of that name, say whose it is."
+    walk:
+      - "Show the id and status of every order."
+      - "Bring in the delivery's distance, matching on the order id, and keep every order."
+      - "Say whose columns they are, with the short names."
+    return:
+      text: "Show the id of every order and the bag size of its delivery. Keep every order."
+      model: "SELECT o.order_id, d.bag_size FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id"
+      rows: 6000
+      narration:
+        - "6,000 rows, with an empty bag size for each of the cancelled orders."
+        - "Every order kept, and the bag size taken from the delivery where there was one."
+      note: "Return for step 7. A different column of the same table."
+    note: "The same movement on the pair of tables the closing sentence uses. The distance is also empty for 112 delivered orders, as the data README says, which is a second kind of empty that step 15 separates from this one."
+
+  # 8
+  - kind: "give"
+    new: ["keep-the-empties"]
+    text: |-
+      Now the useful part. A row that found no match has empty cells on the other side, and you already know how to ask about an empty cell: IS NULL. So to find the rows with no match, ask for the empties. Which orders have no courier?
+
+      ```sql
+      SELECT o.order_id, o.status FROM orders o LEFT JOIN couriers c ON o.courier_id = c.courier_id WHERE c.courier_id IS NULL
+      ```
+
+      Run it.
+    shows:
+      - "SELECT o.order_id, o.status FROM orders o LEFT JOIN couriers c ON o.courier_id = c.courier_id WHERE c.courier_id IS NULL"
+    after_run: "399 orders, every one of them cancelled. A cancelled order has no courier, and nothing matches an empty cell, so these orders found no courier in the couriers table, and their courier columns came back empty. The question IS NULL, asked of a column from the other table, picks out the rows with no match."
+    note: "Keep-the-empties, on a pair where the reason is in the data (empty never matches), and where the answer is not the closing sentence's. The question is asked of a column from the right-hand table, courier_id, which is empty only when there was no match. Learner is told why, in the learner's own earlier word (empty cell). 399 appears here and in the closing sentence, from two different angles, on purpose."
+
+  # 9
+  - kind: "ask"
+    requires: ["keep-the-empties", "keep-all-of-first", "empty-side", "empty-cells", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "Show the id and promised minutes of the orders that have no delivery."
+    model: "SELECT o.order_id, o.promised_minutes FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL"
+    rows: 399
+    narration:
+      - "399 orders with no delivery. Keep every order, match to the deliveries, and keep the rows where the delivery side is empty."
+      - "The same 399 as the orders with no courier. They are the cancelled ones."
+      - ""
+    wrong:
+      - sql: "SELECT o.order_id, o.promised_minutes FROM orders o JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL"
+        ask: "Nothing came back. With a plain join, which rows survive, and can one of them have an empty delivery?"
+        why: "a plain join drops the rows with no match, so there are none left to be empty."
+      - sql: "SELECT o.order_id, o.promised_minutes FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id = NULL"
+        ask: "Nothing came back. What is the question you ask of an empty cell?"
+        why: "nothing equals an empty cell, not even another empty cell, so the question is IS NULL."
+      - sql: "SELECT o.order_id, o.promised_minutes FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id"
+        ask: "All 6,000 orders came back. Which words keep only the ones with no delivery?"
+    walk:
+      - "Show the id and promised minutes of every order, keeping every order and bringing in the deliveries."
+      - "Keep only the rows where the delivery's order id is empty."
+    return:
+      text: "Show the id of every order that has no courier."
+      model: "SELECT o.order_id FROM orders o LEFT JOIN couriers c ON o.courier_id = c.courier_id WHERE c.courier_id IS NULL"
+      rows: 399
+      narration:
+        - "399 order ids, all cancelled. Keep every order, match to the couriers, keep the empties."
+        - "The rows that found no courier."
+      note: "Return for step 9. The other pair of tables, and fewer columns."
+    note: "Keep-the-empties asked, on the closing sentence's own tables, with a different shape (a list, and not a count). The `= NULL` slip is the common one and has been seen once in lesson 3."
+
+  # 10
+  - kind: "aside"
+    text: "Only interesting, and nothing to keep. The real name of what you have been writing is LEFT OUTER JOIN, and the word OUTER is allowed but nobody writes it. There is also a RIGHT JOIN, which keeps every row of the second table. It is exactly a LEFT JOIN with the two tables swapped, so almost nobody uses it either. The plain JOIN of earlier lessons has a real name too, an inner join."
+    note: "Real names, so that the learner can hear them in an interview, flagged as an aside (rule D4). No thought id, and no step requires it. Relief after four typed steps and before the new count."
+
+  # 11
+  - kind: "classmate"
+    new: ["count-matches"]
+    requires: ["count-matches", "keep-all-of-first", "empty-side", "summaries-skip-empties", "piles", "one-row-per-pile", "pile-name", "count-rows", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: |-
+      Davi wanted how many orders each coupon had, even the coupon nobody used. He kept every coupon, made a pile for each, and counted the piles:
+
+      ```sql
+      SELECT c.coupon_code, COUNT(*) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code
+      ```
+
+      VOLTA15 came back with 1. Davi, did one order use VOLTA15? ... No, none did. COUNT(*) counts rows, and VOLTA15 has one row: the row that was kept for it, with the order side empty. What he wants to count is the real orders. A summary skips empty cells, as you saw in lesson 3. So name a column from the orders side and count that. What should he have written?
+    model: "SELECT c.coupon_code, COUNT(o.order_id) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+    rows: 4
+    result: [["BEMVINDO10", 631], ["FRETEGRATIS", 932], ["PIZZA20", 321], ["VOLTA15", 0]]
+    shows:
+      - "SELECT c.coupon_code, COUNT(*) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+    narration:
+      - "Four coupons, and VOLTA15 has a count of 0. Counting a column from the orders side counts only the orders that were really there."
+      - "COUNT of a column skips the empties, so the kept row with nothing on the orders side counts nothing."
+      - "631, 932, 321 and 0: every coupon is shown, including the one nobody used."
+    wrong:
+      - sql: "SELECT c.coupon_code, COUNT(*) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+        ask: "That is Davi's sentence again, and VOLTA15 shows 1. Which column is empty on the row that has no order?"
+      - sql: "SELECT c.coupon_code, COUNT(c.coupon_code) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+        ask: "The code is there on every row, even VOLTA15's, so it counts 1. Which column is empty when there was no order?"
+      - sql: "SELECT c.coupon_code, COUNT(o.order_id) FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+        ask: "Three coupons. Which one went missing, and what word keeps it?"
+    walk:
+      - "Keep every coupon, matching it to its orders, and make a pile for each code."
+      - "Count each pile. Which column is empty on the row that has no order?"
+    return:
+      text: "Show each promised time with the number of its orders that have a delivery. Keep every order."
+      model: "SELECT o.promised_minutes, COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.promised_minutes"
+      rows: 3
+      result: [[30, 1902], [40, 1863], [50, 1836]]
+      narration:
+        - "Three promises, with 1,902, 1,863 and 1,836 deliveries. Counting a column from the deliveries side counts only the orders that had one."
+        - "Every order was kept, and only the real deliveries were counted."
+      note: "Return for step 11. A different pair of tables and a pile for each promise."
+    note: "Davi's COUNT(*) slip is the predictable one, and it is made before the learner can (rule E6). The reason is the lesson's: a summary skips empties (lesson 3) and a row with no match has an empty side. The repair is the new thought, and the learner is given the means to build it in the text, which is why it is typed."
+
+  # 12
+  - kind: "ask"
+    requires: ["count-matches", "keep-all-of-first", "empty-side", "summaries-skip-empties", "count-rows", "piles", "one-row-per-pile", "pile-name", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "For each order status, show how many orders there were and how many of them had a delivery. Keep every order."
+    model: "SELECT o.status, COUNT(*), COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.status"
+    rows: 2
+    result: [["cancelled", 399, 0], ["delivered", 5601, 5601]]
+    narration:
+      - "Delivered: 5,601 orders and 5,601 deliveries. Cancelled: 399 orders and no deliveries at all. The two counts sit side by side and the gap between them is the orders with no match."
+      - "COUNT(*) counted every row that was kept, and COUNT of a column from deliveries counted only the matches."
+      - ""
+    wrong:
+      - sql: "SELECT o.status, COUNT(*), COUNT(*) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.status"
+        ask: "Both counts are the same, so cancelled shows 399 deliveries. Which column from deliveries is empty when there was no delivery?"
+      - sql: "SELECT o.status, COUNT(*), COUNT(d.order_id) FROM orders o JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.status"
+        ask: "The cancelled orders are not there at all. What word keeps a row that found no match?"
+      - sql: "SELECT o.status, COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.status"
+        ask: "That has the deliveries but not how many orders there were. What counts every row?"
+    walk:
+      - "Keep every order, bring in the deliveries, and make a pile for each status."
+      - "Count all the rows of each pile."
+      - "Add a second count that skips the rows with no delivery: a column from deliveries."
+    return:
+      text: "For each promised time, show how many orders there were and how many of them had a delivery. Keep every order."
+      model: "SELECT o.promised_minutes, COUNT(*), COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.promised_minutes"
+      rows: 3
+      result: [[30, 2019, 1902], [40, 2003, 1863], [50, 1978, 1836]]
+      narration:
+        - "30 minutes: 2,019 orders and 1,902 deliveries. The same two counts as before, by promise."
+        - "COUNT(*) counts the orders, COUNT of a column from deliveries counts the deliveries."
+      note: "Return for step 12. A different pile for the same two counts."
+    note: "Both counts in one sentence: the clearest picture of why COUNT(*) and COUNT(column) differ, with the counts of the whole table. The result is (cancelled, 399, 0) and (delivered, 5,601, 5,601)."
+
+  # 13
+  - kind: "ask"
+    requires: ["count-matches", "keep-all-of-first", "empty-side", "keep-piles", "piles", "one-row-per-pile", "pile-name", "compare-signs", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "Show the code and the order count of every coupon that fewer than 400 orders used. Keep every coupon, so that a coupon nobody used is included."
+    model: "SELECT c.coupon_code, COUNT(o.order_id) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code HAVING COUNT(o.order_id) < 400"
+    rows: 2
+    result: [["PIZZA20", 321], ["VOLTA15", 0]]
+    narration:
+      - "PIZZA20 with 321 and VOLTA15 with 0. The coupons were kept, piled and counted, and then only the small piles were kept."
+      - "A question about a pile goes after the piles are made, which is what HAVING is for."
+      - ""
+    wrong:
+      - sql: "SELECT c.coupon_code, COUNT(o.order_id) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+        ask: "All four coupons are here. Which words keep only the ones with fewer than 400?"
+      - sql: "SELECT c.coupon_code, COUNT(*) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code HAVING COUNT(*) < 400"
+        ask: "VOLTA15 shows 1, since COUNT(*) counts the row that was kept for it. What should you count?"
+      - sql: "SELECT c.coupon_code, COUNT(o.order_id) FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code HAVING COUNT(o.order_id) < 400"
+        ask: "Only one coupon. Which coupon is missing, and what keeps it?"
+    walk:
+      - "Keep every coupon, match it to its orders, and count the real orders of each code."
+      - "Now keep only the piles whose count is under 400: the keep-rows question, asked of piles."
+    return:
+      text: "Show each promised time with the number of its orders that have a delivery, but only the promised times with fewer than 1,900 deliveries. Keep every order."
+      model: "SELECT o.promised_minutes, COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id GROUP BY o.promised_minutes HAVING COUNT(d.order_id) < 1900"
+      rows: 2
+      result: [[40, 1863], [50, 1836]]
+      narration:
+        - "Two promised times: 40 minutes with 1,863 deliveries and 50 minutes with 1,836. The count of matches, then the keeping of piles."
+        - "Keep, pile, count a column from the other table, and keep the small piles."
+      note: "Return for step 13. HAVING again, with another count of matches."
+    note: "HAVING from SQL-3 returns with count-matches. Result: PIZZA20 321 and VOLTA15 0."
+
+  # 14
+  - kind: "ask"
+    requires: ["keep-the-empties", "empty-cells", "keep-rows", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "Show the ids of the orders that have a delivery, but no distance recorded."
+    model: "SELECT o.order_id FROM orders o JOIN deliveries d ON o.order_id = d.order_id WHERE d.distance_km IS NULL"
+    rows: 112
+    result: [[103312], [104775], [102591], [101002], [100647], [100267], [101808], [101108], [102904], [102592], [101746], [105176], [105841], [100418], [101764], [101660], [105821], [100408], [104094], [100400], [104557], [104632], [100122], [102088], [105835], [102834], [103187], [105290], [105484], [102045], [100857], [105521], [104426], [100552], [100717], [103659], [105954], [100705], [100817], [103139], [103175], [101575], [100612], [105919], [104590], [104422], [105714], [101165], [104872], [105456], [101875], [102504], [100966], [102094], [103937], [104012], [105300], [103283], [101256], [105755], [101991], [100646], [102073], [105831], [102162], [100326], [102793], [102362], [100832], [100382], [101310], [105708], [104006], [100240], [105564], [105952], [105774], [103125], [105870], [105562], [105829], [105616], [103248], [104692], [103776], [102902], [103631], [100242], [104777], [104407], [103985], [101038], [103520], [101725], [101096], [105106], [105583], [100293], [105359], [102654], [101591], [101131], [103974], [105979], [104320], [103618], [101793], [101870], [101171], [102880], [101836], [105567]]
+    narration:
+      - "112 orders. They have a delivery, and the delivery has an empty distance, so this is a plain join and a question about an empty cell."
+      - "Not the same as the orders with no delivery: these found their delivery, and one of its cells is empty."
+      - ""
+    wrong:
+      - sql: "SELECT o.order_id FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL"
+        ask: "399 orders. Those have no delivery at all. Which column is empty when a delivery exists but its distance was not recorded?"
+      - sql: "SELECT o.order_id FROM orders o JOIN deliveries d ON o.order_id = d.order_id WHERE d.distance_km = NULL"
+        ask: "Nothing came back. What is the question you ask of an empty cell?"
+        why: "nothing equals an empty cell, so the question is IS NULL."
+      - sql: "SELECT o.order_id FROM orders o JOIN deliveries d ON o.order_id = d.order_id"
+        ask: "That is every delivered order. Which ones did I ask for?"
+    walk:
+      - "Join the orders to their deliveries, so that only the orders with a delivery are left."
+      - "Keep the ones where the distance is empty."
+    return:
+      text: "How many deliveries have no distance recorded?"
+      model: "SELECT COUNT(*) FROM deliveries WHERE distance_km IS NULL"
+      rows: 1
+      result: [[112]]
+      narration:
+        - "112 deliveries. A count of the rows where the distance is empty, with no join."
+        - "Keep the empties, count them."
+      note: "Return for step 14. No join: the table is asked about itself."
+    note: "The two empties, kept apart (rule C6): an empty because there was no match (steps 8 and 9) and an empty inside a row that did match. The first wrong answer is the confusion this step exists to expose. A learner who writes this without any join gets the right answer and is accepted."
+
+  # 15
+  - kind: "ask"
+    requires: ["join", "join-on", "whose-column", "short-names", "keep-rows", "compare-signs", "two-questions", "from-table", "choose-columns", "commas"]
+    text: "Show the ids of the orders that used a coupon with a discount above 10."
+    model: "SELECT o.order_id FROM orders o JOIN coupons c ON o.coupon_code = c.coupon_code WHERE c.discount_pct > 10"
+    rows: 321
+    narration:
+      - "321 orders: PIZZA20 is the only coupon with a discount above 10. A plain join this time, because every order here had a match."
+      - "Join, then keep the rows where the discount is above 10."
+      - ""
+    wrong:
+      - sql: "SELECT o.order_id FROM orders o JOIN coupons c ON o.coupon_code = c.coupon_code WHERE c.discount_pct >= 10"
+        ask: "That includes the 10 percent coupon. Which sign is strictly above?"
+      - sql: "SELECT o.order_id FROM orders o JOIN coupons c ON o.coupon_code = c.coupon_code"
+        ask: "That is every order with a coupon. Which ones did I ask for?"
+      - sql: "SELECT order_id FROM orders o JOIN coupons c ON o.coupon_code = c.coupon_code WHERE discount_pct > 10 AND c.coupon_code = 'FRETEGRATIS'"
+        ask: "No rows. FRETEGRATIS has a discount of 0. Which coupon has more than 10?"
+    walk:
+      - "Join the orders to the coupons on the code."
+      - "Keep the rows where the discount is above 10, and show the order ids."
+    return:
+      text: "Show the ids of the orders that were delivered in the rain and came to more than 100."
+      model: "SELECT o.order_id FROM orders o JOIN deliveries d ON o.order_id = d.order_id WHERE d.rain = 1 AND o.subtotal > 100"
+      rows: 126
+      narration:
+        - "126 orders. A join to the deliveries, and two questions about the rows."
+        - "Join, then keep the rows that pass both questions."
+      note: "Return for step 15. Another pair of tables, and two questions joined with AND."
+    note: "A plain JOIN used on purpose, as relief: LEFT JOIN is only needed when the unmatched rows are wanted (rule C6, keep confusable things apart, then contrast). The return adds two-questions from SQL-2."
+
+  # 16
+  - kind: "ask"
+    requires: ["keep-all-of-first", "empty-side", "empty-cells", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "Show each order's id and the discount of its coupon. Keep every order."
+    model: "SELECT o.order_id, c.discount_pct FROM orders o LEFT JOIN coupons c ON o.coupon_code = c.coupon_code"
+    rows: 6000
+    narration:
+      - "6,000 rows. The 4,116 orders with no coupon have an empty discount, and FRETEGRATIS orders have a discount of 0, which is a real number and not an empty cell."
+      - "Every order was kept, and the discount was taken from coupons where the order had a coupon."
+      - ""
+    wrong:
+      - sql: "SELECT o.order_id, c.discount_pct FROM orders o JOIN coupons c ON o.coupon_code = c.coupon_code"
+        ask: "1,884 rows. Where did the orders with no coupon go, and what word keeps them?"
+      - sql: "SELECT o.order_id, c.discount_pct FROM coupons c LEFT JOIN orders o ON o.coupon_code = c.coupon_code"
+        ask: "That keeps every coupon, and gives 1,885 rows. Which table has the rows we want all of?"
+    walk:
+      - "Show every order's id, with the discount of its coupon."
+      - "Make sure that every order is kept, with an empty discount where there was no coupon."
+    return:
+      text: "Show each order's id and the vehicle of its courier. Keep every order."
+      model: "SELECT o.order_id, cr.vehicle FROM orders o LEFT JOIN couriers cr ON o.courier_id = cr.courier_id"
+      rows: 6000
+      narration:
+        - "6,000 rows, with an empty vehicle for each of the 399 cancelled orders."
+        - "Every order was kept, and the vehicle was taken from couriers where the order had a courier."
+      note: "Return for step 16. Another pair of tables, with the same empties."
+    note: "The orders-first version of the thought on a third pair of tables, so it does not depend on deliveries. An order without a coupon has an empty code, and nothing matches an empty code, so the discount comes back empty: the same reason as step 8. FRETEGRATIS has a discount of 0, which is the data's own contrast between empty and zero."
+
+  # 17
+  - kind: "ask"
+    requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "sort-direction", "keep-all-of-first", "empty-side", "compare-signs", "name-a-table", "name-a-result", "beside-comes-late", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    any_column_order: true
+    text: "Show each coupon's newest order: the code and the order id. Keep every coupon."
+    model: "WITH n AS (SELECT c.coupon_code, o.order_id, ROW_NUMBER() OVER (PARTITION BY c.coupon_code ORDER BY o.created_at DESC) AS rn FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code) SELECT coupon_code, order_id FROM n WHERE rn = 1"
+    rows: 4
+    narration:
+      - "Four coupons, each with its newest order. VOLTA15 is still there, with an empty order, because it was kept and there was nothing to number."
+      - "A join, a numbering inside piles from the newest, and keep number 1: three things from three different lessons in one sentence."
+      - ""
+    wrong:
+      - sql: "WITH n AS (SELECT c.coupon_code, o.order_id, ROW_NUMBER() OVER (PARTITION BY c.coupon_code ORDER BY o.created_at DESC) AS rn FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code) SELECT coupon_code, order_id FROM n WHERE rn = 1"
+        ask: "Three coupons. Which one is missing, and what keeps it?"
+      - sql: "WITH n AS (SELECT c.coupon_code, o.order_id, ROW_NUMBER() OVER (PARTITION BY c.coupon_code ORDER BY o.created_at) AS rn FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code) SELECT coupon_code, order_id FROM n WHERE rn = 1"
+        ask: "That is each coupon's oldest. Which end is number 1?"
+      - sql: "SELECT c.coupon_code, MAX(o.created_at) FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code"
+        ask: "That gives the latest time, but not which order it was. What does a pile's summary not keep?"
+    walk:
+      - "Keep every coupon, match it to its orders, and number each coupon's orders from the newest. Name that table."
+      - "Show the code and the order from it."
+      - "Keep only the rows numbered 1."
+    return:
+      text: "Show each coupon's oldest order: the code and the order id. Keep every coupon."
+      model: "WITH n AS (SELECT c.coupon_code, o.order_id, ROW_NUMBER() OVER (PARTITION BY c.coupon_code ORDER BY o.created_at) AS rn FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code) SELECT coupon_code, order_id FROM n WHERE rn = 1"
+      rows: 4
+      narration:
+        - "Four coupons again, each with its oldest order, and VOLTA15 with an empty order."
+        - "The other end of the same pile."
+      note: "Return for step 17. The other end of the same sentence."
+    note: "A weave of SQL-7 into the join. No two orders of one coupon share the newest or the oldest time, though a few share a minute elsewhere, so the answer is stable. VOLTA15's row is numbered 1, because its pile has one row, empty."
+
+  # 18
+  - kind: "aside"
+    text: "Only interesting, and nothing to keep. What you have been doing has a name: an anti-join, the rows of one table that have no partner in another. Besides LEFT JOIN with IS NULL, people write it with NOT EXISTS or with NOT IN. All of them give the same rows. The one you have is the one that reads like what you did: keep every row, and then keep the ones with nothing on the other side."
+    note: "Real name for the closing thought, flagged as an aside (rule D4). It prepares the learner for the other spellings in an interview. Not a thought id, never asked. Relief after the longest typed sentence of the lesson."
+
+  # 19
+  - kind: "ask"
+    requires: ["keep-the-empties", "keep-all-of-first", "empty-side", "empty-cells", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    friction: true
+    text: "The last two, and I won't break them down. First: the coupons that nobody has used."
+    model: "SELECT c.coupon_code FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code WHERE o.order_id IS NULL"
+    rows: 1
+    result: [["VOLTA15"]]
+    narration:
+      - "VOLTA15, the one coupon with no orders. Keep every coupon, match to the orders, and keep the ones with nothing on the other side. That is a real interview question, and you built it from the parts."
+      - "The coupons first, so every one was kept. Then the empties."
+      - "One coupon: VOLTA15."
+    wrong:
+      - sql: "SELECT c.coupon_code FROM coupons c JOIN orders o ON c.coupon_code = o.coupon_code WHERE o.order_id IS NULL"
+        ask: "Nothing came back. With a plain join, which rows survive, and can one of them have an empty order?"
+      - sql: "SELECT c.coupon_code FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code"
+        ask: "All 1,885 rows. Which words keep only the coupon with no order?"
+      - sql: "SELECT c.coupon_code FROM orders o LEFT JOIN coupons c ON c.coupon_code = o.coupon_code WHERE c.coupon_code IS NULL"
+        ask: "That has 4,116 empty rows: the orders with no coupon. Which table's rows do we want all of?"
+      - sql: "SELECT c.coupon_code FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code WHERE o.order_id = NULL"
+        ask: "Nothing came back. What is the question you ask of an empty cell?"
+    walk:
+      - "Keep every coupon, matching each to its orders."
+      - "Now keep the rows where the order side is empty, and show the code."
+    return:
+      text: "Show the ids of the orders that have no coupon in the coupons table."
+      model: "SELECT o.order_id FROM orders o LEFT JOIN coupons c ON o.coupon_code = c.coupon_code WHERE c.coupon_code IS NULL"
+      rows: 4116
+      narration:
+        - "4,116 orders. The orders came first, so every order was kept, and only those with nothing on the coupon side were kept after that."
+        - "Every order with no coupon, found by keeping the empties."
+      note: "Return for step 19. The other direction: the orders with no coupon."
+    note: "Closing sentence one, pass-bar task 3 (result: VOLTA15, checked). Friction: no walk in the text. Orders with no coupon have an empty code, so the return finds them through the same reason as step 8."
+
+  # 20
+  - kind: "ask"
+    requires: ["keep-the-empties", "keep-all-of-first", "empty-side", "count-rows", "empty-cells", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    text: "And the second: how many orders have no delivery?"
+    model: "SELECT COUNT(*) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL"
+    rows: 1
+    result: [[399]]
+    narration:
+      - "399, the same number as the cancelled orders you counted in the first lesson. Every cancelled order has no delivery, and every delivered one has."
+      - "Keep every order, match to deliveries, keep the empties, count them."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id"
+        ask: "That counts every order: 6,000. Which words keep only the ones with no delivery?"
+      - sql: "SELECT COUNT(*) FROM orders o JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL"
+        ask: "Nothing was counted. With a plain join, which rows survive?"
+      - sql: "SELECT COUNT(d.order_id) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL"
+        ask: "That counts a column that is empty on every row left, so it counts nothing. What counts rows?"
+    walk:
+      - "Keep every order, bring in the deliveries on the order id."
+      - "Keep the rows where the delivery is empty."
+      - "Count what is left."
+    return:
+      text: "How many couriers have no orders?"
+      model: "SELECT COUNT(*) FROM couriers cr LEFT JOIN orders o ON cr.courier_id = o.courier_id WHERE o.order_id IS NULL"
+      rows: 1
+      result: [[0]]
+      narration:
+        - "0. Every courier has at least one order, so nothing was left after the keeping of empties, and the count is 0."
+        - "Keep every courier, match to the orders, keep the empties, count them: and there were none."
+      note: "Return for step 20. The other direction, and an answer of 0."
+    note: "Closing sentence two, from the map: 399, which is also the count of cancelled orders SQL-1 found. The learner has met the pair of tables twice. The return finds 0, to show that a count of the unmatched can be zero without error."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today you learned to keep the rows that have no partner. LEFT JOIN keeps every row of the first table. Where a row found no match, the other side is left empty. You ask for the empties with IS NULL, and so you find what has no match. And you count real matches by counting a column from the other side, since the kept row with no partner would otherwise count as one.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    requires: ["count-matches", "keep-all-of-first", "empty-side", "keep-piles", "piles", "one-row-per-pile", "pile-name", "compare-signs", "join", "join-on", "whose-column", "short-names", "from-table", "choose-columns", "commas"]
+    any_column_order: true
+    text: "The codes of the coupons that fewer than 100 orders used."
+    model: "SELECT c.coupon_code FROM coupons c LEFT JOIN orders o ON c.coupon_code = o.coupon_code GROUP BY c.coupon_code HAVING COUNT(o.order_id) < 100"
+    rows: 1
+    result: [["VOLTA15"]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: keep every coupon, count the real matches, and keep the small piles, on a combination never practised (the answer is VOLTA15, with a count of 0, and a learner who counts rows gets 1 and still gets it). Never scored (rule F1)."

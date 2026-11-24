@@ -1,0 +1,1032 @@
+lesson: pd-04
+title: "Look things up in pandas"
+strand: pd
+stage: 1
+thoughts:
+  merge: "`orders.merge(restaurants, on='restaurant_id')` sticks each order's restaurant on the end of its row."
+  pile-by-merged: "A column that came from the other table can make the piles."
+  only-matches-survive: "Rows with no partner drop out of a merge. Cancelled orders have no delivery, so they are gone."
+  names-back-as-column: "`.reset_index()` turns the pile names back into an ordinary column, for when the next step needs them as one."
+  several-summaries: {text: "`.agg(['mean', 'count'])` says several things about each pile at once.", grade: shape}
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    any_column_order: true
+    text: "The orders table has no city. How many orders did the restaurants of each city get? Show each city with its count."
+    model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+    rows: 4
+    result: [["Belo Horizonte", 1494], ["Curitiba", 639], ["Rio de Janeiro", 1375], ["São Paulo", 2492]]
+    after_run: "That one is SQL, from a while back: stick the restaurant on each order, then make piles by its city. Today the same two movements, in Python."
+    note: "Opening cold check from SQL-4, on a combination never practised (SQL-4 asked for an average, not a count). It is SQL on purpose: PD-4 writes the same sentence in step 4. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["merge"]
+    text: |-
+      The orders table holds a restaurant's number and nothing else about it. The city lives in the restaurants table. In SQL, JOIN stuck the restaurant onto each order. Pandas calls it merge, and it is said in the order you think it: the table you start from, the table to stick on, and the column they share, after the word on:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined[['order_id', 'restaurant_id', 'city', 'cuisine']].head(3))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(joined[['order_id', 'restaurant_id', 'city', 'cuisine']].head(3))
+    after_run: "Each order now has its restaurant's city and cuisine at the end of its row. The word on says which column is the same in both tables, as ON did in SQL, and it appears only once in what came out. We gave the result a name, joined, and then did something with it: name what came out, then do something with it. The table went in twice and one table came out."
+    note: "Imports JOIN and ON from SQL-4, and name-the-result from PD-1, said aloud. Both the tables are read at the top of the script, as the owner decided. The learner has been asked to take a list of columns since PD-3 step 5, so the four-column print is owned."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "list-of-columns", "look-at-rows", "join-on"]
+    text: "Stick the restaurants onto the orders, and show me the order id, the restaurant's name and its cuisine, for the first four orders."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined[['order_id', 'name', 'cuisine']].head(4))
+    output: |-
+      order_id     name     cuisine
+      0    104843  Rest 35  brasileira
+      1    102076  Rest 58    japonesa
+      2    103434  Rest 16       pizza
+      3    105520  Rest 30    japonesa
+    narration:
+      - "Four orders, each with the name and the cuisine of its restaurant. Merge on the shared column, then ask for three columns and the first rows."
+      - "The restaurants were stuck onto the orders, and then you took what you wanted."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='order_id')
+          print(joined[['order_id', 'name', 'cuisine']].head(4))
+        ask: "Does the restaurants table have an order_id column? Which column do the two tables share?"
+        why: "a merge matches rows on a column that both tables have."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = restaurants.merge(orders, on='restaurant_id')
+          print(joined[['order_id', 'name', 'cuisine']].head(4))
+        ask: "Those come out restaurant by restaurant, because you started from the restaurants. Which table are we asking about?"
+        why: "the table you start from is the one whose rows come out, and we are asking about orders."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.head(4))
+        ask: "That shows every column of both tables, as much as fits. Which three did I ask for?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          print(joined[['order_id', 'name', 'cuisine']].head(4))
+        ask: "Python has not heard of joined yet. What makes it, and what does it have to be given?"
+    walk:
+      - "Read the orders file and the restaurants file, each into a table of its own."
+      - "Stick the restaurants onto the orders: the orders first, then merge, the other table, and the shared column after on. Give the result a name."
+      - "Ask that table for the three columns, as a list, and for its first four rows."
+    return:
+      text: "Stick the restaurants onto the orders, and show me the order id, the subtotal and the city of the first three orders."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(joined[['order_id', 'subtotal', 'city']].head(3))
+      output: |-
+        order_id  subtotal            city
+        0    104843     81.10  Rio de Janeiro
+        1    102076     18.85  Rio de Janeiro
+        2    103434     84.23       São Paulo
+      narration:
+        - "Three orders, each with its city beside it. The same merge, and a different list of columns."
+        - "Rio de Janeiro, Rio de Janeiro and São Paulo: the cities of those three orders' restaurants."
+      note: "Return for step 3."
+    note: "The first typed merge. The learner was shown the sentence in step 2, so the first slot is only which columns to show. The two files are read at the top: the owner's decision."
+
+  # 4
+  - kind: "give"
+    lang: "python"
+    new: ["pile-by-merged"]
+    text: |-
+      Once the city is on the order's row, it is a column like any other, and a column can make the piles. This is the sentence you wrote in SQL at the start of the sitting:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined.groupby('city').size())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(joined.groupby('city').size())
+    after_run: "1,494, 639, 1,375 and 2,492: the same four numbers SQL gave, one for each city. The orders never had a city. The merge put one on each row, and from then on it was an ordinary column, so it could make piles. The sentence reads in the order it happens: stick on, pile, count."
+    note: "The echo of step 1, deliberate: the learner sees the same four numbers with a different spelling. It is a discovery, because a merged column behaves exactly as any other, and nothing about piles had to be learned again."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "pile-by-merged", "groupby", "pick-then-summarise", "pile-names-on-left"]
+    text: "For each cuisine, what was the average delivery fee?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined.groupby('cuisine')['delivery_fee'].mean())
+    output: |-
+      cuisine
+      arabe         5.162219
+      brasileira    5.289885
+      hamburguer    5.343543
+      japonesa      5.137149
+      pizza         5.218509
+      saudavel      5.061878
+      Name: delivery_fee, dtype: float64
+    narration:
+      - "Six cuisines, each with an average fee near 5.20. The cuisine is not in the orders table, so the merge came first, and then the piles, the column and the summary."
+      - "Stick on, pile by the new column, pick the fee, say the average. Each step followed the one before."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('cuisine')['delivery_fee'].mean())
+        ask: "Does the orders table have a cuisine column? Where does it live?"
+        why: "a column that lives in another table has to be stuck onto the rows before it can make piles."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.groupby('restaurant_id')['delivery_fee'].mean())
+        ask: "That is a pile for each restaurant. Which column holds the cuisine, and which makes the piles?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.groupby('cuisine')['subtotal'].mean())
+        ask: "That is the average subtotal. Which column did I ask the average of?"
+    walk:
+      - "Read both files, and stick the restaurants onto the orders."
+      - "Make piles by the cuisine column, which came from the other table."
+      - "Pick the delivery fee, and say its average."
+    return:
+      text: "For each city, what was the average subtotal?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(joined.groupby('city')['subtotal'].mean())
+      output: |-
+        city
+        Belo Horizonte    59.792629
+        Curitiba          61.509324
+        Rio de Janeiro    61.112348
+        São Paulo         60.085795
+        Name: subtotal, dtype: float64
+      narration:
+        - "Four cities, each close to 60: Curitiba and Rio a little above, Belo Horizonte a little below."
+        - "Stick on, pile by the city, pick the subtotal, say the average."
+      note: "Return for step 5."
+    note: "Merge, then PD-2's piles on a merged column. Another table's column makes the piles."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "merge", "name-the-result", "pile-by-merged", "groupby", "pick-then-summarise", "pile-names-on-left", "keep-before-piles"]
+    text: "For the delivered orders only, what was the average subtotal in each city?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      delivered = joined[joined['status'] == 'delivered']
+      print(delivered.groupby('city')['subtotal'].mean())
+    output: |-
+      city
+      Belo Horizonte    59.831036
+      Curitiba          61.373966
+      Rio de Janeiro    60.975496
+      São Paulo         60.249449
+      Name: subtotal, dtype: float64
+    narration:
+      - "Four cities, each close to 60: the same four averages SQL gave. Stick the restaurants on, keep the delivered rows, pile by city, pick the subtotal, say the average."
+      - "Keep before piles, as ever: the delivered rows first, then the piles."
+      - "That is a real interview question, and you built it from the parts."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.groupby('city')['subtotal'].mean())
+        ask: "Those averages include the cancelled orders. Where do we drop them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          delivered = orders[orders['status'] == 'delivered']
+          print(delivered.groupby('city')['subtotal'].mean())
+        ask: "The orders table has no city. What has to happen before the city can make the piles?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          delivered = joined[joined['status'] == 'delivered']
+          print(delivered.groupby('city')['status'].mean())
+        ask: "Which column is the average about? Averaging a word does not mean anything."
+    walk:
+      - "Read both files and stick the restaurants onto the orders."
+      - "Keep only the delivered rows, and give them a name."
+      - "Make piles by city, pick the subtotal, and say the average."
+    return:
+      text: "Among the cancelled orders only, what was the average delivery fee for each cuisine?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        cancelled = joined[joined['status'] == 'cancelled']
+        print(cancelled.groupby('cuisine')['delivery_fee'].mean())
+      output: |-
+        cuisine
+        arabe         5.233148
+        brasileira    5.392500
+        hamburguer    5.646548
+        japonesa      5.471781
+        pizza         5.300000
+        saudavel      4.974821
+        Name: delivery_fee, dtype: float64
+      narration:
+        - "Six cuisines, each with a fee near 5.4. Stick on, keep the cancelled rows, pile by cuisine, pick the fee, say the average."
+        - "The same order as before, with other words in it."
+      note: "Return for step 6."
+    note: "The closing sentence of SQL-4 (pass-bar task 2), in pandas, with the same answers: four cities close to 60. Merge, keep, pile, pick, say. A learner who keeps first and merges second gets the same output, so either order is accepted."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["only-matches-survive"]
+    text: |-
+      There is a fourth table, in deliveries.csv. It has one row for each order that was delivered: the order's number, how far it travelled, whether it rained, and how many orders the courier was carrying. Merge the orders with it, and count the rows before and after:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      print(len(orders))
+      print(len(deliveries))
+      print(len(joined))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        print(len(orders))
+        print(len(deliveries))
+        print(len(joined))
+    after_run: "6,000 orders, 5,601 deliveries, and 5,601 rows after the merge. 399 orders vanished. Those are the cancelled orders: they were never delivered, so they have no row in deliveries. A merge keeps only the rows that have a partner in the other table, and the rest drop out without a word. That is what JOIN did in SQL too."
+    note: "A real wrinkle the learner has not met, and a consequence of the data: restaurants and couriers have no unmatched rows. 399 is the number of cancelled orders SQL-1 found. It is the bridge to the closing sentence, where it makes the lateness comparison honest. The way to keep them is a later thought and is not mentioned."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "only-matches-survive", "name-the-result", "how-many", "name-a-value"]
+    text: "Without looking at the status, work out how many orders have no delivery."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      print(len(orders) - len(joined))
+    output: "399"
+    narration:
+      - "399. The orders that went in, take away the rows that survived the merge: the ones with no partner. They turn out to be the cancelled orders."
+      - "6,000 take away 5,601: a number you can use as soon as you know what a merge drops."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(len(joined))
+        ask: "That is how many survived. How many orders went in, and how many have no delivery?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(len(deliveries) - len(joined))
+        ask: "Those two are equal, so nothing is left. Which table do the orders without a delivery come from?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(len(joined) - len(orders))
+        ask: "Which is the bigger number, the rows that went in or the rows that came out? Take the smaller from the bigger."
+    walk:
+      - "Read the orders and the deliveries, and merge them on the order's number."
+      - "Count the rows that went in, and the rows that came out."
+      - "Take one away from the other."
+    return:
+      text: "Do the same with the restaurants: how many orders have no restaurant to stick on?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(len(orders) - len(joined))
+      output: "0"
+      narration:
+        - "0. Every order has a restaurant, so the merge dropped nothing."
+        - "6,000 went in and 6,000 came out, and the difference is nothing."
+      note: "Return for step 8. A merge that drops nothing. Subtracting the other way round (the rows that went in, take away the deliveries) also gives 399 and is accepted."
+    note: "The thought used as a tool: a merge's row count tells you how many rows had no partner."
+
+  # 9
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. If you have ever used a spreadsheet, you have done a merge. VLOOKUP looks a value up in another table and brings a column back, and that is what you did with the city. People say join, merge and lookup for the same movement, and interviewers use all three, so now each of them will be familiar."
+    note: "Relief after the climb of steps 7 and 8, and a real link to something many learners already know (rule B7, import what the learner owns). Not a mnemonic."
+
+  # 10
+  - kind: "give"
+    lang: "python"
+    new: ["names-back-as-column"]
+    text: |-
+      Piles put their names on the left, but not as a column: they are the labels of the rows. That matters when the next step wants to ask the names a question, or take them in a list of columns, as with any ordinary column. reset_index turns the names back into an ordinary column:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      by_city = joined.groupby('city')['subtotal'].mean().reset_index()
+      print(by_city[by_city['city'] == 'Curitiba'])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        by_city = joined.groupby('city')['subtotal'].mean().reset_index()
+        print(by_city[by_city['city'] == 'Curitiba'])
+    after_run: "One row, for Curitiba, with its average beside it. The city is now an ordinary column called city, so the brackets could ask it a question: is it Curitiba? Before reset_index the cities were only labels, and by_city['city'] would have failed. A table with two ordinary columns takes anything you know how to do to a table."
+    note: "The real need, stated: an ordinary column can be asked a question, put in a list of columns, and merged on. The map says 'for when the next step needs them as one'. The step shows the next step. It is not claimed that a merge needs it (a merge can match on the labels too), and nothing here depends on that."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise", "names-back-as-column", "name-the-result", "yes-no-column", "brackets-keep-yes", "compare-signs"]
+    text: "For each restaurant, work out the average subtotal as a table that has restaurant_id as a column. Then show only the restaurants numbered above 55."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      by_restaurant = orders.groupby('restaurant_id')['subtotal'].mean().reset_index()
+      print(by_restaurant[by_restaurant['restaurant_id'] > 55])
+    output: |-
+      restaurant_id   subtotal
+      55             56  59.919300
+      56             57  61.991700
+      57             58  68.058776
+      58             59  58.590708
+      59             60  61.915978
+    narration:
+      - "Five restaurants, 56 to 60, each with its average subtotal. The names came back as a column, so the brackets could ask it whether it was above 55."
+      - "Piles, an average, the names back as a column, then a keep on those names."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          by_restaurant = orders.groupby('restaurant_id')['subtotal'].mean()
+          print(by_restaurant[by_restaurant['restaurant_id'] > 55])
+        ask: "Python says there is no column called restaurant_id here. Where are the pile names, and what turns them back into a column?"
+        why: "the pile names are only labels until reset_index makes them a column."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          by_restaurant = orders.groupby('restaurant_id')['subtotal'].mean().reset_index()
+          print(by_restaurant)
+        ask: "Every restaurant is here. Where do we keep only the ones above 55?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          by_restaurant = orders.groupby('restaurant_id')['subtotal'].mean().reset_index()
+          print(by_restaurant[by_restaurant['subtotal'] > 55])
+        ask: "That asks about the average. Which column holds the restaurant's number?"
+    walk:
+      - "Read the orders, make piles by restaurant, pick the subtotal and say the average."
+      - "Turn the pile names back into an ordinary column, and give the table a name."
+      - "Ask the restaurant column whether each is above 55, and keep those rows."
+    return:
+      text: "For each promised time, work out the average delivery fee as a table that has promised_minutes as a column. Then show only the rows whose promised time is above 30."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        by_promise = orders.groupby('promised_minutes')['delivery_fee'].mean().reset_index()
+        print(by_promise[by_promise['promised_minutes'] > 30])
+      output: |-
+        promised_minutes  delivery_fee
+        1                40      5.218198
+        2                50      5.269014
+      narration:
+        - "Two rows, for 40 and for 50, each with its average fee. The promised times were only labels until reset_index made them a column."
+        - "Piles, an average, the names back as a column, then a keep on those names."
+      note: "Return for step 11."
+    note: "The reason for reset_index acted out: the learner asks the names a question. Fifty-five is arbitrary on purpose, and says so by being plain. An alternative with a different print would not match, and the wrong answers say why."
+
+  # 12
+  - kind: "give"
+    lang: "python"
+    new: ["several-summaries"]
+    supplies: [".agg(['mean', 'count'])"]
+    text: |-
+      This one you would look up, and nobody minds. The thought is: say several things about each pile at once. Here it is spelled `.agg(['mean', 'count'])`, a list of the summaries you want, each in quotes, after the column. The names of the summaries are the ones you know:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined.groupby('city')['subtotal'].agg(['mean', 'count']))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(joined.groupby('city')['subtotal'].agg(['mean', 'count']))
+    after_run: "A table with two columns, one for each thing you asked, and the pile names on the left. Belo Horizonte: an average of about 59.79 over 1,487 orders. The count is lower than the number of orders, because the subtotals that are empty are left out of the average, and out of the count. Several summaries, one line, one table."
+    note: "A shape thought: the teacher supplies the spelling in her own line, and says it is something people look up (rule C10). The count is of non-empty values, which is a plain fact worth saying: 1,487 against 1,494 orders."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "pile-by-merged", "groupby", "pick-then-summarise", "several-summaries"]
+    supplies: [".agg(['mean', 'count'])"]
+    text: "For each cuisine, show the average delivery fee and how many orders there were. The spelling is `.agg(['mean', 'count'])`, after the column."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined.groupby('cuisine')['delivery_fee'].agg(['mean', 'count']))
+    output: "mean  count\ncuisine                    \narabe       5.162219    802\nbrasileira  5.289885   1133\nhamburguer  5.343543   1290\njaponesa    5.137149    961\npizza       5.218509    845\nsaudavel    5.061878    969"
+    narration:
+      - "Six cuisines, each with its average fee and its number of orders: hamburguer has the most, 1,290. Two summaries, said at once."
+      - "Stick on, pile by cuisine, pick the fee, and two summaries in a list."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.groupby('cuisine')['delivery_fee'].mean())
+        ask: "That is only the average. How do we ask for the count in the same line?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.groupby('cuisine')['delivery_fee'].agg('mean', 'count'))
+        ask: "agg is given one list of summaries, not two separate things. What goes round them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          restaurants = pd.read_csv('restaurants.csv')
+          joined = orders.merge(restaurants, on='restaurant_id')
+          print(joined.groupby('cuisine')['delivery_fee'].agg(['mean', 'sum']))
+        ask: "The first is right. Which second summary did I ask for: how many orders?"
+    walk:
+      - "Read both files, and stick the restaurants onto the orders."
+      - "Make piles by cuisine, and pick the delivery fee."
+      - "Say both summaries at once, with the spelling you were given."
+    return:
+      text: "For each city, show the average subtotal and how many orders there were, with `.agg(['mean', 'count'])`."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
+        joined = orders.merge(restaurants, on='restaurant_id')
+        print(joined.groupby('city')['subtotal'].agg(['mean', 'count']))
+      output: "mean  count\ncity                            \nBelo Horizonte  59.792629   1487\nCuritiba        61.509324    636\nRio de Janeiro  61.112348   1367\nSão Paulo       60.085795   2485"
+      narration:
+        - "Four cities, each with its average and its count: São Paulo has 2,485 orders with a subtotal, and Curitiba has 636."
+        - "Stick on, pile by city, pick the subtotal, then two summaries at once."
+      note: "Return for step 13. It carries the spelling in its own text, like the step."
+    note: "The shape thought is asked once with its spelling in the text (supplies). It is not brought back cold. The step is also the third in a row with a merge, so the new piece is the last slot."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "first-look", "text-quotes"]
+    text: "Read deliveries.csv, and look it over the way you would a stranger."
+    model: |
+      import pandas as pd
+      deliveries = pd.read_csv('deliveries.csv')
+      deliveries.info()
+    output: "<class 'pandas.DataFrame'>\nRangeIndex: 5601 entries, 0 to 5600\nData columns (total 4 columns):\n #   Column       Non-Null Count  Dtype  \n---  ------       --------------  -----  \n 0   order_id     5601 non-null   int64  \n 1   distance_km  5489 non-null   float64\n 2   rain         5601 non-null   int64  \n 3   bag_size     5601 non-null   int64  \ndtypes: float64(1), int64(3)\nmemory usage: 175.2 KB"
+    narration:
+      - "Four columns and 5,601 rows. Distance_km has 5,489 filled, so 112 are empty. The rest are full."
+      - "A report, and no print around it: the order's number, the distance, whether it rained and the bag size."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          deliveries = pd.read_csv('deliveries.csv')
+          print(deliveries.info())
+        ask: "The report ends with a word that is not part of it. What did info give back for print to show?"
+        why: "info prints its report and gives nothing back."
+      - code: |-
+          import pandas as pd
+          deliveries = pd.read_csv('deliveries.csv')
+          print(deliveries.head())
+        ask: "Those are the first rows. Which action says who the table is, column by column, and how full it is?"
+      - code: |-
+          import pandas as pd
+          deliveries = pd.read_csv('deliveries')
+          deliveries.info()
+        ask: "Python says there is no such file. What is a file's whole name?"
+    walk:
+      - "Read deliveries.csv into a table."
+      - "Ask the table who it is: the action that reports its columns, their kinds and how full each is."
+    return:
+      text: "Now the coupons file, coupons.csv. Look it over in the same way."
+      model: |
+        import pandas as pd
+        coupons = pd.read_csv('coupons.csv')
+        coupons.info()
+      output: "<class 'pandas.DataFrame'>\nRangeIndex: 4 entries, 0 to 3\nData columns (total 2 columns):\n #   Column        Non-Null Count  Dtype\n---  ------        --------------  -----\n 0   coupon_code   4 non-null      str  \n 1   discount_pct  4 non-null      int64\ndtypes: int64(1), str(1)\nmemory usage: 196.0 bytes"
+      narration:
+        - "Two columns and four rows, every one filled in. The same action, on a small table."
+        - "A report written by the table itself."
+      note: "Return for step 14."
+    note: "First look at a new table, which the learner has been told is what you do. The empty distances are noticed here and used in the closing note on ML-1. rain is stored as 0 and 1, which is why step 15 counts it with value_counts."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "value-counts", "text-quotes"]
+    text: "On how many deliveries did it rain, and on how many did it not? The rain column holds 1 for rain and 0 for none."
+    model: |
+      import pandas as pd
+      deliveries = pd.read_csv('deliveries.csv')
+      print(deliveries['rain'].value_counts())
+    output: |-
+      rain
+      0    4512
+      1    1089
+      Name: count, dtype: int64
+    narration:
+      - "4,512 deliveries without rain and 1,089 with it. One column, asked how many of each, the biggest first."
+      - "About one delivery in five had rain. A column, and value_counts."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          deliveries = pd.read_csv('deliveries.csv')
+          print(deliveries.groupby('rain').size())
+        ask: "Right numbers, but they come in the order of the names. Which word gives the biggest first, on its own?"
+      - code: |-
+          import pandas as pd
+          deliveries = pd.read_csv('deliveries.csv')
+          print(deliveries['rain'].mean())
+        ask: "That is the share with rain, one number. What shows both counts?"
+      - code: |-
+          import pandas as pd
+          deliveries = pd.read_csv('deliveries.csv')
+          print(deliveries['rain'])
+        ask: "That is the whole column. Which word counts how many of each?"
+    walk:
+      - "Read deliveries.csv into a table."
+      - "Take the rain column out."
+      - "Ask it how many of each."
+    return:
+      text: "The bag_size column says how many orders the courier carried at once. For each bag size, how many deliveries were there?"
+      model: |
+        import pandas as pd
+        deliveries = pd.read_csv('deliveries.csv')
+        print(deliveries['bag_size'].value_counts())
+      output: |-
+        bag_size
+        1    3537
+        2    1778
+        3     286
+        Name: count, dtype: int64
+      narration:
+        - "Bags of 1 are the commonest, 3,537, then 2 with 1,778, then 3 with 286."
+        - "A column asked how many of each, the biggest first."
+      note: "Return for step 15."
+    note: "value_counts on a column that holds numbers rather than words, which is what it does on a table the learner has never seen. The numbers 4,512 and 1,089 are used in step 16."
+
+  # 16
+  - kind: "classmate"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "pile-by-merged", "groupby", "size", "only-matches-survive", "name-the-result"]
+    text: |-
+      Ana wants to know whether deliveries are late more often when it rains. She adds a late column to the orders, as you did last time, and piles by rain:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+      print(orders.groupby('rain')['late'].mean())
+      ```
+
+      Python answered: KeyError: 'rain'. Ana, does the orders table have a rain column? ... No. Where did we just see one? ... In deliveries. So before she can pile by rain, the deliveries have to be stuck onto the orders, as the restaurants were when we needed a city.
+
+      To check the merge, ask for the number of deliveries in each rain pile. It should match what you saw in the last step.
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      print(joined.groupby('rain').size())
+    output: |-
+      rain
+      0    4512
+      1    1089
+      dtype: int64
+    broken: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+      print(orders.groupby('rain')['late'].mean())
+    narration:
+      - "4,512 and 1,089, the same numbers as before: the merge kept every delivery and added nothing. The rain column came from the other table, and then it made piles."
+      - "The deliveries were stuck on, and rain became a pile column. A column that lives in another table has to arrive before it can be used."
+      - "Both piles are the size they should be, so the merge is right."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          print(orders.groupby('rain').size())
+        ask: "Python still cannot find rain in the orders. What has to be done to the orders before rain is there?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='restaurant_id')
+          print(joined.groupby('rain').size())
+        ask: "Does the deliveries table have a restaurant_id column? Which column do these two tables share?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(len(joined))
+        ask: "That is one number, how many survived. Ana wanted the count in each rain pile. What makes the piles?"
+    walk:
+      - "Read the orders and the deliveries, and merge them on the order's number."
+      - "Make piles by rain, and count the rows of each pile."
+    return:
+      text: "Merge the orders with the deliveries, and count how many deliveries there were for each bag size."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        print(joined.groupby('bag_size').size())
+      output: |-
+        bag_size
+        1    3537
+        2    1778
+        3     286
+        dtype: int64
+      narration:
+        - "3,537 with a bag of 1, 1,778 with 2 and 286 with 3. The merge brought bag_size over, and then it made the piles."
+        - "The same sentence with a different pile column, which came from the other table."
+      note: "Return for step 16."
+    note: "Ana makes the slip before the learner can (rule E6), with Python's own message as the real reason. This is SQL-4's opening problem, 'the orders table has no city', with rain in the city's place. She is asked to repair it with a count, not with the closing sentence, so the closing is still the learner's to build. The merge keeps all 5,601 deliveries, so the counts are the ones from step 15."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "only-matches-survive", "pile-by-merged", "groupby", "pick-then-summarise", "several-summaries", "names-back-as-column"]
+    supplies: [".agg(['mean', 'count'])"]
+    text: "For each rain pile, show the average distance and how many deliveries, as a table that has rain as a column. The spelling is `.agg(['mean', 'count'])`."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      print(joined.groupby('rain')['distance_km'].agg(['mean', 'count']).reset_index())
+    output: |-
+      rain      mean  count
+      0     0  4.337828   4420
+      1     1  4.857250   1069
+    narration:
+      - "It rained on longer trips as well: about 4.86 km on average, against 4.34 without rain. Stick on, pile by rain, pick the distance, two summaries, the names back as a column."
+      - "A table with rain as an ordinary column and the two summaries beside it. The count is smaller than the number of deliveries, because the 112 empty distances are left out."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(joined.groupby('rain')['distance_km'].agg(['mean', 'count']))
+        ask: "That is right, but rain is still only a label on the left. What turns the pile names back into a column?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(joined.groupby('rain')['distance_km'].mean().reset_index())
+        ask: "That has the average only. How do we ask for the count in the same line?"
+    walk:
+      - "Read both files, and merge the orders with the deliveries."
+      - "Make piles by rain, pick the distance, and say both summaries."
+      - "Turn the pile names back into a column."
+    return:
+      text: "For each bag size, show the average distance and how many deliveries, as a table that has bag_size as a column, using `.agg(['mean', 'count'])`."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        print(joined.groupby('bag_size')['distance_km'].agg(['mean', 'count']).reset_index())
+      output: |-
+        bag_size      mean  count
+        0         1  4.286609   3465
+        1         2  4.563548   1742
+        2         3  5.541844    282
+      narration:
+        - "Bag sizes 1, 2 and 3, with average distances of 4.29, 4.56 and 5.54 km. The bigger the bag, the longer the trip."
+        - "Piles by bag size, two summaries, and the names back as a column."
+      note: "Return for step 17."
+    note: "Shape and names-back together, on the new table. The learner is not told that the deliveries table alone would give the same answer for the distance (it would, apart from the merge's no-op), because it is true and is a step away from the point."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "only-matches-survive", "new-column", "yes-no-as-column", "mean-of-yes-no"]
+    text: "Merge the orders with the deliveries, add a late column, and print the share of those deliveries that was late."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+      print(joined['late'].mean())
+    output: "0.4259953579717908"
+    narration:
+      - "About 0.426, the same share you got in the last lesson by keeping the delivered orders first. This time the merge did the keeping for you: the cancelled orders have no delivery, so they dropped out."
+      - "A late column on the merged table, and the average of it: the share late, over delivered orders only, because only they survived the merge."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          print(orders['late'].mean())
+        ask: "That share counts the cancelled orders as on time, and there are 399 of them. What leaves them out without a status?"
+        why: "a merge with the deliveries keeps only the delivered orders."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(joined['late'].mean())
+        ask: "Python cannot find a column called late. Where does it come from?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          joined['late'] = joined['actual_minutes'] < joined['promised_minutes']
+          print(joined['late'].mean())
+        ask: "That is the share that came early. Which way round does late compare the two times?"
+    walk:
+      - "Read both files, and merge them on the order's number."
+      - "Add a late column: was the real time more than the promised time?"
+      - "Print the average of that column."
+    return:
+      text: "Merge the orders with the deliveries, add a column called quick that says whether the order was promised in under 40 minutes, and print the share of those deliveries that were quick."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        joined['quick'] = joined['promised_minutes'] < 40
+        print(joined['quick'].mean())
+      output: "0.3395822174611676"
+      narration:
+        - "About 0.340: a third of the deliveries were promised in under 40 minutes."
+        - "A kept question, then its average, on the merged table."
+      note: "Return for step 18."
+    note: "The bridge between PD-3's late column and the closing sentence: the learner sees why merge makes the share honest, and the 0.426 is the same figure as PD-3 step 13. The first wrong answer shows the other, less honest, figure."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "new-column", "yes-no-as-column", "mean-of-yes-no", "pile-by-merged", "groupby", "pick-then-summarise", "several-summaries"]
+    supplies: [".agg(['mean', 'count'])"]
+    friction: true
+    text: "This one I won't break down. For each bag size, what share of the deliveries was late, and how many deliveries were there? The spelling is `.agg(['mean', 'count'])`."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+      print(joined.groupby('bag_size')['late'].agg(['mean', 'count']))
+    output: "mean  count\nbag_size                 \n1         0.352276   3537\n2         0.519123   1778\n3         0.758741    286"
+    narration:
+      - "A bag of 1 was late 35 times in a hundred, a bag of 2 was late 52, and a bag of 3 was late 76. The more orders a courier carries, the later the delivery. You built it from a merge, a kept question, piles and two summaries."
+      - "Stick on, add the column, pile, pick, and two things said at once. A share and a count for each pile."
+      - "Three bag sizes, three shares, and how many deliveries stand behind each."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          print(joined.groupby('bag_size')['late'].agg(['mean', 'count']))
+        ask: "Python cannot find a column called late. Where does it come from?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+          print(joined.groupby('bag_size')['late'].mean())
+        ask: "That is the share only. How do we ask for the count in the same line?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          print(orders.groupby('bag_size')['late'].agg(['mean', 'count']))
+        ask: "Does the orders table have a bag_size column? Where does it live?"
+    walk:
+      - "Read both files, merge them, and add the late column."
+      - "Make piles by bag size, pick the late column."
+      - "Say both summaries at once, with the spelling you were given."
+    return:
+      text: "For each rain pile, what share of the deliveries was late, and how many were there? Use `.agg(['mean', 'count'])`."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+        print(joined.groupby('rain')['late'].agg(['mean', 'count']))
+      output: "mean  count\nrain                 \n0     0.374778   4512\n1     0.638200   1089"
+      narration:
+        - "Without rain 0.375 of 4,512 deliveries were late, and with rain 0.638 of 1,089."
+        - "Piles by rain, a share and a count, from the merged table."
+      note: "Return for step 19. It gives away the closing figure with the counts, so it is only played after a miss, and the closing still has to be built."
+    note: "Friction (rule C9). Everything in PD-4 in one sentence, and the penultimate step: bag size is a new pile column and the shape thought returns once more. The return is the closing sentence with counts, which only plays after a miss."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "only-matches-survive", "new-column", "yes-no-as-column", "mean-of-yes-no", "pile-by-merged", "groupby", "pick-then-summarise", "pile-names-on-left"]
+    text: "The last one, from nothing. Is a delivery more often late when it rains? Show the share of late deliveries with rain and without."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      joined = orders.merge(deliveries, on='order_id')
+      joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+      print(joined.groupby('rain')['late'].mean())
+    output: |-
+      rain
+      0    0.374778
+      1    0.638200
+      Name: late, dtype: float64
+    narration:
+      - "0.375 without rain and 0.638 with it. Yes, and by a lot: deliveries are late almost twice as often in the rain. That is a business question answered from two tables by thinking: stick the deliveries on, work out which were late, pile by rain, take the share."
+      - "Merge, add the column, pile, pick, average. The merge dropped the cancelled orders, which kept the share honest, and the rain column came from the other table."
+      - "37.5 percent late when dry, 63.8 percent when it rained."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          print(orders.groupby('rain')['late'].mean())
+        ask: "Python cannot find rain in the orders. Where does rain live, and what has to happen first?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+          print(joined.groupby('rain')['actual_minutes'].mean())
+        ask: "That is how long the deliveries took, on average. The question is about lateness. Which column says whether a delivery was late?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='order_id')
+          joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+          print(joined.groupby('late')['rain'].mean())
+        ask: "Which column makes the piles, and which is the average about? We want the share late, in each rain pile."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          joined = orders.merge(deliveries, on='restaurant_id')
+          joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+          print(joined.groupby('rain')['late'].mean())
+        ask: "Does the deliveries table have a restaurant_id column? Which column do these two tables share?"
+    walk:
+      - "Read the two files, and merge the orders with the deliveries."
+      - "Add a late column: was the real time more than the promised time?"
+      - "Make piles by rain, pick the late column, and say its average."
+    return:
+      text: "From nothing: is a delivery more often late when the courier carries three orders at once? Show the share late for a bag of 3 and for the other bag sizes, as one pile each."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        joined = orders.merge(deliveries, on='order_id')
+        joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
+        print(joined.groupby('bag_size')['late'].mean())
+      output: |-
+        bag_size
+        1    0.352276
+        2    0.519123
+        3    0.758741
+        Name: late, dtype: float64
+      narration:
+        - "0.352 for a bag of 1, 0.519 for 2 and 0.759 for 3. Yes: a bag of 3 is late three times in four."
+        - "The same sentence, with another pile column, and the same method."
+      note: "Return for step 20."
+    note: "The surprise sentence, and PD-4's closing sentence in the map (pass-bar task 14): 0.375 without rain, 0.638 with it. It uses no new word: merge from step 2, the late column from PD-3, piles from PD-2. The merge is the reason the answer is honest, as step 18 showed. The return shows the same method on the other new column, and shares the bag size with step 19, so it is the one place where a return repeats a nearby step's figures."
+
+  # 21
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. Today the movements you know went across two tables. Stick one table onto another by a column they share, pile by a column that came from the other table, remember that rows with no partner drop out, say several things about each pile, and turn the pile names back into a column when the next step needs one. Then you answered a real question: it is late far more often when it rains. The merge, the piles and the share are things you have done many times now, in SQL and in Python, and it is the same table going in and a table coming out.
+
+      You are not fast, and you are not meant to be. For now the aim is that you can think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "pile-by-merged", "groupby", "size", "sort-values", "pile-names-on-left"]
+    text: "How many orders did each cuisine's restaurants get, the biggest number first? Start from nothing."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
+      joined = orders.merge(restaurants, on='restaurant_id')
+      print(joined.groupby('cuisine').size().sort_values(ascending=False))
+    output: |-
+      cuisine
+      hamburguer    1290
+      brasileira    1133
+      saudavel       969
+      japonesa       961
+      pizza          845
+      arabe          802
+      dtype: int64
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: merge, piles by a merged column, a count and a sort, on a combination never practised. Never scored (rule F1). What a miss tells the script: which of the two reads, the merge, the shared column, the piles or the sort was absent."

@@ -241,3 +241,15 @@ Result: three months, August to October 2026. The change is empty for August, mi
 
 1. **The threshold in SQL-3.** The owner left this to me and I chose 100 delivered orders, which leaves 16 restaurants. The reason is that a closing answer of two rows (at 110) shows too little of what `HAVING` does, and 16 rows shows that it keeps some piles and drops others.
 2. **`short-names` in SQL-4.** Taught, as a core thought. Interview answers nearly always write `o` and `r`.
+
+## As written, 24 Nov 2026
+
+All nine lessons are in `content/sql/`. Changes from this map, each said by the writer in the lesson's notes:
+
+- **SQL-3** keeps the threshold of 100 and its 16 restaurants. Davi's `'Pizza'` introduces `text-is-exact`, and Ana's `WHERE COUNT(*)` introduces `rows-or-piles`, with SQLite's own message.
+- **SQL-4** opens on the need (orders per city) as a give, since the question cannot be answered yet. A 360,000-row cross join shows why `ON` is needed. An aside plants the dropped rows that SQL-8 uses: orders joined to couriers gives 5,601 rows, not 6,000.
+- **SQL-5** lists `name-a-value` under `requires`, not `imports`, because an id may be introduced once. The teacher still says aloud that it is the Python idea.
+- **SQL-6** compares with `>` in the `SELECT`, giving 1 or 0, so that `row-against-pile` needs no subtraction. Subtraction belongs to SQL-9.
+- **SQL-8** gives `keep-the-empties` first on orders with no courier (399), before the coupons.
+- **SQL-7** gives the name-only `ties` a `new` on its aside, because otherwise the checker reports it as never introduced.
+- Wrong answers that gave the model result were dropped where SQLite's scan order made a "no ORDER BY" slip give identical rows.

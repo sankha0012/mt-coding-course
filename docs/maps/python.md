@@ -178,6 +178,7 @@ Assumes: PY-5.
 | 4 | `missing-is-none` | An empty cell arrives as `None`. | Core |
 | 5 | `skip-the-missing` | `if row['subtotal'] is not None:` leaves the empty ones out, which is what `AVG` did for you. | Core |
 | 6 | `read-a-file` | `csv.DictReader` turns a file into rows like these. | Shape |
+| 7 | `text-to-number` | Cells from a file are text, so `float(...)` turns one into a number. Added when written, because the closing function needs it. | Core |
 
 Closes with: the average of one column per value of another, ignoring missing values (pass-bar task 8).
 
@@ -233,7 +234,7 @@ Assumes: PY-7.
 | # | Identifier | The thought | Grade |
 |---|---|---|---|
 | 1 | `split` | `sentence.split()` cuts text into a list of words. | Core |
-| 2 | `join` | `' '.join(words)` puts a list back together. | Core |
+| 2 | `join-words` | `' '.join(words)` puts a list back together. Renamed from `join` when written, because `join` is already SQL-4's `JOIN`. | Core |
 | 3 | `tidy` | `.lower()` and `.strip()` clean text before it is compared. | Core |
 | 4 | `positions` | `range(len(words))` gives the positions themselves, for when you need to look at a neighbour. | Core |
 | 5 | `neighbours` | `words[i]` and `words[i + 1]`, stopping one short of the end. | Core |
@@ -342,3 +343,14 @@ def merge(a, b):
 
 1. **`lambda`** stays core, typed from memory in PY-7.
 2. **Merging sorted lists** stays shape grade. The teacher walks through it once, and it is not brought back cold.
+
+## As written, 24 Nov 2026
+
+All ten lessons are in `content/py/`. Changes from this map, each said by the writer in the lesson's notes:
+
+- **PY-1** teaches `show` second, before `list`, because Python prints only when told to and a program that shows nothing cannot be judged.
+- **PY-2** closes with "above 50 and under 100" on an eight-value list. With the map's list, "above 50" removed nothing, so a learner could skip the filter and still pass.
+- **PY-4** has a classmate whose `.get(dish)` shows `None` before PY-5 teaches it. It is the real reason for the default.
+- **PY-5** closes by also printing an average, and a hidden `check` confirms the function returns and does not print. `comment` and the learner's own `assert` lines cannot be verified from output, so a learner who leaves them out still passes.
+- **PY-6** closes on real subtotals: delivered 69.41 and cancelled 31.3, not the 50.0 of the map's sample rows.
+- **PY-10** judges `three-checks` weakly, since the learner's own asserts only show that they hold on their own function. `cost-in-words` is shown by counting steps. There are no infinite-loop wrong answers for `while`, because the checker would wait on them.

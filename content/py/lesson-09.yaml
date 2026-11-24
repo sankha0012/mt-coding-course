@@ -1,0 +1,1253 @@
+lesson: py-09
+title: "A loop that remembers"
+strand: py
+stage: 1
+thoughts:
+  remember-previous: "Keep the last item under a name, and give the name its new value at the end of each turn."
+  compare-with-previous: "Each item is judged against the one before it. On the first turn there is nothing before it, so ask about `None` first: `and` never looks at its second half when the first says no."
+  list-of-lists: "A result can be a list of groups, and each group is a list. Two pairs of brackets reach inside: the group first, then the item."
+  start-new-group: "When the gap is too big, put the group you are building away in the list of groups, and start a fresh empty one."
+  close-last-group: "The last group is still in your hands when the loop ends. Put it away too, if it holds anything."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "split", "tidy", "positions", "neighbours", "if-question", "equals-asks", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `follows` that takes a sentence and a word, and hands back a list of the words that come straight after that word in the sentence. Capitals do not matter."
+    check: |-
+      print(follows('The order was late and the order was cold', 'the'))
+      print(follows('late', 'late'))
+    model: |-
+      def follows(sentence, word):
+          words = sentence.lower().split()
+          result = []
+          for i in range(len(words) - 1):
+              if words[i] == word.lower():
+                  result.append(words[i + 1])
+          return result
+    output: |-
+      ['order', 'order']
+      []
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PY-8: split, tidy, positions and neighbours, plus a list built in a loop. A combination not practised. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["remember-previous"]
+    text: |-
+      Last time you looked at a word and its neighbour by going through the positions. There is another way to do it, with no positions at all. Keep the last item you saw under a name, and at the end of each turn, give that name the item you are on.
+
+      ```python
+      times = [1, 5, 9, 50, 55]
+      previous = None
+      for t in times:
+          print(previous, t)
+          previous = t
+      ```
+
+      Run it.
+    shows:
+      - |-
+        times = [1, 5, 9, 50, 55]
+        previous = None
+        for t in times:
+            print(previous, t)
+            previous = t
+    after_run: "Each line shows the item before, and the item now. On the first turn there was nothing before, and previous was None, the empty cell. The very last line of the loop is what matters: previous takes the item you are on, ready for the next turn. A loop that remembers."
+    note: "remember-previous. The same pairs as neighbours, reached another way. 'The empty cell' is PY-5's None. The line order inside the loop is the whole point, so the after_run says so."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "for-each", "new-list-in-loop", "add-to-end", "nothing", "remember-previous"]
+    text: "Write a function called `with_previous` that takes a list and hands back a list of pairs: each item, and the item before it. The first item has None before it."
+    check: "print(with_previous([1, 5, 9]))"
+    model: |-
+      def with_previous(times):
+          result = []
+          previous = None
+          for t in times:
+              result.append((previous, t))
+              previous = t
+          return result
+    output: "[(None, 1), (1, 5), (5, 9)]"
+    narration:
+      - "The item before, and the item now, as a pair, and a None in front of the first. previous was used first, and given its new value last."
+      - "Pairs of before and now. The name is given the new item at the very end of the turn."
+      - ""
+    wrong:
+      - code: |-
+          def with_previous(times):
+              result = []
+              previous = None
+              for t in times:
+                  previous = t
+                  result.append((previous, t))
+              return result
+        ask: "Look at each pair. Is the first part the item before? What was previous given before it was used?"
+        why: "previous has to keep the old item until the end of the turn. If it is given the new item first, it is the same as now."
+      - code: |-
+          def with_previous(times):
+              result = []
+              previous = None
+              for t in times:
+                  result.append((previous, t))
+              return result
+        ask: "Every pair starts with None. What gives previous a new value, and when?"
+        why: "nothing gave it one. At the end of each turn it takes the item you are on."
+      - code: |-
+          def with_previous(times):
+              result = []
+              previous = None
+              for t in times:
+                  result.append((previous, t))
+                  previous = t
+                  return result
+        ask: "How many pairs came back? Where does the return belong?"
+        why: "a return inside the loop ends the function on the first turn."
+    walk:
+      - "Start a list for the result, and make previous None."
+      - "On each turn, add a pair of previous and the item now."
+      - "Then, still inside the loop, give previous the item you are on. Hand the list back after the loop."
+    return:
+      text: "Write `with_previous_lengths`, which takes a list of words and hands back a list of pairs: the length of the word before, and the length of the word now. The first has None before it."
+      check: "print(with_previous_lengths(['the', 'order', 'was']))"
+      model: |-
+        def with_previous_lengths(words):
+            result = []
+            previous = None
+            for word in words:
+                result.append((previous, len(word)))
+                previous = len(word)
+            return result
+      output: "[(None, 3), (3, 5), (5, 3)]"
+      narration:
+        - "None and 3, then 3 and 5, then 5 and 3. What previous remembers is not the word but its length, and it still takes its new value at the end of the turn."
+        - "What is kept can be anything worked out from the item."
+      note: "Return for step 3."
+    note: "remember-previous, asked at once. The wrong answers are the real slips: updated too early, never updated, and a return in the loop."
+
+  # 4
+  - kind: "give"
+    lang: "python"
+    new: ["compare-with-previous"]
+    text: |-
+      Now something to do with it: judge each item against the one before. A new time is a big gap if it is more than 30 minutes after the one before. On the first turn there is nothing before it, so the question about None comes first, and the sum second.
+
+      ```python
+      times = [1, 5, 9, 50, 55, 120]
+      previous = None
+      for t in times:
+          if previous is not None and t - previous > 30:
+              print('a gap before', t)
+          previous = t
+      ```
+
+      Run it.
+    shows:
+      - |-
+        times = [1, 5, 9, 50, 55, 120]
+        previous = None
+        for t in times:
+            if previous is not None and t - previous > 30:
+                print('a gap before', t)
+            previous = t
+    after_run: "A gap before 50, and a gap before 120. The order inside the question matters. And looks at its first half, and if that says no, it never looks at the second. On the first turn previous is None, the first half says no, and the sum that would fail is never done."
+    note: "compare-with-previous. The short-circuit is stated as the reason for the order inside the question, so that it is a reason and not a rule to remember. Ana's slip comes next."
+
+  # 5
+  - kind: "classmate"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "if-question", "and-or", "running-result", "remember-previous", "compare-with-previous", "nothing"]
+    text: |-
+      Ana wanted to count the big gaps in a list of times. She wrote the sum first, and the question about None second:
+
+      ```python
+      times = [1, 5, 9, 50, 55, 120]
+      count = 0
+      previous = None
+      for t in times:
+          if t - previous > 30 and previous is not None:
+              count = count + 1
+          previous = t
+      print(count)
+      ```
+
+      Python stopped with: TypeError: unsupported operand type(s) for -: 'int' and 'NoneType'. Ana, what is previous on the first turn, and which half of the question is looked at first? ... None, and the sum. 1 minus nothing is not a sum. The question about None has to go first, so that the sum is skipped. Write `count_gaps`, which takes a list of times and a gap, and hands back how many times a time comes more than that gap after the one before it.
+    check: |-
+      print(count_gaps([1, 5, 9, 50, 55, 120], 30))
+      print(count_gaps([7], 30))
+      print(count_gaps([1, 6, 11], 5))
+    model: |-
+      def count_gaps(times, gap):
+          count = 0
+          previous = None
+          for t in times:
+              if previous is not None and t - previous > gap:
+                  count = count + 1
+              previous = t
+          return count
+    output: |-
+      2
+      0
+      0
+    narration:
+      - "2 gaps: before 50 and before 120. Is-not-None first, the sum second, and previous given its new value at the end of every turn, however the question went."
+      - "Count a time when it is more than the gap after the one before. A single time has no one before it, so it counts nothing."
+      - ""
+    wrong:
+      - code: |-
+          def count_gaps(times, gap):
+              count = 0
+              previous = None
+              for t in times:
+                  if t - previous > gap and previous is not None:
+                      count = count + 1
+                  previous = t
+              return count
+        ask: "Python stops with a TypeError. Which half of the question gets looked at first?"
+        why: "and looks at its first half first, and the sum with None is in it. The question about None has to be the first half."
+      - code: |-
+          def count_gaps(times, gap):
+              count = 0
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous > gap:
+                      count = count + 1
+                      previous = t
+              return count
+        ask: "Count what you get on the times 1, 5, 9, 50. When does previous ever get a value?"
+        why: "it is only given one inside the question, and the question is never yes while previous is None. It belongs at the end of the turn, outside the question."
+      - code: |-
+          def count_gaps(times, gap):
+              count = 0
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous >= gap:
+                      count = count + 1
+                  previous = t
+              return count
+        ask: "Try it with a gap of 5 on times that are exactly 5 apart. Is 5 more than 5?"
+        why: "more than is a strict question. Equal is not more."
+    walk:
+      - "Start a count at zero, and previous at None."
+      - "On each turn, ask: is previous not None, and is this time more than the gap after it? Count a yes."
+      - "At the end of the turn, give previous the time you are on."
+    return:
+      text: "Write `count_drops`, which takes a list of numbers and hands back how many times a number is smaller than the one before it."
+      check: "print(count_drops([5, 3, 8, 2]))"
+      model: |-
+        def count_drops(numbers):
+            count = 0
+            previous = None
+            for n in numbers:
+                if previous is not None and n < previous:
+                    count = count + 1
+                previous = n
+            return count
+      output: "2"
+      narration:
+        - "2 drops in 5, 3, 8, 2: 5 to 3, and 8 to 2. The same loop, with the comparison being just smaller than the one before."
+        - "A count of the numbers that fall below the one before."
+      note: "Return for step 5."
+    note: "Classmate with a real Python message (rule E6), and the learner repairs by writing the function. The third wrong answer is >= for >, caught by the last line of the check: [1, 6, 11] with a gap of 5."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "if-question", "new-list-in-loop", "add-to-end", "sorted", "last", "how-many", "empty-case", "nothing", "remember-previous", "compare-with-previous"]
+    text: "Write a function called `biggest_gap` that takes a list of times and hands back the biggest gap between a time and the one before it. If there is no gap at all, it hands back None."
+    check: |-
+      print(biggest_gap([1, 5, 9, 50, 55, 120]))
+      print(biggest_gap([7]))
+    model: |-
+      def biggest_gap(times):
+          gaps = []
+          previous = None
+          for t in times:
+              if previous is not None:
+                  gaps.append(t - previous)
+              previous = t
+          if len(gaps) == 0:
+              return None
+          return sorted(gaps)[-1]
+    output: |-
+      65
+      None
+    narration:
+      - "65: from 55 to 120. The gaps were collected, one for each time that has one before it, and the biggest is last in the sorted list."
+      - "A list of gaps, sorted, the last one. And with one time there are no gaps at all, so None, not an error."
+      - ""
+    wrong:
+      - code: |-
+          def biggest_gap(times):
+              gaps = []
+              previous = None
+              for t in times:
+                  if previous is not None:
+                      gaps.append(t - previous)
+                  previous = t
+              return sorted(gaps)[-1]
+        ask: "Try it with a single time. What is in the list of gaps, and what is its last item?"
+        why: "with one time there is nothing to take the last of. The empty case is asked about first, as with the average of nothing."
+      - code: |-
+          def biggest_gap(times):
+              gaps = []
+              previous = None
+              for t in times:
+                  if previous is not None:
+                      gaps.append(t - previous)
+                  previous = t
+              if len(gaps) == 0:
+                  return None
+              return sorted(gaps)[0]
+        ask: "That is the smallest gap. Which end of a sorted list has the biggest?"
+        why: "sorted goes upward, so the biggest is last."
+      - code: |-
+          def biggest_gap(times):
+              gaps = []
+              previous = None
+              for t in times:
+                  gaps.append(t - previous)
+                  previous = t
+              if len(gaps) == 0:
+                  return None
+              return sorted(gaps)[-1]
+        ask: "Python stops on the first time. What does the first time have before it?"
+        why: "nothing, and a sum with None fails. The question about None comes first."
+    walk:
+      - "Make a list for the gaps, and remember the previous time."
+      - "On each turn, when there is a time before it, add the difference to the list. Then give previous the time you are on."
+      - "If the list of gaps is empty, hand back None. Otherwise sort it and hand back the last."
+    return:
+      text: "Write `total_of_gaps`, which takes a list of times and hands back the total of the gaps between each time and the one before. With no gaps the total is 0."
+      check: |-
+        print(total_of_gaps([1, 5, 9, 50, 55, 120]))
+        print(total_of_gaps([7]))
+      model: |-
+        def total_of_gaps(times):
+            total = 0
+            previous = None
+            for t in times:
+                if previous is not None:
+                    total = total + (t - previous)
+                previous = t
+            return total
+      output: |-
+        119
+        0
+      narration:
+        - "119: all the gaps added up. The same loop, with a running total in place of a list. A single time has no gaps and the total stays 0."
+        - "A total, not a biggest."
+      note: "Return for step 6."
+    note: "remember-previous and the empty case (PY-5) with PY-2's sorted and last. The edge case is a list of one time, which a classmate would miss."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["list-of-lists"]
+    text: |-
+      Next, the groups. A result can be a list of groups, and each group is itself a list. So it is a list of lists. Two pairs of square brackets reach inside: the first picks the group, the second picks the item in it.
+
+      ```python
+      groups = [[1, 5, 9], [50, 55], [120]]
+      print(len(groups))
+      print(groups[1])
+      print(groups[1][0])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        groups = [[1, 5, 9], [50, 55], [120]]
+        print(len(groups))
+        print(groups[1])
+        print(groups[1][0])
+    after_run: "3 groups, then the second group, then the first item of it. It is the same two pairs of brackets as a table: a table is a list of rows, and this is a list of groups. Each one is picked by position, and positions start at zero."
+    note: "list-of-lists. Reuses table-is-list-of-rows from PY-6 (the same two brackets) and position from PY-2, which is why it needs only a give."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "list-of-lists", "pair", "for-each", "how-many", "total", "new-list-in-loop", "add-to-end"]
+    text: "Write a function called `summary` that takes a list of groups of numbers, and hands back a list of pairs: for each group, how many numbers it has and their total."
+    check: "print(summary([[1, 5, 9], [50, 55], [120]]))"
+    model: |-
+      def summary(groups):
+          result = []
+          for group in groups:
+              result.append((len(group), sum(group)))
+          return result
+    output: "[(3, 15), (2, 105), (1, 120)]"
+    narration:
+      - "3 numbers adding to 15, 2 adding to 105, 1 making 120. Each turn of the loop had a whole group in hand, and len and sum worked on it."
+      - "One pair for each group. A group is a list, so everything you know about lists works on it."
+      - ""
+    wrong:
+      - code: |-
+          def summary(groups):
+              result = []
+              for group in groups:
+                  result.append((len(groups), sum(group)))
+              return result
+        ask: "Every pair starts with 3. Which is the group you have in hand: groups, or group?"
+        why: "groups is all of them, and group is the one this turn is about."
+      - code: |-
+          def summary(groups):
+              result = []
+              for group in groups:
+                  result.append((len(group), sum(groups)))
+              return result
+        ask: "Python says it cannot add lists. What does sum need to be given: the groups, or one group?"
+        why: "sum adds up numbers, and a group is made of numbers. groups is made of lists."
+      - code: |-
+          def summary(groups):
+              result = []
+              for group in groups:
+                  result = (len(group), sum(group))
+              return result
+        ask: "One pair came back. What happens to result on each turn?"
+        why: "result is given a new value each turn instead of having a pair added to it."
+    walk:
+      - "Start an empty list, and go through the groups."
+      - "For each group, make a pair: how many items it has, and their total."
+      - "Add the pair to the list, and hand it back."
+    return:
+      text: "Write `averages`, which takes a list of groups of numbers and hands back a list with the average of each group."
+      check: "print(averages([[1, 5, 9], [50, 55], [120]]))"
+      model: |-
+        def averages(groups):
+            result = []
+            for group in groups:
+                result.append(sum(group) / len(group))
+            return result
+      output: "[5.0, 52.5, 120.0]"
+      narration:
+        - "5.0, 52.5 and 120.0. A total over a count, once for each group."
+        - "An average per group: the average from PY-1, inside a loop over groups."
+      note: "Return for step 8."
+    note: "A group is a list, so len and sum from PY-1 work on it. The wrong answers are the groups/group mix-up in two places, and overwriting."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["start-new-group"]
+    text: |-
+      Now to make the groups. Keep the group you are building in a name, `current`, and the finished ones in `groups`. When a time is more than 30 after the one before, the group in hand is finished: put it away in `groups`, and start an empty one. Then the time goes into whichever group is current.
+
+      ```python
+      times = [1, 5, 9, 50, 55, 120]
+      groups = []
+      current = []
+      previous = None
+      for t in times:
+          if previous is not None and t - previous > 30:
+              groups.append(current)
+              current = []
+          current.append(t)
+          previous = t
+      print(groups)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        times = [1, 5, 9, 50, 55, 120]
+        groups = []
+        current = []
+        previous = None
+        for t in times:
+            if previous is not None and t - previous > 30:
+                groups.append(current)
+                current = []
+            current.append(t)
+            previous = t
+        print(groups)
+    after_run: "Two groups are put away: 1, 5, 9 and 50, 55. Each time a gap showed up, the group in hand was put away and a fresh one begun. Now look at the times and look at the groups. Is every time somewhere? Keep that question for the next step."
+    note: "start-new-group. The program is deliberately unfinished, and the learner is asked in the last two sentences to look. The next step is Davi seeing it."
+
+  # 10
+  - kind: "classmate"
+    lang: "python"
+    new: ["close-last-group"]
+    text: |-
+      Davi looked at that, and said it was done. Davi, which time is not in any group? ... 120. Where is it? Still in current, in your hand. A group is put away when the next gap shows up, and after the very last time there is no next gap. So when the loop is over, put current away too. But only if it holds something: if the list of times was empty, there is no group to put away.
+
+      ```python
+      times = [1, 5, 9, 50, 55, 120]
+      groups = []
+      current = []
+      previous = None
+      for t in times:
+          if previous is not None and t - previous > 30:
+              groups.append(current)
+              current = []
+          current.append(t)
+          previous = t
+      if len(current) > 0:
+          groups.append(current)
+      print(groups)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        times = [1, 5, 9, 50, 55, 120]
+        groups = []
+        current = []
+        previous = None
+        for t in times:
+            if previous is not None and t - previous > 30:
+                groups.append(current)
+                current = []
+            current.append(t)
+            previous = t
+        if len(current) > 0:
+            groups.append(current)
+        print(groups)
+    after_run: "Three groups, and 120 is in the last one, alone. The loop ends with a group still in your hands, and it is yours to put away. This is the most common slip in this kind of question, and every programmer makes it once."
+    note: "close-last-group, through Davi's slip (rule E6). It is a wrong result and not an error, so the reason is stated in words. The guard for an empty list is included from the start so that the learner meets one version, with its reason."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "list-of-lists", "if-question", "and-or", "new-list-in-loop", "add-to-end", "how-many", "nothing", "remember-previous", "compare-with-previous", "start-new-group", "close-last-group"]
+    text: "Write a function called `rising_runs` that takes a list of numbers and cuts it into groups where each group keeps going up. A number that is not bigger than the one before it starts a new group."
+    check: |-
+      print(rising_runs([1, 3, 2, 5, 6, 4]))
+      print(rising_runs([]))
+    model: |-
+      def rising_runs(numbers):
+          groups = []
+          current = []
+          previous = None
+          for n in numbers:
+              if previous is not None and n <= previous:
+                  groups.append(current)
+                  current = []
+              current.append(n)
+              previous = n
+          if len(current) > 0:
+              groups.append(current)
+          return groups
+    output: |-
+      [[1, 3], [2, 5, 6], [4]]
+      []
+    narration:
+      - "1, 3 then 2, 5, 6 then 4. A group is put away when a number does not go up, and the last group is put away after the loop."
+      - "The same shape as a session, with a different question about the one before it. And an empty list gives no groups at all."
+      - ""
+    wrong:
+      - code: |-
+          def rising_runs(numbers):
+              groups = []
+              current = []
+              previous = None
+              for n in numbers:
+                  if previous is not None and n <= previous:
+                      groups.append(current)
+                      current = []
+                  current.append(n)
+                  previous = n
+              return groups
+        ask: "Look at the numbers and the groups together. Which number is not in any group?"
+        why: "the last group is still in hand when the loop ends. It has to be put away after it."
+      - code: |-
+          def rising_runs(numbers):
+              groups = []
+              current = []
+              previous = None
+              for n in numbers:
+                  if previous is not None and n <= previous:
+                      groups.append(current)
+                      current = []
+                  current.append(n)
+                  previous = n
+              groups.append(current)
+              return groups
+        ask: "Now try the empty list. What is in the list that comes back?"
+        why: "with no numbers, current is empty, and putting it away makes a group with nothing in it. It is put away only if it holds something."
+      - code: |-
+          def rising_runs(numbers):
+              groups = []
+              current = []
+              previous = None
+              for n in numbers:
+                  if previous is not None and n <= previous:
+                      groups.append(current)
+                  current.append(n)
+                  previous = n
+              if len(current) > 0:
+                  groups.append(current)
+              return groups
+        ask: "Look at the first group. What does it hold, and what happens to current after it is put away?"
+        why: "putting a list away does not copy it. It is the same list, still being filled, unless a fresh empty one is started."
+    walk:
+      - "Make a list for the groups, a list for the group in hand, and previous."
+      - "When there is a previous number, and this one is not bigger, put the group in hand away and start a fresh empty one. Then add the number and update previous."
+      - "After the loop, put the last group away, if it holds anything."
+    return:
+      text: "Write `falling_runs`, which takes a list of numbers and cuts it into groups where each group keeps going down. A number that is not smaller than the one before it starts a new group."
+      check: |-
+        print(falling_runs([5, 3, 4, 1]))
+        print(falling_runs([]))
+      model: |-
+        def falling_runs(numbers):
+            groups = []
+            current = []
+            previous = None
+            for n in numbers:
+                if previous is not None and n >= previous:
+                    groups.append(current)
+                    current = []
+                current.append(n)
+                previous = n
+            if len(current) > 0:
+                groups.append(current)
+            return groups
+      output: |-
+        [[5, 3], [4, 1]]
+        []
+      narration:
+        - "5, 3 then 4, 1. The same pieces, with the comparison turned round."
+        - "The mirror image: a new group where a number is not smaller."
+      note: "Return for step 11."
+    note: "The whole sentence, with a different question from the one the learner met. All three parts of the groups are at work. The empty list is in the check on purpose."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "if-question", "running-result", "build-average", "empty-case", "nothing", "remember-previous", "compare-with-previous"]
+    text: "Write a function called `average_gap` that takes a list of times and hands back the average of the gaps between each time and the one before. If there are fewer than two times it hands back None."
+    check: |-
+      print(average_gap([1, 5, 9, 50, 55, 120]))
+      print(average_gap([]))
+      print(average_gap([7]))
+    model: |-
+      def average_gap(times):
+          total = 0
+          count = 0
+          previous = None
+          for t in times:
+              if previous is not None:
+                  total = total + (t - previous)
+                  count = count + 1
+              previous = t
+          if count == 0:
+              return None
+          return total / count
+    output: |-
+      23.8
+      None
+      None
+    narration:
+      - "23.8: 119 over 5 gaps. Note that there are five gaps for six times, one fewer, and that is what the count says."
+      - "A total and a count, both grown only when there is a time before. Then the average, or None when nothing was counted."
+      - ""
+    wrong:
+      - code: |-
+          def average_gap(times):
+              total = 0
+              count = 0
+              previous = None
+              for t in times:
+                  if previous is not None:
+                      total = total + (t - previous)
+                  count = count + 1
+                  previous = t
+              if count == 0:
+                  return None
+              return total / count
+        ask: "You divided by 6, the number of times. How many gaps are there?"
+        why: "the first time has no gap before it, so there is one fewer gap than times. The count grows in the same question as the total."
+      - code: |-
+          def average_gap(times):
+              total = 0
+              count = 0
+              previous = None
+              for t in times:
+                  if previous is not None:
+                      total = total + (t - previous)
+                      count = count + 1
+                  previous = t
+              return total / count
+        ask: "Try the empty list. What does Python say about the division?"
+        why: "with no gaps, the count is zero and there is no average. The empty case is asked about first."
+      - code: |-
+          def average_gap(times):
+              total = 0
+              count = 0
+              previous = None
+              for t in times:
+                  if previous is not None:
+                      total = total + t
+                      count = count + 1
+                  previous = t
+              if count == 0:
+                  return None
+              return total / count
+        ask: "Look at what was added to the total. Is that the gap?"
+        why: "the gap is the difference between this time and the one before. The time itself is not a gap."
+    walk:
+      - "Keep a total and a count, both starting at zero, and a previous."
+      - "When there is a previous time, add the gap to the total and one to the count. At the end of the turn update previous."
+      - "If nothing was counted, hand back None. Otherwise the total over the count."
+    return:
+      text: "Write `count_close`, which takes a list of times and a limit, and hands back how many times a time is within the limit of the one before it, meaning no more than the limit."
+      check: "print(count_close([1, 5, 9, 50, 55, 120], 10))"
+      model: |-
+        def count_close(times, limit):
+            count = 0
+            previous = None
+            for t in times:
+                if previous is not None and t - previous <= limit:
+                    count = count + 1
+                previous = t
+            return count
+      output: "3"
+      narration:
+        - "3 of the 5 gaps are within 10: 4, 4 and 5. The same loop, counting the small ones where before it counted the big."
+        - "A count of the gaps that pass a question."
+      note: "Return for step 12."
+    note: "Spacing for build-average and empty-case from PY-5 inside the new loop. The wrong answers are the count that grows outside the question, the empty case, and adding the time and not the gap."
+
+  # 13
+  - kind: "aside"
+    text: "Only interesting. This shape of loop, where you keep the last thing, compare, put a group away and finish with the one in your hands, is how a website works out how many visits it had. A visit is a run of clicks with no long gap in it. The gap is a choice, and thirty minutes is a common one."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "pair", "if-question", "and-or", "new-list-in-loop", "add-to-end", "nothing", "remember-previous", "compare-with-previous"]
+    text: "Write a function called `drops` that takes a list of numbers and hands back a list of pairs: each number that is smaller than the one before it, with that earlier number first."
+    check: "print(drops([5, 3, 8, 2]))"
+    model: |-
+      def drops(numbers):
+          result = []
+          previous = None
+          for n in numbers:
+              if previous is not None and n < previous:
+                  result.append((previous, n))
+              previous = n
+          return result
+    output: "[(5, 3), (8, 2)]"
+    narration:
+      - "(5, 3) and (8, 2): the number before, then the one that fell. Each falling number was caught by a question about the one before it."
+      - "A pair of before and now, but only when it dropped."
+      - ""
+    wrong:
+      - code: |-
+          def drops(numbers):
+              result = []
+              previous = None
+              for n in numbers:
+                  if previous is not None and n < previous:
+                      result.append((n, previous))
+                  previous = n
+              return result
+        ask: "Which should be first in each pair, the one before or the one that fell?"
+        why: "the question asked for the earlier number first."
+      - code: |-
+          def drops(numbers):
+              result = []
+              previous = None
+              for n in numbers:
+                  if n < previous:
+                      result.append((previous, n))
+                  previous = n
+              return result
+        ask: "Python says it cannot compare a number with None. What is previous on the first turn?"
+        why: "None cannot be compared. The question about None goes first."
+      - code: |-
+          def drops(numbers):
+              result = []
+              previous = None
+              for n in numbers:
+                  previous = n
+                  if previous is not None and n < previous:
+                      result.append((previous, n))
+              return result
+        ask: "Nothing is ever smaller than itself. What is previous when the question is asked?"
+        why: "it was already given the new number. It is updated at the end of the turn."
+    walk:
+      - "Make a list for the pairs, and previous."
+      - "When there is a previous number and this one is smaller, add a pair: previous first, this number second."
+      - "At the end of the turn, update previous. Then hand the list back."
+    return:
+      text: "Write `jumps_over`, which takes a list of numbers and a size, and hands back a list of pairs: each number that is more than the size above the one before it, with that earlier number first."
+      check: "print(jumps_over([1, 5, 9, 50, 55, 120], 30))"
+      model: |-
+        def jumps_over(numbers, size):
+            result = []
+            previous = None
+            for n in numbers:
+                if previous is not None and n - previous > size:
+                    result.append((previous, n))
+                previous = n
+            return result
+      output: "[(9, 50), (55, 120)]"
+      narration:
+        - "(9, 50) and (55, 120): the numbers either side of a big jump. A difference compared to a size, with the pair kept."
+        - "A pair for each big jump."
+      note: "Return for step 14."
+    note: "remember-previous and compare-with-previous again, with a pair as the answer (PY-7). Spacing: this is the third return of the loop that remembers, and the learner has had to name every part."
+
+  # 15
+  - kind: "classmate"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "list-of-lists", "if-question", "and-or", "new-list-in-loop", "add-to-end", "how-many", "nothing", "remember-previous", "compare-with-previous", "start-new-group", "close-last-group"]
+    text: |-
+      Ana wanted to cut a list of statuses into runs of the same status. She was quick, and put the line that updates previous inside the question:
+
+      ```python
+      def runs_of(items):
+          groups = []
+          current = []
+          previous = None
+          for item in items:
+              if previous is not None and item != previous:
+                  groups.append(current)
+                  current = []
+                  previous = item
+              current.append(item)
+          if len(current) > 0:
+              groups.append(current)
+          return groups
+      ```
+
+      On delivered, delivered, cancelled, delivered it gave one big group with all four. No error. Ana, when is previous first given a value? ... Only inside the question. And the question needs previous to have one already. So it never does. Previous is updated at the end of every turn, outside the question. Write `runs_of`, which takes a list of items and hands back the runs of equal items, each as a list.
+    check: |-
+      print(runs_of(['delivered', 'delivered', 'cancelled', 'delivered']))
+      print(runs_of([]))
+      print(runs_of(['x']))
+    model: |-
+      def runs_of(items):
+          groups = []
+          current = []
+          previous = None
+          for item in items:
+              if previous is not None and item != previous:
+                  groups.append(current)
+                  current = []
+              current.append(item)
+              previous = item
+          if len(current) > 0:
+              groups.append(current)
+          return groups
+    output: |-
+      [['delivered', 'delivered'], ['cancelled'], ['delivered']]
+      []
+      [['x']]
+    narration:
+      - "Two delivered, then one cancelled, then one delivered: three runs. previous is given the item on every turn, so it is never stuck at None."
+      - "A new run starts where an item is different from the one before. The last run is put away after the loop."
+      - ""
+    wrong:
+      - code: |-
+          def runs_of(items):
+              groups = []
+              current = []
+              previous = None
+              for item in items:
+                  if previous is not None and item != previous:
+                      groups.append(current)
+                      current = []
+                      previous = item
+                  current.append(item)
+              if len(current) > 0:
+                  groups.append(current)
+              return groups
+        ask: "That is Ana's. Where does previous first get a value, and when does the question first say yes?"
+        why: "the question needs previous to be something, and only the question gives it a value."
+      - code: |-
+          def runs_of(items):
+              groups = []
+              current = []
+              previous = None
+              for item in items:
+                  if previous is not None and item == previous:
+                      groups.append(current)
+                      current = []
+                  current.append(item)
+                  previous = item
+              if len(current) > 0:
+                  groups.append(current)
+              return groups
+        ask: "Look at which items got split apart. Is a new run meant to start on a match, or on a difference?"
+        why: "a run is a stretch of equal items, so it ends where one is different. != asks whether they differ."
+    walk:
+      - "Make a list for the runs, a list for the run in hand, and previous."
+      - "When there is a previous item and this one differs from it, put the run in hand away and start a fresh one. Then add the item, and update previous."
+      - "After the loop, put the last run away, if it holds anything."
+    return:
+      text: "Write `runs_by_length`, which takes a list of words and cuts it into runs of words of the same length, each run as a list."
+      check: "print(runs_by_length(['the', 'was', 'order', 'late', 'bao']))"
+      model: |-
+        def runs_by_length(words):
+            groups = []
+            current = []
+            previous = None
+            for word in words:
+                if previous is not None and len(word) != len(previous):
+                    groups.append(current)
+                    current = []
+                current.append(word)
+                previous = word
+            if len(current) > 0:
+                groups.append(current)
+            return groups
+      output: "[['the', 'was'], ['order'], ['late'], ['bao']]"
+      narration:
+        - "The two three-letter words, the and was, was share a run of three letters, then order, then late, then bao: four runs. What was compared was the length of the word and of the word before."
+        - "Runs of words of the same size."
+      note: "Return for step 15."
+    note: "A classmate slip with no Python message (the output is wrong, shown in words), then the learner writes the whole function. The model is the learner's own fourth use of the groups pattern, with a question about equality. != is used here as the question that two things differ. It is not new: PY-1's equals-asks, turned round."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "list-of-lists", "for-each", "new-list-in-loop", "add-to-end", "position", "last"]
+    text: "Write a function called `spans` that takes a list of groups of times, and hands back how long each group lasts: its last time minus its first."
+    check: "print(spans([[1, 5, 9], [50, 55], [120]]))"
+    model: |-
+      def spans(groups):
+          result = []
+          for group in groups:
+              result.append(group[-1] - group[0])
+          return result
+    output: "[8, 5, 0]"
+    narration:
+      - "8, 5 and 0. Each group had its last item and its first item taken, and the difference is how long it went on. A group of one lasts 0."
+      - "One number for each group: from the first time in it to the last."
+      - ""
+    wrong:
+      - code: |-
+          def spans(groups):
+              result = []
+              for group in groups:
+                  result.append(group[0] - group[-1])
+              return result
+        ask: "Are those numbers positive? Which is the later time, and which should come first in the subtraction?"
+        why: "the last is the later one, so it goes first in a subtraction that should be positive."
+      - code: |-
+          def spans(groups):
+              result = []
+              for group in groups:
+                  result.append(groups[-1] - groups[0])
+              return result
+        ask: "Python says it cannot subtract lists. Which is the group in hand: groups, or group?"
+        why: "groups is every group. group is the one this turn is about, and its items are the times."
+      - code: |-
+          def spans(groups):
+              result = []
+              for group in groups:
+                  result.append(group[1] - group[0])
+              return result
+        ask: "Try the group with one time. What is at position 1 in a group of one?"
+        why: "there is no second item, so Python stops. The last item is group[-1], and it works for any size."
+    walk:
+      - "Go through the groups, keeping a list for the answers."
+      - "For each group, take its last item and its first."
+      - "Add the difference to the list, and hand it back."
+    return:
+      text: "Write `starts_and_ends`, which takes a list of groups of times and hands back a list of pairs: the first time and the last time of each group."
+      check: "print(starts_and_ends([[1, 5, 9], [50, 55], [120]]))"
+      model: |-
+        def starts_and_ends(groups):
+            result = []
+            for group in groups:
+                result.append((group[0], group[-1]))
+            return result
+      output: "[(1, 9), (50, 55), (120, 120)]"
+      narration:
+        - "(1, 9), (50, 55) and (120, 120). A pair for each group, built from its two ends."
+        - "The two ends of each group, kept together as a pair."
+      note: "Return for step 16."
+    note: "list-of-lists and position/last from PY-2. A group of one lasts 0, which is the edge a classmate would miss, and it is in the check."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "if-question", "and-or", "running-result", "nothing", "remember-previous", "compare-with-previous", "start-new-group"]
+    text: "Write a function called `count_sessions` that takes a list of times and a gap, and hands back how many groups the times make, when a new group starts wherever a time is more than the gap after the one before. Do not build the groups, only count them."
+    check: |-
+      print(count_sessions([1, 5, 9, 50, 55, 120], 30))
+      print(count_sessions([], 30))
+      print(count_sessions([7], 30))
+    model: |-
+      def count_sessions(times, gap):
+          count = 0
+          previous = None
+          for t in times:
+              if previous is None or t - previous > gap:
+                  count = count + 1
+              previous = t
+          return count
+    output: |-
+      3
+      0
+      1
+    narration:
+      - "3 sessions. The first time starts one, and so does each time that comes after a big gap. With no times there are none."
+      - "A new session starts at the very first time, or after a gap. Or looks at its first half, and if that says yes, it never does the sum, so None is safe here too."
+      - ""
+    wrong:
+      - code: |-
+          def count_sessions(times, gap):
+              count = 0
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous > gap:
+                      count = count + 1
+                  previous = t
+              return count
+        ask: "That counts the gaps. How many sessions are there if there are two gaps?"
+        why: "the first session has no gap before it. The first time starts one, and each gap starts another, so there is one more session than gaps."
+      - code: |-
+          def count_sessions(times, gap):
+              count = 1
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous > gap:
+                      count = count + 1
+                  previous = t
+              return count
+        ask: "Try it with no times at all. How many sessions did it say?"
+        why: "starting at 1 gives one session even when there are no times. The first time starts one, in the loop, so none start from nothing."
+      - code: |-
+          def count_sessions(times, gap):
+              count = 0
+              previous = None
+              for t in times:
+                  if t - previous > gap or previous is None:
+                      count = count + 1
+                  previous = t
+              return count
+        ask: "Python stops with a TypeError. Which half of the question is looked at first, and what happens to it on the first turn?"
+        why: "or looks at its first half, and if that says yes it stops. The question about None has to come first, so that the sum is not done on it."
+    walk:
+      - "Start a count at zero, and previous at None."
+      - "A time starts a session if there is nothing before it, or if it is more than the gap after the one before. Count it when it does."
+      - "At the end of the turn, update previous. Hand back the count."
+    return:
+      text: "Write `count_streaks`, which takes a list of numbers and hands back how many groups it makes when a number that is not bigger than the one before it starts a new group."
+      check: |-
+        print(count_streaks([1, 3, 2, 5, 6, 4]))
+        print(count_streaks([]))
+      model: |-
+        def count_streaks(numbers):
+            count = 0
+            previous = None
+            for n in numbers:
+                if previous is None or n <= previous:
+                    count = count + 1
+                previous = n
+            return count
+      output: |-
+        3
+        0
+      narration:
+        - "3 groups: 1, 3 then 2, 5, 6 then 4. The first number starts one, and so does each number that does not go up."
+        - "The count of the groups, without building them."
+      note: "Return for step 17."
+    note: "The same question as the closing sentence, answered with a number. The or short-circuit is the mirror of the and in step 4 and gets its reason here, as the third wrong answer. The first time starts a session, which is why the count starts at zero."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "list-of-lists", "if-question", "and-or", "new-list-in-loop", "add-to-end", "how-many", "nothing", "remember-previous", "compare-with-previous", "start-new-group", "close-last-group"]
+    friction: true
+    text: "This is the one I won't break down. Write a function called `sessions` that takes a list of times, in minutes, and a gap, and hands back the times in groups. A time that is more than the gap after the one before it starts a new group."
+    check: |-
+      print(sessions([1, 5, 9, 50, 55, 120], 30))
+      print(sessions([], 30))
+      print(sessions([7], 30))
+      print(sessions([0, 30, 60], 30))
+    model: |-
+      def sessions(times, gap):
+          groups = []
+          current = []
+          previous = None
+          for t in times:
+              if previous is not None and t - previous > gap:
+                  groups.append(current)
+                  current = []
+              current.append(t)
+              previous = t
+          if len(current) > 0:
+              groups.append(current)
+          return groups
+    output: |-
+      [[1, 5, 9], [50, 55], [120]]
+      []
+      [[7]]
+      [[0, 30, 60]]
+    narration:
+      - "That is a real interview question, and you made it by thinking: remember the last time, judge each against it, put a group away when the gap is too big, and put the last one away at the end. Three groups, and the last is alone."
+      - "[1, 5, 9], [50, 55] and [120]. A group in hand, a list of finished ones, and the one before. Every line was one you had written."
+      - "It is the shape behind every question that cuts a list into runs."
+    wrong:
+      - code: |-
+          def sessions(times, gap):
+              groups = []
+              current = []
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous > gap:
+                      groups.append(current)
+                      current = []
+                  current.append(t)
+                  previous = t
+              return groups
+        ask: "Count the groups, and then the times in them. Which time has gone missing?"
+        why: "the last group is still in hand when the loop ends."
+      - code: |-
+          def sessions(times, gap):
+              groups = []
+              current = []
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous > gap:
+                      groups.append(current)
+                      current = []
+                  current.append(t)
+                  previous = t
+              groups.append(current)
+              return groups
+        ask: "Try the empty list. What comes back?"
+        why: "with no times the group in hand is empty, and it is put away only if it holds something."
+      - code: |-
+          def sessions(times, gap):
+              groups = []
+              current = []
+              previous = None
+              for t in times:
+                  if previous is not None and t - previous >= gap:
+                      groups.append(current)
+                      current = []
+                  current.append(t)
+                  previous = t
+              if len(current) > 0:
+                  groups.append(current)
+              return groups
+        ask: "Look at the times 0, 30, 60 with a gap of 30. Is 30 more than 30?"
+        why: "the question was more than the gap, and equal is not more."
+    walk:
+      - "Make a list for the finished groups, a list for the group in hand, and previous."
+      - "On each time: if there is a previous and this time is too far from it, put the group away and start a fresh one. Then add the time, and update previous."
+      - "After the loop, put the last group away, if it holds anything."
+    return:
+      text: "Write `blocks`, which takes a list of times and a gap, and hands back the times in groups. A time that is the gap or more after the one before it starts a new group."
+      check: |-
+        print(blocks([0, 30, 60], 30))
+        print(blocks([], 30))
+      model: |-
+        def blocks(times, gap):
+            groups = []
+            current = []
+            previous = None
+            for t in times:
+                if previous is not None and t - previous >= gap:
+                    groups.append(current)
+                    current = []
+                current.append(t)
+                previous = t
+            if len(current) > 0:
+                groups.append(current)
+            return groups
+      output: |-
+        [[0], [30], [60]]
+        []
+      narration:
+        - "Three separate groups from 0, 30 and 60: 30 is the gap, and the gap or more starts a new group. The one change from sessions is the sign."
+        - "Where the gap is exactly the limit, this one cuts and sessions does not."
+      note: "Return for step 18. The result differs from the step's only because of the boundary."
+    note: "The closing sentence of PY-9 and pass-bar task 11, unbroken (friction). The check adds the empty list, a single time, and a gap exactly equal to the limit: the three edges a classmate would miss. The map's expected [[1, 5, 9], [50, 55], [120]] is the first line of the check."
+
+  # 19
+  - kind: "give"
+    lang: "python"
+    text: |-
+      Now try it on real times. These are the minutes after midnight at which the first thirteen orders of 1 August were placed. I turned the times in the file into minutes for you. Here they go through the function you wrote, with a gap of an hour.
+
+      ```python
+      def sessions(times, gap):
+          groups = []
+          current = []
+          previous = None
+          for t in times:
+              if previous is not None and t - previous > gap:
+                  groups.append(current)
+                  current = []
+              current.append(t)
+              previous = t
+          if len(current) > 0:
+              groups.append(current)
+          return groups
+
+      times = [0, 68, 75, 131, 141, 163, 165, 203, 204, 220, 220, 305, 358]
+      for group in sessions(times, 60):
+          print(len(group), group[0], group[-1])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def sessions(times, gap):
+            groups = []
+            current = []
+            previous = None
+            for t in times:
+                if previous is not None and t - previous > gap:
+                    groups.append(current)
+                    current = []
+                current.append(t)
+                previous = t
+            if len(current) > 0:
+                groups.append(current)
+            return groups
+
+        times = [0, 68, 75, 131, 141, 163, 165, 203, 204, 220, 220, 305, 358]
+        for group in sessions(times, 60):
+            print(len(group), group[0], group[-1])
+    after_run: "Three sessions: the order at midnight, on its own, then ten orders from 68 to 220, then two from 305 to 358. The first gap was 68 minutes, over the hour, so it was cut. Same function, a different gap, a different answer. This is how a row of timestamps becomes sessions, and it comes back with pandas."
+    note: "The function on real times. The 13 minutes are from the first 13 rows of orders.csv (00:00, 01:08, 01:15, 02:11, 02:21, 02:43, 02:45, 03:23, 03:24, 03:40, 03:40, 05:05, 05:58). The output was run: 1 0 0 / 10 68 220 / 2 305 358."
+
+  # 20
+  - kind: "recap"
+    text: |-
+      Stop there. Today a loop learned to remember: it kept the last item, judged each one against it, and updated it at the end of every turn. Then it learned to keep groups: put one away when the gap was too big, start a fresh one, and put the last away when the loop ended.
+
+      You are not fast at this, and you are not meant to be. This is acquisition. Don't go over any of it before next time. One question, cold, and then we stop.
+
+  # 21
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "list-of-lists", "if-question", "and-or", "new-list-in-loop", "add-to-end", "nothing", "remember-previous", "compare-with-previous", "start-new-group", "close-last-group"]
+    text: "Write a function called `same_status_runs` that takes a list of statuses and hands back how many runs of equal statuses it has, and how long the longest run is, as a pair. An empty list gives (0, 0)."
+    check: |-
+      print(same_status_runs(['delivered', 'delivered', 'cancelled', 'delivered', 'delivered', 'delivered']))
+      print(same_status_runs([]))
+    model: |-
+      def same_status_runs(statuses):
+          groups = []
+          current = []
+          previous = None
+          for s in statuses:
+              if previous is not None and s != previous:
+                  groups.append(current)
+                  current = []
+              current.append(s)
+              previous = s
+          if len(current) > 0:
+              groups.append(current)
+          if len(groups) == 0:
+              return (0, 0)
+          longest = sorted(groups, key=lambda g: len(g))[-1]
+          return (len(groups), len(longest))
+    output: |-
+      (3, 3)
+      (0, 0)
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: the groups pattern with PY-7's lambda and a pair as the answer, on a combination not yet practised. Never scored."

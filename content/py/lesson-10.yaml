@@ -1,0 +1,1033 @@
+lesson: py-10
+title: "Say it shorter, say its cost"
+strand: py
+stage: 1
+thoughts:
+  one-line-list: "`[s for s in subtotals if s > 50]` is the loop, the question and the adding, in one line. What to collect comes first."
+  each-thing-once: "`set(items)` keeps each thing once, in no particular order."
+  cost-in-words: "One pass is linear. A loop inside a loop is quadratic. Looking a name up in a dict costs the same however big it is. Sorting costs a little more than one pass."
+  three-checks: "Three checks for any function: the ordinary case, the empty case, and the awkward case."
+  while-loop: {text: "`while` repeats for as long as its question says yes.", grade: shape}
+  two-positions: {text: "Two positions move through two sorted lists, and the smaller item is taken each time.", grade: shape}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "new-list-in-loop", "add-to-end", "if-question", "and-or", "nothing", "remember-previous", "compare-with-previous", "start-new-group"]
+    text: "Write a function called `session_starts` that takes a list of times and a gap, and hands back the first time of each session: a time starts one if it is the very first, or more than the gap after the one before."
+    check: |-
+      print(session_starts([1, 5, 9, 50, 55, 120], 30))
+      print(session_starts([], 30))
+    model: |-
+      def session_starts(times, gap):
+          starts = []
+          previous = None
+          for t in times:
+              if previous is None or t - previous > gap:
+                  starts.append(t)
+              previous = t
+          return starts
+    output: |-
+      [1, 50, 120]
+      []
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PY-9: the loop that remembers, with the start of a group as the question. A combination not practised. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["one-line-list"]
+    text: |-
+      You have written this loop many times: start an empty list, go through something, ask a question, add on a yes. Python has a way to say all of that in one line. Here is the loop, and under it the one line that does the same.
+
+      ```python
+      subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+
+      kept = []
+      for s in subtotals:
+          if s > 50:
+              kept.append(s)
+      print(kept)
+
+      print([s for s in subtotals if s > 50])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
+
+        kept = []
+        for s in subtotals:
+            if s > 50:
+                kept.append(s)
+        print(kept)
+
+        print([s for s in subtotals if s > 50])
+    after_run: "The same list twice. Read the one line from the middle out: for each s in subtotals, if s is above 50, and in front goes what to collect, here just s. The brackets make it a list. What to collect, the loop, the question. It is the loop and nothing else, so keep the loop in your head and the line follows."
+    note: "one-line-list. The learner has just written the loop many times, so the line is the same thing said shorter. SELECT s FROM subtotals WHERE s > 50 is the SQL echo, and it is in the after_run only as the reading order."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "one-line-list", "if-question"]
+    text: "Write a function called `above` that takes a list of values and a limit, and hands back the values that are above the limit, in one line."
+    check: "print(above([81.1, 18.85, 84.23, 91.11, 31.3], 50))"
+    model: |-
+      def above(values, limit):
+          return [v for v in values if v > limit]
+    output: "[81.1, 84.23, 91.11]"
+    narration:
+      - "Three values come back: the ones that passed. What to collect, the loop, the question, all in one pair of brackets."
+      - "That is the loop from before, folded into a line."
+      - ""
+    wrong:
+      - code: |-
+          def above(values, limit):
+              return [v > limit for v in values]
+        ask: "That is a list of True and False, one for each value. What goes in front: the question, or what you want to collect?"
+        why: "the front is what to collect. The question goes at the end, where it keeps or drops."
+      - code: |-
+          def above(values, limit):
+              return [v if v > limit for v in values]
+        ask: "Python calls that a syntax error. Where does the question go in the one-line version?"
+        why: "at the end, after the loop part. The loop part comes first, then the question."
+      - code: |-
+          def above(values, limit):
+              return [v for v in values] if v > limit
+        ask: "Python says v is not defined. Where does v exist?"
+        why: "v is only a name inside the brackets. The question has to be inside them too."
+    walk:
+      - "Say it as a loop first: for each v in values, if v is above the limit, collect v."
+      - "Put the thing to collect at the front."
+      - "Then the loop part, then the question, all inside square brackets."
+    return:
+      text: "Write `below`, which takes a list of values and a limit, and hands back the values that are below the limit, in one line."
+      check: "print(below([81.1, 18.85, 84.23, 91.11, 31.3], 50))"
+      model: |-
+        def below(values, limit):
+            return [v for v in values if v < limit]
+      output: "[18.85, 31.3]"
+      narration:
+        - "18.85 and 31.3 are the two below 50. The same line with the question turned round."
+        - "A smaller-than question in the same one line."
+      note: "Return for step 3."
+    note: "one-line-list asked at once, straight after the give. The three wrong answers are the real slips in order of how common they are."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "one-line-list", "if-question", "how-many"]
+    text: "Write a function called `lengths_over` that takes a list of words and a number n, and hands back the lengths of the words that have more than n letters, in one line. What gets collected is not the word."
+    check: "print(lengths_over(['pizza', 'coca', 'burger', 'bao'], 3))"
+    model: |-
+      def lengths_over(words, n):
+          return [len(w) for w in words if len(w) > n]
+    output: "[5, 4, 6]"
+    narration:
+      - "5, 4 and 6: the lengths of pizza, coca and burger. Bao was left out by the question. What is at the front can be worked out from the item, and need not be the item."
+      - "The thing collected was the length, and the question was about the length as well."
+      - ""
+    wrong:
+      - code: |-
+          def lengths_over(words, n):
+              return [w for w in words if len(w) > n]
+        ask: "Those are the words. What did I ask to get back?"
+        why: "the front says what to collect. It is len(w) here."
+      - code: |-
+          def lengths_over(words, n):
+              return [len(w) for w in words if w > n]
+        ask: "Python says it cannot compare text with a number. What is the question being asked about?"
+        why: "the question is about the length of the word, so it has to use len(w) too."
+      - code: |-
+          def lengths_over(words, n):
+              return [len(w) if len(w) > n for w in words]
+        ask: "Where does the question go in the one-line version?"
+        why: "at the end, after the loop part."
+    walk:
+      - "Say it as a loop: for each word, if its length is more than n, collect its length."
+      - "What gets collected goes in front."
+      - "Then the loop part and the question."
+    return:
+      text: "Write `lengths_under`, which takes a list of words and a number n, and hands back the lengths of the words that have fewer than n letters, in one line."
+      check: "print(lengths_under(['pizza', 'coca', 'burger', 'bao'], 4))"
+      model: |-
+        def lengths_under(words, n):
+            return [len(w) for w in words if len(w) < n]
+      output: "[3]"
+      narration:
+        - "Just 3, for bao. The same line, turned round."
+        - "The lengths of the short words."
+      note: "Return for step 4."
+    note: "The front slot is no longer just the loop name. It is a second use of the line, with a change in two places: front and question."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "one-line-list", "if-question", "equals-asks", "table-is-list-of-rows", "cell"]
+    text: "Rows are dicts, so a line can reach into them. Write a function called `ids_where` that takes the rows of a table and a status, and hands back the order_id of each row that has that status, in one line."
+    check: |-
+      print(ids_where([
+          {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+          {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+          {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+          {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23},
+      ], 'delivered'))
+    model: |-
+      def ids_where(rows, status):
+          return [row['order_id'] for row in rows if row['status'] == status]
+    output: "[104843, 101248, 103434]"
+    narration:
+      - "Three ids: the delivered ones. The question asked each row about its status, and what was collected was a different cell of it. That is SELECT order_id FROM orders WHERE status = 'delivered'."
+      - "For each row, if its status matches, collect its id."
+      - ""
+    wrong:
+      - code: |-
+          def ids_where(rows, status):
+              return [row['order_id'] for row in rows if row['status'] = status]
+        ask: "Python calls that a syntax error. What does a question use?"
+        why: "one equals sign gives a name. Two ask."
+      - code: |-
+          def ids_where(rows, status):
+              return [row for row in rows if row['status'] == status]
+        ask: "Those are whole rows. What did I ask to get back from each?"
+        why: "the front says what to collect, and it is the id."
+      - code: |-
+          def ids_where(rows, status):
+              return [row['order_id'] for row in rows if status == 'delivered']
+        ask: "Ask it for cancelled. What does the question look at?"
+        why: "the question has to be about the row in hand, and the status you were given is the same for every row."
+    walk:
+      - "Say it as a loop through the rows: if the row's status is the one asked for, collect its id."
+      - "What to collect goes in front: the row's order_id."
+      - "Then the loop part, and the question about the row's status."
+    return:
+      text: "Write `big_ids`, which takes the rows of a table and a limit, and hands back the order_id of each row with a subtotal above the limit, in one line."
+      check: |-
+        print(big_ids([
+            {'order_id': 104843, 'status': 'delivered', 'subtotal': 81.1},
+            {'order_id': 102388, 'status': 'cancelled', 'subtotal': 31.3},
+            {'order_id': 101248, 'status': 'delivered', 'subtotal': 57.72},
+            {'order_id': 103434, 'status': 'delivered', 'subtotal': 84.23},
+        ], 60))
+      model: |-
+        def big_ids(rows, limit):
+            return [row['order_id'] for row in rows if row['subtotal'] > limit]
+      output: "[104843, 103434]"
+      narration:
+        - "The two orders above 60: 104843 and 103434. A question about a number, with an id collected."
+        - "Collect the id where the subtotal passes."
+      note: "Return for step 5."
+    note: "PY-6's rows with the one-line form. The first wrong answer is the key mistake from PY-1, kept alive."
+
+  # 6
+  - kind: "give"
+    lang: "python"
+    new: ["each-thing-once"]
+    text: |-
+      Another small tool: `set`. Give it a list and it keeps each thing once. It does not keep any order, so when the order matters, sort it.
+
+      ```python
+      items = ['pizza', 'coca', 'pizza', 'sushi', 'coca']
+      print(len(set(items)))
+      print(sorted(set(items)))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        items = ['pizza', 'coca', 'pizza', 'sushi', 'coca']
+        print(len(set(items)))
+        print(sorted(set(items)))
+    after_run: "3 different things, and the three of them in alphabetical order. A set is for the question of what is there, and not in what order. It is the same idea as SELECT DISTINCT in SQL."
+    note: "each-thing-once. Sorted is used so that the printed output is stable (a set has no order). The SQL import is DISTINCT, named in the after_run."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "each-thing-once", "how-many"]
+    text: "Write a function called `how_many_kinds` that takes a list of items and hands back how many different items it holds."
+    check: "print(how_many_kinds(['pizza', 'coca', 'pizza', 'sushi', 'coca']))"
+    model: |-
+      def how_many_kinds(items):
+          return len(set(items))
+    output: "3"
+    narration:
+      - "3 different dishes, from 5 items. Duplicates were dropped, then counted."
+      - "Each thing once, then how many."
+      - ""
+    wrong:
+      - code: |-
+          def how_many_kinds(items):
+              return len(items)
+        ask: "That counts every item, repeats included. What keeps each thing once?"
+        why: "a list keeps repeats. set drops them."
+      - code: |-
+          def how_many_kinds(items):
+              return set(items)
+        ask: "That hands back the different dishes, not how many. What was I asking for?"
+        why: "a count is len of it."
+      - code: |-
+          def how_many_kinds(items):
+              print(len(set(items)))
+        ask: "That showed the number but did not hand it back. What word hands a value back?"
+        why: "print shows to a person. return hands to the code that asked."
+    walk:
+      - "Make the list into a set."
+      - "Count what is in it."
+      - "Hand the count back."
+    return:
+      text: "Write `kinds`, which takes a list of items and hands back the different items, in alphabetical order, as a list."
+      check: "print(kinds(['pizza', 'coca', 'pizza', 'sushi', 'coca']))"
+      model: |-
+        def kinds(items):
+            return sorted(set(items))
+      output: "['coca', 'pizza', 'sushi']"
+      narration:
+        - "Coca, pizza, sushi: each once, in order. The set dropped the repeats, and sorted gave them an order."
+        - "A set has no order, so sorted comes last."
+      note: "Return for step 7."
+    note: "COUNT(DISTINCT) by hand, in one line. The third wrong answer is the show-or-return slip kept alive."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "one-line-list", "if-question", "each-thing-once", "sorted"]
+    text: "Write a function called `distinct_big` that takes a list of values and a limit, and hands back the different values that are above the limit, smallest first."
+    check: "print(distinct_big([81.1, 18.85, 81.1, 91.11, 31.3, 91.11], 50))"
+    model: |-
+      def distinct_big(values, limit):
+          return sorted(set([v for v in values if v > limit]))
+    output: "[81.1, 91.11]"
+    narration:
+      - "81.1 and 91.11, each once, in order. Keep, drop the repeats, sort. Three tools in a row, each handing its result to the next."
+      - "The one-line list keeps the big ones, the set drops the repeats, and sorted puts them in order."
+      - ""
+    wrong:
+      - code: |-
+          def distinct_big(values, limit):
+              return set([v for v in values if v > limit])
+        ask: "Those come back in no order I could rely on, and as a set. What was I asking for?"
+        why: "a set has no order. sorted gives a list, in order."
+      - code: |-
+          def distinct_big(values, limit):
+              return sorted([v for v in values if v > limit])
+        ask: "Look for a value that comes back twice. Which tool keeps each thing once?"
+        why: "a list keeps repeats. set drops them."
+      - code: |-
+          def distinct_big(values, limit):
+              return sorted(set(values))
+        ask: "Those include the small ones. Where did the limit go?"
+        why: "the question about the limit has to keep only the big ones, before or after the set."
+    walk:
+      - "Keep only the values above the limit, in one line."
+      - "Make that a set, so that each is there once."
+      - "Sort it, smallest first, and hand it back."
+    return:
+      text: "Write `distinct_short`, which takes a list of words and a number n, and hands back the different words with fewer than n letters, in alphabetical order."
+      check: "print(distinct_short(['pizza', 'coca', 'bao', 'coca', 'bao', 'burger'], 5))"
+      model: |-
+        def distinct_short(words, n):
+            return sorted(set([w for w in words if len(w) < n]))
+      output: "['bao', 'coca']"
+      narration:
+        - "Bao and coca, once each, in alphabetical order. The same three tools, with a question about length."
+        - "Keep, drop repeats, sort."
+      note: "Return for step 8."
+    note: "Recombination: one-line-list, each-thing-once and sorted from PY-2, nested. Values 81.1 and 91.11 each appear twice in the check."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["cost-in-words"]
+    text: |-
+      Now a different kind of question: how much work does a program do as its input grows? Not seconds, which depend on the machine, but steps, which do not. Here are two programs that only count their own steps. One goes through n things once. The other goes through all pairs of n things, a loop inside a loop.
+
+      ```python
+      def one_pass(n):
+          count = 0
+          for i in range(n):
+              count = count + 1
+          return count
+
+      def pair_by_pair(n):
+          count = 0
+          for i in range(n):
+              for j in range(n):
+                  count = count + 1
+          return count
+
+      print(one_pass(10), one_pass(100), one_pass(1000))
+      print(pair_by_pair(10), pair_by_pair(100), pair_by_pair(1000))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def one_pass(n):
+            count = 0
+            for i in range(n):
+                count = count + 1
+            return count
+
+        def pair_by_pair(n):
+            count = 0
+            for i in range(n):
+                for j in range(n):
+                    count = count + 1
+            return count
+
+        print(one_pass(10), one_pass(100), one_pass(1000))
+        print(pair_by_pair(10), pair_by_pair(100), pair_by_pair(1000))
+    after_run: "Ten times as many things: one pass does ten times the work, and the pairs do a hundred times the work. A thousand things and the pairs are at a million. That is what people mean by linear and quadratic: work that grows in step with the input, and work that grows with its square. Say it in words and you pass the question: one pass is linear, a loop inside a loop is quadratic."
+    note: "cost-in-words. It counts steps and not seconds, because nothing in this course is timed. Only the first two statements of the thought are shown here. The other two come in the next steps: a dict lookup and a sort."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "for-each", "if-question", "is-it-there", "set-by-name", "new-list-in-loop", "add-to-end", "cost-in-words"]
+    text: "Write a function called `repeated` that takes a list of items and hands back the items that had already appeared earlier in the list, each time it happens, in order. Go through the list once, and keep what you have seen in a dict."
+    check: |-
+      print(repeated(['pizza', 'coca', 'pizza', 'sushi', 'coca', 'pizza']))
+      print(repeated([]))
+      print(repeated(['a', 'b']))
+    model: |-
+      def repeated(items):
+          seen = {}
+          result = []
+          for item in items:
+              if item in seen:
+                  result.append(item)
+              seen[item] = True
+          return result
+    output: |-
+      ['pizza', 'coca', 'pizza']
+      []
+      []
+    narration:
+      - "Pizza, coca, pizza: each one the moment it came round again. One pass, and each look into seen was a dict lookup, which costs the same however long the list is. So this is linear."
+      - "Asking a dict whether a name is there does not walk through the names. That is why one pass with a dict beats a loop inside a loop."
+      - ""
+    wrong:
+      - code: |-
+          def repeated(items):
+              seen = {}
+              result = []
+              for item in items:
+                  if item in seen:
+                      result.append(item)
+              return result
+        ask: "Nothing ever comes back. When does an item get into seen?"
+        why: "it has to be written into the dict, after it has been asked about."
+      - code: |-
+          def repeated(items):
+              seen = {}
+              result = []
+              for item in items:
+                  seen[item] = True
+                  if item in seen:
+                      result.append(item)
+              return result
+        ask: "Every item comes back. Is the item in seen before you ask?"
+        why: "it was written in before the question, so it is always there. The question comes first, then the writing."
+      - code: |-
+          def repeated(items):
+              result = []
+              for item in items:
+                  if items.count(item) > 1:
+                      result.append(item)
+              return result
+        ask: "That is a different thing: it gives every copy of a repeated thing, the first as well. Which ones was I asking for?"
+        why: "the first appearance is not a repeat. Only the later ones are."
+    walk:
+      - "Start an empty dict for what you have seen, and an empty list for the answer."
+      - "For each item: if it is already in the dict, add it to the answer."
+      - "Whatever happened, write the item into the dict. Hand the answer back."
+    return:
+      text: "Write `count_repeats`, which takes a list of items and hands back how many times an item had already appeared earlier in the list. Go through the list once, and keep what you have seen in a dict."
+      check: "print(count_repeats(['pizza', 'coca', 'pizza', 'sushi', 'coca', 'pizza']))"
+      model: |-
+        def count_repeats(items):
+            seen = {}
+            count = 0
+            for item in items:
+                if item in seen:
+                    count = count + 1
+                seen[item] = True
+            return count
+      output: "3"
+      narration:
+        - "3: pizza, coca and pizza again. One pass, with a count in place of a list."
+        - "The same one pass, counting."
+      note: "Return for step 10."
+    note: "The one-pass version of an interview question that is also asked as a double loop. The dict lookup is the point (cost-in-words, second statement). The edge cases are the empty list and a list with no repeats, in the check on purpose."
+
+  # 11
+  - kind: "aside"
+    text: "Only interesting. A dict finds a name without walking through the others. It turns the name into a number, which says where in memory to look, and goes straight there. The number is called a hash. That is the real reason a dict lookup costs the same however big the dict is, and it is all you need to know about it."
+
+  # 12
+  - kind: "give"
+    lang: "python"
+    new: ["three-checks"]
+    text: |-
+      A function is only finished when you have tried it. Try three things, always the same three: the ordinary case, the empty case, and the awkward case, where something ties or sits at an edge. Here they are for `top_k`, written as the checks you met earlier. If all of them hold, nothing prints but the last line.
+
+      ```python
+      def top_k(items, k):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+          return ranked[:k]
+
+      assert top_k(['a', 'b', 'a'], 1) == [('a', 2)]
+      assert top_k([], 3) == []
+      assert top_k(['b', 'a'], 2) == [('a', 1), ('b', 1)]
+      print('held')
+      ```
+
+      Run it.
+    shows:
+      - |-
+        def top_k(items, k):
+            counts = {}
+            for item in items:
+                counts[item] = counts.get(item, 0) + 1
+            ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+            return ranked[:k]
+
+        assert top_k(['a', 'b', 'a'], 1) == [('a', 2)]
+        assert top_k([], 3) == []
+        assert top_k(['b', 'a'], 2) == [('a', 1), ('b', 1)]
+        print('held')
+    after_run: "Held. The ordinary case: a repeats and wins. The empty case: nothing in, nothing out. The awkward case: a tie, which has to come out in alphabetical order. Those are the three you reach for first, on any function, and an interviewer is usually waiting to see whether you do."
+    note: "three-checks. Uses check-with-assert from PY-5 (silence means it held). The awkward case is a tie, the one the learner met in PY-7."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "sorted", "key-function", "lambda", "last", "empty-case", "nothing", "check-with-assert", "three-checks"]
+    text: "Write a function called `longest` that takes a list of words and hands back the longest word, or None if the list is empty. Then write three checks for it with assert: an ordinary case, the empty case, and an awkward case where two words tie. End by printing the words longest holds."
+    model: |-
+      def longest(words):
+          if len(words) == 0:
+              return None
+          return sorted(words, key=lambda w: len(w))[-1]
+
+      assert longest(['bao', 'pizza', 'coca']) == 'pizza'
+      assert longest([]) is None
+      assert longest(['coca', 'bao', 'sushi', 'pizza']) == 'pizza'
+      print('longest holds')
+    output: "longest holds"
+    narration:
+      - "Three checks, all holding. The ordinary one, the empty one, and the tie. The tie has to be decided by your own function, and then written down as what you expect."
+      - "The empty case is the one that stopped the function until you gave it a line of its own."
+      - ""
+    wrong:
+      - code: |-
+          def longest(words):
+              return sorted(words, key=lambda w: len(w))[-1]
+
+          assert longest(['bao', 'pizza', 'coca']) == 'pizza'
+          assert longest([]) is None
+          assert longest(['coca', 'bao', 'sushi', 'pizza']) == 'pizza'
+          print('longest holds')
+        ask: "Python stops with an IndexError on the second check. What does the function do with an empty list?"
+        why: "there is no last item of an empty list. The empty case needs a line of its own, before the sort."
+      - code: |-
+          def longest(words):
+              if len(words) == 0:
+                  return None
+              return sorted(words, key=lambda w: len(w))[-1]
+
+          assert longest(['bao', 'pizza', 'coca']) == 'pizza'
+          assert longest([]) is None
+          assert longest(['coca', 'bao', 'sushi', 'pizza']) == 'pizza'
+        ask: "Nothing came out. Which line tells the person that all the checks held?"
+        why: "a silent assert says nothing when it holds. The last line was asked for."
+      - code: |-
+          def longest(words):
+              if len(words) == 0:
+                  return None
+              return sorted(words, key=lambda w: len(w))[-1]
+
+          assert longest(['bao', 'pizza', 'coca']) = 'pizza'
+          assert longest([]) is None
+          assert longest(['coca', 'bao', 'sushi', 'pizza']) == 'pizza'
+          print('longest holds')
+        ask: "Python calls that a syntax error. What does a check use between the two sides?"
+        why: "two equals signs ask. One gives a name."
+    walk:
+      - "Write the function, with the empty case first."
+      - "Write three asserts: an ordinary list, an empty list, and a list where two words tie. For the tie, run your own function in your head and write what it gives."
+      - "Finish by printing the words longest holds."
+    return:
+      text: "Write a function called `shortest` that takes a list of words and hands back the shortest word, or None if the list is empty. Then write three checks for it with assert: an ordinary case, the empty case, and an awkward case where two words tie. End by printing the words shortest holds."
+      model: |-
+        def shortest(words):
+            if len(words) == 0:
+                return None
+            return sorted(words, key=lambda w: len(w))[0]
+
+        assert shortest(['pizza', 'bao', 'coca']) == 'bao'
+        assert shortest([]) is None
+        assert shortest(['pizza', 'bao', 'sushi', 'cat']) == 'bao'
+        print('shortest holds')
+      output: "shortest holds"
+      narration:
+        - "Held. The first of the tied shortest words comes out, because the sort keeps ties in the order they came."
+        - "The same three cases, with the other end."
+      note: "Return for step 13."
+    note: "The three-checks habit, asked once with the function in hand. The output only tells whether the learner's own checks hold on their own function, so its judgement is partial and the narration says what the asserts are for. A wrong expectation on the tie raises AssertionError, which is the real reason the awkward case is worth writing."
+
+  # 14
+  - kind: "give"
+    lang: "python"
+    new: ["while-loop"]
+    text: |-
+      One more loop, and this one you would look up. A `for` goes through a list, once. A `while` goes on for as long as its question says yes, and it is up to you to make sure that something inside changes the answer. The word is `while`, then a question, then a colon, then the lines that repeat.
+
+      ```python
+      total = 0
+      count = 0
+      while total < 100:
+          total = total + 30
+          count = count + 1
+      print(count, total)
+      ```
+
+      Run it.
+    shows:
+      - |-
+        total = 0
+        count = 0
+        while total < 100:
+            total = total + 30
+            count = count + 1
+        print(count, total)
+    after_run: "4 and 120. Each time round, the question was asked again: is total below 100? The fourth turn took it to 120, the question said no, and the loop ended. The one danger is a while whose question never says no. If nothing inside changes total, it goes on forever, and the program has to be stopped."
+    note: "while-loop, shape grade (spelling supplied, thought core in the owner's decision). The infinite loop is named as a danger and not demonstrated: the checker would wait for it. Not a mnemonic, a real warning."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "running-result", "if-question", "while-loop"]
+    supplies: ["while"]
+    text: "Write a function called `doublings` that takes a start and a limit, and hands back how many times you can double the start before doubling again would go past the limit. This one you would look up: the word is `while`, then a question, then a colon, and the lines that repeat."
+    check: |-
+      print(doublings(3, 100))
+      print(doublings(200, 100))
+    model: |-
+      def doublings(start, limit):
+          count = 0
+          n = start
+          while n * 2 <= limit:
+              n = n * 2
+              count = count + 1
+          return count
+    output: |-
+      5
+      0
+    narration:
+      - "5 doublings: 6, 12, 24, 48, 96. The question was asked again before each one, and the loop ended when a next doubling would pass 100."
+      - "The question that keeps the loop going is the one before each doubling, and the loop changes n so that it eventually says no."
+      - ""
+    wrong:
+      - code: |-
+          def doublings(start, limit):
+              count = 0
+              n = start
+              while n <= limit:
+                  n = n * 2
+                  count = count + 1
+              return count
+        ask: "That says 6. After the last doubling that fits, what does the loop do once more?"
+        why: "the question looked at n and not at what it would be next. It let one more doubling happen, past the limit."
+      - code: |-
+          def doublings(start, limit):
+              count = 0
+              n = start
+              if n * 2 <= limit:
+                  n = n * 2
+                  count = count + 1
+              return count
+        ask: "That does one doubling at most. What repeats a block for as long as a question says yes?"
+        why: "an if asks once. A while asks again and again."
+      - code: |-
+          def doublings(start, limit):
+              count = 0
+              n = start
+              while n * 2 <= limit:
+                  n = n * 2
+              return count
+        ask: "Nothing counted the doublings. What does count need?"
+        why: "count is only ever given a new value inside the loop, and it was not."
+    walk:
+      - "Start a count at zero, and n at the start."
+      - "Repeat while doubling n would still be within the limit."
+      - "Each time round, double n and add one to the count. Then hand the count back."
+    return:
+      text: "This one you would look up: the word is `while`, then a question, then a colon, and the lines that repeat. Write `halvings`, which takes a number and hands back how many times you can halve it before it drops below 1."
+      check: "print(halvings(100))"
+      model: |-
+        def halvings(n):
+            count = 0
+            while n >= 1:
+                n = n / 2
+                count = count + 1
+            return count
+      output: "7"
+      narration:
+        - "7: 50, 25, 12.5, 6.25, 3.125, 1.5625 and then 0.78, which is below 1. The question was asked before each halving."
+        - "A count of the turns until the question said no."
+      note: "Return for step 15."
+    note: "while-loop with its spelling supplied in the prompt (shape grade). A deliberate off-by-one wrong answer, which is the commonest slip in a while loop. No infinite-loop wrong answer is included: the checker would wait for it."
+
+  # 16
+  - kind: "give"
+    lang: "python"
+    new: ["two-positions"]
+    text: |-
+      Last, a thing you would look up, and you need only follow it once. Two lists are each already in order, and you want one list in order with everything in it. Keep two positions, one in each list, both at the start. Compare the two items there, take the smaller into the result, and move only that list's position on. Here it is, with a line that shows each turn.
+
+      ```python
+      a = [1, 4, 9]
+      b = [2, 3, 10, 11]
+      result = []
+      i = 0
+      j = 0
+      while i < len(a) and j < len(b):
+          if a[i] <= b[j]:
+              result.append(a[i])
+              i = i + 1
+          else:
+              result.append(b[j])
+              j = j + 1
+          print(i, j, result)
+      print(result + a[i:] + b[j:])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        a = [1, 4, 9]
+        b = [2, 3, 10, 11]
+        result = []
+        i = 0
+        j = 0
+        while i < len(a) and j < len(b):
+            if a[i] <= b[j]:
+                result.append(a[i])
+                i = i + 1
+            else:
+                result.append(b[j])
+                j = j + 1
+            print(i, j, result)
+        print(result + a[i:] + b[j:])
+    after_run: "Watch the two positions. The first turn takes 1 from a, and i moves to 1. Then 2 and 3 come from b, and j moves to 2. Then 4 and 9 come from a, and now i is 3, which is the end of a, so the loop stopped. b still had 10 and 11, which are already in order, so they go on the end. a[i:] means everything from position i on, and when a list is used up it is nothing. That is merging two sorted lists, and you will only ever need to look it up."
+    note: "two-positions, shape grade. The teacher walks through it once, with a trace so that the learner can follow the positions. The last line shows what is left over. It is not brought back cold, per the owner's decision. A trace line is printed on each turn, which is the one place where printing inside a loop is right."
+
+  # 17
+  - kind: "classmate"
+    lang: "python"
+    text: |-
+      Davi tried to write the merge himself, and gave back the result at the end of the loop:
+
+      ```python
+      def merge(a, b):
+          result = []
+          i = 0
+          j = 0
+          while i < len(a) and j < len(b):
+              if a[i] <= b[j]:
+                  result.append(a[i])
+                  i = i + 1
+              else:
+                  result.append(b[j])
+                  j = j + 1
+          return result
+
+      print(merge([1, 4, 9], [2, 3, 10, 11]))
+      ```
+
+      It printed [1, 2, 3, 4, 9], and no error. Davi, where are 10 and 11? ... Still in b. The loop stops as soon as one list is used up, and what is left of the other is never taken. Add what is left of both to the end, and one of them is empty.
+    shows:
+      - |-
+        def merge(a, b):
+            result = []
+            i = 0
+            j = 0
+            while i < len(a) and j < len(b):
+                if a[i] <= b[j]:
+                    result.append(a[i])
+                    i = i + 1
+                else:
+                    result.append(b[j])
+                    j = j + 1
+            return result + a[i:] + b[j:]
+
+        print(merge([1, 4, 9], [2, 3, 10, 11]))
+    after_run: "[1, 2, 3, 4, 9, 10, 11]. The leftovers go on the end, one of them empty, and the other already in order."
+    note: "The classic slip in merge, made by a classmate just before the learner types it (rule E6). It is a wrong result, not an error, so the real reason is in words. The fix is run, not typed, because the typed version follows."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "new-list-in-loop", "add-to-end", "if-question", "otherwise", "and-or", "how-many", "while-loop", "two-positions", "first-few"]
+    supplies: ["while i < len(a) and j < len(b):", "result + a[i:] + b[j:]"]
+    text: "Now type it out yourself, with the walk in front of you. Write `merge`, which takes two sorted lists and hands back one sorted list of everything. Both positions start at 0. The line that keeps the loop going is `while i < len(a) and j < len(b):`. Take the smaller item, and move on only the position of the list it came from. When the loop ends, `result + a[i:] + b[j:]` adds what is left over."
+    check: |-
+      print(merge([1, 4, 9], [2, 3, 10, 11]))
+      print(merge([], [5]))
+      print(merge([2, 2], [2]))
+    model: |-
+      def merge(a, b):
+          result = []
+          i = 0
+          j = 0
+          while i < len(a) and j < len(b):
+              if a[i] <= b[j]:
+                  result.append(a[i])
+                  i = i + 1
+              else:
+                  result.append(b[j])
+                  j = j + 1
+          return result + a[i:] + b[j:]
+    output: |-
+      [1, 2, 3, 4, 9, 10, 11]
+      [5]
+      [2, 2, 2]
+    narration:
+      - "[1, 2, 3, 4, 9, 10, 11]. Two positions, the smaller taken each time, and the leftovers added when one list ran out."
+      - "Each turn took one item and moved one position. Together they covered everything in both lists once, so it is a single pass."
+      - ""
+    wrong:
+      - code: |-
+          def merge(a, b):
+              result = []
+              i = 0
+              j = 0
+              while i < len(a) and j < len(b):
+                  if a[i] <= b[j]:
+                      result.append(a[i])
+                      i = i + 1
+                  else:
+                      result.append(b[j])
+                      j = j + 1
+              return result
+        ask: "Look for 10 and 11. Where did they go?"
+        why: "the loop stops when one list runs out. What is left of the other has to be added."
+      - code: |-
+          def merge(a, b):
+              result = []
+              i = 0
+              j = 0
+              while i < len(a) or j < len(b):
+                  if a[i] <= b[j]:
+                      result.append(a[i])
+                      i = i + 1
+                  else:
+                      result.append(b[j])
+                      j = j + 1
+              return result + a[i:] + b[j:]
+        ask: "Python says index out of range. When one list is used up, is it still safe to look at its next item?"
+        why: "and keeps going only while both lists have something. With or, one of them has already run out."
+      - code: |-
+          def merge(a, b):
+              result = []
+              i = 0
+              j = 0
+              while i < len(a) and j < len(b):
+                  if a[i] <= b[j]:
+                      result.append(a[i])
+                  else:
+                      result.append(b[j])
+                  i = i + 1
+                  j = j + 1
+              return result + a[i:] + b[j:]
+        ask: "Both positions move on every turn. Which list's item was taken?"
+        why: "only the position of the list the item came from moves on."
+    walk:
+      - "Start an empty result and both positions at 0."
+      - "While both positions are inside their lists, compare the two items there and take the smaller. Move on only that list's position."
+      - "Then add what is left of both lists, and hand the result back."
+    return:
+      text: "This is the same walk, with one change in the question. The line that keeps the loop going is `while i < len(a) and j < len(b):`, and what is left over is added by `result + a[i:] + b[j:]`. Write `common`, which takes two sorted lists and hands back the items that are in both. Where the two items are equal, take one and move both positions on. Where they are not, move on the position of the smaller."
+      check: "print(common([1, 3, 4, 9], [2, 3, 9, 10, 11]))"
+      model: |-
+        def common(a, b):
+            result = []
+            i = 0
+            j = 0
+            while i < len(a) and j < len(b):
+                if a[i] == b[j]:
+                    result.append(a[i])
+                    i = i + 1
+                    j = j + 1
+                else:
+                    if a[i] < b[j]:
+                        i = i + 1
+                    else:
+                        j = j + 1
+            return result
+      output: "[3, 9]"
+      narration:
+        - "3 and 9, the two items in both lists. The same two positions, and a different question at each turn."
+        - "Equal: take it and move both. Otherwise move the smaller's position."
+      note: "Return for step 18. The leftover line is not needed here, and the narration says why: nothing left over can be in both. The model nests an if inside the else, which is only otherwise with another question."
+    note: "The shape-grade merge (pass-bar task 10), typed with the walk and the spelling in view. The spellings are in the prompt. It is not brought back cold, and the return is the sibling merge with its spelling in view as well. Uses first-few (PY-2) in its slice form."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "for-each", "one-entry-per-pile", "update-the-pile", "get-with-default", "pair", "dict-as-pairs", "sorted", "key-function", "lambda", "tie-rule", "first-few", "check-with-assert", "comment", "three-checks", "cost-in-words"]
+    friction: true
+    text: "This is the one I won't break down. Write `top_k` again, the one that takes a list of items and a number k and hands back the k most common items with their counts, ties in alphabetical order. Under it write three checks with assert: an ordinary case, the empty case, and a tie. Then a comment line saying what it costs in words. End by printing the words top_k holds."
+    model: |-
+      def top_k(items, k):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+          return ranked[:k]
+
+      # one pass to count, then a sort of the different items
+      assert top_k(['a', 'b', 'a'], 1) == [('a', 2)]
+      assert top_k([], 3) == []
+      assert top_k(['b', 'a'], 2) == [('a', 1), ('b', 1)]
+      print('top_k holds')
+    output: "top_k holds"
+    narration:
+      - "That is the whole answer to the question: the function, the three checks, and its cost in a line. One pass to count, which is linear, a dict doing the lookups at the same price however many there are, and one sort of the different items, which costs a little more than a pass."
+      - "Count, sort, cut, and then try the three cases and say what it costs. A person who does that last part unprompted is the one they hire."
+      - "Piles, order and limit, with its proof, and its price."
+    wrong:
+      - code: |-
+          def top_k(items, k):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+              ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+              return ranked[:k]
+
+          assert top_k(['a', 'b', 'a'], 1) == [('a', 2)]
+          assert top_k([], 3) == []
+          assert top_k(['b', 'a'], 2) == [('a', 1), ('b', 1)]
+        ask: "The checks held, and nothing printed. Which line was asked for at the end?"
+        why: "a silent assert says nothing when it holds. The last line tells the reader that they did."
+      - code: |-
+          def top_k(items, k):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+              ranked = sorted(counts.items(), key=lambda pair: pair[1], reverse=True)
+              return ranked[:k]
+
+          # one pass to count, then a sort of the different items
+          assert top_k(['a', 'b', 'a'], 1) == [('a', 2)]
+          assert top_k([], 3) == []
+          assert top_k(['b', 'a'], 2) == [('a', 1), ('b', 1)]
+          print('top_k holds')
+        ask: "The third check stops with an AssertionError. Which two items tie, and which should come first?"
+        why: "with the count alone, ties stay in the order they came. The question asked for alphabetical, so the key needs a second part."
+      - code: |-
+          def top_k(items, k):
+              counts = {}
+              for item in items:
+                  counts[item] = counts.get(item, 0) + 1
+              ranked = sorted(counts.items(), key=lambda pair: (-pair[1], pair[0]))
+              return ranked
+
+          # one pass to count, then a sort of the different items
+          assert top_k(['a', 'b', 'a'], 1) == [('a', 2)]
+          assert top_k([], 3) == []
+          assert top_k(['b', 'a'], 2) == [('a', 1), ('b', 1)]
+          print('top_k holds')
+        ask: "The first check stops. How many pairs came back, and how many should?"
+        why: "the sort makes the whole ranking, and the cut keeps k of it."
+    walk:
+      - "Write top_k as before: count, sort, cut."
+      - "Under it, three asserts: a list with a clear winner, an empty list, and two items that tie."
+      - "A comment line saying what it costs, then the print."
+    return:
+      text: "Write `sessions` again, the one that takes a list of times and a gap and hands back the groups, where a time more than the gap after the one before starts a new group. Under it write three checks with assert: an ordinary case, the empty case, and a case where a time is exactly the gap after the one before. Then a comment line saying what it costs. End by printing the words sessions holds."
+      model: |-
+        def sessions(times, gap):
+            groups = []
+            current = []
+            previous = None
+            for t in times:
+                if previous is not None and t - previous > gap:
+                    groups.append(current)
+                    current = []
+                current.append(t)
+                previous = t
+            if len(current) > 0:
+                groups.append(current)
+            return groups
+
+        # one pass over the times
+        assert sessions([1, 5, 50], 30) == [[1, 5], [50]]
+        assert sessions([], 30) == []
+        assert sessions([0, 30], 30) == [[0, 30]]
+        print('sessions holds')
+      output: "sessions holds"
+      narration:
+        - "Held. The ordinary case, the empty list, and the edge where the gap is exactly the limit, which does not start a new group. One pass, so linear."
+        - "The three cases and the cost, for a different function."
+      note: "Return for step 19."
+    note: "The closing sentence of PY-10 and pass-bar task 12, unbroken (friction). The cost line is a comment, so it is not judged by the output. The narration says what it should say, and the learner reads it as the check on their own comment. The third wrong answer is the same slip as step 19 of PY-7 in a new place."
+
+  # 20
+  - kind: "give"
+    lang: "python"
+    text: |-
+      And now the short forms on the real table. How many orders have a subtotal above 100, and which coupon codes were ever used? Each is one line, with the loop and the question inside it, and the second drops the repeats.
+
+      ```python
+      import csv
+
+      orders = list(csv.DictReader(open('orders.csv')))
+      big = [row['order_id'] for row in orders if row['subtotal'] != '' and float(row['subtotal']) > 100]
+      codes = set([row['coupon_code'] for row in orders if row['coupon_code'] != ''])
+      print(len(big))
+      print(sorted(codes))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import csv
+
+        orders = list(csv.DictReader(open('orders.csv')))
+        big = [row['order_id'] for row in orders if row['subtotal'] != '' and float(row['subtotal']) > 100]
+        codes = set([row['coupon_code'] for row in orders if row['coupon_code'] != ''])
+        print(len(big))
+        print(sorted(codes))
+    after_run: "632 orders above 100, and three coupon codes in use: BEMVINDO10, FRETEGRATIS and PIZZA20. SQL says the same: WHERE subtotal > 100 gives 632, and COUNT(DISTINCT coupon_code) gives 3. VOLTA15 is in the coupons file and on no order. The empty cells were left out by the question, as you learned in the table lesson."
+    note: "The short forms on the real table. 632 and the three codes were run against data/ and match the SQL answers. The empty cells are skipped by the question in the comprehension, which returns to skip-the-missing."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today you said the same loop in one line, kept each thing once, and said what a program costs in words. You tried a function three ways before you trusted it. You saw a while loop, and you followed a merge of two sorted lists once, which is something people look up and you can too.
+
+      You are not fast at this, and you are not meant to be. This is acquisition. Don't go over any of it before next time. One question, cold, and then we stop.
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "one-line-list", "if-question", "each-thing-once", "sorted", "check-with-assert", "three-checks"]
+    text: "Write a function called `big_kinds` that takes a list of dishes and a limit, and hands back, in alphabetical order, the different dishes whose names are longer than the limit. Then add three checks with assert, and print the words big_kinds holds."
+    model: |-
+      def big_kinds(dishes, limit):
+          return sorted(set([d for d in dishes if len(d) > limit]))
+
+      assert big_kinds(['pizza', 'coca', 'pizza', 'burger'], 4) == ['burger', 'pizza']
+      assert big_kinds([], 4) == []
+      assert big_kinds(['bao', 'bao'], 3) == []
+      print('big_kinds holds')
+    output: "big_kinds holds"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: the one-line list, a set, a sort and the three checks, on a combination not yet practised. Never scored."

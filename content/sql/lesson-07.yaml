@@ -1,0 +1,589 @@
+lesson: sql-07
+title: "Order inside the pile"
+strand: sql
+stage: 2
+thoughts:
+  number-the-rows: "`ROW_NUMBER() OVER (ORDER BY subtotal DESC)` writes a number beside each row, counting in the order you choose."
+  number-inside-pile: "With `PARTITION BY` before the `ORDER BY`, the numbering starts again at 1 in each pile."
+  top-n-per-pile: "To keep the first N rows of each pile, number the rows inside the piles, name the table, and keep the rows numbered up to N."
+  latest-is-number-one: "To get the newest row of each pile, number from the newest and keep number 1."
+  ties: {text: "`RANK` gives tied rows the same number, where `ROW_NUMBER` gives them different numbers in an order the database chooses.", grade: name-only}
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["beside-comes-late", "piles-that-stay", "row-against-pile", "name-a-table", "name-a-result", "summary-column", "from-table", "choose-columns", "commas", "keep-rows", "compare-signs"]
+    any_column_order: true
+    text: "The id and promised minutes of the orders whose delivery fee was above the average delivery fee of the orders promised the same time."
+    model: "WITH f AS (SELECT order_id, promised_minutes, delivery_fee, AVG(delivery_fee) OVER (PARTITION BY promised_minutes) AS typical FROM orders) SELECT order_id, promised_minutes FROM f WHERE delivery_fee > typical"
+    rows: 2967
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-6: write the number beside, name the table, keep from it, with a pile and a comparison, on a combination not practised there (delivery fee by promised minutes). Never scored."
+
+  # 2
+  - kind: "give"
+    new: ["number-the-rows"]
+    text: |-
+      Last time the number beside each row was a summary of rows. There is another kind of number to put there: a count of the rows themselves, 1, 2, 3, in an order you choose. ROW_NUMBER() writes it, and the order goes in the brackets after OVER, with ORDER BY, which you know from lesson 2:
+
+      ```sql
+      SELECT name, city, ROW_NUMBER() OVER (ORDER BY name) FROM restaurants
+      ```
+
+      Run it.
+    shows:
+      - "SELECT name, city, ROW_NUMBER() OVER (ORDER BY name) FROM restaurants"
+    after_run: "Sixty rows, numbered 1 to 60 in the order of the names, so Rest 01 is number 1. ROW_NUMBER's own brackets are empty because it counts rows, and there is no column to put inside. The ORDER BY inside OVER says in what order to count. Nothing is squeezed: it is one more number beside each row."
+    note: "Number the rows, in an order the learner chooses. The restaurants' names are all different, so the numbering has no ties, which keeps every sentence in this lesson stable. OVER and its brackets are the slot from SQL-6, with ORDER BY from SQL-2 inside it."
+
+  # 3
+  - kind: "ask"
+    requires: ["number-the-rows", "sort-direction", "from-table", "choose-columns", "commas"]
+    text: "Show each courier's id and vehicle, numbered in the order of the id, with the highest id as number 1."
+    model: "SELECT courier_id, vehicle, ROW_NUMBER() OVER (ORDER BY courier_id DESC) FROM couriers"
+    rows: 200
+    narration:
+      - "200 rows, with courier 200 as number 1. The order inside OVER decided who got which number, and DESC put the highest first."
+      - "Numbered from the top: the biggest id counted first."
+      - ""
+    wrong:
+      - sql: "SELECT courier_id, vehicle, ROW_NUMBER() OVER (ORDER BY courier_id) FROM couriers"
+        ask: "Courier 1 is number 1. Which end of the ids should be counted first, and what turns the order round?"
+      - sql: "SELECT courier_id, vehicle, ROW_NUMBER() OVER () FROM couriers"
+        ask: "The numbers follow the table's own order. Where do you say in what order to count?"
+        why: "the ORDER BY inside the brackets is what puts the counting in an order."
+      - sql: "SELECT courier_id, vehicle, ROW_NUMBER(courier_id) OVER (ORDER BY courier_id DESC) FROM couriers"
+        ask: "ROW_NUMBER counts rows, and does not need to be told a column. What goes inside its brackets?"
+    walk:
+      - "Show me the id and vehicle of every courier."
+      - "Write a number beside each row with ROW_NUMBER, and OVER with its brackets."
+      - "Inside those brackets, say in what order to count: ORDER BY the id, the biggest first."
+    return:
+      text: "Show each restaurant's id and name, numbered in the order of the name, with the last name alphabetically as number 1."
+      model: "SELECT restaurant_id, name, ROW_NUMBER() OVER (ORDER BY name DESC) FROM restaurants"
+      rows: 60
+      narration:
+        - "60 rows, and Rest 60 is number 1. The counting ran from the end of the alphabet."
+        - "ROW_NUMBER, then OVER, and ORDER BY with DESC inside the brackets."
+      note: "Return for step 3. Another table, another column to count by."
+    note: "The courier ids are all different, so the answer is stable. The wrong answers are built on the three slips a learner can make with a new word: the order, the empty brackets and a column where none goes."
+
+  # 4
+  - kind: "ask"
+    requires: ["number-the-rows", "keep-rows", "compare-signs", "from-table", "choose-columns", "commas"]
+    text: "Show the id and time of each of customer 7's orders, numbered from the oldest."
+    model: "SELECT order_id, created_at, ROW_NUMBER() OVER (ORDER BY created_at) FROM orders WHERE customer_id = 7"
+    rows: 8
+    result: [[104216, "2026-08-07 04:16:00", 1], [104911, "2026-08-15 14:00:00", 2], [100281, "2026-09-02 22:09:00", 3], [103306, "2026-09-28 01:03:00", 4], [100965, "2026-09-29 21:09:00", 5], [100972, "2026-10-11 22:40:00", 6], [104116, "2026-10-15 19:11:00", 7], [100118, "2026-10-22 00:49:00", 8]]
+    narration:
+      - "Customer 7 has eight orders, numbered 1 to 8 from the oldest. The rows were kept first, then numbered."
+      - "Keep the customer, then count what is left. The oldest is number 1 because ascending is what you get when you say nothing."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, created_at, ROW_NUMBER() OVER (ORDER BY created_at) FROM orders"
+        ask: "6,000 rows are numbered. I asked for one customer. Where does that question go?"
+      - sql: "SELECT order_id, created_at, ROW_NUMBER() OVER (ORDER BY created_at DESC) FROM orders WHERE customer_id = 7"
+        ask: "Number 1 is the newest. I asked to start from the oldest. What do you say about the direction?"
+        why: "with nothing said, the smallest comes first, so the oldest time is counted first."
+    walk:
+      - "Show me the id and time of each order, only for customer 7."
+      - "Add a number beside each row, counting in the order of the time created."
+    return:
+      text: "Show the id and time of each of customer 24's orders, numbered from the newest."
+      model: "SELECT order_id, created_at, ROW_NUMBER() OVER (ORDER BY created_at DESC) FROM orders WHERE customer_id = 24"
+      rows: 9
+      narration:
+        - "Customer 24 has nine orders, with the latest as number 1. The rows were kept first and then numbered."
+        - "Keep the customer, number the rest, newest first."
+      note: "Return for step 4. Another customer and the other direction."
+    note: "Keeping and then numbering is the order of events from last lesson. Within one customer no two orders were created at the same moment, so the numbering is stable."
+
+  # 5
+  - kind: "give"
+    new: ["number-inside-pile"]
+    text: |-
+      Now the numbering can start again for each pile. Say how the piles are made first, with PARTITION BY, as you did last time, and say how to count inside them after it, in the same brackets:
+
+      ```sql
+      SELECT order_id, customer_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT order_id, customer_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) FROM orders"
+    after_run: "Each customer's oldest order is number 1, the next is number 2, and so on, and then the numbering goes back to 1 for the next customer. First the piles are made, then the counting is done inside each of them, and that is the order they are written in."
+    note: "PARTITION BY from SQL-6 meets ROW_NUMBER from step 2. The order inside the brackets is the order of events (piles, then counting), so it is a reason and not a rule to remember."
+
+  # 6
+  - kind: "ask"
+    requires: ["number-inside-pile", "from-table", "choose-columns", "commas"]
+    text: "Show each courier's id and vehicle, numbered within each vehicle, in the order of the id."
+    model: "SELECT courier_id, vehicle, ROW_NUMBER() OVER (PARTITION BY vehicle ORDER BY courier_id) FROM couriers"
+    rows: 200
+    narration:
+      - "200 rows. The bikes are numbered 1 to 73, the motos 1 to 110 and the carros 1 to 17: the numbering started again in each pile."
+      - "Piles by vehicle, and a count inside each of them in the order of the id."
+      - ""
+    wrong:
+      - sql: "SELECT courier_id, vehicle, ROW_NUMBER() OVER (ORDER BY courier_id) FROM couriers"
+        ask: "Every courier has a different number, up to 200. What should make the numbering start again?"
+      - sql: "SELECT courier_id, vehicle, ROW_NUMBER() OVER (ORDER BY courier_id PARTITION BY vehicle) FROM couriers"
+        ask: "Which comes first inside the brackets: how the piles are made, or how to count inside them?"
+        why: "the piles come first because the counting happens inside them."
+    walk:
+      - "Show me the id and vehicle of every courier."
+      - "Write a number beside each row, counting in the order of the id."
+      - "Make the numbering start again for each vehicle: PARTITION BY, before the ORDER BY."
+    return:
+      text: "Show each restaurant's name and city, numbered within each city in the alphabetical order of the name."
+      model: "SELECT name, city, ROW_NUMBER() OVER (PARTITION BY city ORDER BY name) FROM restaurants"
+      rows: 60
+      narration:
+        - "60 restaurants. São Paulo's go from 1 to 25, Curitiba's from 1 to 6, and each city starts again at 1."
+        - "Piles by city, and a count inside each in the order of the name."
+      note: "Return for step 6. Another table and another pile."
+    note: "First typed use of PARTITION BY and ORDER BY together. The two inner clauses are what the learner typically gets the wrong way round, hence the second wrong answer."
+
+  # 7
+  - kind: "ask"
+    requires: ["number-inside-pile", "keep-rows", "text-quotes", "compare-signs", "keep-before-piles", "from-table", "choose-columns", "commas"]
+    text: "Show each delivered order's id and courier, numbered within each courier, from the oldest order."
+    model: "SELECT order_id, courier_id, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) FROM orders WHERE status = 'delivered'"
+    rows: 5601
+    narration:
+      - "5,601 rows. The delivered orders were kept, and each courier's orders were counted from 1, oldest first."
+      - "Keep, then pile, then count inside the piles. Each courier starts again at 1."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, courier_id, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) FROM orders"
+        ask: "6,000 rows came out, and the cancelled orders sit together in one pile with no courier. Where do we drop them?"
+      - sql: "SELECT order_id, courier_id, ROW_NUMBER() OVER (ORDER BY created_at) FROM orders WHERE status = 'delivered'"
+        ask: "The numbers run on from 1 to 5,601. What should make the numbering start again for each courier?"
+      - sql: "SELECT order_id, courier_id, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) FROM orders WHERE status = 'delivered'"
+        ask: "Number 1 is the newest. Which end did I ask to count from?"
+    walk:
+      - "Show me the id and courier of each delivered order."
+      - "Write a number beside each row, counting in the order of the time created."
+      - "Make the numbering start again for each courier."
+    return:
+      text: "Show each order's id and customer, numbered within each customer, from the oldest order."
+      model: "SELECT order_id, customer_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) FROM orders"
+      rows: 6000
+      narration:
+        - "6,000 rows, and each customer's oldest order is number 1."
+        - "Pile by customer, count inside each pile in the order of the time."
+      note: "Return for step 7. A different pile, and no keeping."
+    note: "Keeping first, numbering after, as in step 4, now with piles. No courier has two delivered orders at the same moment, so the numbering is stable."
+
+  # 8
+  - kind: "ask"
+    requires: ["number-inside-pile", "sort-direction", "from-table", "choose-columns", "commas"]
+    text: "Show each order's id and customer, numbered within each customer, starting from the newest."
+    model: "SELECT order_id, customer_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC) FROM orders"
+    rows: 6000
+    narration:
+      - "6,000 rows, and each customer's newest order is number 1."
+      - "The same piles as before, counted the other way round: DESC inside the brackets."
+      - ""
+    wrong:
+      - sql: "SELECT order_id, customer_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) FROM orders"
+        ask: "Number 1 is the oldest. Which end should be counted first, and what turns the order round?"
+      - sql: "SELECT order_id, customer_id, ROW_NUMBER() OVER (ORDER BY created_at DESC) FROM orders"
+        ask: "The numbers run on to 6,000. What should make them start again for each customer?"
+      - sql: "SELECT order_id, customer_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY customer_id DESC) FROM orders"
+        ask: "Counting by the customer is counting by something that is the same in every row of a pile. Which column says when?"
+    walk:
+      - "Show me the id and customer of every order."
+      - "Number them within each customer, in the order of the time created."
+      - "Now turn it round, so the newest is number 1."
+    return:
+      text: "Show each delivered order's id and courier, numbered within each courier, starting from the newest."
+      model: "SELECT order_id, courier_id, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) FROM orders WHERE status = 'delivered'"
+      rows: 5601
+      narration:
+        - "5,601 rows, and each courier's newest delivered order is number 1."
+        - "Keep the delivered, pile by courier, count from the newest."
+      note: "Return for step 8. The other pile, and the keeping."
+    note: "The direction matters for what comes next, since the closing sentences count from the newest. Placed after the lesson's two shape-neighbours so that DESC is a recombination and not a new slot."
+
+  # 9
+  - kind: "aside"
+    text: "Only interesting, and nothing to keep. The ORDER BY inside OVER is for the counting. It says which row is number 1. It does not promise the order in which the rows come back to you. If you want the rows sorted, you still say so at the end of the sentence, with ORDER BY, as in lesson 2. Often the two happen to look alike, and that is a coincidence you should not lean on."
+    note: "A real and useful distinction, marked as an aside (rule D4). It guards against reading the first rows of a numbered result as if sorted. No thought id: it adds nothing the learner must produce. Relief after six typed sentences."
+
+  # 10
+  - kind: "give"
+    new: ["top-n-per-pile"]
+    text: |-
+      Here is what numbering is for. To keep the first two rows of each pile, number the rows inside the piles, name that table, and keep the rows numbered up to 2. You know every move in it from last time: the number beside the row is written first, the table is named, and then the keeping is asked of the number.
+
+      ```sql
+      WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders)
+      SELECT customer_id, order_id, created_at FROM n WHERE rn <= 2
+      ```
+
+      Run it.
+    shows:
+      - "WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM n WHERE rn <= 2"
+    after_run: "Each customer's first two orders: 2,845 rows, since 105 customers have placed only one. Number the rows inside the piles, name the table, keep the numbers up to N. That is how you take the first N of every pile."
+    note: "The first use of numbering for a purpose. Nothing is new in the machinery: the number beside the row and the WITH are from SQL-6. Only the reading is new: up to N means the first N of each pile. Ties are impossible here, since no customer has two orders at the same moment."
+
+  # 11
+  - kind: "ask"
+    requires: ["top-n-per-pile", "number-inside-pile", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: "Show the first two restaurants of each city, in the alphabetical order of the name: the name and the city."
+    model: "WITH r AS (SELECT name, city, ROW_NUMBER() OVER (PARTITION BY city ORDER BY name) AS rn FROM restaurants) SELECT name, city FROM r WHERE rn <= 2"
+    rows: 8
+    result: [["Rest 01", "Belo Horizonte"], ["Rest 07", "Belo Horizonte"], ["Rest 03", "Curitiba"], ["Rest 06", "Curitiba"], ["Rest 04", "Rio de Janeiro"], ["Rest 10", "Rio de Janeiro"], ["Rest 02", "São Paulo"], ["Rest 05", "São Paulo"]]
+    narration:
+      - "Eight restaurants, two for each of the four cities, each the first two alphabetically in its city."
+      - "Number inside the piles, name the table, keep the numbers up to 2."
+      - ""
+    wrong:
+      - sql: "SELECT name, city FROM restaurants ORDER BY name LIMIT 2"
+        ask: "That gives two restaurants in all. How many did I ask for in each city? What does LIMIT know about piles?"
+        why: "LIMIT cuts the whole table once. It cannot cut each pile."
+      - sql: "SELECT name, city FROM restaurants WHERE ROW_NUMBER() OVER (PARTITION BY city ORDER BY name) <= 2"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+      - sql: "WITH r AS (SELECT name, city, ROW_NUMBER() OVER (ORDER BY name) AS rn FROM restaurants) SELECT name, city FROM r WHERE rn <= 2"
+        ask: "Two restaurants in all. What should make the numbering start again in each city?"
+    walk:
+      - "Write the table of restaurants numbered within each city by name, and name it."
+      - "From it, show the name and the city."
+      - "Keep only the rows numbered up to 2."
+    return:
+      text: "Show the first three couriers of each vehicle, in the order of the id: the id and the vehicle."
+      model: "WITH r AS (SELECT courier_id, vehicle, ROW_NUMBER() OVER (PARTITION BY vehicle ORDER BY courier_id) AS rn FROM couriers) SELECT courier_id, vehicle FROM r WHERE rn <= 3"
+      rows: 9
+      narration:
+        - "Nine couriers, three for each vehicle: the first three ids of the bikes, the carros and the motos."
+        - "Number inside the piles, name the table, keep the numbers up to 3."
+      note: "Return for step 11. Another table, pile and N."
+    note: "The first asked use of top-N per pile. The LIMIT wrong answer is the predictable slip, and the classmate in step 13 makes the same slip with a different sentence. Restaurant names are all different, so there are no ties."
+
+  # 12
+  - kind: "ask"
+    requires: ["top-n-per-pile", "number-the-rows", "compare-signs", "sort-direction", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: "Using a number beside each row, show the id and subtotal of the three biggest orders."
+    model: "WITH n AS (SELECT order_id, subtotal, ROW_NUMBER() OVER (ORDER BY subtotal DESC) AS rn FROM orders) SELECT order_id, subtotal FROM n WHERE rn <= 3"
+    rows: 3
+    result: [[101347, 281.15], [105582, 233.44], [100169, 209.96]]
+    narration:
+      - "The three biggest orders: 281.15, 233.44 and 209.96, the same three that ORDER BY and LIMIT gave you in lesson 2."
+      - "No piles this time, so the whole table is one pile. The first three of it are the three biggest."
+      - ""
+    wrong:
+      - sql: "WITH n AS (SELECT order_id, subtotal, ROW_NUMBER() OVER (ORDER BY subtotal) AS rn FROM orders) SELECT order_id, subtotal FROM n WHERE rn <= 3"
+        ask: "Those are the three smallest. Which end do we count from?"
+      - sql: "WITH n AS (SELECT order_id, subtotal, ROW_NUMBER() OVER (ORDER BY subtotal DESC) AS rn FROM orders) SELECT order_id, subtotal FROM n WHERE rn <= 5"
+        ask: "Five rows. How many did I ask for?"
+      - sql: "SELECT order_id, subtotal FROM orders WHERE ROW_NUMBER() OVER (ORDER BY subtotal DESC) <= 3"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+    walk:
+      - "Write the table of orders numbered by subtotal, the biggest first. Name it."
+      - "From it, show the id and subtotal."
+      - "Keep only the rows numbered up to 3."
+    return:
+      text: "Using a number beside each row, show the id and vehicle of the three couriers with the highest ids."
+      model: "WITH n AS (SELECT courier_id, vehicle, ROW_NUMBER() OVER (ORDER BY courier_id DESC) AS rn FROM couriers) SELECT courier_id, vehicle FROM n WHERE rn <= 3"
+      rows: 3
+      narration:
+        - "Couriers 200, 199 and 198, the three highest ids. Number from the top, keep up to 3."
+        - "No piles: the whole table is counted as one."
+      note: "Return for step 12. A different table, the same one-pile numbering."
+    note: "The whole table as a single pile. It connects the new idea to ORDER BY ... LIMIT from lesson 2, which does the same job on one pile. The top five subtotals are all different, so the answer is stable, and the three biggest are 281.15, 233.44 and 209.96."
+
+  # 13
+  - kind: "classmate"
+    new: ["latest-is-number-one"]
+    requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "sort-direction", "keep-rows", "text-quotes", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: |-
+      Ana wanted the most recent delivered order of each courier. She sorted the delivered orders newest first, and cut to one:
+
+      ```sql
+      SELECT courier_id, order_id, created_at FROM orders WHERE status = 'delivered' ORDER BY created_at DESC LIMIT 1
+      ```
+
+      One row came back: the newest delivered order of all. Ana, does LIMIT cut the table once, or once for each courier? ... Once. LIMIT knows nothing about piles. What she wants is the first row of each courier's pile, with the newest counted as first. What should she have written?
+    model: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 1"
+    rows: 200
+    shows:
+      - "SELECT courier_id, order_id, created_at FROM orders WHERE status = 'delivered' ORDER BY created_at DESC LIMIT 1"
+    narration:
+      - "200 couriers, and the newest delivered order of each. Number from the newest, and keep number 1."
+      - "The first row of each pile, where first means newest. That is a number 1, counted from the newest."
+      - "One row for each courier, the latest one."
+    wrong:
+      - sql: "SELECT courier_id, order_id, created_at FROM orders WHERE status = 'delivered' ORDER BY created_at DESC LIMIT 1"
+        ask: "That is Ana's sentence again, and it gives one row. What can keep one row for each courier?"
+      - sql: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 1"
+        ask: "That is each courier's oldest order. Which end of the numbering is number 1?"
+      - sql: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) AS rn FROM orders) SELECT courier_id, order_id, created_at FROM n WHERE rn = 1"
+        ask: "That has 201 rows: the cancelled orders have no courier and made a pile of their own. Which orders did Ana ask about, and where do we drop the others?"
+      - sql: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (ORDER BY created_at DESC) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 1"
+        ask: "One row again. What should make the numbering start again for each courier?"
+    walk:
+      - "Write the table of delivered orders, numbered within each courier from the newest. Name it."
+      - "Show the courier, the order and the time from it."
+      - "Keep only the rows numbered 1."
+    return:
+      text: "Show the oldest delivered order of each courier: the courier, the order id and the time."
+      model: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 1"
+      rows: 200
+      narration:
+        - "200 couriers, and the oldest delivered order of each. Number from the oldest, keep number 1."
+        - "The same sentence as before, counted the other way round."
+      note: "Return for step 13. The other end of the same pile."
+    note: "Ana makes the predictable slip before the learner can (rule E6), and the reason comes with it: LIMIT cuts the whole table, and piles are not in its vocabulary. The repair is the new thought, so it is a discovery and not a rule. The LIMIT answer is the one a learner who skipped this lesson would give, and so the wrong answer for it is first in the list. No courier has two delivered orders at the same moment."
+
+  # 14
+  - kind: "ask"
+    requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "sort-direction", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: "Show each customer's biggest order: the customer, the order id and the subtotal."
+    model: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn = 1"
+    rows: 1475
+    narration:
+      - "1,475 customers, and the biggest order of each. Number from the biggest, and keep number 1."
+      - "The newest was number 1 a moment ago and the biggest is number 1 now. Number 1 is whatever you counted first."
+      - ""
+    wrong:
+      - sql: "SELECT customer_id, MAX(subtotal) FROM orders GROUP BY customer_id"
+        ask: "That gives the biggest subtotal of each customer, but not which order it was. What does a pile's summary not keep?"
+        why: "GROUP BY squeezes the rows, so the order id is gone. Numbering keeps the rows."
+      - sql: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn = 1"
+        ask: "Those are each customer's smallest. Which end of the numbering is number 1?"
+      - sql: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn <= 2"
+        ask: "Two rows for most customers. How many did I ask for?"
+    walk:
+      - "Write the table of orders numbered within each customer, the biggest subtotal first. Name it."
+      - "Show the customer, the order and the subtotal from it."
+      - "Keep only the rows numbered 1."
+    return:
+      text: "Show each restaurant's biggest order: the restaurant, the order id and the subtotal."
+      model: "WITH n AS (SELECT restaurant_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY restaurant_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT restaurant_id, order_id, subtotal FROM n WHERE rn = 1"
+      rows: 60
+      narration:
+        - "60 restaurants, and the biggest order of each. Restaurant 8 has the biggest at 200.78, and restaurant 4 has 193.68."
+        - "Number from the biggest, keep number 1."
+      note: "Return for step 14. Another pile; the same two moves."
+    note: "Number 1 does not mean newest, it means counted first: the lesson's one real generalisation. A customer's subtotals are all different, so there are no ties. The GROUP BY answer is the one that people reach for in interviews."
+
+  # 15
+  - kind: "aside"
+    new: ["ties"]
+    text: "Only interesting, and you will not be asked it. Every sentence so far counted by something that never ties inside a pile: an id, or the time of one customer's orders. If two rows did tie, ROW_NUMBER would still give them different numbers, and which one gets the lower one is up to the database. There is a second function, RANK, that gives tied rows the same number. People ask about the difference in interviews, so now you have heard the name."
+    note: "The name-only thought `ties`, in the one aside it is allowed (grade name-only). It is also an honest account of why every sort column in this lesson was chosen so that nothing ties."
+
+  # 16
+  - kind: "ask"
+    requires: ["top-n-per-pile", "number-inside-pile", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: "Show each customer's second order: the customer, the order id and the time."
+    model: "WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM n WHERE rn = 2"
+    rows: 1370
+    narration:
+      - "1,370 customers have a second order, and here it is. The sign was an equals this time, to keep one number and not the first few."
+      - "Number inside the piles from the oldest, and keep number 2."
+      - ""
+    wrong:
+      - sql: "WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM n WHERE rn <= 2"
+        ask: "That keeps the first as well. Which sign keeps just number 2?"
+      - sql: "WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM n WHERE rn > 1"
+        ask: "That is every order after the first. Which sign keeps exactly one number?"
+      - sql: "WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM n WHERE rn = 2"
+        ask: "One row. What should make the numbering start again for each customer?"
+    walk:
+      - "Write the table of orders numbered within each customer from the oldest. Name it."
+      - "Show the customer, the order and the time from it."
+      - "Keep only the rows numbered 2."
+    return:
+      text: "Show each courier's third delivered order: the courier, the order id and the time."
+      model: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 3"
+      rows: 200
+      narration:
+        - "200 couriers, and the third delivered order of each. Number from the oldest, keep number 3."
+        - "Keep the delivered, number inside the piles, keep one number."
+      note: "Return for step 16. Another pile, and a keeping inside the table."
+    note: "Any number can be kept, not only 1: the sign is a choice, and the second wrong answer is the common one. 105 customers have only one order, and they are not in the result. Nothing ties within a customer."
+
+  # 17
+  - kind: "ask"
+    requires: ["top-n-per-pile", "number-inside-pile", "count-rows", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: "How many customers have placed at least three orders?"
+    model: "WITH n AS (SELECT customer_id, order_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT COUNT(*) FROM n WHERE rn = 3"
+    rows: 1
+    result: [[1172]]
+    narration:
+      - "1,172 customers. Every customer with three orders has a row numbered 3, so counting those rows counts the customers."
+      - "A count of the rows that have number 3: one for each customer with three orders or more."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(DISTINCT customer_id) FROM orders"
+        ask: "That counts every customer who has placed any order. How do you tell the ones with three or more?"
+      - sql: "SELECT COUNT(*) FROM orders GROUP BY customer_id HAVING COUNT(*) >= 3"
+        ask: "That gives one count for each customer, not one number. What should the count be of?"
+      - sql: "WITH n AS (SELECT customer_id, order_id, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT COUNT(*) FROM n WHERE rn <= 3"
+        ask: "That counts the first three orders of every customer. Which one number makes one row for each customer who has three?"
+    walk:
+      - "Number each customer's orders from the oldest, and name the table."
+      - "Keep the rows numbered 3."
+      - "Count what is left."
+    return:
+      text: "How many couriers have delivered at least thirty orders?"
+      model: "WITH n AS (SELECT courier_id, order_id, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) AS rn FROM orders WHERE status = 'delivered') SELECT COUNT(*) FROM n WHERE rn = 30"
+      rows: 1
+      result: [[71]]
+      narration:
+        - "71 couriers. A courier who has delivered thirty has a row numbered 30, and you counted those rows."
+        - "Number inside the piles, keep one number, count what is left."
+      note: "Return for step 17. Another pile, another number, and a keeping inside the table."
+    note: "A second route to the same answer exists (GROUP BY and HAVING from SQL-3 gives the same 1,172), and it is accepted if the learner uses it: this checks the answer, not the method. The number is the point: a row has number 3 only if its pile has at least three rows."
+
+  # 18
+  - kind: "ask"
+    requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up", "keep-rows", "text-quotes", "compare-signs", "sort-direction", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    friction: true
+    any_column_order: true
+    text: "This one I won't break down. The biggest delivered order of each city: show the city, the order id and the subtotal. The city lives in restaurants."
+    model: "WITH n AS (SELECT r.city, o.order_id, o.subtotal, ROW_NUMBER() OVER (PARTITION BY r.city ORDER BY o.subtotal DESC) AS rn FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered') SELECT city, order_id, subtotal FROM n WHERE rn = 1"
+    rows: 4
+    narration:
+      - "Four cities, and the biggest delivered order of each, with Rio de Janeiro's 281.15 the biggest of all. A join, a numbering, a name and a keeping, all in one sentence."
+      - "The city came from the other table, then it made the piles, then you numbered inside them and kept number 1."
+      - "Four rows. Every piece of that sentence you had met before today, except for putting them together."
+    wrong:
+      - sql: "SELECT r.city, MAX(o.subtotal) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered' GROUP BY r.city"
+        ask: "That gives each city's biggest subtotal, but not the order. What does a pile's summary not keep?"
+      - sql: "WITH n AS (SELECT r.city, o.order_id, o.subtotal, ROW_NUMBER() OVER (PARTITION BY r.city ORDER BY o.subtotal DESC) AS rn FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered') SELECT city, order_id, subtotal FROM n WHERE rn <= 2"
+        ask: "Two rows for each city. How many did I ask for?"
+      - sql: "WITH n AS (SELECT r.city, o.order_id, o.subtotal, ROW_NUMBER() OVER (PARTITION BY r.city ORDER BY o.subtotal) AS rn FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered') SELECT city, order_id, subtotal FROM n WHERE rn = 1"
+        ask: "Those are the smallest. Which end is number 1?"
+    walk:
+      - "From orders, bring in each order's restaurant, and keep the delivered orders."
+      - "Number the rows within each city, the biggest subtotal first, and name that table."
+      - "Show the city, the order and the subtotal for the rows numbered 1."
+    return:
+      text: "Show the two biggest delivered orders of each city: the city, the order id and the subtotal."
+      model: "WITH n AS (SELECT r.city, o.order_id, o.subtotal, ROW_NUMBER() OVER (PARTITION BY r.city ORDER BY o.subtotal DESC) AS rn FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id WHERE o.status = 'delivered') SELECT city, order_id, subtotal FROM n WHERE rn <= 2"
+      rows: 8
+      narration:
+        - "Eight rows, two for each city, with the bigger first in each."
+        - "The same sentence as before, keeping up to 2 in place of just 1."
+      note: "Return for step 18. Keep the first two in place of the first one."
+    note: "Friction, and the lesson's first weave with SQL-4: the pile is a column that has to be looked up. It is a long sentence on purpose. The top two subtotals of each city differ, so there is no tie. The numbers are the biggest delivered orders of each city."
+
+  # 19
+  - kind: "ask"
+    requires: ["top-n-per-pile", "number-inside-pile", "sort-direction", "keep-rows", "text-quotes", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    text: "Show each courier's three newest delivered orders: the courier, the order id and the time."
+    model: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn <= 3"
+    rows: 600
+    narration:
+      - "600 rows, three for each of the 200 couriers: the newest three of each."
+      - "Keep the delivered, number each courier's orders from the newest, keep up to 3."
+      - ""
+    wrong:
+      - sql: "SELECT courier_id, order_id, created_at FROM orders WHERE status = 'delivered' ORDER BY created_at DESC LIMIT 3"
+        ask: "Three rows in all. How many did I ask for in each courier's pile? What does LIMIT know about piles?"
+      - sql: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn <= 3"
+        ask: "Those are the three oldest. Which end is counted first?"
+      - sql: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) AS rn FROM orders) SELECT courier_id, order_id, created_at FROM n WHERE rn <= 3"
+        ask: "The cancelled orders have no courier and make a pile of their own, with three rows. Which orders did I ask about?"
+    walk:
+      - "Write the table of delivered orders, numbered within each courier from the newest. Name it."
+      - "Show the courier, the order and the time from it."
+      - "Keep the rows numbered up to 3."
+    return:
+      text: "Show each customer's two newest orders: the customer, the order id and the time."
+      model: "WITH n AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM n WHERE rn <= 2"
+      rows: 2845
+      narration:
+        - "2,845 rows: two for each customer who has two, and one for each who has one."
+        - "Number from the newest, keep up to 2."
+      note: "Return for step 19. Another pile, another N."
+    note: "Latest and top-N together, with a keeping inside the table, one step before the closing sentences. It is the 'three newest' of the courier and no courier has two delivered orders at the same moment."
+
+  # 20
+  - kind: "ask"
+    requires: ["top-n-per-pile", "number-inside-pile", "sort-direction", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    friction: true
+    any_column_order: true
+    text: "The last two, and I won't break them down. First: the three biggest orders of each restaurant, with the restaurant, the order id and the subtotal."
+    model: "WITH ranked AS (SELECT order_id, restaurant_id, subtotal, ROW_NUMBER() OVER (PARTITION BY restaurant_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT restaurant_id, order_id, subtotal FROM ranked WHERE rn <= 3"
+    rows: 180
+    narration:
+      - "180 rows, three for each of the 60 restaurants, the biggest first. That is a real interview question, and you built it by numbering inside the piles, naming the table and keeping up to 3."
+      - "Number from the biggest, inside each restaurant, and keep the first three."
+      - "Three for each restaurant: 180 rows."
+    wrong:
+      - sql: "SELECT restaurant_id, order_id, subtotal FROM orders ORDER BY subtotal DESC LIMIT 3"
+        ask: "Three rows in all. How many did I ask for in each restaurant? What does LIMIT know about piles?"
+      - sql: "WITH ranked AS (SELECT order_id, restaurant_id, subtotal, ROW_NUMBER() OVER (PARTITION BY restaurant_id ORDER BY subtotal) AS rn FROM orders) SELECT restaurant_id, order_id, subtotal FROM ranked WHERE rn <= 3"
+        ask: "Those are each restaurant's smallest. Which end is counted first?"
+      - sql: "SELECT restaurant_id, order_id, subtotal FROM orders WHERE ROW_NUMBER() OVER (PARTITION BY restaurant_id ORDER BY subtotal DESC) <= 3"
+        ask: "SQL refuses. When is the number beside the row written, compared with the keeping?"
+      - sql: "SELECT restaurant_id, MAX(subtotal) FROM orders GROUP BY restaurant_id"
+        ask: "One line per restaurant, and only its biggest. I asked for three rows of each, with the order ids. What keeps the rows?"
+    walk:
+      - "Write the table of orders numbered within each restaurant, the biggest subtotal first. Name it."
+      - "Show the restaurant, the order and the subtotal from it."
+      - "Keep the rows numbered up to 3."
+    return:
+      text: "Show each customer's two biggest orders: the customer, the order id and the subtotal."
+      model: "WITH n AS (SELECT customer_id, order_id, subtotal, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY subtotal DESC) AS rn FROM orders) SELECT customer_id, order_id, subtotal FROM n WHERE rn <= 2"
+      rows: 2845
+      narration:
+        - "2,845 rows: two for each customer who has two, and one for each who has one. Number from the biggest, keep up to 2."
+        - "The same moves as the restaurants, on customers."
+      note: "Return for step 20. Another pile and another N."
+    note: "Closing sentence one, from the map and pass-bar task 4: 180 rows. No restaurant has a tie between its third and fourth biggest order, so the answer is stable, even though some restaurants have ties lower down."
+
+  # 21
+  - kind: "ask"
+    requires: ["latest-is-number-one", "number-inside-pile", "sort-direction", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    any_column_order: true
+    text: "And the second: each customer's latest order, with the customer, the order id and the time."
+    model: "WITH ranked AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at DESC) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM ranked WHERE rn = 1"
+    rows: 1475
+    narration:
+      - "1,475 customers, and the latest order of each. Number from the newest, keep number 1, as you did for the couriers."
+      - "One row for each customer, and it is the newest. The same two moves, on a different pile."
+      - ""
+    wrong:
+      - sql: "SELECT customer_id, MAX(created_at) FROM orders GROUP BY customer_id"
+        ask: "That gives the latest time of each customer, but not which order it was. What does a pile's summary not keep?"
+      - sql: "WITH ranked AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM ranked WHERE rn = 1"
+        ask: "Those are each customer's oldest. Which end is number 1?"
+      - sql: "SELECT customer_id, order_id, created_at FROM orders ORDER BY created_at DESC LIMIT 1"
+        ask: "One row, the newest of everyone. What can keep one row for each customer?"
+    walk:
+      - "Write the table of orders numbered within each customer, the newest first. Name it."
+      - "Show the customer, the order and the time from it."
+      - "Keep only the rows numbered 1."
+    return:
+      text: "Show each customer's oldest order: the customer, the order id and the time."
+      model: "WITH ranked AS (SELECT customer_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY created_at) AS rn FROM orders) SELECT customer_id, order_id, created_at FROM ranked WHERE rn = 1"
+      rows: 1475
+      narration:
+        - "1,475 rows, the oldest order of each customer. Number from the oldest, keep number 1."
+        - "The other end of the same pile."
+      note: "Return for step 21. The opposite end of the same sentence."
+    note: "Closing sentence two, pass-bar task 5: 1,475 rows. No customer has two orders at the same moment, so the answer is stable. The learner has met it once, with couriers, in step 13."
+
+  # 22
+  - kind: "recap"
+    text: |-
+      Stop there. Today you met numbering. You can write a number beside each row, counting in an order you choose. You can make the numbering start again in each pile. And you saw what that is for: keep the rows numbered up to N and you have the first N of every pile, the three biggest or the two newest, and keep number 1 and you have the biggest, the newest, the first. The number has to be written first and the table named, because the number beside the row comes after the keeping.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 23
+  - kind: "cold-check"
+    requires: ["latest-is-number-one", "top-n-per-pile", "number-inside-pile", "sort-direction", "keep-rows", "text-quotes", "compare-signs", "beside-comes-late", "name-a-table", "name-a-result", "from-table", "choose-columns", "commas"]
+    any_column_order: true
+    text: "Each courier's second newest delivered order: the courier, the order id and the time."
+    model: "WITH n AS (SELECT courier_id, order_id, created_at, ROW_NUMBER() OVER (PARTITION BY courier_id ORDER BY created_at DESC) AS rn FROM orders WHERE status = 'delivered') SELECT courier_id, order_id, created_at FROM n WHERE rn = 2"
+    rows: 200
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: numbering from the newest and keeping one number other than 1, with a keeping inside the table, on a combination never practised. No courier has two delivered orders at the same moment. Never scored (rule F1)."

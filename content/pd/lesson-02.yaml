@@ -1,0 +1,856 @@
+lesson: pd-02
+title: "Piles in pandas"
+strand: pd
+stage: 1
+thoughts:
+  groupby: "`orders.groupby('status')` makes the piles."
+  pick-then-summarise: "Then pick the column, then say the summary: thinking order."
+  pile-names-on-left: "The pile names come out on the left, by themselves. Nobody has to ask for them."
+  size: "`.size()` counts the rows of each pile."
+  value-counts: "`orders['status'].value_counts()` is piles and a count in one word, biggest first."
+  sort-values: "`.sort_values(ascending=False)` sorts, biggest first."
+  keep-piles-again: "The piles are a table, so keeping piles is keeping rows. There is no second word."
+  row-by-row-and: "Two questions are joined with `&` or `|`, each in its own brackets. Python's `and` asks once, and these ask every row."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "From restaurants, show each city with how many restaurants it has, the biggest number first."
+    model: "SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC"
+    rows: 4
+    result: [["São Paulo", 25], ["Belo Horizonte", 15], ["Rio de Janeiro", 14], ["Curitiba", 6]]
+    after_run: "That one is SQL, from a few lessons back. Hold on to what it did: piles, a count for each, the biggest first. Today we write it in Python."
+    note: "Opening cold check, from SQL-1 and SQL-2: piles, the pile's name, a count, a sort by the count. It is deliberately SQL. Step 10 writes the same sentence in one word of pandas. No two cities share a count, so the order is stable. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["groupby"]
+    text: |-
+      Piles in SQL were GROUP BY. Pandas makes piles too, and says them in the order you think them: the table first, then the piles. Here the orders are sorted into piles by their status, and then a line to count how many piles there are:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders.groupby('status')))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders.groupby('status')))
+    after_run: "Two piles: cancelled and delivered. The orders were sorted by what their status column holds, as GROUP BY did. We have not said anything about the piles yet, so there is nothing to see except how many there are. The piles are not a table you can look at. They wait for something to be said about them."
+    note: "Printing the piles themselves would show a memory address that changes every run, so the first step counts them. len on piles counts piles, where len on a table counts rows. That is said once, and is the real reason for the odd-looking line."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["pick-then-summarise"]
+    text: |-
+      Now say something about each pile. You already know how to say something about a column of a table: pick the column, then say the summary. Do just that to the piles:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders.groupby('status')['subtotal'].mean())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders.groupby('status')['subtotal'].mean())
+    after_run: "About 59.99 for the cancelled orders and 60.43 for the delivered ones: the two numbers SQL gave you in the first lesson. The table, then the piles, then the column, then the summary. In SQL the summary came first and the piles last, and here the sentence runs in the order you think it."
+    note: "Pick-then-summarise is the PD-1 sentence with the piles inserted. Nothing new is spelled, only an order. 59.99 and 60.43 are SQL-1 step 19."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise"]
+    text: "For each status, what was the average delivery fee?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders.groupby('status')['delivery_fee'].mean())
+    output: |-
+      status
+      cancelled    5.368246
+      delivered    5.201960
+      Name: delivery_fee, dtype: float64
+    narration:
+      - "Cancelled about 5.37, delivered about 5.20. Piles by status, the delivery fee picked, its average said."
+      - "One average for each pile: the table, the piles, the column, the summary."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['delivery_fee'].mean())
+        ask: "That is one number for the whole table. What makes it one for each status?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('delivery_fee')['status'].mean())
+        ask: "Which column makes the piles, and which is the average about?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('status').mean()['delivery_fee'])
+        ask: "Python cannot average the whole table, because some columns are words. Pick the column before the summary."
+    walk:
+      - "Make the piles by status, after the table."
+      - "Pick the delivery fee column."
+      - "Say the average, and print."
+    return:
+      text: "For each promised time, what was the longest delivery that really happened?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders.groupby('promised_minutes')['actual_minutes'].max())
+      output: |-
+        promised_minutes
+        30     63.9
+        40     95.5
+        50    109.9
+        Name: actual_minutes, dtype: float64
+      narration:
+        - "109.9 for the 50-minute promises, and less for the others. A different pile, a different column, a different summary."
+        - "Piles by promised time, the real minutes picked, the biggest said."
+      note: "Return for step 5."
+    note: "First pile sentence with no hand-holding. It follows the give of step 3 with another pile column and another picked column, so it is not an edit of it in one place. Its names on the left have already been seen in step 3 and are not remarked on until the next step."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    new: ["pile-names-on-left"]
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise"]
+    text: "The promised_minutes column holds 30, 40 or 50. For each promised time, what was the average subtotal? In SQL you had to ask for the pile's name, or the numbers came out unlabelled. Look at what pandas does about that when you run it."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders.groupby('promised_minutes')['subtotal'].mean())
+    output: |-
+      promised_minutes
+      30    60.335199
+      40    60.069905
+      50    60.797772
+      Name: subtotal, dtype: float64
+    narration:
+      - "Each number has its pile beside it, 30, 40 and 50, and you did not ask for them. The answer is filed under the names of the piles, down the left, by itself."
+      - "Three piles, and each average already carries its name. In SQL you had to ask for the name. Here nobody does."
+      - "30, 40 and 50 are there on the left, without a word from you."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('promised_minutes')['subtotal'])
+        ask: "Piles are made and a column is picked, but nothing is said about each pile. What do we want to know about each?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('subtotal')['promised_minutes'].mean())
+        ask: "How many piles did you expect, and what are we piling by? Which column makes the piles?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'].mean())
+        ask: "That is one number for every order. Where do the piles come in?"
+    walk:
+      - "Read orders.csv. Then, after the table, make the piles: groupby, with the column to pile by in quotes."
+      - "Pick the column the average is about."
+      - "Say the summary, and print."
+    return:
+      text: "For each status, what was the average promised time?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders.groupby('status')['promised_minutes'].mean())
+      output: |-
+        status
+        cancelled    40.626566
+        delivered    39.882164
+        Name: promised_minutes, dtype: float64
+      narration:
+        - "Two piles, each with its name beside it: cancelled and delivered. The names came out without being asked for."
+        - "The table, the piles, the column, the summary. And the pile's name on the left by itself."
+      note: "Return for step 4. Other pile column and other summary column."
+    note: "The new thought is a discovery and not a rule: the learner is told to look, then sees. The names have been on the left since step 3, and this is the step that says so. It resolves, without a word of teaching, the tension SQL-1 built in steps 15 to 17. Echoes SQL-1 step 19's return, where the promised times were the piles."
+
+  # 6
+  - kind: "give"
+    lang: "python"
+    new: ["size"]
+    text: |-
+      Counting is the one summary that needs no column, because it counts whole rows, not the values of one column. In SQL that was the star. After the piles, the word for it is size:
+
+      ```python
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(restaurants.groupby('city').size())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        restaurants = pd.read_csv('restaurants.csv')
+        print(restaurants.groupby('city').size())
+    after_run: "15, 6, 14 and 25: how many restaurants each city has, the same numbers SQL gave, each with its city beside it. Nothing was picked, because rows are what is counted. Size is COUNT of the star, said after the piles."
+    note: "size, and no column picked, is COUNT(*) said in the new order. The learner has met the cities and their counts in SQL-1 steps 16 to 18."
+
+  # 7
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "groupby", "size", "pile-names-on-left"]
+    text: "How many couriers ride each vehicle?"
+    model: |
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
+      print(couriers.groupby('vehicle').size())
+    output: |-
+      vehicle
+      bike      73
+      carro     17
+      moto     110
+      dtype: int64
+    narration:
+      - "Bike 73, carro 17, moto 110. Piles by vehicle, then a count of each pile, with the names on the left."
+      - "The 73 you found in the first lesson, now with its two neighbours and all three names."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          couriers = pd.read_csv('couriers.csv')
+          print(couriers.groupby('vehicle'))
+        ask: "Piles are made, and nothing is said about them. What do we want to know about each?"
+      - code: |-
+          import pandas as pd
+          couriers = pd.read_csv('couriers.csv')
+          print(couriers['vehicle'].size())
+        ask: "That asks a column about its size, and a column has no piles. What makes the piles first?"
+      - code: |-
+          import pandas as pd
+          couriers = pd.read_csv('couriers.csv')
+          print(couriers.groupby('city').size())
+        ask: "Those are the cities. Which column holds the vehicle?"
+    walk:
+      - "Read couriers.csv into a table."
+      - "Make piles by the vehicle column."
+      - "Count the rows of each pile, and print."
+    return:
+      text: "The restaurants have a cuisine. For each cuisine, how many restaurants are there?"
+      model: |
+        import pandas as pd
+        restaurants = pd.read_csv('restaurants.csv')
+        print(restaurants.groupby('cuisine').size())
+      output: |-
+        cuisine
+        arabe          8
+        brasileira    11
+        hamburguer    13
+        japonesa      10
+        pizza          8
+        saudavel      10
+        dtype: int64
+      narration:
+        - "Six cuisines, each with its count: arabe 8, brasileira 11, hamburguer 13, japonesa 10, pizza 8, saudavel 10."
+        - "Piles by cuisine, then a count of each. The names came out without being asked for."
+      note: "Return for step 7."
+    note: "Counting piles of another table. The learner never needs to pick a column here, which is why the star was never a worry in SQL either."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "pile-names-on-left", "compare-signs", "keep-before-piles"]
+    text: "Among the orders above 100, how many were promised for each time?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['subtotal'] > 100].groupby('promised_minutes').size())
+    output: |-
+      promised_minutes
+      30    219
+      40    199
+      50    214
+      dtype: int64
+    narration:
+      - "219 for the 30-minute promises, 199 for 40 and 214 for 50. You kept the big orders first, then made the piles, then counted them."
+      - "Keep, pile, count: the same order as SQL, with the table first. After the table, the sentence runs in the order things happen."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('promised_minutes').size())
+        ask: "Those counts include every order. Which ones did I ask about?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('promised_minutes')[orders['subtotal'] > 100].size())
+        ask: "Which happens first, keeping rows or making piles? Write them in that order."
+        why: "the rows are kept before the piles are made, so the keeping comes first in the sentence."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[orders['subtotal'] > 100]))
+        ask: "That is how many big orders there are in all. How many for each promised time?"
+    walk:
+      - "Read orders.csv. Keep only the orders above 100, as before."
+      - "Of what is left, make the piles by promised time."
+      - "Count the rows of each pile, and print."
+    return:
+      text: "Among the cancelled orders, how many were promised for each time?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[orders['status'] == 'cancelled'].groupby('promised_minutes').size())
+      output: |-
+        promised_minutes
+        30    117
+        40    140
+        50    142
+        dtype: int64
+      narration:
+        - "117 at 30 minutes, 140 at 40 and 142 at 50. Keep the cancelled ones, pile them, count the piles."
+        - "The same order as before: keep, then piles, then the count."
+      note: "Return for step 8."
+    note: "PD-1's keep, joined to this lesson's piles. Keep-before-piles is SQL-1's last thought, now in the order of the sentence itself."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["value-counts"]
+    text: |-
+      For a single column, piles and a count are so common that pandas has one word for the lot. Ask a column how many of each, and it tells you, the biggest first:
+
+      ```python
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
+      print(couriers['vehicle'].value_counts())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        print(couriers['vehicle'].value_counts())
+    after_run: "Moto 110, bike 73, carro 17: the piles you made a moment ago, already counted and already in order, with no groupby and no size. It is the first thing people do to a table they have never seen: what is in this column, and how many of each."
+    note: "value-counts was added to the map on 24 Nov for the cold sittings, which use tables the learner has never seen. It is a shortcut for step 7 plus a sort, and the learner is told what it is a shortcut for."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "value-counts"]
+    text: "Which cities are the restaurants in, and how many in each, the biggest first?"
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(restaurants['city'].value_counts())
+    output: |-
+      city
+      São Paulo         25
+      Belo Horizonte    15
+      Rio de Janeiro    14
+      Curitiba           6
+      Name: count, dtype: int64
+    narration:
+      - "São Paulo 25, Belo Horizonte 15, Rio 14, Curitiba 6. That is the sentence you wrote in SQL at the start of the sitting, in a single word."
+      - "One column, asked how many of each, biggest first."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants.groupby('city').size())
+        ask: "Right numbers, but in the order of the alphabet. Which word gives the biggest first, on its own?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants['city'].value_counts)
+        ask: "Python showed you the action and did not run it. What do brackets do after an action's name?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants['city'].count())
+        ask: "That is one number: how many cities were written down. What do we want for each city?"
+    walk:
+      - "Read restaurants.csv into a table."
+      - "Take the city column out."
+      - "Ask it how many of each: value_counts, with its brackets."
+    return:
+      text: "The couriers work in cities too. Show me each city and how many couriers it has, the biggest first."
+      model: |
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        print(couriers['city'].value_counts())
+      output: |-
+        city
+        São Paulo         89
+        Rio de Janeiro    49
+        Belo Horizonte    32
+        Curitiba          30
+        Name: count, dtype: int64
+      narration:
+        - "São Paulo 89, Rio de Janeiro 49, Belo Horizonte 32, Curitiba 30. A column, asked how many of each."
+        - "Piles by city, counted and sorted, in one word."
+      note: "Return for step 10."
+    note: "The same sentence as the cold check, written in the shortest way. A learner who answers with groupby and size gets the right numbers in the alphabet's order, which is the first wrong answer, and the question points them at the sort."
+
+  # 11
+  - kind: "give"
+    lang: "python"
+    new: ["sort-values"]
+    text: |-
+      When the piles are made some other way, and you want them in the order of their numbers, you sort the values. It starts from the smallest, as sorted did for a list, and ascending=False turns it round, as reverse=True did there. The sort is the last thing said, because it happens last:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders.groupby('promised_minutes')['subtotal'].mean().sort_values(ascending=False))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders.groupby('promised_minutes')['subtotal'].mean().sort_values(ascending=False))
+    after_run: "50 first, with the biggest average, then 30, then 40. The averages were made first, and then put in order, which is why the sort comes at the end, as ORDER BY did. The word for turning it round is not reverse here. It is ascending=False. That spelling just is."
+    note: "Imports sorted and reverse=True from PY-2 and ORDER BY ... DESC from SQL-2. ascending versus reverse is an arbitrary difference, and the step says so, as SQL-1 did for AVG (rule B6)."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise", "pile-names-on-left", "sort-values"]
+    text: "For each status, what did the delivery fees add up to? Show the biggest first."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders.groupby('status')['delivery_fee'].sum().sort_values(ascending=False))
+    output: |-
+      status
+      delivered    29136.18
+      cancelled     2141.93
+      Name: delivery_fee, dtype: float64
+    narration:
+      - "Delivered first, with 29,136.18, then cancelled with 2,141.93. Piles, the fee, the total, then the order, in the order it happens."
+      - "The sort came last, after the totals existed."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('status')['delivery_fee'].sum())
+        ask: "Cancelled comes first, because the piles are listed in the order of their names. What puts the biggest first?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('status')['delivery_fee'].sum().sort_values())
+        ask: "Sorted, but which end comes first?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('status')['delivery_fee'].sum().sort_values(reverse=True))
+        tell: "That is the word for lists. Here it is ascending=False. That spelling just is."
+    walk:
+      - "Make the piles by status, pick the delivery fee, and say the total."
+      - "Sort what came out."
+      - "Turn it round so the biggest is first."
+    return:
+      text: "For each promised time, what was the average real time of a delivery? Show the biggest first."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders.groupby('promised_minutes')['actual_minutes'].mean().sort_values(ascending=False))
+      output: |-
+        promised_minutes
+        50    49.439216
+        40    39.606924
+        30    29.377445
+        Name: actual_minutes, dtype: float64
+      narration:
+        - "50 minutes promised took about 49.4, then 40, then 30. Piles, the average, the sort."
+        - "The same last word as before, on a different column."
+      note: "Return for step 12."
+    note: "Sort after summaries. The unsorted answer happens to be in the alphabet's order and the sort without ascending=False gives the same order, so the first two wrong answers both show."
+
+  # 13
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. The three movements you keep making, split the table into piles, say something about each pile, put the answers together into a new table, have a name among people who work with data: split, apply, combine. A paper in 2011 gave it that name, and pointed out that it is what GROUP BY and groupby and half the other tools do, under different spellings. It is why your thought in SQL was already the thought in Python."
+    note: "Relief after the climb of steps 11 and 12 and before the steepest part of the lesson (rule C8). A real origin of a real phrase, and no mnemonic. It restates, from a distance, the course's own claim that the movements do not change."
+
+  # 14
+  - kind: "give"
+    lang: "python"
+    new: ["keep-piles-again"]
+    text: |-
+      Piles that have been counted are a table, or very nearly: a column of numbers, each with a name beside it. So you can keep some of them the way you keep rows. Ask a question of the column, and hand the answers to the brackets. We name the counts first, because we use them twice:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      counts = orders[orders['status'] == 'delivered'].groupby('restaurant_id').size()
+      print(counts[counts > 110])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        counts = orders[orders['status'] == 'delivered'].groupby('restaurant_id').size()
+        print(counts[counts > 110])
+    after_run: "Two restaurants had more than 110 delivered orders: restaurant 2 with 113, and restaurant 24 with 112. The question was asked of the piles' counts, and the brackets kept the yes. There is no second word for it. In SQL, WHERE asked about rows and HAVING asked about piles, and you had to know which was which. Here the piles are a table, so keeping piles is keeping rows."
+    note: "The thought that dissolves HAVING (map note). counts[counts > 110] is the same brackets and the same question as PD-1 step 16, so it is a discovery. counts is named because it is needed twice, which is name-the-result again. The list comes out short, on purpose."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "keep-piles-again", "name-the-result", "how-many", "compare-signs"]
+    text: "How many restaurants had more than 100 delivered orders?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      counts = orders[orders['status'] == 'delivered'].groupby('restaurant_id').size()
+      print(len(counts[counts > 100]))
+    output: "16"
+    narration:
+      - "16: the same 16 restaurants SQL kept with HAVING. You made the piles, counted them, named the counts, and kept the piles that passed."
+      - "Keep the delivered orders, pile them by restaurant, count each pile, then keep the piles above 100. And only a table was ever kept."
+      - "16 restaurants."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          counts = orders[orders['status'] == 'delivered'].groupby('restaurant_id').size()
+          print(len(counts))
+        ask: "That is every restaurant. Where do we keep only the ones above 100?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          counts = orders[orders['status'] == 'delivered'].groupby('restaurant_id').size()
+          print(len(counts > 100))
+        ask: "That counted the answers, and there is one for every restaurant. What keeps only the yes ones?"
+        why: "the question alone only answers. The brackets are what drop the no's, for piles as for rows."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          counts = orders.groupby('restaurant_id').size()
+          print(len(counts[counts > 100]))
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+    walk:
+      - "Keep the delivered orders, pile them by restaurant, and count each pile. Give the counts a name."
+      - "Ask the counts a question: is each above 100?"
+      - "Hand it to the brackets, and count what is left."
+    return:
+      text: "How many customers placed more than 7 orders?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        counts = orders.groupby('customer_id').size()
+        print(len(counts[counts > 7]))
+      output: "66"
+      narration:
+        - "66 customers. Pile by customer, count the piles, keep the big ones, count those."
+        - "The same shape: piles, a count, a question asked of the counts, the brackets."
+      note: "Return for step 15."
+    note: "The closing sentence of SQL-3 in pandas (16 restaurants). A classmate's mistake from SQL-3, WHERE on a count, cannot happen here because there is only one kind of keeping. That is the point of the thought."
+
+  # 16
+  - kind: "classmate"
+    lang: "python"
+    new: ["row-by-row-and"]
+    text: |-
+      Two questions about each row, as in SQL: the order was delivered, and it came to more than 100. Ana joined them the way she would in a loop:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders[(orders['status'] == 'delivered') and (orders['subtotal'] > 100)]))
+      ```
+
+      Python answered: ValueError: The truth value of a Series is ambiguous. Ana, how many answers does each of those questions give? ... 6,000, one for every row. And the word and asks once: is this whole thing true, or is it false? A column of 6,000 answers cannot be true as a whole, so Python refuses.
+
+      The sign that asks both at once, row by row, is &. For either, it is |. Each question goes in its own round brackets, because & is done before == and >, and the brackets say: questions first.
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders[(orders['status'] == 'delivered') & (orders['subtotal'] > 100)]))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders[(orders['status'] == 'delivered') & (orders['subtotal'] > 100)]))
+    broken: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders[(orders['status'] == 'delivered') and (orders['subtotal'] > 100)]))
+    after_run: "589 orders were delivered and came to more than 100, the figure SQL gave you with AND. Each question was asked of every row, and & kept a row only where both said yes. And would have asked the whole column once."
+    note: "Ana makes the slip before the learner can (rule E6), and Python's own message supplies the real reason. The reason for the round brackets is also real, and is given, so it is not an arbitrary rule (rule B5): & is done before the comparisons. This is the PY-2 and/or thought in a new place, and it is where the two kinds of asking part company. 589 is SQL-2 step 9."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "row-by-row-and", "how-many", "compare-signs"]
+    text: "How many orders had a delivery fee of 0 and a subtotal above 100?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders[(orders['delivery_fee'] == 0) & (orders['subtotal'] > 100)]))
+    output: "160"
+    narration:
+      - "160. Each question in its own brackets, and & kept the rows where both said yes. The same 160 SQL found."
+      - "Two questions asked of every row, joined by &, then the brackets kept the rows, then len counted them."
+      - "160 orders."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[(orders['delivery_fee'] == 0) and (orders['subtotal'] > 100)]))
+        ask: "Python refuses, and says the truth value of a column is ambiguous. Does and ask once, or ask every row?"
+        why: "and asks once about the whole column. & asks each row."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[orders['delivery_fee'] == 0 & orders['subtotal'] > 100]))
+        ask: "Python did the & before the comparisons. What goes round each question, so that they are done first?"
+        why: "& is done before == and >, so each question needs its own round brackets."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[(orders['delivery_fee'] == 0) | (orders['subtotal'] > 100)]))
+        ask: "Would a row have to pass both questions, or only one of them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders[orders['delivery_fee'] == 0]))
+        ask: "That is only the first question. How do we add the second?"
+    walk:
+      - "Ask the delivery fee column whether each order's fee is 0."
+      - "Ask the subtotal column whether each is above 100. Each question gets its own round brackets."
+      - "Join them with the sign that asks both of every row, hand that to the table's brackets, and count."
+    return:
+      text: "The promised_minutes column holds 30, 40 or 50. How many orders were promised in 30 minutes and came to less than 20?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders[(orders['promised_minutes'] == 30) & (orders['subtotal'] < 20)]))
+      output: "101"
+      narration:
+        - "101 orders. Two questions about each row, joined by &, each in its own brackets."
+        - "Both had to say yes for a row to stay."
+      note: "Return for step 17."
+    note: "SQL-2 step 10 in pandas. 160 is SQL-2's answer, and 101 is its return."
+
+  # 18
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "row-by-row-and", "how-many", "text-quotes"]
+    text: "How many restaurants serve pizza or japonesa?"
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(len(restaurants[(restaurants['cuisine'] == 'pizza') | (restaurants['cuisine'] == 'japonesa')]))
+    output: "18"
+    narration:
+      - "18: eight pizza places and ten japonesa ones. Either question being yes was enough, and | said so."
+      - "Two questions, each in its own brackets, joined by the sign for either."
+      - "18 restaurants."
+    wrong:
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(len(restaurants[(restaurants['cuisine'] == 'pizza') & (restaurants['cuisine'] == 'japonesa')]))
+        ask: "Zero. Can one restaurant serve two cuisines at once? Which sign keeps a row if either question says yes?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(len(restaurants[(restaurants['cuisine'] == 'pizza') or (restaurants['cuisine'] == 'japonesa')]))
+        ask: "Python refuses, because or asks once, about the whole column. Which sign asks every row?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(len(restaurants[restaurants['cuisine'] == 'pizza']))
+        ask: "Only the pizza ones. How do we add the other cuisine?"
+    walk:
+      - "Ask the cuisine column whether it is pizza."
+      - "Ask it whether it is japonesa. Each question wears its own round brackets."
+      - "Join them with the sign for either, keep the rows, and count."
+    return:
+      text: "The couriers ride a bike, a moto or a carro. How many ride a moto or a carro?"
+      model: |
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        print(len(couriers[(couriers['vehicle'] == 'moto') | (couriers['vehicle'] == 'carro')]))
+      output: "127"
+      narration:
+        - "127. Either question being yes was enough."
+        - "Two questions about the vehicle, one sign between them: the one for either."
+      note: "Return for step 18."
+    note: "The OR half of the thought, on text. 18 and 127 echo SQL-2 step 11 and its return."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "pick-then-summarise", "pile-names-on-left", "sort-values", "name-the-result", "keep-before-piles"]
+    friction: true
+    text: "This one I won't break down. For the delivered orders only, show each promised time with its average subtotal, the biggest average first."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      delivered = orders[orders['status'] == 'delivered']
+      print(delivered.groupby('promised_minutes')['subtotal'].mean().sort_values(ascending=False))
+    output: |-
+      promised_minutes
+      50    60.758956
+      30    60.571488
+      40    59.955852
+      Name: subtotal, dtype: float64
+    narration:
+      - "50 first, with about 60.76, then 30, then 40. Keep the delivered rows, pile them, pick the column, average it, sort the averages. Each step followed the one before."
+      - "Five movements, in the order they happen, and you found the order yourself."
+      - "Delivered orders only, three piles, the biggest average first."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('promised_minutes')['subtotal'].mean().sort_values(ascending=False))
+        ask: "Those averages include the cancelled orders. Where do we drop them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          delivered = orders[orders['status'] == 'delivered']
+          print(delivered.groupby('promised_minutes')['subtotal'].mean())
+        ask: "Those are right but in the order of the names. What puts the biggest first?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('promised_minutes')[orders['status'] == 'delivered']['subtotal'].mean().sort_values(ascending=False))
+        ask: "Which happens first, keeping rows or making piles? Write them in that order."
+    walk:
+      - "Keep only the delivered orders, as you did at the start."
+      - "Of those, make the piles by promised time, pick the subtotal, and say the average."
+      - "Sort the averages, the biggest first."
+    return:
+      text: "Among the cancelled orders only, show each promised time with what its delivery fees added up to, the biggest first."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        cancelled = orders[orders['status'] == 'cancelled']
+        print(cancelled.groupby('promised_minutes')['delivery_fee'].sum().sort_values(ascending=False))
+      output: |-
+        promised_minutes
+        40    773.89
+        50    737.95
+        30    630.09
+        Name: delivery_fee, dtype: float64
+      narration:
+        - "40 first, with 773.89, then 50, then 30. Keep, pile, pick, add up, sort."
+        - "The same five movements, with a total in place of an average."
+      note: "Return for step 19. Not broken down, like the step."
+    note: "Friction (rule C9). SQL-1's keep-then-pile sentence, with a sort at the end, and with a name for what was kept. A learner who skips the name still passes, since the output is the same."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "pile-names-on-left", "sort-values", "look-at-rows", "keep-before-piles"]
+    text: "The last one, from nothing: the five restaurants with the most delivered orders, and how many each had."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['status'] == 'delivered'].groupby('restaurant_id').size().sort_values(ascending=False).head(5))
+    output: |-
+      restaurant_id
+      2     113
+      24    112
+      3     109
+      59    109
+      22    108
+      dtype: int64
+    accepts:
+      - |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[orders['status'] == 'delivered']['restaurant_id'].value_counts().head(5))
+    narration:
+      - "Restaurant 2 first, with 113, then 24, then 3 and 59 on 109, then 22 on 108: the five SQL gave. That is a real interview question and you built it by thinking: keep the delivered orders, pile them by restaurant, count each pile, sort, take the first five. Every word in the order it happens."
+      - "Keep, pile, count, sort, cut, and you wrote them in that order. The sentence reads left to right as the work happens."
+      - "Five restaurants, each with its count, the busiest first."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['status'] == 'delivered'].groupby('restaurant_id').size().sort_values(ascending=False))
+        ask: "Every restaurant is here. Which word keeps only the first five?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['status'] == 'delivered'].groupby('restaurant_id').size().sort_values().head(5))
+        ask: "Those are the five with the fewest. Which end do we want?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders.groupby('restaurant_id').size().sort_values(ascending=False).head(5))
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+    walk:
+      - "Keep the delivered orders, and make the piles by restaurant."
+      - "Count each pile, and sort the counts, the biggest first."
+      - "Keep only the first five, with the action that shows the first rows."
+    return:
+      text: "Among the delivered orders, show the three restaurants with the biggest total of subtotals, with each total."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[orders['status'] == 'delivered'].groupby('restaurant_id')['subtotal'].sum().sort_values(ascending=False).head(3))
+      output: |-
+        restaurant_id
+        24    7245.43
+        3     6761.38
+        16    6749.46
+        Name: subtotal, dtype: float64
+      narration:
+        - "Restaurant 24 first, with 7,245.43, then 3 and 16. Keep, pile, pick, add up, sort, cut."
+        - "The same sentence as before, with a total in place of a count."
+      note: "Return for step 20. Uses pick-then-summarise, so it is not the closing sentence with a word changed."
+    note: "The surprise sentence, and the closing sentence of PD-2 in the map: the answer SQL-2 gave. Restaurants 3 and 59 tie at 109, and pandas puts 3 first where SQL put 59 first. The model prints them in the order its code gives, and the checker compares the printed order, so the note matters. The value_counts route prints the same five in the same order, with a different last line, so it is accepted."
+
+  # 21
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. You made piles in Python, said something about each, counted them, sorted them and kept some of them, always in the order you think it: the table, the rows you keep, the piles, the column, the summary, the sort, the cut. The numbers matched what SQL gave you, because the questions are the same. The pile's name came out on its own, and keeping piles turned out to be only keeping rows.
+
+      You are still not fast, and you are not meant to be. The aim is that you can think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "pile-names-on-left", "keep-before-piles"]
+    text: "Counting only the couriers who ride a bike, how many are there in each city? Start from nothing."
+    model: |
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
+      print(couriers[couriers['vehicle'] == 'bike'].groupby('city').size())
+    output: |-
+      city
+      Belo Horizonte     9
+      Curitiba          13
+      Rio de Janeiro    18
+      São Paulo         33
+      dtype: int64
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: keep, then pile, then count, on a table the lesson used and a combination it never asked. It is SQL-1's closing cold check, in pandas, with the same answer (9, 13, 18, 33). Never scored (rule F1). What a miss tells the script: which of the import, the read, the keeping, the piles or the count was absent."

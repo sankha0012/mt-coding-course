@@ -263,3 +263,16 @@ Downloaded on 24 Nov 2026 into `data/real/olist/`, which git ignores. What a fir
 
 1. **Reading the file.** Make the learner read it every time. Applied above and in every closing script.
 2. **The second model in ML-2.** Gradient boosting. Applied above.
+
+## As written, 24 Nov 2026
+
+All eight lessons are in `content/pd/` and `content/ml/`. Changes from this map, each said by the writer in the lesson's notes:
+
+- **PD-1** shows `head()` on restaurants and couriers, because the 11-column orders table gets cut with `...`.
+- **PD-2** and **PD-4** open with an SQL cold check. PD-2 shows `groupby` through `len(...groupby(...))`, because printing the group object shows a memory address that changes every run. Its closing step accepts the `value_counts` route, whose output ends with `Name: count`. Restaurants 3 and 59, tied at 109, come out in the order 3, 59 in pandas and 59, 3 in SQL.
+- **PD-3** gives `dropna` as a second give under `fill-or-drop`. `info()` is shown without `print`, and the lesson says why.
+- **PD-4** shows `reset_index` as making the pile names askable, not as something merge needs, because pandas can merge on index names.
+- **PD-5** has the latest-order-per-customer sentence as a mid-lesson ask, and closes on latest plus `transform`.
+- **ML-2** keeps two worlds apart. On the `dropna` rows, as in ML-1, adding the promised time lifts the plain model from 0.697 to 0.792, and boosting scores 0.787. The figures in this map (0.805, 0.795, 0.938 and 0.926) hold on all 5,601 rows with a fill learned from the training rows only, which is where the lesson goes after `fit-on-train-only`. Typed steps fill with the mean and print it (4.4174 against 4.439), because a median fill leaks invisibly (4.3 either way).
+- **ML-3** uses no `check`: the learner's script prints. `np.arange` and `% k` are split across two gives.
+- **ML-1** and **ML-2** each have one ask more than the map, as extra returns on existing thoughts.

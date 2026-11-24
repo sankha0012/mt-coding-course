@@ -1,0 +1,930 @@
+lesson: pd-03
+title: "Clean and add columns"
+strand: pd
+stage: 1
+thoughts:
+  first-look: "`orders.info()` lists the columns, their kinds, and how many cells of each are filled."
+  list-of-columns: "A list of names gets several columns. One name gives a column, a list of names gives a table, which is where the two pairs of brackets come from."
+  new-column: "`orders['total'] = ...` adds a column, the way a dict takes a new name."
+  column-sums: "Columns add and subtract, row by row."
+  yes-no-as-column: "A question can be kept as a column of its own."
+  mean-of-yes-no: "The mean of a yes-or-no column is the share of yes."
+  find-missing: "`.isna().sum()` counts the empty cells of a column."
+  fill-or-drop: "`.fillna(value)` fills them, `.dropna(subset=[...])` drops their rows. Say which you chose and why."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "sort-values", "pile-names-on-left", "keep-before-piles"]
+    text: "Counting only the cancelled orders, how many were promised for each time, the biggest count first? Start from nothing."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['status'] == 'cancelled'].groupby('promised_minutes').size().sort_values(ascending=False))
+    output: |-
+      promised_minutes
+      50    142
+      40    140
+      30    117
+      dtype: int64
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PD-2: keep, piles, a count, a sort, on a combination never practised (PD-2 step 8 kept the cancelled orders and piled them, without the sort). Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    new: ["first-look"]
+    text: |-
+      A table you have never seen is a stranger, and the first thing to do with a stranger is ask who it is: which columns it has, what kind of values they hold, and how many of each are filled in. One action asks all three. It prints its own report and gives nothing back, so there is nothing to put print around:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders.info()
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders.info()
+    after_run: "Eleven columns. Beside each is the kind of value it holds, int64 and float64 for numbers and str for text, and how many cells are filled. Read down the Non-Null column. Most say 6,000. Subtotal says 5,975, so 25 are empty. Actual_minutes and courier_id say 5,601, because cancelled orders have neither, and coupon_code says 1,884, because most orders used no coupon. Together with value_counts, this is what people do first with a table they have never seen. We come back to the empty cells soon."
+    note: "Opens on the strange table (the cold sittings use tables the learner has never seen: the map's note on first-look). info is the one place where nothing is wrapped in print, and the reason is given plainly: it prints, and gives nothing back. The empty cells are only noticed here. Find-missing and fill-or-drop arrive in steps 15 to 20."
+
+  # 3
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "first-look", "text-quotes"]
+    text: "The restaurants file is another table. Look it over the way you would a stranger: its columns, their kinds, and how many cells are filled."
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      restaurants.info()
+    output: "<class 'pandas.DataFrame'>\nRangeIndex: 60 entries, 0 to 59\nData columns (total 5 columns):\n #   Column         Non-Null Count  Dtype\n---  ------         --------------  -----\n 0   restaurant_id  60 non-null     int64\n 1   name           60 non-null     str  \n 2   city           60 non-null     str  \n 3   cuisine        60 non-null     str  \n 4   signup_date    60 non-null     str  \ndtypes: int64(1), str(4)\nmemory usage: 2.5 KB"
+    narration:
+      - "Five columns, 60 rows, and every column filled in: sixty non-null all the way down. Nothing is missing here."
+      - "A report on the table, written by the table itself. No print was needed, because info prints."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants.info())
+        ask: "The report ends with a word that is not part of it. What did info give back for print to show?"
+        why: "info prints its report and gives nothing back, and print of nothing shows the word None."
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants.head())
+        ask: "Those are the first rows. Which action says who the table is, column by column, and how full it is?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          restaurants.head()
+        ask: "Nothing came out at all. Head gives a table back, and nothing shows it. And is that what I asked for?"
+    walk:
+      - "Bring pandas in and read restaurants.csv."
+      - "Ask the table who it is: the action that reports its columns, their kinds and how full each is."
+    return:
+      text: "Now the couriers file. Look it over in the same way."
+      model: |
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        couriers.info()
+      output: "<class 'pandas.DataFrame'>\nRangeIndex: 200 entries, 0 to 199\nData columns (total 3 columns):\n #   Column      Non-Null Count  Dtype\n---  ------      --------------  -----\n 0   courier_id  200 non-null    int64\n 1   vehicle     200 non-null    str  \n 2   city        200 non-null    str  \ndtypes: int64(1), str(2)\nmemory usage: 4.8 KB"
+      narration:
+        - "Three columns and 200 rows, all of them filled in. The same one action, on another table."
+        - "A report written by the table itself. Nothing was empty."
+      note: "Return for step 3."
+    note: "Only the table changes from step 2, on purpose, as in the first typed step of a new action (rule: early steps may change one slot). The restaurants table has no empty cells. That is said, so the learner knows a full table looks like this."
+
+  # 4
+  - kind: "give"
+    lang: "python"
+    new: ["list-of-columns"]
+    text: |-
+      So far one name in the brackets gave one column. Put a list of names there, and you get several columns at once. You made lists in the first lesson of Python: square brackets and commas. So the table's brackets hold a list, and the list has brackets of its own:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[['order_id', 'subtotal']].head())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[['order_id', 'subtotal']].head())
+    after_run: "Two columns, with the first rows of each. One name gave a column. A list of names gives a table. That is where the two pairs of brackets come from: the outer pair is the table's, which gets something from inside, and the inner pair belongs to the list. In SQL this was two names after SELECT, with a comma between."
+    note: "Held back until step 4, so that PD-1 to PD-3 step 3 have one column at a time (the map's plan for this pair). The doubled brackets are given a real reason at once, and are never offered as a rule. The learner has seen head and a column, so the output is not new."
+
+  # 5
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "list-of-columns", "look-at-rows", "list", "get-by-name"]
+    text: "Show me the name and the cuisine of the first three restaurants."
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      print(restaurants[['name', 'cuisine']].head(3))
+    output: |-
+      name     cuisine
+      0  Rest 01  brasileira
+      1  Rest 02    saudavel
+      2  Rest 03  hamburguer
+    narration:
+      - "Three restaurants, each with its name and its cuisine. A list of two names in the table's brackets gave a table of two columns."
+      - "Two names, so a list. The table came out narrower, and head cut it to three rows."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants['name', 'cuisine'].head(3))
+        ask: "You gave the brackets two names, but they take one thing. What puts several names into one thing?"
+        why: "several names go in a list, and a list wears square brackets of its own."
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants['name'].head(3))
+        ask: "That is one column. How do we ask for two?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          print(restaurants[['name', 'cuisine']])
+        ask: "That is the whole table, as much as fits. Which action asks for only the first few rows?"
+    walk:
+      - "Read restaurants.csv."
+      - "Ask for two columns: a list of two names, in quotes, inside the table's brackets."
+      - "Ask for the first three rows of what came out."
+    return:
+      text: "From the couriers, show me the id and the vehicle of the first two."
+      model: |
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        print(couriers[['courier_id', 'vehicle']].head(2))
+      output: |-
+        courier_id vehicle
+        0           1    bike
+        1           2    bike
+      narration:
+        - "Two couriers, each with an id and a vehicle. A list of names, in the table's brackets."
+        - "Two columns, two rows: a narrower, shorter table."
+      note: "Return for step 5."
+    note: "Lists were in PY-1 and the table's brackets in PD-1. Together they give the two pairs. The wrong answer with two names and no list is the slip the thought exists for. Name only what the learner has seen: name and cuisine appeared in step 4 of PD-1's restaurants head."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "list-of-columns", "look-at-rows", "compare-signs"]
+    text: "For the orders above 100, show me the id and the subtotal of the first five."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['subtotal'] > 100][['order_id', 'subtotal']].head())
+    output: |-
+      order_id  subtotal
+      18    104930    106.41
+      23    105817    117.91
+      34    102977    108.60
+      50    103159    104.16
+      53    103891    100.21
+    narration:
+      - "Five orders, all above 100. Keep the big ones, take two columns, show the first five: the order you think it in."
+      - "The keeping came first, then the two columns, then the first rows."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['subtotal'] > 100].head())
+        ask: "That shows every column. Which two did I ask for?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[['order_id', 'subtotal']].head())
+        ask: "Those include small orders. Where does the keeping go?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders[orders['subtotal'] > 100]['order_id', 'subtotal'].head())
+        ask: "Two names are in the brackets without a list round them. What holds several names?"
+    walk:
+      - "Keep only the orders above 100."
+      - "Of those, take the two columns: a list of two names."
+      - "Show the first rows."
+    return:
+      text: "For the cancelled orders, show me the order id and the delivery fee of the first four."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders[orders['status'] == 'cancelled'][['order_id', 'delivery_fee']].head(4))
+      output: |-
+        order_id  delivery_fee
+        24     102388          4.99
+        40     102161          8.99
+        131    104460          6.99
+        148    102089          6.99
+      narration:
+        - "Four cancelled orders, each with an id and a fee. Keep, then two columns, then the first rows."
+        - "The same order as before, with another word and another number of rows."
+      note: "Return for step 6."
+    note: "Keep, then list, then head: PD-1's keep joined to the new list. Everything in order of thinking."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["new-column"]
+    text: |-
+      Now the other direction: giving a table a new column. Write the new column's name in the brackets, as if you were asking for it, put it to the left of an equals sign, and put the value to the right. You did this with a dict, when prices['acai'] = 25 added a name that was not there:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['country'] = 'Brazil'
+      print(orders[['order_id', 'country']].head(3))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['country'] = 'Brazil'
+        print(orders[['order_id', 'country']].head(3))
+    after_run: "A new column, with the same word on every row. The name went in the brackets, the value after the equals sign, as it did for the dict. The table in your program now has twelve columns. The file on your computer has not changed and cannot: the program works on its own copy, which goes when the script ends."
+    note: "Imports set-by-name from PY-3 and name-a-value, said aloud. The constant is the simplest possible value, so that the next step can add arithmetic as its own thought. The point that the file is untouched is real and answers a worry the learner may have."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "new-column", "list-of-columns", "look-at-rows", "set-by-name"]
+    text: "Give the restaurants table a column called country that says Brazil on every row, and show the name, the city and the country of its first three."
+    model: |
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
+      restaurants['country'] = 'Brazil'
+      print(restaurants[['name', 'city', 'country']].head(3))
+    output: |-
+      name            city country
+      0  Rest 01  Belo Horizonte  Brazil
+      1  Rest 02       São Paulo  Brazil
+      2  Rest 03        Curitiba  Brazil
+    narration:
+      - "Three restaurants, each with a country at the end. The new column was named in brackets, and given its value after the equals sign."
+      - "A column added, then three columns asked for as a list. Both used brackets, with different jobs."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          restaurants[country] = 'Brazil'
+          print(restaurants[['name', 'city', 'country']].head(3))
+        ask: "Is country a name in your program, or the name of a column? What does a column's name wear?"
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          restaurants['country'] == 'Brazil'
+          print(restaurants[['name', 'city', 'country']].head(3))
+        ask: "Two equals signs ask a question, and nothing was put in the table. Which sign gives a name?"
+        why: "one equals sign gives a name, and a new column is given its name."
+      - code: |-
+          import pandas as pd
+          restaurants = pd.read_csv('restaurants.csv')
+          restaurants['country'] = Brazil
+          print(restaurants[['name', 'city', 'country']].head(3))
+        ask: "Is Brazil a name in your program, or a word we are looking for?"
+    walk:
+      - "Read restaurants.csv."
+      - "Give the table the new column: its name in brackets and quotes, an equals sign, and the word Brazil in quotes."
+      - "Ask for the three columns as a list, and the first three rows."
+    return:
+      text: "Give the couriers table a column called team that says north on every row, and show the id and the team of its first two."
+      model: |
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
+        couriers['team'] = 'north'
+        print(couriers[['courier_id', 'team']].head(2))
+      output: |-
+        courier_id   team
+        0           1  north
+        1           2  north
+      narration:
+        - "Two couriers, each with team north beside the id. A new column, then two columns asked for."
+        - "The same two movements on another table."
+      note: "Return for step 8."
+    note: "The two kinds of brackets side by side, one adding a column and one asking for columns. The word Brazil is chosen because every city in the data is in Brazil."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["column-sums"]
+    text: |-
+      A new column can be worked out from the columns you already have. Put the sum on the right of the equals sign. Columns add and subtract row by row: the first row's subtotal plus the first row's fee, then the second row's own pair, and so on down:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['total'] = orders['subtotal'] + orders['delivery_fee']
+      print(orders[['subtotal', 'delivery_fee', 'total']].head(3))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['total'] = orders['subtotal'] + orders['delivery_fee']
+        print(orders[['subtotal', 'delivery_fee', 'total']].head(3))
+    after_run: "81.10 and 8.99 make 90.09, and the next row's own two numbers make 25.84. Each row added by itself, and no loop was written: it is the loop from the start of the course, done for you, one row at a time. A row with an empty subtotal gets an empty total, because nothing is known to add."
+    note: "Arithmetic between columns is a separate thought from the new column, and arrives one step after it so that new-column was only the equals sign. The empty-total remark plants find-missing for step 15."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "new-column", "column-sums", "list-of-columns", "look-at-rows"]
+    text: "Add a column called minutes_over that holds the real minutes minus the promised minutes, and show the order id and minutes_over for the first four."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['minutes_over'] = orders['actual_minutes'] - orders['promised_minutes']
+      print(orders[['order_id', 'minutes_over']].head(4))
+    output: |-
+      order_id  minutes_over
+      0    104843          -4.8
+      1    102076          -5.2
+      2    103434          -8.3
+      3    105520          -1.8
+    narration:
+      - "Four orders that came in early: minus 4.8, minus 5.2 and so on. Each row took its own real minutes and took away its own promise."
+      - "A column worked out from two others, row by row."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['minutes_over'] = orders['promised_minutes'] - orders['actual_minutes']
+          print(orders[['order_id', 'minutes_over']].head(4))
+        ask: "Which minutes did I take away from which? Over means the real time is the bigger one."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders[minutes_over] = orders['actual_minutes'] - orders['promised_minutes']
+          print(orders[['order_id', 'minutes_over']].head(4))
+        ask: "Is minutes_over a name in your program, or the name of a column? What does a column's name wear?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['minutes_over'] = 'actual_minutes' - 'promised_minutes'
+          print(orders[['order_id', 'minutes_over']].head(4))
+        ask: "Those are two words in quotes, not the columns. How do you ask the table for a column's values?"
+    walk:
+      - "Read orders.csv."
+      - "Give the table a new column called minutes_over, worked out from two columns: the real minutes take away the promised minutes."
+      - "Show the order id and the new column, for the first four rows."
+    return:
+      text: "Add a column called minutes_early that holds the promised minutes minus the real minutes, and show the order id and minutes_early for the first four."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['minutes_early'] = orders['promised_minutes'] - orders['actual_minutes']
+        print(orders[['order_id', 'minutes_early']].head(4))
+      output: |-
+        order_id  minutes_early
+        0    104843            4.8
+        1    102076            5.2
+        2    103434            8.3
+        3    105520            1.8
+      narration:
+        - "4.8, 5.2, 8.3 and 1.8 minutes early: the same four orders, now counted the other way round."
+        - "A column worked out from two others, with the minus the other way."
+      note: "Return for step 10."
+    note: "Subtraction in the order the prompt spells out. The wrong answer with the two columns the wrong way round gives different numbers, so the checker sees it."
+
+  # 11
+  - kind: "give"
+    lang: "python"
+    new: ["yes-no-as-column"]
+    text: |-
+      A question can be kept, too. You have only ever asked one to hand to the brackets, but a column of yes and no is a column like any other, so it can be given a name and added to the table. Here the question compares two columns row by row: was the real time longer than the promised time?
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+      print(orders[['order_id', 'late']].head())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+        print(orders[['order_id', 'late']].head())
+    after_run: "True on the fifth order, False on the first four: only that one took longer than promised. The question that fed the brackets before is now a column of its own, and a column can be kept, shown, counted or averaged."
+    note: "The question and the new column meet. Both are owned, and this step only joins them. The column late is the one PD-4's closing sentence builds on, and the one the closing sentence of this lesson adds."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "new-column", "yes-no-as-column", "yes-no-column", "list-of-columns", "look-at-rows", "compare-signs"]
+    text: "Add a column called pricey that says whether the subtotal is above 80, and show the order id and pricey for the first five."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['pricey'] = orders['subtotal'] > 80
+      print(orders[['order_id', 'pricey']].head())
+    output: |-
+      order_id  pricey
+      0    104843    True
+      1    102076   False
+      2    103434    True
+      3    105520    True
+      4    102202   False
+    narration:
+      - "Three Trues and two Falses: 81.10, 84.23 and 91.11 are above 80, and the other two are not. The question became a column."
+      - "A column of yes and no, kept under its own name."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['pricey'] = orders['subtotal'] < 80
+          print(orders[['order_id', 'pricey']].head())
+        ask: "Which way round did I ask? Pricey means above 80."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['pricey'] = orders[orders['subtotal'] > 80]
+          print(orders[['order_id', 'pricey']].head())
+        ask: "That kept the rows above 80 and tried to put a table into one column. What should each row hold: the row itself, or an answer?"
+        why: "a column of yes and no is the question on its own, before it goes anywhere near the brackets."
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['pricey'] = orders['subtotal'] > '80'
+          print(orders[['order_id', 'pricey']].head())
+        ask: "Is 80 a word we are looking for, or a number?"
+    walk:
+      - "Read orders.csv."
+      - "Ask the subtotal column the question, with the sign for above."
+      - "Keep the answers as a new column called pricey, and show it with the order id."
+    return:
+      text: "Add a column called quick that says whether the promised time is under 40 minutes, and show the order id and quick for the first five."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['quick'] = orders['promised_minutes'] < 40
+        print(orders[['order_id', 'quick']].head())
+      output: |-
+        order_id  quick
+        0    104843  False
+        1    102076   True
+        2    103434  False
+        3    105520   True
+        4    102202  False
+      narration:
+        - "False, True, False, True, False: the promised times of those five orders. A question kept as a column."
+        - "The question on its own, with a name."
+      note: "Return for step 12."
+    note: "A question about one column, kept under its own name. The wrong answer that keeps the rows is the one the learner is most likely to try, having just learned the brackets."
+
+  # 13
+  - kind: "give"
+    lang: "python"
+    new: ["mean-of-yes-no"]
+    text: |-
+      A column of True and False can be averaged. True counts as 1 and False as 0, and the average of a column of ones and zeros is the share of ones. So here is the share of the delivered orders that were late:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+      delivered = orders[orders['status'] == 'delivered']
+      print(delivered['late'].mean())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+        delivered = orders[orders['status'] == 'delivered']
+        print(delivered['late'].mean())
+    after_run: "About 0.426: forty-three deliveries in every hundred came late. A share, in one line, with no counting by hand. Why only the delivered orders? A cancelled order has no real time, and a comparison with an empty cell says no, so the cancelled ones would have counted as on time. That is a trap worth knowing."
+    note: "The mean of ones and zeros is mathematics the learner owns, and it is said as that. The trap about empty cells is deliberately noticed here and explained in step 15, so the learner meets it before they can step in it."
+
+  # 14
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no", "name-the-result", "equals-asks"]
+    text: "What share of the delivered orders had a delivery fee of 0?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['free'] = orders['delivery_fee'] == 0
+      delivered = orders[orders['status'] == 'delivered']
+      print(delivered['free'].mean())
+    output: "0.2533476164970541"
+    narration:
+      - "About 0.253: roughly a quarter of the delivered orders had free delivery. The question became a column, and the average of the column is the share."
+      - "A column of yes and no, the delivered rows kept, then the average of what is left."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['free'] = orders['delivery_fee'] == 0
+          print(orders['free'].mean())
+        ask: "That includes the cancelled orders. Where do we drop them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['free'] = orders['delivery_fee'] == 0
+          delivered = orders[orders['status'] == 'delivered']
+          print(delivered['free'].sum())
+        ask: "That is how many had free delivery. We wanted the share. Which summary of ones and zeros is a share?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['free'] = orders['delivery_fee'] = 0
+          delivered = orders[orders['status'] == 'delivered']
+          print(delivered['free'].mean())
+        ask: "One equals sign gives a name, and two ask. Which do we want for the question about the fee?"
+    walk:
+      - "Add a column that asks whether each fee is 0."
+      - "Keep only the delivered orders, and give them a name."
+      - "Say the average of the new column for those orders."
+    return:
+      text: "What share of the delivered orders were promised in under 40 minutes?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['quick'] = orders['promised_minutes'] < 40
+        delivered = orders[orders['status'] == 'delivered']
+        print(delivered['quick'].mean())
+      output: "0.3395822174611676"
+      narration:
+        - "About 0.340: a third of the delivered orders were promised in under 40 minutes."
+        - "The question kept as a column, the delivered rows, then the share."
+      note: "Return for step 14."
+    note: "Three thoughts in one sentence: a kept question, a keep, and a share. The learner may skip the column and write the question in brackets, which is a different thing and is not among the wrong answers here."
+
+  # 15
+  - kind: "give"
+    lang: "python"
+    new: ["find-missing"]
+    text: |-
+      Now to the empty cells you saw in the report at the start. Pandas can ask every cell of a column whether it is empty. The answer is a column of True and False, and you have just learned what the sum of such a column is. A True counts as 1, so the sum counts the Trues:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['subtotal'].isna().sum())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['subtotal'].isna().sum())
+    after_run: "25. The same 25 that the report counted, found by asking every cell: are you empty? In SQL the question was IS NULL, and here it is isna. The trick of adding up the Trues is the same trick that made a share out of a mean."
+    note: "Imports empty-cells and IS NULL from SQL-3, said aloud. The sum of a column of yes and no was introduced as a mean in step 13 and is the same trick, so there is nothing to remember: the three words isna, sum and a dot are the only spellings. Pass-bar content for cleaning."
+
+  # 16
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "find-missing", "yes-no-as-column"]
+    text: "How many orders have no actual time?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['actual_minutes'].isna().sum())
+    output: "399"
+    narration:
+      - "399: the cancelled orders, which never had a real time. Every cell asked whether it was empty, and the sum counted the yes."
+      - "399 empty cells. The report at the start said the same, with 5,601 filled out of 6,000."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['actual_minutes'].isna())
+        ask: "That is the column of answers, one for each order. What turns the True's into one number?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['actual_minutes'].isna().mean())
+        ask: "That is the share, not the count. Which summary counts the True's?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['actual_minutes'].isna().count())
+        ask: "That counted every answer, yes and no alike. Which summary adds up the ones?"
+    walk:
+      - "Read orders.csv, and take the actual minutes column."
+      - "Ask every cell whether it is empty."
+      - "Add up the True's, and print."
+    return:
+      text: "How many orders have an empty coupon_code?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(orders['coupon_code'].isna().sum())
+      output: "4116"
+      narration:
+        - "4,116: the orders that used no coupon. The report said 1,884 filled, and 6,000 take away 1,884 is 4,116."
+        - "Every cell asked whether it was empty, and the sum counted the yes."
+      note: "Return for step 16."
+    note: "399 and the report: the same number found in two ways. 4,116 is the return. Neither sentence needs the learner to reason about NaN."
+
+  # 17
+  - kind: "aside"
+    lang: "python"
+    text: "Something that is only interesting, with nothing in it to keep. The empty cell is shown as NaN, which stands for not a number. It comes from the standard that nearly every computer's arithmetic has followed since the 1980s, and it has one famous property: NaN is not equal to anything, not even to itself. That is why you cannot find it by asking whether a cell equals NaN, and why there is a separate question, isna. It is the same idea as IS NULL in SQL, where nothing equals an empty cell either."
+    note: "Relief, and a real reason for isna. It restates SQL-3's empty-cells thought from the other side, and answers 'why not ==' before the learner asks."
+
+  # 18
+  - kind: "classmate"
+    lang: "python"
+    new: ["fill-or-drop"]
+    text: |-
+      Now do something about the 25 empty subtotals. One choice is to fill them with a value, and a kind value is the middle one, the median, written .median() the way .mean() was. Davi tried it, and then counted what was still empty:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['subtotal'].fillna(orders['subtotal'].median())
+      print(orders['subtotal'].isna().sum())
+      ```
+
+      It said 25. Davi, what did fillna give you, and where did it go? ... It gave back a new column with the holes filled, and Davi did nothing with it, so the table's own column was never touched. To keep it, put it back where it came from, with the equals sign you use for any new column:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['subtotal'] = orders['subtotal'].fillna(orders['subtotal'].median())
+      print(orders['subtotal'].isna().sum())
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['subtotal'].fillna(orders['subtotal'].median())
+        print(orders['subtotal'].isna().sum())
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['subtotal'] = orders['subtotal'].fillna(orders['subtotal'].median())
+        print(orders['subtotal'].isna().sum())
+    after_run: "None left. Filling means choosing a value, and the middle one is a kind choice, because it is typical and 25 out of 6,000 will hardly move an average. The other choice is to drop the orders that have no subtotal, which invents nothing but throws orders away. Either is fine. What matters is that you say which you chose, and why."
+    note: "Davi makes the slip before the learner can (rule E6). The silent failure, nothing changes and nothing complains, is the real danger of fillna, and its reason is the same equals sign as new-column, so it is not an arbitrary rule. The first shown sentence runs and says 25, and the player runs only the last. The 'say which you chose and why' is the thought's second half, and the closing steps return to it. .median() is introduced as a spelling of a statistic the learner owns."
+
+  # 19
+  - kind: "give"
+    lang: "python"
+    text: |-
+      The other choice is to drop the rows that have an empty cell. The word is dropna. Watch what happens when it is not told which column to look at, and when it is:
+
+      ```python
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders.dropna()))
+      print(len(orders.dropna(subset=['subtotal'])))
+      ```
+
+      Run it.
+    shows:
+      - |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        print(len(orders.dropna()))
+        print(len(orders.dropna(subset=['subtotal'])))
+    after_run: "1,763 and 5,975. With nothing said, a row goes if any of its cells is empty, and most orders have no coupon, so nearly all of them went. With subset naming the one column we care about, in a list, only the 25 orders without a subtotal went. Always say the column. And dropna gives a table back, as fillna gave a column: nothing in your table changes unless you name what came back."
+    note: "A second spelling of the same thought, so there is no new id (rule B1: it is one thought, fill or drop, with two spellings and a choice). The two-line comparison is the reason for subset, which is therefore not arbitrary. subset takes a list, and the learner has just met lists in brackets."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "fill-or-drop", "list-of-columns", "how-many"]
+    text: "Drop the orders that have no actual time, and tell me how many are left."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(len(orders.dropna(subset=['actual_minutes'])))
+    output: "5601"
+    narration:
+      - "5,601: the delivered orders, the ones that have a real time. The cancelled ones went, because the one column we named was empty for them."
+      - "399 rows dropped out of 6,000. You said which column to look at, in a list."
+      - ""
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders.dropna()))
+        ask: "That dropped a row for an empty cell in any column, and the coupons are mostly empty. Which one column do I care about?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders.fillna(0)))
+        ask: "That kept every row. Which of the two choices drops rows?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(len(orders.dropna(['actual_minutes'])))
+        ask: "Python did not know what to do with the list. What word names the columns to look at?"
+    walk:
+      - "Read orders.csv."
+      - "Drop the rows that have an empty actual time: dropna, and the column in a list after subset."
+      - "Count what is left."
+    return:
+      text: "Fill the empty subtotals with 0, and print the average subtotal."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['subtotal'] = orders['subtotal'].fillna(0)
+        print(orders['subtotal'].mean())
+      output: "60.14755833333333"
+      narration:
+        - "About 60.15, lower than the 60.40 you had. A zero says the order cost nothing, which is not true, so the average fell. The middle value would hardly have moved it."
+        - "A fill is a claim about the missing value, and 0 is a claim you could not defend here."
+      note: "Return for step 20. It is the choice that has to be defended: say which you chose and why."
+    note: "Dropping, with its one hazard. The return asks for the opposite choice, with a worse fill, so the narration can say why one fill is better than another."
+
+  # 21
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no", "name-the-result", "groupby", "pick-then-summarise", "pile-names-on-left"]
+    text: "This one I won't break down. For the delivered orders, what share was late, for each promised time?"
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+      delivered = orders[orders['status'] == 'delivered']
+      print(delivered.groupby('promised_minutes')['late'].mean())
+    output: |-
+      promised_minutes
+      30    0.414301
+      40    0.431562
+      50    0.432462
+      Name: late, dtype: float64
+    narration:
+      - "About 41 percent of the 30-minute promises were late, 43 percent of the 40-minute ones and 43 percent of the 50-minute ones. A question kept as a column, the delivered rows, piles, and the average of the column in each pile: a share for each."
+      - "You joined this lesson's two thoughts to last lesson's piles by thinking: a column of yes and no, and the mean of it in each pile is a share in each pile."
+      - "Three piles, three shares. No counting by hand."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          print(orders.groupby('promised_minutes')['late'].mean())
+        ask: "The cancelled orders sit in these piles as on time. Where do we drop them?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          delivered = orders[orders['status'] == 'delivered']
+          print(delivered.groupby('promised_minutes')['late'].mean())
+        ask: "There is no column called late in the table yet. Where does it come from?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          delivered = orders[orders['status'] == 'delivered']
+          print(delivered.groupby('late')['promised_minutes'].mean())
+        ask: "Which column makes the piles, and which is the average about?"
+    walk:
+      - "Add a column that says whether each order was late, as you did a moment ago."
+      - "Keep only the delivered orders."
+      - "Make piles by promised time, pick the late column, and say the average."
+    return:
+      text: "For the delivered orders, what share had free delivery, for each promised time?"
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders['free'] = orders['delivery_fee'] == 0
+        delivered = orders[orders['status'] == 'delivered']
+        print(delivered.groupby('promised_minutes')['free'].mean())
+      output: |-
+        promised_minutes
+        30    0.256572
+        40    0.257112
+        50    0.246187
+        Name: free, dtype: float64
+      narration:
+        - "About 0.257 for 30 minutes, 0.257 for 40 and 0.246 for 50: about a quarter in every pile."
+        - "A kept question, the delivered rows, piles, and the share in each."
+      note: "Return for step 21. Not broken down, like the step."
+    note: "Friction (rule C9), and the shape of PD-4's closing sentence, one piece early: a kept yes-or-no column, a mean in each pile. The delivered rows come first for a real reason, which step 13 gave."
+
+  # 22
+  - kind: "ask"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "find-missing", "fill-or-drop", "new-column", "column-sums", "yes-no-as-column", "mean-of-yes-no"]
+    text: "The last one, from nothing. Fill the empty subtotals with the median. Add a total column and a late column. Print how many subtotals were empty before, how many after, the average total, and the share of delivered orders that were late."
+    model: |
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders['subtotal'].isna().sum())
+      orders['subtotal'] = orders['subtotal'].fillna(orders['subtotal'].median())
+      orders['total'] = orders['subtotal'] + orders['delivery_fee']
+      orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+      print(orders['subtotal'].isna().sum())
+      print(orders['total'].mean())
+      print(orders[orders['status'] == 'delivered']['late'].mean())
+    output: |-
+      25
+      0
+      65.59036833333333
+      0.4259953579717908
+    narration:
+      - "25 empty before, none after, an average total of about 65.59, and 43 deliveries in a hundred late. That is the whole job of getting a table ready: look at what is missing, choose what to do and say it in code, add the columns you need, and check them with a number."
+      - "Count, fill, add two columns, count again, and read the new columns. And you chose the median, and you know why."
+      - "25, then 0. Then a total and a share, from the columns you made."
+    wrong:
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'].isna().sum())
+          orders['subtotal'].fillna(orders['subtotal'].median())
+          orders['total'] = orders['subtotal'] + orders['delivery_fee']
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          print(orders['subtotal'].isna().sum())
+          print(orders['total'].mean())
+          print(orders[orders['status'] == 'delivered']['late'].mean())
+        ask: "The empties are still there after the fill. What did fillna give you, and where did it go?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'].isna().sum())
+          orders['subtotal'] = orders['subtotal'].fillna(orders['subtotal'].median())
+          orders['total'] = orders['subtotal'] + orders['delivery_fee']
+          orders['late'] = orders['actual_minutes'] < orders['promised_minutes']
+          print(orders['subtotal'].isna().sum())
+          print(orders['total'].mean())
+          print(orders[orders['status'] == 'delivered']['late'].mean())
+        ask: "That is the share that came early. Which way round does late compare the two times?"
+      - code: |-
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          print(orders['subtotal'].isna().sum())
+          orders['subtotal'] = orders['subtotal'].fillna(orders['subtotal'].median())
+          orders['total'] = orders['subtotal'] + orders['delivery_fee']
+          orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
+          print(orders['subtotal'].isna().sum())
+          print(orders['total'].mean())
+          print(orders['late'].mean())
+        ask: "That share counts the cancelled orders as on time. Which rows should the share be about?"
+    walk:
+      - "Read orders.csv, and print how many subtotals are empty."
+      - "Fill them with the median, and put the result back into the subtotal column."
+      - "Add the two new columns, count the empties again, and print the average total and the share of delivered orders that were late."
+    return:
+      text: "From nothing: drop the orders that have no subtotal, add a total column, and print how many orders are left and the average total."
+      model: |
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        orders = orders.dropna(subset=['subtotal'])
+        orders['total'] = orders['subtotal'] + orders['delivery_fee']
+        print(len(orders))
+        print(orders['total'].mean())
+      output: |-
+        5975
+        65.60630627615063
+      narration:
+        - "5,975 orders left, and an average total of about 65.61. Drop, add a column, check with two numbers."
+        - "You chose to drop where you filled before, and you named the result."
+      note: "Return for step 22."
+    note: "The surprise sentence, and PD-3's closing sentence in the map (pass-bar task 13): 25 empty subtotals before, none after. It adds the two prints the map's code lacks, because pandas is judged by what is printed. The learner chose fill by the prompt, and the narration says why. Pass-bar task 13 is core."
+
+  # 23
+  - kind: "recap"
+    lang: "python"
+    text: |-
+      Stop there. In one sitting you learned to look at a table you have never seen, to take several columns, to add columns of your own from the ones you have, to keep a question as a column and average it into a share, and to deal with empty cells by filling them or dropping them, and to say which and why. Each of those is the same table going in and a table coming out, with a column changed.
+
+      You are not fast, and you are not meant to be. The aim is that you can think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 24
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no"]
+    text: "What share of the couriers ride a bike? Start from nothing."
+    model: |
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
+      couriers['bike'] = couriers['vehicle'] == 'bike'
+      print(couriers['bike'].mean())
+    output: "0.365"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a kept question and its mean, on a table that was only met by name and in this lesson's first typed step. 73 of 200 is 0.365, and the learner has seen the 73. Never scored (rule F1). What a miss tells the script: which of the read, the equals sign, the question or the mean was absent."

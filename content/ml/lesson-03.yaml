@@ -1,0 +1,1503 @@
+lesson: ml-03
+title: "K-fold by hand"
+strand: ml
+stage: 2
+thoughts:
+  bring-numpy-in: {text: "`import numpy as np`, for a row of numbers the length of the table.", grade: shape}
+  fold-number-per-row: "`np.arange(len(X)) % k` gives every row a fold number from 0 to k minus 1."
+  row-by-row-not: "`~` turns a yes-or-no column round. It belongs with `&` and `|`."
+  this-fold-and-the-rest: "The test rows are this fold. The training rows are all the others."
+  average-the-scores: "One score per fold, kept in a list, averaged at the end. A running result."
+  metric-by-hand: {text: "AUC and KS can be written by hand. You know what they are.", grade: name-only}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "pick-the-metric", "read-and-criticise"]
+    supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    text: "Keep every delivery. Guess whether a delivery was more than 12 minutes late. X holds the distance, the bag size and the promised minutes, and a quarter of the rows are held back. Fill the empty distances with the median of the training rows only, fit gradient boosting, and print its AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 12
+      X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)
+      fill = X_train['distance_km'].median()
+      X_train['distance_km'] = X_train['distance_km'].fillna(fill)
+      X_test['distance_km'] = X_test['distance_km'].fillna(fill)
+      model = GradientBoostingClassifier(random_state=0)
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.849"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from ML-2: the honest fill, the swapped model and the metric, on a combination never practised. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "python"
+    text: |
+      You have a score. Now a question about the score. Run the same model on the same rows five times, and change nothing but which rows are held back. The seed is the number after `random_state`, and a loop can change it:
+
+      ```python
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      for seed in range(5):
+          X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        for seed in range(5):
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=seed)
+            model = LogisticRegression()
+            model.fit(X_train, y_train)
+            print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    after_run: |
+      0.792, 0.790, 0.793, 0.814 and 0.802: one model, one table, and a spread of more than 0.02, only because a different fifth was held back. Which of them is the model's score? None of them. Each is one opinion. A better question to ask is: if every row had its turn at being held back, what would the scores say together? Cut the rows into equal groups, called folds. Hold one fold back, train on the rest, score it. Then the next fold, and the next. The mean is the score, and the spread tells you how far to trust it. People call this cross-validation. The library has a word for it, and today you will write it yourself, because writing it is how you know what it does, and because it is asked in interviews.
+    note: "The motive first (rule B3 and C10 together): one split is one opinion, shown with the learner's own pipeline and the loop and range they know. There is no new thought here. Seeds 0 to 4 give 0.792, 0.790, 0.793, 0.814 and 0.802."
+
+  # 3
+  - kind: "give"
+    lang: "python"
+    new: ["bring-numpy-in"]
+    text: |
+      First, each row needs a number. Not its label: a plain count, one for each row, from 0. A row of numbers like that is numpy's job. The line that brings numpy in is another one that everybody looks up, and it always reads `import numpy as np`. Then `np.arange(len(X))` is a row of numbers from 0 up to one less than the number of rows in X:
+
+      ```python
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      rows = np.arange(len(X))
+      print(rows[:5])
+      print(rows[-1])
+      ```
+
+      Run it.
+    shows:
+      - |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        rows = np.arange(len(X))
+        print(rows[:5])
+        print(rows[-1])
+    after_run: |
+      0, 1, 2, 3, 4, and the last is 5,488: one number for each of the 5,489 rows, counting from 0 as always. The brackets after `arange` hold how many numbers to make, and `len(X)` is how many rows there are. A numpy row of numbers answers to the same square brackets as a list.
+    note: "Shape grade: the import is supplied in the teacher's text and called something people look up. Only the line and what `np.arange` is for are new; `len`, `[:5]` and `[-1]` are PY-1 and PY-2."
+
+  # 4
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in"]
+    supplies: ["import numpy as np"]
+    text: "Make a row of numbers, one for each row of X, with `import numpy as np`. This time keep every delivery, and let X hold the distance and the rain. Print how many numbers are in the row, and then the last one."
+    model: |
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id')
+      X = data[['distance_km', 'rain']]
+      rows = np.arange(len(X))
+      print(len(rows))
+      print(rows[-1])
+    output: |-
+      5601
+      5600
+    narration:
+      - "5,601 numbers, and the last is 5,600, because the count starts at 0. One number for each delivery, with none dropped."
+      - "The row is as long as the table, and `len(X)` told `arange` how long."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain']]
+          rows = np.arange(len(X) - 1)
+          print(len(rows))
+          print(rows[-1])
+        ask: "One number is missing, and the last one is one too small. How long should the row be?"
+        why: "`arange` stops one short of its number, so asking for `len(X)` numbers gives 0 up to the last position."
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain']]
+          rows = np.arange(len(X))
+          print(len(rows))
+          print(rows[-1])
+        ask: "That dropped the deliveries with no distance. What did I ask you to do with every delivery?"
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id')
+          X = data[['distance_km', 'rain']]
+          rows = np.arange(len(data['rain']))
+          print(rows[-1])
+          print(len(rows))
+        ask: "Both numbers are there, but look at which comes first. Which did I ask for first?"
+    walk:
+      - "Merge the two tables, keeping every row. Build X from the two columns."
+      - "A row of numbers as long as X: `np.arange`, with how many rows there are inside its brackets."
+      - "Print its length, then its last number."
+    return:
+      text: "Once more, with `import numpy as np`. This time drop the rows with no distance, and let X hold all four columns. Make a row of numbers, one for each row of X, and print the first three numbers and then the last."
+      model: |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        rows = np.arange(len(X))
+        print(rows[:3])
+        print(rows[-1])
+      output: |-
+        [0 1 2]
+        5488
+      narration:
+        - "0, 1, 2 and then, 5,488 for the last: one number for each of the rows that were kept."
+        - "The row is as long as the table, whatever the table is."
+      note: "Return for step 4."
+    note: "First typed numpy. The spelling is in the text, so that `supplies` can name it. The wrong answer that is one short is the commonest slip."
+
+  # 5
+  - kind: "give"
+    lang: "python"
+    new: ["fold-number-per-row"]
+    text: |
+      Now give each of those numbers a fold. With five folds, we want every row labelled 0, 1, 2, 3, 4, then 0, 1, 2, 3, 4 again, all the way down the table. That is counting, and starting over when you reach 5. Arithmetic has a sign for exactly that: `%`, the remainder after dividing. 7 % 5 is 2, because 5 goes into 7 once and leaves 2. 5 % 5 is 0, and 6 % 5 is 1. Written after a whole row of numbers, it works on every one of them at once, as column arithmetic did:
+
+      ```python
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 5
+      print(fold[:12])
+      print(len(X[fold == 0]))
+      ```
+
+      Run it.
+    shows:
+      - |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 5
+        print(fold[:12])
+        print(len(X[fold == 0]))
+    after_run: |
+      0, 1, 2, 3, 4, 0, 1, 2, 3, 4, 0, 1. And fold 0 holds 1,098 rows, one fifth of the table, give or take a row. `% k` can only give the numbers 0 up to k minus 1, which is exactly k folds. And because neighbouring rows land in different folds, each fold is spread across the whole table, and not one stretch of the dates. Notice what the last print did: `fold == 0` is a question asked of every row, a column of yes and no, and the brackets keep the yes rows. You have done that since the first pandas lesson.
+    note: "fold-number-per-row. `%` is explained with a real definition, the remainder, and the reason it fits (it counts to k and starts over). The `%` itself is the one spelling the learner has not met, and it arrives in use before it is explained (rule B3). The table is in time order, so dealing rows round the folds makes each fold cover the whole period, which is a real reason, not a mnemonic."
+
+  # 6
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row"]
+    supplies: ["import numpy as np"]
+    text: "With `import numpy as np`, give every row of X a fold number for four folds. Drop the rows with no distance, and let X hold all four columns. Print how many rows are in fold 0, and then how many in fold 3."
+    model: |
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 4
+      print(len(X[fold == 0]))
+      print(len(X[fold == 3]))
+    output: |-
+      1373
+      1372
+    narration:
+      - "1,373 in fold 0 and 1,372 in fold 3. 5,489 does not divide by 4, so the first fold gets the spare row. The counting starts at 0, and fold 0 is where the spare one goes."
+      - "A fold number for each row, then a question asked of every row, and the yes rows counted."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          print(len(X[fold == 0]))
+          print(len(X[fold == 3]))
+        ask: "How many folds did I ask for, and which number goes after the percent sign?"
+        why: "the number after `%` is how many folds there are. It is the remainder's ceiling."
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          print(len(X[fold == 1]))
+          print(len(X[fold == 3]))
+        ask: "Which fold did I ask to see first?"
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          print(len(X[fold = 0]))
+          print(len(X[fold == 3]))
+        ask: "One equals sign names something, two ask. Which does the brackets want?"
+    walk:
+      - "Make the row of numbers, one for each row of X."
+      - "Give each its remainder after dividing by 4: that is its fold."
+      - "Ask which rows are in fold 0, keep the yes rows, count them. Then the same for fold 3."
+    return:
+      text: "And with three folds. With `import numpy as np`, drop the rows with no distance, and let X hold all four columns. Print how many rows are in fold 0, and then how many in fold 2."
+      model: |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 3
+        print(len(X[fold == 0]))
+        print(len(X[fold == 2]))
+      output: |-
+        1830
+        1829
+      narration:
+        - "1,830 and 1,829. Three folds, with the spare row going to the first."
+        - "Remainder after dividing by 3, and the yes rows of each question counted."
+      note: "Return for step 6. Other number of folds, other second fold."
+    note: "The fold numbers typed. One slip is a syntax error (`=` for `==`), which is the first lesson of Python and not new here."
+
+  # 7
+  - kind: "give"
+    lang: "python"
+    new: ["row-by-row-not"]
+    text: |
+      Next, the rows to train on: every row that is not in the fold we hold back. The question `fold == 0` has an answer for each row, a column of yes and no. To turn it round, so that yes becomes no and no becomes yes, you put a `~` in front of it. It belongs with the two signs you met in the pandas lessons: `&` for and, `|` for or, and `~` for not. All three work on every row, and Python's own words `and`, `or` and `not` would ask once, about the whole column, which is why pandas does not use them.
+
+      ```python
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 5
+      test = fold == 0
+      print(len(X[test]))
+      print(len(X[~test]))
+      ```
+
+      Run it.
+    shows:
+      - |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 5
+        test = fold == 0
+        print(len(X[test]))
+        print(len(X[~test]))
+    after_run: |
+      1,098 rows in the fold, and 4,391 rows outside it. Added up, they are the whole table. Notice that 4,391 is the number of training rows you got from `train_test_split` with a fifth held back: it is the same split, made by hand. The `~` is the third sign of the three, and it has the same reason as the other two.
+    note: "row-by-row-not. It belongs with `&` and `|` (PD-2 `row-by-row-and`), so the learner owns the reason: Python's own words ask once. No new rule, just the third sign. The 4,391 echo links the fold to the split of ML-1."
+
+  # 8
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not"]
+    supplies: ["import numpy as np"]
+    text: "Use `import numpy as np` and five folds again, with the rows with no distance dropped and all four columns in X. Print how many rows are not in fold 4."
+    model: |
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 5
+      test = fold == 4
+      print(len(X[~test]))
+    output: "4392"
+    narration:
+      - "4,392. Fold 4 is the short one, with 1,097 rows, so the rest are the other 4,392. The question asked of every row, turned round with the tilde, and the yes rows counted."
+      - "Not in fold 4: the answer is the table less that fold."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 4
+          print(len(X[test]))
+        ask: "That counts the rows that are in fold 4. How do you ask for the rows that are not?"
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 4
+          print(len(X[not test]))
+        ask: "Python's own `not` asks once, about the whole column. Which sign asks of every row?"
+        why: "`~` works row by row, as `&` and `|` do. `not` would ask a single question about the whole column."
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 3
+          print(len(X[~test]))
+        ask: "Which fold did I ask to leave out?"
+    walk:
+      - "Make the fold numbers for five folds."
+      - "Ask of every row: is it in fold 4? Name the answers test."
+      - "Turn the answers round, keep the yes rows, and count them."
+    return:
+      text: "With `import numpy as np`, four folds, the rows with no distance dropped and all four columns in X. Print how many rows are not in fold 0."
+      model: |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 4
+        test = fold == 0
+        print(len(X[~test]))
+      output: "4116"
+      narration:
+        - "4,116: the 1,373 rows of fold 0 are left out. The question, turned round, and the yes rows counted."
+        - "Everything but fold 0."
+      note: "Return for step 8. Other number of folds and fold."
+    note: "The tilde typed. The wrong answers include Python's own `not`, which is the first thing a Python learner reaches for, and it fails with a real error."
+
+  # 9
+  - kind: "give"
+    lang: "python"
+    new: ["this-fold-and-the-rest"]
+    text: |
+      Now the two halves of a split, made by hand. The test rows are the rows in this fold. The training rows are all the others. Everything else is what you have written since the first lesson of this strand: make, fit, predict the chances, score.
+
+      ```python
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 5
+      test = fold == 0
+      X_train, X_test = X[~test], X[test]
+      y_train, y_test = y[~test], y[test]
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      ```
+
+      Run it.
+    shows:
+      - |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 5
+        test = fold == 0
+        X_train, X_test = X[~test], X[test]
+        y_train, y_test = y[~test], y[test]
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    after_run: |
+      0.789: the score on fold 0, a model trained on the other four folds. It is `train_test_split`, made by hand, with the test rows chosen by their fold number and the training rows as their opposite. Two names on the left of an equals sign, as in a split, and one question, `test`, shared by X and y so that their rows still match.
+    note: "this-fold-and-the-rest. The learner has typed every other line. The two-name unpacking is the same as `train_test_split`'s four names and PY-3's `two-names`. Sharing `test` between X and y is what keeps the answers aligned with their rows."
+
+  # 10
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Score one fold of your own. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: five folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. Hold fold 2 back, train a logistic regression on the other folds, and print its AUC on fold 2, rounded to three places."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 5
+      test = fold == 2
+      X_train, X_test = X[~test], X[test]
+      y_train, y_test = y[~test], y[test]
+      model = LogisticRegression()
+      model.fit(X_train, y_train)
+      print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+    output: "0.795"
+    narration:
+      - "0.795 on fold 2. The test rows were the rows of that fold, the training rows were every row outside it, and the rest was the pipeline you know."
+      - "This fold and the rest: the question and its opposite, shared by X and y."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 2
+          X_train, X_test = X[test], X[~test]
+          y_train, y_test = y[test], y[~test]
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "That trains on the fold and tests on the rest. Which rows should the model learn from?"
+        why: "the held-back fold is the test. The other folds, four fifths of the rows, are for training."
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 0
+          X_train, X_test = X[~test], X[test]
+          y_train, y_test = y[~test], y[test]
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "Which fold did I ask you to hold back?"
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 2
+          X_train, X_test = X[~test], X[test]
+          y_train, y_test = y[test], y[~test]
+          model = LogisticRegression()
+          model.fit(X_train, y_train)
+          print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+        ask: "X_train and y_train should line up row for row. Which question picked the rows of each, and does it match?"
+    walk:
+      - "Make the fold numbers, and the question: is this row in fold 2?"
+      - "The test rows are the yes rows. The training rows are the opposite. Do the same to X and to y."
+      - "Make, fit, predict the chances, and print the AUC on the test rows."
+    return:
+      text: "Once more, with `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: four folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. Hold fold 3 back, train a logistic regression on the others, and print its AUC on fold 3, rounded to three places."
+      model: |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 4
+        test = fold == 3
+        X_train, X_test = X[~test], X[test]
+        y_train, y_test = y[~test], y[test]
+        model = LogisticRegression()
+        model.fit(X_train, y_train)
+        print(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))
+      output: "0.82"
+      narration:
+        - "0.82 on fold 3 of 4. Another fold, another number of folds, and the same two halves."
+        - "This fold, and the rest."
+      note: "Return for step 10. Other number of folds and fold."
+    note: "A hand-made split scored once. The wrong answers swap the halves, or mismatch X and y, and each gives a different number or a real error."
+
+  # 11
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score"]
+    supplies: ["import numpy as np"]
+    text: "How big are the two halves? With `import numpy as np`: four folds, the rows with no distance dropped, and all four columns in X. Hold fold 3 back. Print how many rows are in the training part, and then how many in the test part, of X."
+    model: |
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 4
+      test = fold == 3
+      X_train, X_test = X[~test], X[test]
+      y_train, y_test = y[~test], y[test]
+      print(len(X_train))
+      print(len(X_test))
+    output: |-
+      4117
+      1372
+    narration:
+      - "4,117 to train on and 1,372 to test on. The test rows are the rows of fold 3 and the training rows are the other three folds, which add up to the whole table."
+      - "The fold and the rest: the two sizes add up to 5,489."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          test = fold == 3
+          X_train, X_test = X[~test], X[test]
+          y_train, y_test = y[~test], y[test]
+          print(len(X_test))
+          print(len(X_train))
+        ask: "Which size did I ask you to print first, the training part or the test part?"
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          test = fold == 3
+          X_train, X_test = X[test], X[~test]
+          print(len(X_train))
+          print(len(X_test))
+        ask: "The training part is the smaller one here. Which of the two halves should be the bigger?"
+    walk:
+      - "Make the fold numbers for four folds."
+      - "The question: is this row in fold 3? The test rows are the yes rows, and the training rows are the opposite."
+      - "Print the length of each part of X, the training part first."
+    return:
+      text: "And with three folds. With `import numpy as np`, drop the rows with no distance and put all four columns in X. Hold fold 2 back. Print how many rows are in the training part, and then in the test part, of X."
+      model: |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 3
+        test = fold == 2
+        X_train, X_test = X[~test], X[test]
+        y_train, y_test = y[~test], y[test]
+        print(len(X_train))
+        print(len(X_test))
+      output: |-
+        3660
+        1829
+      narration:
+        - "3,660 to train on and 1,829 to test on, which add up to the whole table. Three folds mean two thirds to train on."
+        - "The same two halves, with fewer folds."
+      note: "Return for step 11. Other number of folds and fold."
+    note: "The sizes of the two halves, printed, so that the learner sees that the more folds there are, the larger the training part. It is also one step of the hand-made split without a model, so the load drops a little before the loop."
+
+  # 12
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result"]
+    supplies: ["import numpy as np"]
+    text: "Every row should be held back exactly once. Check it. With `import numpy as np`: four folds, the rows with no distance dropped, and all four columns in X. Go through the folds in turn, add up how many rows each holds, and print the total. It should be the number of rows in X."
+    model: |
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 4
+      total = 0
+      for i in range(4):
+          total = total + len(X[fold == i])
+      print(total)
+    output: "5489"
+    narration:
+      - "5,489, which is every row of X. Each fold held its rows once and nobody was held twice. A running result, started before the loop and added to inside it, as in the first Python lesson."
+      - "The total starts at 0, grows by each fold's rows, and is read after the loop."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          for i in range(4):
+              total = 0
+              total = total + len(X[fold == i])
+          print(total)
+        ask: "The total is only the last fold's. Where does a running result start: before the loop, or inside it?"
+        why: "inside the loop it starts over on every turn, and only the last turn's value is left."
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          total = 0
+          for i in range(3):
+              total = total + len(X[fold == i])
+          print(total)
+        ask: "How many folds are there, and so how many turns should the loop take?"
+      - code: |-
+          import numpy as np
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          total = 0
+          for i in range(4):
+              total = total + len(X[~(fold == i)])
+          print(total)
+        ask: "That adds up the rows outside each fold. Which rows did I ask you to add up?"
+    walk:
+      - "Make the fold numbers, and a total that starts at 0."
+      - "For each fold number from 0 to 3, add the number of rows in that fold to the total."
+      - "After the loop, print the total."
+    return:
+      text: "Now check the other half. With `import numpy as np`: five folds, the rows with no distance dropped, and all four columns in X. Go through the folds in turn, add up how many rows are outside each fold, and print the total."
+      model: |
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 5
+        total = 0
+        for i in range(5):
+            total = total + len(X[~(fold == i)])
+        print(total)
+      output: "21956"
+      narration:
+        - "21,956: each row is a training row in four of the five folds, so 4 times 5,489. The running result is read after the loop."
+        - "Everything outside each fold, added up."
+      note: "Return for step 12. The training rows instead, and five folds."
+    note: "The running result of PY-1 in pandas dress, with `~` used once more. It prepares the classmate of step 14: the learner has just started a result before the loop and read it after. The check, that every row is tested once, is what cross-validation promises."
+
+  # 13
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Now give every fold its turn. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: five folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. For each fold in turn, hold it back, train a logistic regression on the others, and print its AUC on the held-back fold, rounded to three places."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 5
+      for i in range(5):
+          test = fold == i
+          model = LogisticRegression()
+          model.fit(X[~test], y[~test])
+          print(round(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]), 3))
+    output: |-
+      0.789
+      0.81
+      0.795
+      0.827
+      0.794
+    narration:
+      - "Five numbers, from 0.789 to 0.827: the model's score on each fold, when the other four trained it. Fold 3 was the easiest and fold 0 the hardest. You made the choice of fold with a loop, and the rest is the pipeline."
+      - "One turn of the loop is the hand-made split you wrote a few steps ago, with i in place of the number."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          test = fold == 0
+          for i in range(5):
+              model = LogisticRegression()
+              model.fit(X[~test], y[~test])
+              print(round(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]), 3))
+        ask: "Five numbers came out, and they are all the same. Where is the fold chosen: before the loop, or on each turn?"
+        why: "the question that picks the fold has to use the loop's number, so that each turn holds a different fold back."
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 5
+          for i in range(5):
+              test = fold == i
+              model = LogisticRegression()
+              model.fit(X[test], y[test])
+              print(round(roc_auc_score(y[~test], model.predict_proba(X[~test])[:, 1]), 3))
+        ask: "That trains on the fold and tests on the rest. Which rows are the model allowed to learn from?"
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          for i in range(4):
+              test = fold == i
+              model = LogisticRegression()
+              model.fit(X[~test], y[~test])
+              print(round(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]), 3))
+        ask: "How many folds did I ask for?"
+    walk:
+      - "Make the fold numbers. Then loop: for each fold number from 0 to 4."
+      - "Inside the loop: this fold is the test, the rest is the training. Make the model and fit it on the rest."
+      - "Still inside the loop, print the AUC on this fold, rounded."
+    return:
+      text: "Again, with three folds and a different question. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: the rows with no distance dropped, all four columns in X, and y whether a delivery was more than 10 minutes late. For each fold in turn, hold it back, train a logistic regression on the others, and print its AUC on the held-back fold, rounded to three places."
+      model: |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 10
+        fold = np.arange(len(X)) % 3
+        for i in range(3):
+            test = fold == i
+            model = LogisticRegression()
+            model.fit(X[~test], y[~test])
+            print(round(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]), 3))
+      output: |-
+        0.89
+        0.873
+        0.877
+      narration:
+        - "Three scores, one for each fold. For the question of more than 10 minutes late, they sit close to 0.88."
+        - "The same loop with a different number of folds and a different thing to guess."
+      note: "Return for step 13. Other number of folds and target."
+    note: "The whole loop, typed once without the function. It is the step the classmate and the closing sentence stand on. The three wrong answers are the real slips: the fold fixed outside the loop, the halves swapped, and the wrong number of folds."
+
+  # 14
+  - kind: "classmate"
+    lang: "python"
+    new: ["average-the-scores"]
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "total", "how-many"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "\nDavi wanted a single number from the five scores. He kept them in a list, added each fold's score to it, and divided the sum by how many there were, as you did in the first Python lesson:\n\n```python\nimport numpy as np\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nfold = np.arange(len(X)) % 5\nfor i in range(5):\n    scores = []\n    test = fold == i\n    model = LogisticRegression()\n    model.fit(X[~test], y[~test])\n    scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))\nprint(round(sum(scores) / len(scores), 3))\n```\n\nIt ran, and it printed 0.794. Davi, how many scores are in the list when the loop has finished? ... One. The list starts empty at the top of every turn, so each turn throws away the one before, and only the last fold's score is left. And 0.794 is the last fold's score. The result you keep has to start before the loop, grow inside it, and be used after it, just as the count of delivered orders did in the first lesson of Python:\n\n```python\nimport numpy as np\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nfold = np.arange(len(X)) % 5\nscores = []\nfor i in range(5):\n    test = fold == i\n    model = LogisticRegression()\n    model.fit(X[~test], y[~test])\n    scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))\nprint(round(sum(scores) / len(scores), 3))\n```\n\nRun it.\n"
+    shows:
+      - |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        fold = np.arange(len(X)) % 5
+        scores = []
+        for i in range(5):
+            test = fold == i
+            model = LogisticRegression()
+            model.fit(X[~test], y[~test])
+            scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+        print(round(sum(scores) / len(scores), 3))
+    after_run: "\n0.803: the mean of five scores, one for each fold. One score per fold, added to a list as the loop goes round, and the average taken at the end, from the total and how many. The list was made before the loop, so it kept every turn's score. That number, 0.803, is a better answer to \"how good is this model?\" than any of the five single scores, and the spread, 0.789 to 0.827, tells you how much to trust it.\n"
+    note: "The classmate (Davi) makes the slip the learner would make with a running result (rule E6), and the reason is the one given in PY-1 (the result starts before the loop). The slip runs without error and gives a number, so the learner is asked how many scores the list holds. The repaired code is shown and run. The next step asks for it."
+
+  # 15
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Average the folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: four folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. For each fold in turn, train a logistic regression on the other folds and score it on that one. Keep the scores in a list, and print their mean, rounded to three places."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      fold = np.arange(len(X)) % 4
+      scores = []
+      for i in range(4):
+          test = fold == i
+          model = LogisticRegression()
+          model.fit(X[~test], y[~test])
+          scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+      print(round(sum(scores) / len(scores), 3))
+    output: "0.802"
+    narration:
+      - "0.802, the mean of four fold scores. The list was made before the loop, it grew by one score a turn, and the mean was worked out after the loop as the total divided by how many."
+      - "Four folds give nearly the same mean as five did: 0.802 against 0.803. That is the point of averaging."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          for i in range(4):
+              scores = []
+              test = fold == i
+              model = LogisticRegression()
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          print(round(sum(scores) / len(scores), 3))
+        ask: "How many scores are in the list at the end? Where should it start?"
+        why: "a result that is kept across turns starts before the loop."
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          scores = []
+          for i in range(4):
+              test = fold == i
+              model = LogisticRegression()
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          print(round(sum(scores), 3))
+        ask: "That is the total of the scores. What do you divide it by to make an average?"
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          fold = np.arange(len(X)) % 4
+          scores = []
+          for i in range(4):
+              test = fold == i
+              model = LogisticRegression()
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          print(round(scores[-1], 3))
+        ask: "That is the last score only. How do you make one number from all of them?"
+    walk:
+      - "Make the fold numbers and an empty list for the scores, before any loop."
+      - "For each fold, make and fit the model on the others, and add its score on this fold to the list."
+      - "After the loop, the total divided by how many, rounded and printed."
+    return:
+      text: "And once more, for a different question. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: three folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was more than 10 minutes late. Keep each fold's score in a list, and print the mean of the list, rounded to three places."
+      model: |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 10
+        fold = np.arange(len(X)) % 3
+        scores = []
+        for i in range(3):
+            test = fold == i
+            model = LogisticRegression()
+            model.fit(X[~test], y[~test])
+            scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+        print(round(sum(scores) / len(scores), 3))
+      output: "0.88"
+      narration:
+        - "0.88: the mean of three scores for the question of more than 10 minutes late. Made before the loop, grown inside it, read after it."
+        - "A list, a loop and a mean, as in the first Python lessons."
+      note: "Return for step 15. Other number of folds and target."
+    note: "The repaired loop typed. Whether the learner remembers where the list starts is what the three wrong answers test, and the first is Davi's slip."
+
+  # 16
+  - kind: "aside"
+    lang: "python"
+    new: ["metric-by-hand"]
+    text: "\nSomething that is only interesting, with nothing in it to keep. `roc_auc_score` is a word from the library, but AUC is only a count, and you could write it yourself. Take every pair made of one late delivery and one on-time delivery, and ask in what share of the pairs the late one was given the higher chance. That share is the AUC. Another metric you will hear of, KS, is the biggest gap between two running totals: the share of late deliveries and the share of on-time ones that sit below each cut-off on the chance. Both can be written in a few lines, and you already know what they are, which is the hard part. In some interviews you are asked to write one. Not today.\n"
+    note: "metric-by-hand, name only (pass-bar task 17): it appears in one aside and in no prompt and no `requires`. Both descriptions are the textbook ones: AUC as the share of (late, on-time) pairs ranked the right way, KS as the largest gap between the two cumulative distributions."
+
+  # 17
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "sorted", "what-comes-out", "show-or-return"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Wrap the loop in a function. `fold_scores` takes a model, the table X, the answers y and the number of folds k, and hands back the list of the k scores, one for each fold. Then, with `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, call `fold_scores` with a logistic regression and five folds, and print the lowest score and then the highest, rounded to three places."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      def fold_scores(model, X, y, k):
+          fold = np.arange(len(X)) % k
+          scores = []
+          for i in range(k):
+              test = fold == i
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          return scores
+      scores = fold_scores(LogisticRegression(), X, y, 5)
+      print(round(sorted(scores)[0], 3))
+      print(round(sorted(scores)[-1], 3))
+    output: |-
+      0.789
+      0.827
+    narration:
+      - "0.789 and 0.827: the lowest and the highest of five. The same model, the same table, and a spread of almost 0.04 depending only on which fifth was held back. That is why one split is one opinion."
+      - "The function takes in a model, a table, answers and a number, and hands back a list: something in, something out. The sorting put the lowest first and the highest last."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def fold_scores(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              print(scores)
+          scores = fold_scores(LogisticRegression(), X, y, 5)
+          print(round(sorted(scores)[0], 3))
+          print(round(sorted(scores)[-1], 3))
+        ask: "The function printed its scores, and handed nothing back. What does `sorted` get from it? Which word hands a result back to the code that called?"
+        why: "`print` shows a value to a person. `return` hands it to the code that asked."
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def fold_scores(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+                  return scores
+          scores = fold_scores(LogisticRegression(), X, y, 5)
+          print(round(sorted(scores)[0], 3))
+          print(round(sorted(scores)[-1], 3))
+        ask: "Both numbers are the same, so the list has one score. Where does the `return` sit, inside the loop or after it?"
+        why: "the first `return` ends the function, so a return inside the loop hands back after one fold."
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def fold_scores(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              return scores
+          scores = fold_scores(LogisticRegression(), X, y, 4)
+          print(round(sorted(scores)[0], 3))
+          print(round(sorted(scores)[-1], 3))
+        ask: "How many folds did I ask for?"
+    walk:
+      - "Inside the function: the fold numbers, an empty list for the scores, and a loop over the folds."
+      - "In each turn: this fold is the test, train on the others, and add the score on this fold to the list. After the loop, hand the list back."
+      - "Outside: read the files, build X and y, call the function with a logistic regression and five folds, sort the list, and print the first and the last."
+    return:
+      text: "And with four folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, write `fold_scores` again, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and call it with a logistic regression and four folds. Print the lowest score and then the highest, rounded to three places."
+      model: |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        def fold_scores(model, X, y, k):
+            fold = np.arange(len(X)) % k
+            scores = []
+            for i in range(k):
+                test = fold == i
+                model.fit(X[~test], y[~test])
+                scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+            return scores
+        scores = fold_scores(LogisticRegression(), X, y, 4)
+        print(round(sorted(scores)[0], 3))
+        print(round(sorted(scores)[-1], 3))
+      output: |-
+        0.786
+        0.82
+      narration:
+        - "0.786 and 0.82. With four folds the extremes move, though the mean hardly does."
+        - "A list handed back, sorted, the first and the last."
+      note: "Return for step 17. Other number of folds."
+    note: "The function, written for the first time, with the file read in the same script. It returns the list, so that the closing step has only to change the last line. The lowest and highest of five folds are the figures the map quotes (0.789 to 0.827)."
+
+  # 18
+  - kind: "recap"
+    lang: "python"
+    text: "\nStop there. You have now written, one thought at a time, what the library does in one word: a number for every row, a fold for each number, the test rows as this fold and the training rows as all the others, one score per fold, and their mean at the end. Every piece was something you owned already. Just one sentence is left, and I won't break it down.\n"
+    note: "Relief before the capstone (rule C8). It names the pieces so that the closing sentence is a recombination."
+
+  # 19
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "what-comes-out", "show-or-return"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    friction: true
+    text: "The last one, and I won't break it down. Cross-validation, written without the library. Write `cross_validate(model, X, y, k)`: it holds back each fold in turn, trains the model on the others, and hands back the mean AUC of the folds. Then, in the same script, read the two files, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC of a logistic regression over five folds, rounded to three places. The lines you may look up are `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      def cross_validate(model, X, y, k):
+          fold = np.arange(len(X)) % k
+          scores = []
+          for i in range(k):
+              test = fold == i
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          return sum(scores) / len(scores)
+      print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+    output: "0.803"
+    narration:
+      - "0.803. Cross-validation, written with your own hands: a fold for every row, this fold against the rest, a score for each turn, and the mean at the end. Five folds, from 0.789 to 0.827, and a mean you can trust far more than any one of them. If you can write this, you can think out the machinery behind a model score."
+      - "A function with a loop, a list that grows, a yes-or-no column and its opposite, and fit and predict. All of it came from earlier steps, and you chose the order."
+      - "0.803, the same number the five folds give, from a model that was never graded on a row it had learned from."
+    wrong:
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def cross_validate(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              return sum(scores)
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+        ask: "That is the total of the scores, a number near 4. What do you divide it by?"
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def cross_validate(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+                  return sum(scores) / len(scores)
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+        ask: "That is the score of the first fold alone. Where does the mean have to be worked out: inside the loop or after it?"
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def cross_validate(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[test], y[test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              return sum(scores) / len(scores)
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+        ask: "That trains the model on the fold it is scored on. Which rows should it learn from?"
+        why: "the held-back fold is for scoring only. Training on it is the leak you learned to read."
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def cross_validate(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              print(sum(scores) / len(scores))
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+        ask: "The function printed the mean and handed back nothing. What does the print outside it show, and which word hands a value back?"
+    walk:
+      - "Inside the function: a number for each row, a fold for each number, and an empty list for the scores before the loop."
+      - "For each fold: the rows of this fold are the test, the others are the training rows. Fit on the training rows, and add the score on the test rows to the list."
+      - "After the loop, hand back the total divided by how many. Outside: read, merge, build X and y, and print the function called with a logistic regression and five folds."
+    return:
+      text: "And not broken down either. Write `cross_validate(model, X, y, k)` again, and use it on a different question: whether a delivery was more than 10 minutes late, with all four columns in X, the rows with no distance dropped, and four folds, for a logistic regression. Print the mean AUC, rounded to three places. The lines you may look up are `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+      model: |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] - data['promised_minutes'] > 10
+        def cross_validate(model, X, y, k):
+            fold = np.arange(len(X)) % k
+            scores = []
+            for i in range(k):
+                test = fold == i
+                model.fit(X[~test], y[~test])
+                scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+            return sum(scores) / len(scores)
+        print(round(cross_validate(LogisticRegression(), X, y, 4), 3))
+      output: "0.881"
+      narration:
+        - "0.881. Four folds, a different question, the same function: you can write it without looking at the last one."
+        - "The fold numbers, this fold and the rest, a list of scores, and the mean."
+      note: "Return for step 19. Not broken down, like the step."
+    note: "The capstone of the course (pass-bar task 16), with a result of 0.803 for five folds. The function is the map's closing code word for word. Deliberate friction (rule C9). The wrong answers are the real slips in this function: the total without the division, the return inside the loop, training on the test fold, and printing without returning."
+
+  # 20
+  - kind: "ask"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "what-comes-out", "swap-the-model", "show-or-return"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
+    text: "Put your function to work. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate` once more, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over five folds of a logistic regression, and then of gradient boosting, rounded to three places."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+      y = data['actual_minutes'] > data['promised_minutes']
+      def cross_validate(model, X, y, k):
+          fold = np.arange(len(X)) % k
+          scores = []
+          for i in range(k):
+              test = fold == i
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          return sum(scores) / len(scores)
+      print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+      print(round(cross_validate(GradientBoostingClassifier(random_state=0), X, y, 5), 3))
+    output: |-
+      0.803
+      0.797
+    narration:
+      - "0.803 for the plain model and 0.797 for the boosted one, each averaged over five folds. The same answer as before, now with a fair measure: the plain model is ahead, and by about as much as before."
+      - "The function took the model as something that comes in, so swapping models was only the first line of the call. That is the point of writing it as a function."
+      - ""
+    wrong:
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def cross_validate(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              return sum(scores) / len(scores)
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+        ask: "Both lines used the plain model. Which model goes in the second call?"
+      - code: |-
+          import numpy as np
+          from sklearn.linear_model import LogisticRegression
+          from sklearn.ensemble import GradientBoostingClassifier
+          from sklearn.metrics import roc_auc_score
+          import pandas as pd
+          orders = pd.read_csv('orders.csv')
+          deliveries = pd.read_csv('deliveries.csv')
+          data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+          X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+          y = data['actual_minutes'] > data['promised_minutes']
+          def cross_validate(model, X, y, k):
+              fold = np.arange(len(X)) % k
+              scores = []
+              for i in range(k):
+                  test = fold == i
+                  model.fit(X[~test], y[~test])
+                  scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+              return sum(scores) / len(scores)
+          print(round(cross_validate(GradientBoostingClassifier(random_state=0), X, y, 5), 3))
+          print(round(cross_validate(LogisticRegression(), X, y, 5), 3))
+        ask: "Which model did I ask you to print first?"
+    walk:
+      - "Write the function, with the model as something that goes in."
+      - "Read, merge, build X and y."
+      - "Call it with the plain model, and then with the boosted one, and print each, rounded."
+    return:
+      text: "The same with three folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate`, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over three folds of a logistic regression, and then of gradient boosting, rounded to three places."
+      model: |
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
+        data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+        X = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]
+        y = data['actual_minutes'] > data['promised_minutes']
+        def cross_validate(model, X, y, k):
+            fold = np.arange(len(X)) % k
+            scores = []
+            for i in range(k):
+                test = fold == i
+                model.fit(X[~test], y[~test])
+                scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+            return sum(scores) / len(scores)
+        print(round(cross_validate(LogisticRegression(), X, y, 3), 3))
+        print(round(cross_validate(GradientBoostingClassifier(random_state=0), X, y, 3), 3))
+      output: |-
+        0.802
+        0.793
+      narration:
+        - "Three folds this time, and the plain model is still ahead. Fewer folds, slightly different means."
+        - "The same function, called twice with different models."
+      note: "Return for step 20. Three folds."
+    note: "The payoff of the capstone: the learner uses the function on the comparison of ML-2 and sees that the fair measure agrees with the single split (the plain model is a little ahead). 0.803 and 0.797."
+
+  # 21
+  - kind: "recap"
+    lang: "python"
+    text: "\nStop there. Of everything in this strand, this is the sentence that matters most: not the model, but how you know what a number means. You built a score you could trust, from nothing but the pieces you already owned. You are not fast at it, and you are not meant to be. Speed is trained somewhere else, later. Don't go over any of this. One more question, cold, and then we stop.\n"
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "python"
+    requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "what-comes-out", "show-or-return"]
+    supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
+    text: "Write `cross_validate(model, X, y, k)`, which returns the mean AUC over k folds. Then read the files, drop the rows with no distance, put the distance, the rain and the bag size in X, let y be whether a delivery was more than 15 minutes late, and print the mean AUC over three folds of a logistic regression, rounded to three places. The lines you may look up are `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    model: |
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
+      data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+      X = data[['distance_km', 'rain', 'bag_size']]
+      y = data['actual_minutes'] - data['promised_minutes'] > 15
+      def cross_validate(model, X, y, k):
+          fold = np.arange(len(X)) % k
+          scores = []
+          for i in range(k):
+              test = fold == i
+              model.fit(X[~test], y[~test])
+              scores.append(roc_auc_score(y[test], model.predict_proba(X[test])[:, 1]))
+          return sum(scores) / len(scores)
+      print(round(cross_validate(LogisticRegression(), X, y, 3), 3))
+    output: "0.873"
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: the capstone function, on a combination never practised (other columns and target, three folds). Never scored (rule F1). A miss tells the script which of the fold numbers, this fold and the rest, the list of scores, or the mean was absent."

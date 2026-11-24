@@ -1,0 +1,602 @@
+lesson: sql-03
+title: "Keep piles, and empty cells"
+strand: sql
+stage: 1
+thoughts:
+  text-is-exact: "Inside quotes it is your data, and data is matched letter for letter, capitals and accents included."
+  empty-cells: "A cell can be empty. Nothing equals an empty cell, so the question is written `IS NULL`."
+  summaries-skip-empties: "A summary of a column skips its empty cells. A count of rows, `COUNT(*)`, does not."
+  how-many-different: "`COUNT(DISTINCT customer_id)` counts each different value once."
+  keep-piles: "`HAVING` is the keep-rows question, asked of piles. It is written after the piles are made."
+  rows-or-piles: "A question about a row goes in `WHERE`. A question about a pile goes in `HAVING`."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "The two cuisines with the most restaurants, and how many each."
+    model: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine ORDER BY COUNT(*) DESC LIMIT 2"
+    rows: 2
+    result: [["hamburguer", 13], ["brasileira", 11]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from lesson 2: piles, a sort by the count and a cut, on a table and column not combined that way before. Hamburguer 13 and brasileira 11 leave no tie. Never scored."
+
+  # 2
+  - kind: "classmate"
+    new: ["text-is-exact"]
+    requires: ["count-rows", "from-table", "keep-rows", "compare-signs", "text-quotes"]
+    text: |-
+      Davi wanted to know how many pizza restaurants there are. He remembered the quotes this time, and wrote:
+
+      ```sql
+      SELECT COUNT(*) FROM restaurants WHERE cuisine = 'Pizza'
+      ```
+
+      The answer came back: 0. No error, just nothing. Davi, how does the cuisine column write that word? ... All small letters. Inside quotes the word is your data, and data is matched exactly, letter for letter, capitals and accents included. A capital P is a different word. What should he have written?
+    model: "SELECT COUNT(*) FROM restaurants WHERE cuisine = 'pizza'"
+    rows: 1
+    result: [[8]]
+    shows:
+      - "SELECT COUNT(*) FROM restaurants WHERE cuisine = 'Pizza'"
+    narration:
+      - "8 pizza places. The word in quotes has to match the table's word exactly, down to the capital letters."
+      - "Small letters, as the table has them. Quotes mean it is data, and data is matched letter for letter."
+      - "8. Nothing to fix but the capital."
+    wrong:
+      - sql: "SELECT COUNT(*) FROM restaurants WHERE cuisine = 'PIZZA'"
+        ask: "Look at the cuisine column again. Are its words written in capitals?"
+      - sql: "SELECT COUNT(*) FROM restaurants WHERE cuisine = Pizza"
+        ask: "Is Pizza a column, or a word we are looking for?"
+    walk:
+      - "Davi's sentence is shaped right. Look only at the word inside the quotes."
+      - "Write it exactly as the table has it."
+    return:
+      text: "How many hamburguer restaurants are there?"
+      model: "SELECT COUNT(*) FROM restaurants WHERE cuisine = 'hamburguer'"
+      rows: 1
+      result: [[13]]
+      narration:
+        - "13. The word in quotes had to be written exactly as the table has it."
+        - "Small letters again: quotes make it data, and data is matched letter for letter."
+      note: "Return for step 2."
+    note: "Davi makes the slip before the learner can (rule E6). The answer is a quiet 0 and not an error, which is why it is worth a classmate. Lesson 1 step 9 had this as a wrong-answer bait, never taught."
+
+  # 3
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "choose-columns", "keep-rows", "compare-signs", "text-quotes", "two-questions", "text-is-exact"]
+    text: "The names of the hamburguer restaurants in São Paulo. The tilde on the a is part of the word, so copy the city exactly as I wrote it."
+    thinking_order: "From restaurants, keeping the ones in São Paulo that serve hamburguer, just the name."
+    model: "SELECT name FROM restaurants WHERE city = 'São Paulo' AND cuisine = 'hamburguer'"
+    rows: 5
+    result: [["Rest 09"], ["Rest 11"], ["Rest 36"], ["Rest 39"], ["Rest 60"]]
+    narration:
+      - "Five names. Two questions joined with AND, and each word in quotes written exactly as the table has it."
+      - "From restaurants, keep the ones that pass both questions, show the name."
+      - ""
+    wrong:
+      - sql: "SELECT name FROM restaurants WHERE city = 'Sao Paulo' AND cuisine = 'hamburguer'"
+        ask: "No rows came back. Is the city spelled in your sentence exactly as it is in the table?"
+        why: "data inside quotes is matched letter for letter, so a missing tilde is a different word."
+      - sql: "SELECT name FROM restaurants WHERE city = 'São Paulo' OR cuisine = 'hamburguer'"
+        ask: "Would a restaurant have to pass both questions, or only one of them?"
+      - sql: "SELECT name FROM restaurants WHERE city = 'São Paulo' AND cuisine = 'Hamburguer'"
+        ask: "Look at how the cuisine column writes its words. Is yours written the same way?"
+    walk:
+      - "Show me the names from restaurants."
+      - "Keep only the ones in São Paulo."
+      - "Add the second question, joined with the word for both."
+    return:
+      text: "Show the ids of the couriers in Belo Horizonte who ride a bike."
+      model: "SELECT courier_id FROM couriers WHERE city = 'Belo Horizonte' AND vehicle = 'bike'"
+      rows: 9
+      narration:
+        - "Nine ids. Two questions joined with AND, each word written as the table has it."
+        - "The city has two words and capitals, and all of it sat inside the quotes."
+      note: "Return for step 3."
+    note: "Exactness meets accents and two-word values, with the thought just given. The model differs from step 2 in SELECT and WHERE."
+
+  # 4
+  - kind: "give"
+    new: ["empty-cells"]
+    text: |-
+      At the very start I told you a few cells are empty and to leave them for another day. This is the day. An empty cell is called NULL, and to find the rows where a cell is empty you ask IS NULL:
+
+      ```sql
+      SELECT COUNT(*) FROM orders WHERE subtotal IS NULL
+      ```
+
+      Run it.
+    shows:
+      - "SELECT COUNT(*) FROM orders WHERE subtotal IS NULL"
+    after_run: "25 orders have no subtotal. Look at the question: it is not an equals sign. Nothing equals an empty cell, not a number, not a word, not even another empty cell, because empty means we do not know, and one unknown is not equal to another. So the question is IS NULL."
+    note: "Pays the debt from lesson 1 step 3. The reason for IS NULL is real, so there is no rule left over."
+
+  # 5
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "two-questions", "empty-cells"]
+    text: "How many of the delivered orders have no subtotal?"
+    thinking_order: "From orders, keeping the delivered ones where the subtotal is empty, how many?"
+    model: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal IS NULL"
+    rows: 1
+    result: [[23]]
+    narration:
+      - "23. Two questions joined by AND: one about a word, one about an empty cell."
+      - "From orders, keep the delivered ones with an empty subtotal, count them: 23. Two of the 25 were cancelled."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal = NULL"
+        ask: "Does anything equal an empty cell? What is the question for an empty one?"
+        why: "an equals sign never says yes to an empty cell, so the count is 0."
+      - sql: "SELECT COUNT(*) FROM orders WHERE status = 'delivered' AND subtotal = ''"
+        ask: "An empty cell is not an empty word. What question did we use for empty cells?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE subtotal IS NULL"
+        ask: "That is every empty subtotal. Which ones did I ask about?"
+    walk:
+      - "How many orders have an empty subtotal?"
+      - "Keep only the delivered ones: add a second question, joined with the word for both."
+    return:
+      text: "The coupon_code column is empty when no coupon was used. How many orders with no coupon were promised in 30 minutes?"
+      model: "SELECT COUNT(*) FROM orders WHERE coupon_code IS NULL AND promised_minutes = 30"
+      rows: 1
+      result: [[1384]]
+      narration:
+        - "1,384 orders. An empty cell is asked with IS NULL, and a number in the other question joined with AND."
+        - "No coupon means an empty cell. Keep those, and the 30-minute promises, and count."
+      note: "Return for step 5. Other column and a number in place of a word."
+    note: "First typed use of IS NULL. The equals-NULL slip is the bait, and it gives 0 quietly."
+
+  # 6
+  - kind: "give"
+    new: ["summaries-skip-empties"]
+    text: |-
+      What does a summary do with an empty cell? Look at two counts side by side. The first is the one you know. The second has a column inside its brackets, as AVG does:
+
+      ```sql
+      SELECT COUNT(*), COUNT(subtotal) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT COUNT(*), COUNT(subtotal) FROM orders"
+    after_run: "6,000 and 5,975. The star counts rows, and every row counts, empty cells or not. A count of a column counts only the cells that are filled in, so the 25 empty ones were skipped. AVG, SUM, MAX and MIN skip them too: the average subtotal we have been quoting is the average of 5,975 numbers."
+    note: "This is why lesson 1's 60.40 was an average of 5,975 orders and not 6,000. It is stated now, once the learner can see the two numbers."
+
+  # 7
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "empty-cells", "summaries-skip-empties"]
+    text: "The coupon_code column is empty unless the customer used a coupon. How many orders used one?"
+    thinking_order: "From orders, how many cells of coupon_code are filled in?"
+    model: "SELECT COUNT(coupon_code) FROM orders"
+    rows: 1
+    result: [[1884]]
+    narration:
+      - "1,884. A count of the column skips the empty cells, so what is left is the orders with a coupon."
+      - "No question was needed: the empties dropped out by themselves."
+      - "1,884 orders had a coupon."
+    wrong:
+      - sql: "SELECT COUNT(*) FROM orders"
+        ask: "That counts every row. Which count skips the empty cells?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE coupon_code IS NULL"
+        ask: "That is how many had no coupon. Which way round did I ask?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE coupon_code = ''"
+        ask: "Is an empty cell an empty word? What does a summary of a column do with empty cells?"
+    walk:
+      - "How many rows does orders have?"
+      - "Now count the column coupon_code, with the column inside the brackets, in place of the star."
+    return:
+      text: "The actual_minutes column holds how long each delivery really took. For how many orders is it filled in?"
+      model: "SELECT COUNT(actual_minutes) FROM orders"
+      rows: 1
+      result: [[5601]]
+      narration:
+        - "5,601: the delivered orders. A count of the column skips the empty ones."
+        - "The column went inside the brackets, and the empties dropped out."
+      note: "Return for step 7. The cancelled orders have no real time."
+    note: "Uses the thought the way it is most useful: 'how many have one' as a count of the column. A learner who answers with IS NULL and its opposite is also right in meaning, and the checker takes any sentence with the same result."
+
+  # 8
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "empty-cells"]
+    any_column_order: true
+    text: "For each status, how many orders have no subtotal?"
+    thinking_order: "From orders, keeping the ones with an empty subtotal, a pile per status, the status and how many."
+    model: "SELECT status, COUNT(*) FROM orders WHERE subtotal IS NULL GROUP BY status"
+    rows: 2
+    result: [["cancelled", 2], ["delivered", 23]]
+    narration:
+      - "Two piles: 23 delivered and 2 cancelled. Keep the empties first, pile what is left, count each pile."
+      - "Keep, then pile, in the order they happen, with the empty-cell question in the keeping part."
+      - ""
+    wrong:
+      - sql: "SELECT status, COUNT(*) FROM orders GROUP BY status"
+        ask: "Those are all the orders in each pile. Where do we keep only the empty subtotals?"
+      - sql: "SELECT status, COUNT(subtotal) FROM orders GROUP BY status"
+        ask: "A count of the column skips the empty cells, so it counts the filled ones. We want the empty ones. How do we pick those rows?"
+      - sql: "SELECT COUNT(*) FROM orders WHERE subtotal IS NULL GROUP BY status"
+        ask: "Which of the two numbers is the cancelled one?"
+    walk:
+      - "How many orders have an empty subtotal?"
+      - "Now sort those into piles by status, and put the pile's name in front."
+    return:
+      text: "For each promised time, how many orders had no coupon?"
+      model: "SELECT promised_minutes, COUNT(*) FROM orders WHERE coupon_code IS NULL GROUP BY promised_minutes"
+      rows: 3
+      result: [[30, 1384], [40, 1364], [50, 1368]]
+      narration:
+        - "Three piles, one per promised time, each with the orders that had no coupon."
+        - "Keep the empty coupons, pile by the promise, count each pile."
+      note: "Return for step 8."
+    note: "Empty cells meet keep-before-piles. The wording does not say 'empty' in the prompt's second sentence the same way as step 5."
+
+  # 9
+  - kind: "give"
+    new: ["how-many-different"]
+    text: |-
+      Each order has a customer_id. A customer can order again and again, so a count of that column would say 6,000, once for every order. To count each customer once, put DISTINCT inside the brackets, in front of the column:
+
+      ```sql
+      SELECT COUNT(DISTINCT customer_id) FROM orders
+      ```
+
+      Run it.
+    shows:
+      - "SELECT COUNT(DISTINCT customer_id) FROM orders"
+    after_run: "1,475 different customers placed those 6,000 orders. DISTINCT means each different value, once. Everything else about the count is as before."
+    note: "The learner has met 'how many orders' and 'how many customers' as the same question until now. This separates them."
+
+  # 10
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "summary-column", "how-many-different"]
+    text: "How many different customers had an order cancelled?"
+    thinking_order: "From orders, keeping the cancelled ones, how many different customers?"
+    model: "SELECT COUNT(DISTINCT customer_id) FROM orders WHERE status = 'cancelled'"
+    rows: 1
+    result: [[342]]
+    narration:
+      - "342. Keep the cancelled orders, then count each customer once."
+      - "There were 399 cancelled orders, but some customers were cancelled more than once: 342 people."
+      - ""
+    wrong:
+      - sql: "SELECT COUNT(customer_id) FROM orders WHERE status = 'cancelled'"
+        ask: "That is 399, one for each order. Which word counts each customer once?"
+      - sql: "SELECT COUNT(DISTINCT customer_id) FROM orders"
+        ask: "That is every customer who ever ordered. Which ones did I ask about?"
+      - sql: "SELECT DISTINCT customer_id FROM orders WHERE status = 'cancelled'"
+        ask: "That lists them. I asked how many. What counts them?"
+    walk:
+      - "How many different customers placed orders?"
+      - "Keep only the cancelled orders first."
+    return:
+      text: "How many different cuisines do the restaurants serve?"
+      model: "SELECT COUNT(DISTINCT cuisine) FROM restaurants"
+      rows: 1
+      result: [[6]]
+      narration:
+        - "6. The column inside the brackets, with DISTINCT in front, from restaurants."
+        - "Each cuisine is counted once, however many restaurants serve it."
+      note: "Return for step 10."
+    note: "The first sentence in which 'orders' and 'people' differ in the numbers."
+
+  # 11
+  - kind: "aside"
+    text: "Something that is only interesting, with nothing in it to keep. Real tables are full of empty cells: a form left blank, a sensor that dropped out, a field nobody needed. So when people meet a table they have never seen, a good first look is to put COUNT(*) and the count of a column side by side, as you did a minute ago. If the two numbers differ, there are empties, and you know before they surprise you."
+    note: "Relief after the first run of three new thoughts (rule C8), and the real reason to care about empties. It is offered as interesting and not as a rule."
+
+  # 12
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "how-many-different"]
+    any_column_order: true
+    text: "For each status, how many different customers?"
+    model: "SELECT status, COUNT(DISTINCT customer_id) FROM orders GROUP BY status"
+    rows: 2
+    result: [["cancelled", 342], ["delivered", 1469]]
+    narration:
+      - "1,469 customers had a delivered order and 342 had a cancelled one. The two add up to more than 1,475, because some customers are in both piles."
+      - "A pile per status, and in each pile every customer counted once."
+      - ""
+    wrong:
+      - sql: "SELECT status, COUNT(customer_id) FROM orders GROUP BY status"
+        ask: "Those are 5,601 and 399, one for each order. Which word counts each customer once?"
+      - sql: "SELECT COUNT(DISTINCT customer_id) FROM orders GROUP BY status"
+        ask: "Which of the two numbers is the cancelled one?"
+      - sql: "SELECT status, COUNT(DISTINCT status) FROM orders GROUP BY status"
+        ask: "Each pile has one status, so that counts 1. What did I ask you to count once each?"
+    walk:
+      - "From orders, a pile per status, and the status and how many orders in each."
+      - "Now count each customer once in each pile."
+    return:
+      text: "For each promised time, how many different customers ordered?"
+      model: "SELECT promised_minutes, COUNT(DISTINCT customer_id) FROM orders GROUP BY promised_minutes"
+      rows: 3
+      result: [[30, 1113], [40, 1132], [50, 1100]]
+      narration:
+        - "About 1,100 different customers in each pile."
+        - "A pile for each promise, and each customer counted once inside it."
+      note: "Return for step 12. Another pile column."
+    note: "Distinct in a pile. Step 10's sentence had a WHERE and no piles, so this differs in more than one clause."
+
+  # 13
+  - kind: "give"
+    new: ["keep-piles"]
+    text: |-
+      Now back to piles. You know how to keep rows: a question after the table, and the rows that answer no are dropped. Piles can be kept the same way. Suppose we want only the cities with more than 40 couriers. That is a question about a whole pile, its size. It is asked with the word HAVING, after the piles are made:
+
+      ```sql
+      SELECT city, COUNT(*) FROM couriers GROUP BY city HAVING COUNT(*) > 40
+      ```
+
+      Run it.
+    shows:
+      - "SELECT city, COUNT(*) FROM couriers GROUP BY city HAVING COUNT(*) > 40"
+    after_run: "Two cities: Rio with 49 and São Paulo with 89. HAVING is the question you already know, asked of piles instead of rows. Each pile answers yes or no, and only the yes piles stay. It comes after GROUP BY for the reason things always do: a pile's size is not known until the piles are made."
+    note: "Reframe (rule B8). HAVING arrives two lessons after piles, as the plan for the confusable pair requires (rule C6): piles are comfortable first."
+
+  # 14
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "keep-piles"]
+    any_column_order: true
+    text: "Show each cuisine with how many restaurants serve it, but only the cuisines that more than 9 restaurants serve."
+    thinking_order: "From restaurants, a pile per cuisine, the cuisine and how many, keeping only the piles bigger than 9."
+    model: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine HAVING COUNT(*) > 9"
+    rows: 4
+    result: [["brasileira", 11], ["hamburguer", 13], ["japonesa", 10], ["saudavel", 10]]
+    narration:
+      - "Four cuisines are big enough. You made the piles, counted them, and kept the piles that answered yes."
+      - "Piles first, then the question about the piles: HAVING after GROUP BY."
+      - ""
+    wrong:
+      - sql: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine"
+        ask: "All six piles are here. Which word keeps only the big ones?"
+      - sql: "SELECT cuisine, COUNT(*) FROM restaurants GROUP BY cuisine HAVING COUNT(*) > 10"
+        ask: "Two piles are missing. Is a pile of 10 more than 9?"
+      - sql: "SELECT cuisine, COUNT(*) FROM restaurants HAVING COUNT(*) > 9 GROUP BY cuisine"
+        ask: "Which happens first, making the piles or keeping them? Write them in that order."
+    walk:
+      - "How many restaurants for each cuisine?"
+      - "Now keep only the piles with a count above 9, with the word that asks questions of piles."
+    return:
+      text: "Show each vehicle with how many couriers ride it, but only the vehicles that more than 20 couriers ride."
+      model: "SELECT vehicle, COUNT(*) FROM couriers GROUP BY vehicle HAVING COUNT(*) > 20"
+      rows: 2
+      result: [["bike", 73], ["moto", 110]]
+      narration:
+        - "Moto 110 and bike 73 are big enough. Carro, with 17, is dropped."
+        - "Piles, a count, then the question about the piles."
+      note: "Return for step 14."
+    note: "First typed HAVING. It is asked before the classmate step so that the learner has a good feeling for it, and so that the contrast in step 15 is a contrast."
+
+  # 15
+  - kind: "classmate"
+    new: ["rows-or-piles"]
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles"]
+    any_column_order: true
+    text: |-
+      Ana was asked: in Rio de Janeiro, which vehicles do more than 10 couriers ride, and how many? She wrote:
+
+      ```sql
+      SELECT vehicle, COUNT(*) FROM couriers WHERE city = 'Rio de Janeiro' AND COUNT(*) > 10 GROUP BY vehicle
+      ```
+
+      SQLite answered: misuse of aggregate: COUNT(). Ana, the city is a fact about one courier. But is "more than 10" a fact about one courier, or about a whole pile of them? ... A pile. WHERE asks its question of each row, one at a time, before any pile exists, so there is no count yet to ask about. A question about a row goes in WHERE. A question about a pile goes in HAVING. And this sentence needs one of each. What should she have written?
+    model: "SELECT vehicle, COUNT(*) FROM couriers WHERE city = 'Rio de Janeiro' GROUP BY vehicle HAVING COUNT(*) > 10"
+    rows: 2
+    result: [["bike", 18], ["moto", 28]]
+    broken: "SELECT vehicle, COUNT(*) FROM couriers WHERE city = 'Rio de Janeiro' AND COUNT(*) > 10 GROUP BY vehicle"
+    narration:
+      - "Moto 28 and bike 18. The city question went in WHERE, because it is about a courier, and the size question went in HAVING, because it is about a pile."
+      - "Keep the Rio couriers, pile them by vehicle, keep the piles bigger than 10: each question in the place that asks it of the right thing."
+      - ""
+    wrong:
+      - sql: "SELECT vehicle, COUNT(*) FROM couriers WHERE city = 'Rio de Janeiro' GROUP BY vehicle"
+        ask: "Carro is still here, with 3. Which question is about a pile, and where does it go?"
+      - sql: "SELECT vehicle, COUNT(*) FROM couriers GROUP BY vehicle HAVING COUNT(*) > 10"
+        ask: "Those piles are made of all the cities. Where do we keep only Rio's couriers?"
+      - sql: "SELECT vehicle, COUNT(*) FROM couriers HAVING city = 'Rio de Janeiro' GROUP BY vehicle HAVING COUNT(*) > 10"
+        ask: "Which happens first, making the piles or keeping them? And is the city a fact about a row or a pile?"
+    walk:
+      - "Is the city a question about one courier or about a pile? Put it where rows are kept."
+      - "Is the size a question about one courier or about a pile? Put it where piles are kept, after the piles are made."
+    return:
+      text: "Show the cities with how many couriers ride a bike there, but only the cities with more than 10 of them."
+      model: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'bike' GROUP BY city HAVING COUNT(*) > 10"
+      rows: 3
+      result: [["Curitiba", 13], ["Rio de Janeiro", 18], ["São Paulo", 33]]
+      narration:
+        - "Curitiba 13, Rio 18 and São Paulo 33. Belo Horizonte, with 9, is dropped."
+        - "The vehicle is a question about a courier, so it went in WHERE. The count is a question about a pile, so it went in HAVING."
+      note: "Return for step 15."
+    note: "Ana makes the predictable slip one step before the learner could (rule E6). SQLite's own message says aggregates are misused there, and the real reason is the order of events. The pair is contrasted only now, after keep-piles has been comfortable alone (rule C6)."
+
+  # 16
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-piles", "summaries-skip-empties"]
+    any_column_order: true
+    text: "Which restaurants have an average subtotal above 65? Show each with its average."
+    thinking_order: "From orders, a pile per restaurant, the restaurant and its average subtotal, keeping only the piles whose average is above 65."
+    model: "SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id HAVING AVG(subtotal) > 65"
+    rows: 7
+    narration:
+      - "Only a few restaurants are that high. The question was about each pile's average, so it went in HAVING, and the average was worked out without the empty subtotals."
+      - "Piles, an average for each, and then the question about the piles."
+      - ""
+    wrong:
+      - sql: "SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id"
+        ask: "All sixty restaurants are here. Which word keeps only the high ones?"
+      - sql: "SELECT restaurant_id, AVG(subtotal) FROM orders WHERE subtotal > 65 GROUP BY restaurant_id"
+        ask: "That keeps the big orders, then averages them. Is 'above 65' about one order, or about a restaurant's average?"
+        why: "WHERE asks about each row. The question here is about the pile's average."
+      - sql: "SELECT restaurant_id, AVG(subtotal) FROM orders GROUP BY restaurant_id HAVING COUNT(*) > 65"
+        ask: "That asks about the size of the pile. What is it we want above 65?"
+    walk:
+      - "From orders, the average subtotal of each restaurant."
+      - "Now keep only the piles whose average is above 65."
+    return:
+      text: "For each promised time, show the average actual time, but only for the promises whose average is above 35."
+      model: "SELECT promised_minutes, AVG(actual_minutes) FROM orders GROUP BY promised_minutes HAVING AVG(actual_minutes) > 35"
+      rows: 2
+      result: [[40, 39.61], [50, 49.44]]
+      narration:
+        - "The 40 and the 50 stay, and the 30 goes: its average is about 29."
+        - "The question was about each pile's average, so it went after the piles were made."
+      note: "Return for step 16."
+    note: "A HAVING on a summary that is not a count, and a repeat of rows-or-piles with a trap that is a likely slip (WHERE subtotal > 65, which gives a different answer, not an error)."
+
+  # 17
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles", "rows-or-piles", "sort", "sort-direction", "sort-by-summary"]
+    ordered: true
+    any_column_order: true
+    text: "Among the couriers on a moto, which cities have more than 20 of them? Show each city with its count, the biggest first."
+    thinking_order: "From couriers, keeping the motos, a pile per city, the city and how many, keeping the piles bigger than 20, the biggest first."
+    model: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'moto' GROUP BY city HAVING COUNT(*) > 20 ORDER BY COUNT(*) DESC"
+    rows: 2
+    result: [["São Paulo", 48], ["Rio de Janeiro", 28]]
+    narration:
+      - "São Paulo with 48, then Rio with 28. Belo Horizonte and Curitiba have fewer than 20 moto couriers."
+      - "Keep the motos, pile by city, keep the big piles, sort: every part in the order it happens."
+      - ""
+    wrong:
+      - sql: "SELECT city, COUNT(*) FROM couriers GROUP BY city HAVING COUNT(*) > 20 ORDER BY COUNT(*) DESC"
+        ask: "Those piles hold every vehicle. Where do we keep only the motos?"
+      - sql: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'moto' GROUP BY city HAVING COUNT(*) > 20"
+        ask: "The right piles, but in which order? Which words put the biggest first?"
+      - sql: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'moto' AND COUNT(*) > 20 GROUP BY city ORDER BY COUNT(*) DESC"
+        ask: "Is 'more than 20' a question about one courier or about a pile? Where does that go?"
+    walk:
+      - "From couriers, keep only the motos, then count them in each city."
+      - "Keep only the piles bigger than 20."
+      - "Sort them, the biggest first."
+    return:
+      text: "Among the bike couriers, show the cities with more than 12 of them, with each count, the biggest first."
+      model: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'bike' GROUP BY city HAVING COUNT(*) > 12 ORDER BY COUNT(*) DESC"
+      rows: 3
+      result: [["São Paulo", 33], ["Rio de Janeiro", 18], ["Curitiba", 13]]
+      narration:
+        - "São Paulo 33, Rio 18, Curitiba 13. Belo Horizonte, with 9, is dropped."
+        - "Keep the bikes, pile by city, keep the big piles, sort."
+      note: "Return for step 17."
+    note: "Keep, pile, keep piles, sort: the sentence runs in the order things happen, now with four stages. 48, 28 are not tied."
+
+  # 18
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "how-many-different", "keep-piles"]
+    any_column_order: true
+    text: "Among the delivered orders, which restaurants were ordered from by more than 105 different customers? Show each restaurant with that number."
+    thinking_order: "From orders, keeping the delivered ones, a pile per restaurant, the restaurant and how many different customers, keeping the piles bigger than 105."
+    model: "SELECT restaurant_id, COUNT(DISTINCT customer_id) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id HAVING COUNT(DISTINCT customer_id) > 105"
+    rows: 4
+    result: [[2, 110], [3, 108], [24, 110], [59, 108]]
+    narration:
+      - "Four restaurants: 2, 3, 24 and 59. Each customer was counted once in each pile, and then the piles were kept."
+      - "Keep the delivered orders, pile by restaurant, count the different customers in each, keep the big piles."
+      - ""
+    wrong:
+      - sql: "SELECT restaurant_id, COUNT(DISTINCT customer_id) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id"
+        ask: "All sixty restaurants are here. Which word keeps only the ones above 105?"
+      - sql: "SELECT restaurant_id, COUNT(customer_id) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id HAVING COUNT(customer_id) > 105"
+        ask: "That counts orders, so a customer who ordered twice is counted twice. Which word counts each customer once?"
+      - sql: "SELECT restaurant_id, COUNT(DISTINCT customer_id) FROM orders GROUP BY restaurant_id HAVING COUNT(DISTINCT customer_id) > 105"
+        ask: "Those piles include the cancelled orders. Where do we drop them?"
+    walk:
+      - "On the delivered orders, how many different customers for each restaurant?"
+      - "Keep only the piles with a number above 105."
+    return:
+      text: "Across all the orders, which restaurants had more than 110 different customers? Show each with its number."
+      model: "SELECT restaurant_id, COUNT(DISTINCT customer_id) FROM orders GROUP BY restaurant_id HAVING COUNT(DISTINCT customer_id) > 110"
+      rows: 6
+      result: [[2, 116], [3, 113], [22, 112], [24, 118], [35, 112], [59, 113]]
+      narration:
+        - "Six restaurants, each with its number of different customers."
+        - "Pile by restaurant, count each customer once, keep the big piles."
+      note: "Return for step 18."
+    note: "Keeps how-many-different alive after its first two steps, and meets keep-piles again. Ties do not matter: the answer is a set."
+
+  # 19
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "empty-cells", "keep-piles"]
+    any_column_order: true
+    text: "Which restaurants have more than one order with no subtotal? Show each restaurant with how many."
+    model: "SELECT restaurant_id, COUNT(*) FROM orders WHERE subtotal IS NULL GROUP BY restaurant_id HAVING COUNT(*) > 1"
+    rows: 5
+    result: [[9, 2], [17, 2], [32, 2], [35, 2], [53, 2]]
+    narration:
+      - "Five restaurants have two each. The empty subtotals were kept as rows first, then piled by restaurant, then the piles were kept."
+      - "Empty cells, piles, and a question about the piles, all in the order they happen."
+      - ""
+    wrong:
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders WHERE subtotal IS NULL GROUP BY restaurant_id"
+        ask: "Every restaurant with at least one empty subtotal is here. Which word keeps only the ones with more than one?"
+      - sql: "SELECT restaurant_id, COUNT(*) FROM orders GROUP BY restaurant_id HAVING COUNT(*) > 1"
+        ask: "That counts every order. Which orders did I ask about?"
+      - sql: "SELECT restaurant_id, COUNT(subtotal) FROM orders GROUP BY restaurant_id HAVING COUNT(subtotal) > 1"
+        ask: "A count of the column skips the empty cells. Is that what we want to count?"
+    walk:
+      - "How many orders have an empty subtotal?"
+      - "Pile those by restaurant, and show each restaurant with its count."
+      - "Keep only the piles bigger than 1."
+    return:
+      text: "Among the cancelled orders with no coupon, which restaurants have more than 7 of them? Show each with its count."
+      model: "SELECT restaurant_id, COUNT(*) FROM orders WHERE coupon_code IS NULL AND status = 'cancelled' GROUP BY restaurant_id HAVING COUNT(*) > 7"
+      rows: 5
+      result: [[10, 8], [16, 8], [17, 8], [31, 8], [40, 8]]
+      narration:
+        - "The restaurants that had more than 9 such orders, each with its count."
+        - "Keep, pile, then keep the piles."
+      note: "Return for step 18."
+    note: "Empty cells, piles and HAVING together. All the empty subtotals are spread thin, so a threshold of 1 keeps five of them."
+
+  # 20
+  - kind: "ask"
+    requires: ["count-rows", "from-table", "summary-column", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles", "keep-piles", "rows-or-piles", "summaries-skip-empties"]
+    friction: true
+    any_column_order: true
+    text: "The last one, and I won't break it down. Among the delivered orders, which restaurants had more than 100 of them? Show each restaurant with how many orders it had and the average subtotal of those orders."
+    model: "SELECT restaurant_id, COUNT(*), AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id HAVING COUNT(*) > 100"
+    rows: 16
+    narration:
+      - "That is a real interview question, and you built it by thinking: from orders, keep the delivered ones, pile them by restaurant, keep the piles with more than 100, and say a count and an average of each. Every part in the order it happens."
+      - "Sixteen restaurants. Keep rows, pile, keep piles: and the question about each kind of thing went where that kind of thing is asked."
+      - "Sixteen rows, each with a count and an average. The delivered-only question went in WHERE, and the size question in HAVING."
+    wrong:
+      - sql: "SELECT restaurant_id, COUNT(*), AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id"
+        ask: "All sixty restaurants are here. Which word keeps only the ones above 100?"
+      - sql: "SELECT restaurant_id, COUNT(*), AVG(subtotal) FROM orders GROUP BY restaurant_id HAVING COUNT(*) > 100"
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+      - sql: "SELECT restaurant_id, COUNT(*), AVG(subtotal) FROM orders WHERE status = 'delivered' AND COUNT(*) > 100 GROUP BY restaurant_id"
+        ask: "Is 'more than 100' about one order or about a pile? Where does a question about a pile go?"
+      - sql: "SELECT restaurant_id, COUNT(*), AVG(subtotal) FROM orders WHERE status = 'delivered' GROUP BY restaurant_id HAVING COUNT(*) > 110"
+        ask: "Only a couple are left. Is the line at 100 or at 110?"
+    walk:
+      - "On the delivered orders, show each restaurant with its count and its average subtotal."
+      - "Keep only the piles with a count above 100, with the word that asks questions of piles."
+    return:
+      text: "Among the cancelled orders, show each restaurant that had more than 8 of them, with the count and the average delivery fee."
+      model: "SELECT restaurant_id, COUNT(*), AVG(delivery_fee) FROM orders WHERE status = 'cancelled' GROUP BY restaurant_id HAVING COUNT(*) > 8"
+      rows: 13
+      narration:
+        - "The restaurants with more than 8 cancelled orders, each with a count and an average fee."
+        - "Keep the cancelled orders, pile by restaurant, keep the piles above 8."
+      note: "Return for step 19. Not broken down, like the step."
+    note: "The surprise sentence and pass-bar task 1. The threshold of 100 leaves 16 restaurants (owner's choice, map question 1). The wrong answers cover a missing HAVING, a missing WHERE, the WHERE-COUNT slip Ana made, and a wrong threshold."
+
+  # 21
+  - kind: "recap"
+    text: |-
+      Stop there. Today you met the things that make real data awkward: words that must match exactly, cells that are empty, and people who order more than once. And you learned to keep piles as you keep rows, with the question in the place that asks it of the right thing: rows in WHERE, piles in HAVING.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles", "rows-or-piles"]
+    any_column_order: true
+    text: "In São Paulo, which cuisines have more than 3 restaurants? Show each cuisine with its count."
+    model: "SELECT cuisine, COUNT(*) FROM restaurants WHERE city = 'São Paulo' GROUP BY cuisine HAVING COUNT(*) > 3"
+    rows: 4
+    result: [["arabe", 5], ["hamburguer", 5], ["japonesa", 5], ["pizza", 6]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: exact text, keeping rows, piles and keeping piles, on a combination never practised. Never scored."

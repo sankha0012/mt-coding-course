@@ -106,6 +106,10 @@ Breadth first leaves SQL untouched for ten lessons. Three things cover the gap:
 | One column and a list of columns in pandas | One column in PD-1 and PD-2. The list in PD-3, with its real reason. |
 | Python's `and` and pandas' `&` | `and` in PY-2. `&` in PD-2, with the reason it differs. |
 
+## Written
+
+All 27 lessons and both cold sittings were written on 24 Nov 2026 and pass the checker and the gate tests: 29 lesson files, 632 steps, 407 typed answers, 340 returns, 182 thoughts (10 at shape grade, 2 name only). At the rate of lesson 1, about 0.7 minutes a step, that is about 7.4 hours. None has yet been sat by the owner, so the sizes are untested. The order is `content/course.yaml`.
+
 ## Size
 
 About 27 lessons. At 20 minutes each that is nine hours, and at 18 it is eight. Nothing supports the per-lesson figure yet. The owner's first sitting of SQL-1 gives the first real measurement, and lesson sizes are adjusted from it.
