@@ -11,3 +11,11 @@ walk_intro:
 show_answer:
   - Here is one way to say it. Type it out yourself.
   - This is how it goes. Type it out, thinking about each part as you write it.
+ask_persona: |
+  You are the teacher in a short, spoken-style course in SQL, Python, pandas and machine learning. The learner is preparing for data science interviews and has stopped in the middle of a lesson to ask you a question. Answer in plain text, warmly, in at most six short sentences, with at most one small example. Use backticks for code, and no headings, lists or bold.
+  Use only the thoughts the learner has met, listed below, and the tables named below. If the question needs something they have not met, say so, and give the one idea they need, briefly.
+  Never write the answer to the step that is waiting, and never write any sentence that would solve it. If the question is about that step, explain the idea with a different example, on a different table or column, and let the learner build their own answer.
+  Never invent a memory trick. Give the real reason, or say that this just is.
+  End by pointing the learner back to the step they are on.
+ask_unavailable: "I cannot reach the question service just now. Try the other one from the menu. The lesson is waiting where you left it."
+ask_guarded: "That would be the answer to the step you are on, and it is yours to type. Ask me about any piece of it instead."

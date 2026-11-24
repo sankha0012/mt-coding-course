@@ -10,6 +10,7 @@ from pydantic import BaseModel
 
 from checker.lesson import load_content, ui_path
 
+from . import ai, llm
 from .engine import Engine
 from .runner import Runner
 from .store import Store
@@ -24,10 +25,11 @@ class Conflict(Exception):
 class Player:
     """Joins the engines, the database and the progress file. Plays the lessons of a folder in order."""
 
-    def __init__(self, content_dir, data_dir, progress_dir, rng=None):
+    def __init__(self, content_dir, data_dir, progress_dir, rng=None, chat=None):
         content = Path(content_dir)
         self.thoughts, lessons = load_content(content)
         ui = yaml.safe_load(ui_path(content).read_text(encoding="utf-8"))
+        self.ui, self.chat = ui, chat or llm.chat
         self.runner, rng = Runner(data_dir), rng or random.Random()
         # a lesson whose data folder is not on this machine is left out, and said so at start up
         self.lessons = [(n, s) for n, s in lessons if all(self.runner.available(x.get("data", "")) for x in s)]
@@ -80,6 +82,42 @@ class Player:
             step = self.engines[name].steps[st["playing"]["step"]]
             return self.runner.play(lang, code, step.get("data", ""))
 
+    def _met(self, name, st):
+        """Ids of the thoughts introduced up to the step now playing, in course order."""
+        ids = []
+        for lesson, steps in self.lessons:
+            upto = st["playing"]["step"] + 1 if lesson == name else len(steps)
+            ids += [t for s in steps[:upto] for t in s.get("new", [])]
+            if lesson == name:
+                break
+        return list(dict.fromkeys(ids))
+
+    def ask(self, question, thread, provider=None):
+        """A side question. The lesson is not touched: no state, no ladder, no event. Only the question
+        and its reply are kept. The model sees only what the learner has already seen."""
+        with self.lock:
+            run_id, name, st = self._current()
+            eng = self.engines[name]
+            step = eng.steps[st["playing"]["step"]]
+            items = self.store.items(run_id)
+            teacher = [i["text"] for i in items if i["type"] == "teacher"]
+            messages = ai.build_messages(
+                self.ui, ai.thought_lines(self.thoughts, self._met(name, st)), teacher,
+                teacher[-1] if teacher else "",
+                ai.attempt_text(items) if st["phase"] == "answer" and st["misses"] else "",
+                ai.schema_lines(self.runner.path(step.get("data", ""))), thread, question)
+        try:  # the lock is free while the model thinks
+            reply, used = self.chat(messages, provider)
+        except llm.Unavailable:
+            return {"reply": self.ui["ask_unavailable"], "ok": False}
+        with self.lock:
+            # st is the step that was asked about, even if the learner has moved on since
+            guarded = any(eng.solves(st, code) for code in ai.code_candidates(reply))
+            if guarded:
+                reply = self.ui["ask_guarded"]
+            self.store.add_question(run_id, st["playing"]["step"] + 1, question, reply, used, guarded)
+        return {"reply": reply, "ok": True, "guarded": guarded}
+
     def new_run(self, go_next=False):
         """After a finished lesson: sit it again, or start the next one."""
         with self.lock:
@@ -98,6 +136,12 @@ class Answer(BaseModel):
     sql: str
 
 
+class Ask(BaseModel):
+    question: str
+    thread: list[dict] = []
+    provider: str | None = None
+
+
 class NewRun(BaseModel):
     next: bool = False
 
@@ -107,8 +151,9 @@ class Play(BaseModel):
     code: str
 
 
-def make_app(content_dir, data_dir, progress_dir, rng=None):
-    player = Player(content_dir, data_dir, progress_dir, rng)
+def make_app(content_dir, data_dir, progress_dir, rng=None, chat=None, providers=None):
+    player = Player(content_dir, data_dir, progress_dir, rng, chat)
+    providers = providers or llm.available
     app = FastAPI()
 
     @app.exception_handler(Conflict)
@@ -136,6 +181,20 @@ def make_app(content_dir, data_dir, progress_dir, rng=None):
         if not p.code.strip():
             raise HTTPException(400, "empty code")
         return player.play(p.lang, p.code)
+
+    @app.get("/api/providers")
+    def get_providers():
+        return {"providers": providers()}
+
+    @app.post("/api/ask")
+    def post_ask(a: Ask):
+        question = a.question.strip()
+        if not question or len(question) > 2000:
+            raise HTTPException(400, "empty or too long")
+        if a.provider is not None and a.provider not in llm.PROVIDERS:
+            raise HTTPException(400, "unknown provider")
+        thread = [{"role": str(m.get("role")), "text": str(m.get("text", ""))[:2000]} for m in a.thread[-10:]]
+        return player.ask(question, thread, a.provider)
 
     @app.post("/api/run/new")
     def post_new(body: NewRun | None = None):
