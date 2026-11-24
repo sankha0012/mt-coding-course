@@ -66,7 +66,7 @@ Done when: the owner has sat PY-6, and can write the function behind pass-bar ta
 
 ## 10. pandas foundation
 
-Add pandas to the checker and the player. Then PD-1 to PD-4, and cold sitting A.
+Add pandas to the checker and the player. Then PD-1 to PD-4, and cold sitting A. The cold sittings run on the Olist tables in `data/real/olist/` (decision C17), so the checker and the player learn to load a second dataset here, and to say so plainly when it is absent.
 
 Done when: the owner has sat cold sitting A. Pass 1 is complete: something runs in all three strands.
 

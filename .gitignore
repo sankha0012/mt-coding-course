@@ -4,3 +4,4 @@ __pycache__/
 .pytest_cache/
 progress/
 .claude/settings.local.json
+data/real/

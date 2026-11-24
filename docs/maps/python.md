@@ -42,7 +42,7 @@ print(count)
 
 Output: 2.
 
-Note: this is the draft opening C1 to C13 from `docs/research/02-panorama-and-openings.md`, extended to a full sitting. Twelve thoughts is the most any lesson has, the same as SQL-1. Most are imports from SQL, which is what makes it bearable. A classmate writes `if status = 'delivered':` before the learner can.
+Note: this is the draft opening C1 to C13 from `docs/research/02-panorama-and-openings.md`, extended to a full sitting. Twelve thoughts is the most any lesson has, the same as SQL-1. Most are imports from SQL, which is what makes it bearable. The owner decided on 24 Nov 2026 to keep all twelve in one lesson. A classmate writes `if status = 'delivered':` before the learner can.
 
 ### PY-2. Lists that grow
 
@@ -340,6 +340,5 @@ def merge(a, b):
 
 ## Questions for the owner
 
-1. **PY-1 at twelve thoughts.** It could be cut in two after `build-average`, which would make eleven Python lessons and 28 in all. The first sitting of SQL-1 will show whether twelve is too many.
-2. **`lambda` as core.** It appears in almost every sorting answer in an interview, so it is typed from memory here. It could instead be shape grade, with a named function always acceptable.
-3. **Merging sorted lists stays shape grade**, as you chose. If a Nubank-style algorithm round comes up, it is the first thing to promote.
+1. **`lambda` as core.** It appears in almost every sorting answer in an interview, so it is typed from memory here. It could instead be shape grade, with a named function always acceptable.
+2. **Merging sorted lists stays shape grade**, as you chose. If a Nubank-style algorithm round comes up, it is the first thing to promote.

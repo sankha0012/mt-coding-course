@@ -28,6 +28,11 @@ The goal was restated, and the rest of the lessons were planned from it.
 | C13 | The owner approves a one-page map per strand, then reviews each lesson by sitting it. The miss log drives revisions. This replaces a full readable draft per lesson, which was done for SQL lesson 1. | Twenty-six more drafts of 600 lines each would not get read. |
 | C14 | Core: window functions, the sessions loop, k-fold cross-validation by hand as the capstone, and tests and Big-O as habits woven through the Python lessons. Shape: merging two sorted lists, window frames, date functions, import lines. Name only: a metric by hand (AUC or KS). | The alarm test, applied to the seventeen tasks. |
 | O6 | Stage 3 (timed drills, hidden tables, exact output) is not built here. It goes to `live-coding-gym`. | The gym already has timed work and mock rounds. |
+| C15 | Synthetic data may be added to `data/`, and real public data may be used. The app is for the owner's personal use and will not be sold, so a non-commercial licence is acceptable. | The practice tables had nothing unmatched and nothing to predict. |
+| C16 | PY-1 keeps its twelve thoughts in one lesson. | The owner's call. Most of the twelve are imports from SQL. |
+| O11 | The ML lessons use `data/deliveries.csv`, a synthetic table added on 24 Nov 2026. | Distance, rain and the courier's load predict lateness: an AUC of about 0.70, and 0.80 with the promised time. |
+| O12 | SQL-8 uses `data/coupons.csv`, a synthetic table with one coupon never used. | "Rows with no match" needs something unmatched. |
+| C17 | The two cold sittings use the Olist Brazilian e-commerce dataset, real data the learner has never seen. The lessons stay on the practice tables. The files live in `data/real/olist/` and stay out of git. | A cold sitting should test thinking, not reproduction, and a round hands you a table you have not seen. The licence is CC BY-NC-SA 4.0 and this repository is public. |
 
 ## Confirmed by the owner (20 Nov 2026, first Claude Code session)
 
@@ -55,8 +60,6 @@ The owner also asked, in the same session, to be asked for permission before any
 | O5 | How should the pause before typing work? | A forced delay could irritate. A simple request could be ignored. |
 | O7 | Should lessons be in Portuguese, or include a phrase bank for talking through code in Portuguese? | Interviews are usually in Portuguese. The owner's Portuguese is good. A phrase bank fits the fluency goal (C9). Decide after pass 1. |
 | O8 | Which SQL dialect do the target platforms use? | The examples run on SQLite. Date functions and a few window details differ between dialects. They are shape grade (C10), so this matters less than it did. |
-| O11 | What data do the ML lessons use? | The practice data has nothing to predict: every model scores an AUC of about 0.50 on lateness. See `docs/maps/pandas-ml.md`. Decide before ML-1. |
-| O12 | Does SQL-8 get `data/coupons.csv`? | Nothing in `data/` is unmatched, so "rows with no match" needs one small new table. See `docs/maps/sql.md`. |
 | O9 | Should PySpark be covered? | Two candidate reports mention it as an alternative to pandas. |
 
 ## Changed along the way

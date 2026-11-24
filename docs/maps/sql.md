@@ -1,6 +1,6 @@
 # SQL strand map
 
-Status: for the owner's approval, 24 Nov 2026. A map says which thoughts each lesson introduces, in order, and the sentence the lesson builds to. It is not a script. Each lesson is written as YAML after this map is approved, and is then reviewed by sitting it (decision C13).
+Status: for the owner's approval, 24 Nov 2026. Revised the same day after the owner allowed synthetic data. A map says which thoughts each lesson introduces, in order, and the sentence the lesson builds to. It is not a script. Each lesson is written as YAML after this map is approved, and is then reviewed by sitting it (decision C13).
 
 Nine lessons. SQL-1 exists. SQL-2 to SQL-4 finish the foundation in pass 1. SQL-5 to SQL-9 are the interview layer in pass 2, after the Python and pandas foundations.
 
@@ -191,7 +191,15 @@ WHERE o.order_id IS NULL
 
 Result: one coupon, `VOLTA15`.
 
-**Needs new data.** Every restaurant and every courier has orders, so nothing in `data/` is unmatched. This lesson needs one small new file, `data/coupons.csv`, with four coupons, one of them never used. The sentence above was run against a scratch copy with that table added. The existing files do not change. This needs the owner's yes before the lesson is written.
+A second sentence for the same thought, on another table: the orders that never had a delivery.
+
+```sql
+SELECT COUNT(*) FROM orders o LEFT JOIN deliveries d ON o.order_id = d.order_id WHERE d.order_id IS NULL
+```
+
+Result: 399, which is the number of cancelled orders that SQL-1 found in step 8.
+
+Note: every restaurant and every courier has orders, so the three original tables had nothing unmatched. The owner allowed synthetic data on 24 Nov 2026, and `data/coupons.csv` and `data/deliveries.csv` were added. Both sentences were run against them.
 
 ### SQL-9. Dates and buckets
 
@@ -218,13 +226,12 @@ Result: three months, August to October 2026. The change is empty for August, mi
 
 ## Checks done on this map
 
-- **Every closing sentence runs** against `data/`, loaded with empty cells as missing. SQL-8 ran against a scratch copy with the coupons table added.
+- **Every closing sentence runs** against `data/`, loaded with empty cells as missing.
 - **Prerequisites.** Each lesson assumes only thoughts from earlier lessons. The two cross-strand imports are marked: SQL-5 leans on naming from PY-1.
 - **Size.** No lesson has more than seven new thoughts. SQL-1 has twelve and remains the largest.
 - **Pass bar.** Tasks 1 to 6 are all core: SQL-3, SQL-4, SQL-8, SQL-7, SQL-7 and SQL-9.
 
 ## Questions for the owner
 
-1. **`data/coupons.csv`** for SQL-8: one new small file, existing files untouched. Yes?
-2. **The threshold in SQL-3** is 100 delivered orders, which leaves 16 restaurants. The panorama used 110, which leaves only 2.
-3. **`short-names` in SQL-4.** Interview answers nearly always use `o` and `r`. Teaching them costs one thought and saves typing in every later lesson.
+1. **The threshold in SQL-3** is 100 delivered orders, which leaves 16 restaurants. The panorama used 110, which leaves only 2.
+2. **`short-names` in SQL-4.** Interview answers nearly always use `o` and `r`. Teaching them costs one thought and saves typing in every later lesson.

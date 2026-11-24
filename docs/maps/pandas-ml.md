@@ -1,6 +1,6 @@
 # pandas and ML strand map
 
-Status: for the owner's approval, 24 Nov 2026. Read `docs/maps/sql.md` first for how a map is laid out.
+Status: for the owner's approval, 24 Nov 2026. Revised the same day after the owner allowed synthetic and real data. Read `docs/maps/sql.md` first for how a map is laid out.
 
 Eight lessons. PD-1 to PD-4 are the foundation in pass 1, after PY-6. PD-5 and ML-1 to ML-3 close pass 2, after PY-10.
 
@@ -46,9 +46,10 @@ Assumes: PD-1.
 | 2 | `pick-then-summarise` | Then pick the column, then say the summary: thinking order. | Core |
 | 3 | `pile-names-on-left` | The pile names come out on the left, by themselves. Nobody has to ask for them. | Core |
 | 4 | `size` | `.size()` counts the rows of each pile. | Core |
-| 5 | `sort-values` | `.sort_values(ascending=False)` sorts, biggest first. | Core |
-| 6 | `keep-piles-again` | The piles are a table, so keeping piles is keeping rows. There is no second word. | Core |
-| 7 | `row-by-row-and` | Two questions are joined with `&` or `\|`, each in its own brackets. Python's `and` asks once, and these ask every row. | Core |
+| 5 | `value-counts` | `orders['status'].value_counts()` is piles and a count in one word, biggest first. | Core |
+| 6 | `sort-values` | `.sort_values(ascending=False)` sorts, biggest first. | Core |
+| 7 | `keep-piles-again` | The piles are a table, so keeping piles is keeping rows. There is no second word. | Core |
+| 8 | `row-by-row-and` | Two questions are joined with `&` or `\|`, each in its own brackets. Python's `and` asks once, and these ask every row. | Core |
 
 Closes with: the five restaurants with the most delivered orders.
 
@@ -58,7 +59,7 @@ orders[orders['status'] == 'delivered'].groupby('restaurant_id').size().sort_val
 
 Result: restaurant 2 with 113, 24 with 112, 3 and 59 with 109, 22 with 108. The answer SQL-2 gave.
 
-Note: `pile-names-on-left` resolves, without a word, the tension that SQL-1 built in steps 15 to 17. `keep-piles-again` is why pandas has no `HAVING`.
+Note: `pile-names-on-left` resolves, without a word, the tension that SQL-1 built in steps 15 to 17. `keep-piles-again` is why pandas has no `HAVING`. `value-counts` was added on 24 Nov: it is the first thing most people type on a table they have never seen, and the cold sittings will use tables the learner has never seen.
 
 ### PD-3. Clean and add columns
 
@@ -66,13 +67,14 @@ Assumes: PD-2.
 
 | # | Identifier | The thought | Grade |
 |---|---|---|---|
-| 1 | `list-of-columns` | A list of names gets several columns. One name gives a column, a list of names gives a table, which is where the two pairs of brackets come from. | Core |
-| 2 | `new-column` | `orders['total'] = ...` adds a column, the way a dict takes a new name. | Core |
-| 3 | `column-sums` | Columns add and subtract, row by row. | Core |
-| 4 | `yes-no-as-column` | A question can be kept as a column of its own. | Core |
-| 5 | `mean-of-yes-no` | The mean of a yes-or-no column is the share of yes. | Core |
-| 6 | `find-missing` | `.isna().sum()` counts the empty cells of a column. | Core |
-| 7 | `fill-or-drop` | `.fillna(value)` fills them, `.dropna(subset=[...])` drops their rows. Say which you chose and why. | Core |
+| 1 | `first-look` | `orders.info()` lists the columns, their kinds, and how many cells of each are filled. | Core |
+| 2 | `list-of-columns` | A list of names gets several columns. One name gives a column, a list of names gives a table, which is where the two pairs of brackets come from. | Core |
+| 3 | `new-column` | `orders['total'] = ...` adds a column, the way a dict takes a new name. | Core |
+| 4 | `column-sums` | Columns add and subtract, row by row. | Core |
+| 5 | `yes-no-as-column` | A question can be kept as a column of its own. | Core |
+| 6 | `mean-of-yes-no` | The mean of a yes-or-no column is the share of yes. | Core |
+| 7 | `find-missing` | `.isna().sum()` counts the empty cells of a column. | Core |
+| 8 | `fill-or-drop` | `.fillna(value)` fills them, `.dropna(subset=[...])` drops their rows. Say which you chose and why. | Core |
 
 Closes with: load a table, clean its missing values, add two columns (pass-bar task 13).
 
@@ -85,7 +87,7 @@ orders['late'] = orders['actual_minutes'] > orders['promised_minutes']
 
 Result: 25 empty subtotals before, none after.
 
-Note: one column for two whole lessons before the list of columns arrives, as the plan for that pair requires.
+Note: one column for two whole lessons before the list of columns arrives, as the plan for that pair requires. `first-look` was added on 24 Nov for the same reason as `value-counts`.
 
 ### PD-4. Look things up in pandas
 
@@ -95,21 +97,22 @@ Assumes: PD-3.
 |---|---|---|---|
 | 1 | `merge` | `orders.merge(restaurants, on='restaurant_id')` sticks each order's restaurant on the end of its row. | Core |
 | 2 | `pile-by-merged` | A column that came from the other table can make the piles. | Core |
-| 3 | `names-back-as-column` | `.reset_index()` turns the pile names back into an ordinary column, for when the next step needs them as one. | Core |
-| 4 | `several-summaries` | `.agg(['mean', 'count'])` says several things about each pile at once. | Shape |
+| 3 | `only-matches-survive` | Rows with no partner drop out of a merge. Cancelled orders have no delivery, so they are gone. | Core |
+| 4 | `names-back-as-column` | `.reset_index()` turns the pile names back into an ordinary column, for when the next step needs them as one. | Core |
+| 5 | `several-summaries` | `.agg(['mean', 'count'])` says several things about each pile at once. | Shape |
 
-Closes with: the share of late deliveries per city (pass-bar task 14).
+Closes with: is a delivery more often late when it rains? (pass-bar task 14)
 
 ```python
-delivered = orders[orders['status'] == 'delivered']
-joined = delivered.merge(restaurants, on='restaurant_id')
+deliveries = pd.read_csv('deliveries.csv')
+joined = orders.merge(deliveries, on='order_id')
 joined['late'] = joined['actual_minutes'] > joined['promised_minutes']
-joined.groupby('city')['late'].mean()
+joined.groupby('rain')['late'].mean()
 ```
 
-Result: four cities, between 0.417 and 0.438.
+Result: 0.375 without rain and 0.638 with it.
 
-Note: `reset_index` appears only where the next step needs the names as a column. It is never a thing to add by habit.
+Note: the lesson first merges restaurants and asks for the average subtotal per city, which echoes SQL-4. It then meets the new `deliveries` table. The closing sentence changed on 24 Nov from "late share per city", where all four cities sat between 0.417 and 0.438 and there was nothing to see. With rain there is a finding, which is what "answer a business question" means.
 
 ## Pass 2: the interview layer
 
@@ -151,16 +154,16 @@ Assumes: PD-5.
 Closes with: predict late deliveries and report a metric (pass-bar task 15).
 
 ```python
-delivered = orders[orders['status'] == 'delivered'].dropna(subset=['subtotal'])
-X = delivered[['subtotal', 'delivery_fee', 'promised_minutes']]
-y = delivered['actual_minutes'] > delivered['promised_minutes']
+data = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])
+X = data[['distance_km', 'rain', 'bag_size']]
+y = data['actual_minutes'] > data['promised_minutes']
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)
 model = LogisticRegression()
 model.fit(X_train, y_train)
 print(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]))
 ```
 
-Result: it runs and prints 0.513. See the first question for the owner.
+Result: an AUC of 0.697 on 5,489 deliveries.
 
 Note: the learner knows the statistics. Only the three verbs and their order are new, and they are "name a thing, then do something with it" once more.
 
@@ -170,17 +173,21 @@ Assumes: ML-1.
 
 | # | Identifier | The thought | Grade |
 |---|---|---|---|
-| 1 | `swap-the-model` | Change the first line and nothing else. Every model has the same three verbs. | Core |
-| 2 | `engineer-then-fit` | New columns are made before the split, by rules that need no learning. | Core |
+| 1 | `engineer-then-fit` | A better column beats a better model. Add the promised time and the score moves. | Core |
+| 2 | `swap-the-model` | Change the first line and nothing else. Every model has the same three verbs. | Core |
 | 3 | `fit-on-train-only` | Anything learned from the data, even a median to fill with, is learned from the training rows only. | Core |
 | 4 | `pick-the-metric` | When one answer is rare, accuracy flatters. Say which metric you chose and why. | Core |
 | 5 | `read-and-criticise` | Reading someone else's pandas and finding what leaks. | Core |
 
-Closes with: from the raw table to a metric, in one script, with a different model.
+Closes with: from the raw tables to a metric, in one script, with missing distances filled from the training rows.
 
-Verified: the script (a random forest, a `has_coupon` column, the subtotal filled with the training median) runs and prints an AUC of 0.501.
+What the data shows, each a line the teacher can use:
 
-Note: a classmate fills the missing subtotals with the median of the whole table before splitting. The learner is asked what the model has now seen. This is Nubank's code review round in small.
+- Adding `promised_minutes` lifts the AUC from 0.697 to 0.805. A long distance matters less when the promise was long.
+- A random forest on the same columns scores 0.755, below the plain model. A fancier model is not a better one.
+- For "more than 15 minutes late", which is 7.3 percent of deliveries, the model's accuracy is 0.938. Answering "no" every time scores 0.926.
+
+Note: a classmate fills the missing distances with the median of the whole table before splitting. The learner is asked what the model has now seen. This is Nubank's code review round in small.
 
 ### ML-3. K-fold by hand (capstone)
 
@@ -208,22 +215,43 @@ def cross_validate(model, X, y, k):
     return sum(scores) / len(scores)
 ```
 
-Result: `cross_validate(LogisticRegression(), X, y, 5)` returns 0.513.
+Result: with five folds on the four columns it returns 0.803. The five folds score between 0.789 and 0.827, so the learner sees why one split is not enough.
 
 Note: the capstone of the course. It has four new thoughts and uses a function, a loop, a running result, a yes-or-no column, the brackets that keep yes rows, and fit and predict. If the learner can write this, the course has done its job.
+
+## The cold sittings use real data
+
+Decided on 24 Nov 2026, after the owner allowed real public data and said a non-commercial licence is fine.
+
+The lessons stay on the practice tables: every sentence in them was checked against those. The two cold sittings move to the **Olist Brazilian e-commerce dataset**: about 100,000 real orders from 2016 to 2018, with customers, sellers, items, payments, reviews, and both the promised and the actual delivery date.
+
+- **Why.** A cold sitting asks whether the learner can think a sentence out, or only reproduce one. A table they have never seen, with real column names and real mess, is the honest test, and it is what a round hands you.
+- **Why this one.** It is the same world as the lessons: orders, delivery, lateness, Brazilian cities. The sentences transfer and only the names change.
+- **What it costs.** No new thoughts and no new lessons. `first-look` and `value-counts` were added to PD-3 and PD-2 so that the learner has the two words for meeting a new table.
+- **Licence.** CC BY-NC-SA 4.0. This repository is public, so the files stay out of git, in a folder that is ignored. The sittings name their source.
+
+Downloaded on 24 Nov 2026 into `data/real/olist/`, which git ignores. What a first look found, all of it useful for cold prompts:
+
+- Nine tables. Orders has 99,441 rows and eight statuses, of which `delivered` is 96,478.
+- 8.1 percent of delivered orders arrived after the estimated date. Late is rare here, so the metric question from ML-2 is real.
+- 775 orders have no row in the items table. That is "rows with no match", found in the wild.
+- A customer who orders twice gets two `customer_id` values and one `customer_unique_id`. Counting customers needs "how many different".
+- Dates arrive as text. Two column names carry a real typo (`product_name_lenght`). Category names are in Portuguese, with a translation table to look them up in.
 
 ## Checks done on this map
 
 - **Every closing sentence runs** against `data/` and gives the result quoted. They were run in a scratch folder with pandas and scikit-learn loaded for that run only. Nothing was installed into the project.
 - **The echoes hold.** PD-1 gives 60.43 as SQL-1 did. PD-2 gives the same five restaurants as SQL-2. PD-5 gives the same 1,475 orders as SQL-7, and `transform` finds the same 2,588 orders as SQL-6.
 - **Prerequisites.** Each lesson assumes only thoughts from earlier lessons. PD-5 needs SQL-6 and SQL-7, which is why it sits in pass 2.
-- **Size.** PD-1 has nine thoughts. The rest have four to seven.
+- **Size.** PD-1 has nine thoughts. PD-2 and PD-3 have eight. The rest have five or six.
 - **Pass bar.** Tasks 13, 14, 15 and 16 are core: PD-3, PD-4, ML-1 and ML-3. Task 17 is name only, in ML-3.
+
+## Settled on 24 Nov 2026
+
+- **Real data for the cold sittings.** The owner said yes to the Olist download. See the section above.
+- **Data for the ML lessons.** The owner allowed synthetic data. `data/deliveries.csv` now gives lateness something to be predicted by: distance, rain, and how many orders the courier carried. See `data/README.md` for how it was made.
 
 ## Questions for the owner
 
-1. **The practice data has nothing to predict.** Lateness is close to a coin toss whatever the column: vehicle, city, cuisine, hour, promised time. Both models score an AUC of about 0.50. The code runs, but a lesson on choosing a metric or on cross-validation needs a score that moves. Two ways out:
-   - Add one small table made for the ML lessons, with a real signal (for example distance and rain driving lateness). This is my recommendation. It is a new file and needs your yes, and it can wait until ML-1 is written.
-   - Keep the data and teach the shape only, with the honest line that nothing here predicts lateness.
-2. **Reading the file or finding it loaded.** `pd.read_csv` should be typed a few times, since every real script starts with it. After PD-1 the tables could simply be there, to save typing.
-3. **A random forest in ML-2.** Any second model shows that the shape does not change. A gradient boosting model would be closer to what credit teams use.
+1. **Reading the file or finding it loaded.** `pd.read_csv` should be typed a few times, since every real script starts with it. After PD-1 the tables could simply be there, to save typing.
+2. **A random forest in ML-2.** Any second model shows that the shape does not change. A gradient boosting model would be closer to what credit teams use.

@@ -50,7 +50,7 @@ Breadth first (decision C12). The foundation of all three strands comes before t
 | PD-1 | The same movements, in thinking order | Average subtotal of delivered orders |
 | PD-2 | Piles in pandas | Top five restaurants by delivered orders |
 | PD-3 | Clean and add columns | Load, clean, add two columns |
-| PD-4 | Look things up in pandas | Late share per city |
+| PD-4 | Look things up in pandas | Are deliveries more often late when it rains? |
 
 Then cold sitting A.
 
@@ -77,6 +77,8 @@ Then cold sitting B.
 ### Cold sittings
 
 A cold sitting is about ten minutes of five or six blank-page prompts drawn from all three strands. It has no ladder, no narration and no score (rule F1). It adds no thoughts and is not counted as a lesson. Its only job is to show where the course has to go back.
+
+The cold sittings are planned on real data the learner has never seen: the Olist Brazilian e-commerce dataset, which is the same world as the lessons with real names and real mess. The lessons themselves stay on the practice tables. See `docs/maps/pandas-ml.md`. The dataset is in `data/real/olist/`, outside git.
 
 ## How the strands stay alive across the gaps
 
@@ -108,4 +110,4 @@ Breadth first leaves SQL untouched for ten lessons. Three things cover the gap:
 
 About 27 lessons. At 20 minutes each that is nine hours, and at 18 it is eight. Nothing supports the per-lesson figure yet. The owner's first sitting of SQL-1 gives the first real measurement, and lesson sizes are adjusted from it.
 
-Open in the maps: PY-1 has twelve thoughts and may need cutting in two, and the ML lessons need data with something to predict.
+Settled on 24 Nov 2026: PY-1 keeps its twelve thoughts, and the ML lessons use `data/deliveries.csv`, a synthetic table in which distance, rain and the courier's load predict lateness.
