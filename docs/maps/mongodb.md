@@ -1,6 +1,8 @@
 # MongoDB strand map
 
-Status: **draft for the owner's approval, 25 Nov 2026.** Nothing is written from this map until it is approved (decision C26 and the working rules in `CLAUDE.md`). Read `docs/maps/sql.md` first for how a map is laid out.
+Status: **approved by the owner on 25 Nov 2026**, with the answers recorded at the end (decision C26). Read `docs/maps/sql.md` first for how a map is laid out.
+
+**This strand is an optional extra**, like the extra recordings Michel Thomas published beside his main courses (decision C28). SQL, Python and pandas are the foundations of a data science interview, and nothing in them waits for MongoDB. See "An optional extra" below.
 
 Six lessons. MG-1 to MG-3 are the foundation. MG-4 to MG-6 are the interview layer, which opens once MG-3 is finished (decision C27). The strand opens after the SQL foundation, because every Mongo thought is a SQL thought in a new spelling and the lessons say so aloud.
 
@@ -18,7 +20,7 @@ Every lesson asks questions the learner has already answered in SQL, on the same
 
 Decided here so that no lesson has to decide them again:
 
-- **One spelling for text:** double quotes, as the MongoDB documentation writes them. A learner who types single quotes is not wrong. The checker judges by result, and the engine reads both.
+- **One spelling for text:** double quotes, as the MongoDB documentation writes them (the owner's decision, 25 Nov 2026). A learner who types single quotes is not wrong. The checker judges by result, and the engine reads both.
 - **Field names are bare words** (`status`, `subtotal`), except a dotted name, which must wear quotes (`"delivery.rain"`) because a dot is not part of a word. That is the only quoting rule for names, and its reason is real.
 - **Every operator starts with a dollar sign.** `$gt`, `$match`, `$sum`. A dollar sign in front of a field name inside quotes (`"$restaurant_id"`) means the value of that field. These are two different jobs for one character, and the lesson that meets the second one says so (MG-3, `field-value`).
 - **The shell words stay out.** No `.pretty()`, no variables, no `let`, no loops. One sentence is one `db.<collection>.<method>(...)`, possibly with `.sort(...)` and `.limit(...)` chained. This is also what the runner reads (see "Running an answer" in the plan).
@@ -248,14 +250,24 @@ Result: 2026-08 with 1,929 orders, 802 late. 2026-09 with 1,813 and 776. 2026-10
 
 Notes:
 
-- **Updates run on a scratch copy.** `update-one` is the only step that changes anything. It runs on a scratch collection that is rebuilt before every sentence, and the course data cannot be written (see the plan). The answer is judged by what `updateOne` reports (one found, one changed), and the learner then asks a `find` to see the change in the next step.
+- **Updates run on a scratch copy, so the course data never changes.** `update-one` is the only step that changes anything. Before the sentence runs, the runner clones the course data into a scratch database. The sentence runs against the clone, and the clone is dropped afterwards. The course database itself is opened read-only for every other sentence and is never written, so after the lessons end the original data is exactly as it was (the owner's requirement, 25 Nov 2026). The answer is judged by what `updateOne` reports (one found, one changed), and the learner then asks a `find`, on the same clone, to see the change in the next step.
 - `mongo-top-n-per-pile` is shape grade and appears once, as the one-stage way to say what `first-in-pile` says in two. The core thought is `first-in-pile`. On the 60 restaurants, the top two subtotals of restaurant 1 are 158.13 and 154.34.
 - The classmate for `first-in-pile` groups without sorting first. The learner gets some order's id and time for each customer, and cannot say which. The same trap as `LIMIT` without `ORDER BY` in SQL-7.
 - `upsert-index-explain` is an aside. Nothing in it is asked and it adds no thought to remember.
 
+## An optional extra
+
+The owner's rule (25 Nov 2026): a learner must be able to finish SQL, Python and pandas without being tied up by MongoDB. So:
+
+- **Nothing in the core course requires a Mongo thought,** and no core lesson, cold sitting A or cold sitting B asks a Mongo prompt. This was already true of the prerequisite graph (decision C27) and is now a rule.
+- **It sits apart in the course.** `content/course.yaml` lists the six lessons, and cold sitting C, under a separate `extras` list after the core. The Course panel shows them under their own heading, "Extra: MongoDB", with a line saying they are optional and open after the SQL foundation.
+- **The course never leads into it.** The "next lesson" after a finished core lesson is always the next core lesson. Only when the whole core is finished does the done screen offer the extras. A learner who is mid-course is never pointed at MongoDB.
+- **Finishing it is not a goal.** The panel shows no count and no "extras remaining". A learner may start MG-1 as soon as the SQL foundation is done, and may stop after any lesson.
+- **The time goal is unchanged.** About eight hours for the core, and about two more for the extra.
+
 ## The cold sitting for this strand
 
-Cold sitting C (`content/cold/lesson-03.yaml`) closes the strand on the real Nobel Prize data, as the SQL cold sittings use Olist (decision C17). It is written after the Nobel data has been fetched and its fields confirmed, and it has its own short map. It is not part of this map.
+Cold sitting C (`content/cold/lesson-03.yaml`) closes the extra on the real Nobel Prize data, as the SQL cold sittings use Olist (decision C17). It is optional like the rest of the strand. It is written after the Nobel data has been fetched and its fields confirmed, and it has its own short map. It is not part of this map.
 
 ## Checks done on this map
 
@@ -267,8 +279,8 @@ Cold sitting C (`content/cold/lesson-03.yaml`) closes the strand on the real Nob
 - **Grades.** Core 34, shape 5 (`computed-value`, `lookup-stage`, `mongo-top-n-per-pile`, `mongo-date-to-month`, `update-one`), name only 2 (`why-items-inside`, `upsert-index-explain`).
 - **The ids** `mongo-pile-by-looked-up`, `mongo-top-n-per-pile` and `mongo-date-to-month` carry a prefix because `pile-by-looked-up`, `top-n-per-pile` and `date-to-month` already exist in the SQL and pandas strands, and an id may be introduced once.
 
-## For the owner to decide before anything is written
+## Answered by the owner on 25 Nov 2026
 
-1. **Text in single or double quotes.** The map says double quotes in the lessons, as MongoDB's own documentation does, and accepts single quotes from the learner. SQL used single quotes. The alternative is to teach single quotes everywhere and keep the spelling one habit across SQL, Python and pandas. Which?
-2. **MG-6 updates.** `update-one` is the only step that writes. It is shape grade, one step, run on a scratch copy. It is useful for an interview that asks "how would you change this", and it is the one step that needs the runner to allow writes. Keep it, or drop it and keep MG-6 read only?
-3. **Order in the course.** The plan puts MG-1 to MG-3 after the pandas foundation and MG-4 to MG-6 after ML, in `course.yaml`, as the recommended path. With unlocking by prerequisites the learner may start MG-1 as soon as the SQL foundation is done. Is that the order you want recommended?
+1. **Quotes.** Double quotes, as MongoDB's own documentation writes them.
+2. **Updates.** `update-one` stays in MG-6. All writes happen on a scratch copy cloned from the course data for the sentence, so the original data does not change after the lessons end.
+3. **Order.** Recommended by concept: foundation, then interview layer. But the strand is an optional extra, kept apart from the core so that SQL, Python and pandas, the foundations of the interview, are never tied up by it (decision C28).
