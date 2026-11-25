@@ -12,6 +12,8 @@ The earlier version of this file had three stages, the third a timed one. The go
 
 The order in `content/course.yaml` is the recommended path. What can be started is decided by prerequisites (decision C27): a lesson opens when the lesson before it in its own strand is finished and the lessons that introduce what it requires are finished. A thought from another strand's foundation needs that whole foundation. An opening cold check that borrows from a lesson not yet finished is skipped.
 
+Optional extras (decision C28) are listed after the core in `course.yaml`. They open by the same rule, are shown apart in the Course panel, and are never offered as the next lesson while a core lesson remains. The core never requires a thought from an extra.
+
 ## The overarching ideas
 
 One per strand. Each is the first thing the learner meets and the thing everything else hangs from.

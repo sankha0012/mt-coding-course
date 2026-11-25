@@ -499,8 +499,8 @@ function initCourse() {
   const draw = () => {
     if (!data) return;
     const nodes = [];
-    data.strands.forEach(s => {
-      const mine = data.lessons.filter(l => l.strand === s.id);
+    const section = extra => data.strands.forEach(s => {
+      const mine = data.lessons.filter(l => l.strand === s.id && l.extra === extra);
       if (!mine.length) return;
       nodes.push(el('h3', null, s.name));
       const layered = new Set(mine.map(l => l.layer)).size > 1;  // only a strand with both layers gets sub-headings
@@ -511,6 +511,12 @@ function initCourse() {
         nodes.push(row(l));
       });
     });
+    section(false);
+    if (data.lessons.some(l => l.extra)) {  // optional lessons sit apart, with no count of how many are left
+      nodes.push(el('h2', null, (data.extras && data.extras.title) || 'Extras'));
+      if (data.extras && data.extras.note) nodes.push(el('p', 'hint', data.extras.note));
+      section(true);
+    }
     list.replaceChildren(...nodes);
   };
 

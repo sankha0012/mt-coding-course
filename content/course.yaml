@@ -1,5 +1,8 @@
 # The lessons in the order they are played. Each entry is strand/lesson-file, without .yaml.
 # Thoughts are shared across strands, so a later lesson may require any earlier thought.
+# An optional `extras:` list may follow the core (decision C28). Extras are played after the core, shown apart in the
+# Course panel, and never offered as the next lesson while a core lesson remains. A core lesson may not require a
+# thought that only an extra introduces: the checker fails it.
 course:
   # pass 1: the foundation of all three strands
   - sql/lesson-01

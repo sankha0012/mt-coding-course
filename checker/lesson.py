@@ -35,12 +35,19 @@ def is_course(content_dir):
     return (Path(content_dir) / "course.yaml").exists()
 
 
+def _manifest(d):
+    """The entries of course.yaml: the core, then the optional extras."""
+    data = yaml.safe_load((Path(d) / "course.yaml").read_text(encoding="utf-8"))
+    return list(data["course"]), list(data.get("extras") or [])
+
+
 def load_course(content_dir):
-    """Read course.yaml, which lists lessons as 'strand/lesson-NN' in the order they are played.
-    Thoughts come from every strand's thoughts.yaml and from the lessons themselves, and an id may be
-    defined once only."""
+    """Read course.yaml, which lists lessons as 'strand/lesson-NN' in the order they are played, then the
+    optional extras, which come after the core. Thoughts come from every strand's thoughts.yaml and from
+    the lessons themselves, and an id may be defined once only."""
     d = Path(content_dir)
-    manifest = yaml.safe_load((d / "course.yaml").read_text(encoding="utf-8"))["course"]
+    core, extras = _manifest(d)
+    manifest = core + extras
     thoughts, owner = {}, {}
     for strand in dict.fromkeys(entry.split("/")[0] for entry in manifest):
         _add_thoughts(thoughts, owner, _read_thoughts(d / strand), strand)
@@ -67,22 +74,23 @@ def _lesson_files(content_dir):
     """Every lesson as read from its file, in the order played."""
     d = Path(content_dir)
     if is_course(d):
-        manifest = yaml.safe_load((d / "course.yaml").read_text(encoding="utf-8"))["course"]
-        paths = [d / f"{entry}.yaml" for entry in manifest]
+        core, extras = _manifest(d)
+        paths = [(d / f"{entry}.yaml", False) for entry in core] + [(d / f"{entry}.yaml", True) for entry in extras]
     else:
-        paths = sorted(d.glob("lesson-*.yaml"))
+        paths = [(p, False) for p in sorted(d.glob("lesson-*.yaml"))]
     out = []
-    for path in paths:
+    for path, extra in paths:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
         data["strand"] = data.get("strand", path.parent.name)
         data["title"] = data.get("title", data["lesson"])
+        data["extra"] = extra
         out.append(data)
     return out
 
 
 def lesson_titles(content_dir):
     """Name, title, strand and layer of every lesson, in the order they are played. Stage 2 is the interview layer."""
-    return [{"lesson": d["lesson"], "title": d["title"], "strand": d["strand"],
+    return [{"lesson": d["lesson"], "title": d["title"], "strand": d["strand"], "extra": d["extra"],
              "layer": "interview" if d.get("stage") == 2 else "foundation"} for d in _lesson_files(content_dir)]
 
 
@@ -121,3 +129,24 @@ def prerequisites(content_dir):
         out[name] = need - {name}
         last[d["strand"]] = name
     return out
+
+
+def extras_needed_by_core(content_dir):
+    """(lesson, thought, extra lesson) for every thought a core lesson requires that only an optional extra
+    introduces. The core course must never wait for an extra (decision C28)."""
+    lessons = _lesson_files(content_dir)
+    intro = {}
+    for d in lessons:
+        for step in d["steps"]:
+            for t in step.get("new", []):
+                intro.setdefault(t, d["lesson"])
+    extra = {d["lesson"] for d in lessons if d["extra"]}
+    found = []
+    for d in lessons:
+        if d["extra"]:
+            continue
+        for step in d["steps"]:
+            for t in step.get("requires", []) + step.get("imports", []):
+                if intro.get(t) in extra and (d["lesson"], t, intro[t]) not in found:
+                    found.append((d["lesson"], t, intro[t]))
+    return found

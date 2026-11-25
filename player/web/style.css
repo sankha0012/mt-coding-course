@@ -94,6 +94,7 @@ button.close:hover { background: var(--code); }
   background: var(--card); color: var(--muted); box-shadow: var(--shadow); font: 0.85rem system-ui, sans-serif; cursor: pointer; }
 #course-open:hover { color: var(--accent); border-color: var(--accent); }
 #course { flex: 0 0 19rem; min-width: 0; overflow-y: auto; background: var(--card); border-right: 1px solid var(--line); padding: 1rem 1rem 2rem; font: 0.88rem system-ui, sans-serif; }
+#course h2 { margin: 1.8rem 0 0.3rem; padding-top: 1rem; border-top: 1px solid var(--line); font: 600 0.8rem/1 system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fn); }
 #course h3 { margin: 1.1rem 0 0.4rem; font: 600 0.7rem/1 system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .course-row { display: grid; grid-template-columns: 1.3rem 1fr; column-gap: 0.4rem; align-items: baseline; padding: 0.35rem 0.5rem; border-radius: 8px; }
 #course h4 { margin: 0.7rem 0 0.2rem 0.5rem; font: 500 0.75rem system-ui, sans-serif; color: var(--muted); }

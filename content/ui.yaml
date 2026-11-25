@@ -11,6 +11,10 @@ course_strands:
   pd: pandas
   ml: Machine learning
   cold: Cold sittings
+  mongo: MongoDB
+course_extras:
+  title: Extras
+  note: Optional. The core course never needs these. Take them when you like, after the lessons they say they open after, and stop whenever you like.
 course_layers:
   foundation: Foundation
   interview: Interview layer

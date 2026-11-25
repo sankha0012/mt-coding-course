@@ -5,7 +5,7 @@ import yaml
 
 from .checks import check_all
 from .env import Env
-from .lesson import load_content
+from .lesson import extras_needed_by_core, is_course, load_content
 
 
 def main(argv=None):
@@ -20,6 +20,9 @@ def main(argv=None):
         print(f"ERROR cannot read the lesson files: {e!r}")
         return 2
     fails, warns, spacing, load = check_all(env, thoughts, lessons)
+    if is_course(args.content):
+        fails += [f"FAIL {lesson}: requires thought '{t}', introduced by {extra}, an optional extra"
+                  for lesson, t, extra in extras_needed_by_core(args.content)]
     for line in fails + warns:
         print(line)
     print("\nSpacing")

@@ -111,7 +111,8 @@ class Player:
         return {"data": key[0], "tables": self._tables[key]}
 
     def _open_unfinished(self):
-        """Lessons that can be started and have not been finished, in the order of the course."""
+        """Lessons that can be started and have not been finished, in the order of the course. The optional
+        extras come last in that order, so they are offered only when no core lesson is left."""
         done = self.store.finished_lessons()
         return [n for n in self.names if n not in done and self.prereq[n] <= done]
 
@@ -134,13 +135,13 @@ class Player:
             waits = [self.outline[p]["title"] for p in self.names
                      if p in self.prereq[n] and p not in done] if states[n] == "locked" else []
             out.append({"lesson": n, "title": o.get("title", n), "strand": o.get("strand", ""),
-                        "layer": o.get("layer", "foundation"), "state": states[n], "finished": n in done,
-                        "waits": waits})
+                        "layer": o.get("layer", "foundation"), "extra": o.get("extra", False),
+                        "state": states[n], "finished": n in done, "waits": waits})
         names = self.ui.get("course_strands", {})
         present = {i["strand"] for i in out}
         ids = [i for i in names if i in present] + sorted(present - set(names))
         return {"lessons": out, "strands": [{"id": i, "name": names.get(i, i)} for i in ids],
-                "layers": self.ui.get("course_layers", {})}
+                "layers": self.ui.get("course_layers", {}), "extras": self.ui.get("course_extras", {})}
 
     def start_lesson(self, name):
         """A fresh sitting of the current lesson, a finished one, or the next. Runs are only ever added."""
