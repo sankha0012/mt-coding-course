@@ -39,6 +39,10 @@ The sibling repository `live-coding-gym` (same owner, same machine) requires a s
 
 `../live-coding-gym` is a finished local app (Python 3.12 with `uv`, FastAPI, plain HTML and JavaScript, SQLite, content in plain files, a content checker). It is a good source of patterns for running learner code safely and comparing SQL results. Its dataset in `content/_shared` is similar to, but not the same as, the one in this repository's `data/`. The examples in these docs were checked against `data/` here.
 
+## Handover
+
+`docs/09-handover.md` says where everything stands (25 Nov 2026), how to run and test, how to handle a sitting, and the known gaps. Read it before anything else when a session starts.
+
 ## First session checklist
 
 1. Read the docs in order.
