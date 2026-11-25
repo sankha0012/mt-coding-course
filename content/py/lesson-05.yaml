@@ -14,18 +14,6 @@ thoughts:
   comment: "A line that starts with `#` is a note for people, and Python skips it."
 steps:
   # 1
-  - kind: "cold-check"
-    requires: ["from-table", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary", "name-a-result", "keep-before-piles"]
-    ordered: true
-    any_column_order: true
-    text: "Counting only the couriers on bikes, how many are there in each city? Call the count n, and show the biggest first."
-    model: "SELECT city, COUNT(*) AS n FROM couriers WHERE vehicle = 'bike' GROUP BY city ORDER BY n DESC"
-    rows: 4
-    result: [["São Paulo", 33], ["Rio de Janeiro", 18], ["Curitiba", 13], ["Belo Horizonte", 9]]
-    after_run: "That is where we stopped last time. On we go."
-    note: "Opening cold check from SQL-1 and SQL-2 together: keep, pile, name the count, sort by the name. Never scored. Naming a result, and a query that takes a table in and gives a table out, is the idea a function will give a Python shape to."
-
-  # 2
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "text-in-list", "dict", "get-by-name", "set-by-name", "one-entry-per-pile", "update-the-pile", "get-with-default"]
@@ -72,10 +60,10 @@ steps:
       narration:
         - "{'delivered': 2, 'cancelled': 1}. Each status found its pile and raised it."
         - "What is there, or zero, plus one: for each item."
-      note: "Return for step 2."
-    note: "A warm start from PY-4: the piles by hand. In step 21 the learner will wrap exactly this loop in a function, so the loop is fresh in the hand when it is wanted."
+      note: "Return for step 1."
+    note: "A warm start from PY-4: the piles by hand. In step 20 the learner will wrap exactly this loop in a function, so the loop is fresh in the hand when it is wanted."
 
-  # 3
+  # 2
   - kind: "give"
     lang: "python"
     new: ["def"]
@@ -101,7 +89,7 @@ steps:
     after_run: "15.98. The def made a name for the two steps and did nothing else. It was the last line that ran them. Take that line away and nothing is shown, because the steps are waiting. You have used functions since the first lesson: len, sum and print are functions somebody else wrote. Now you can write your own."
     note: "The colon and the push are used a third time without being re-taught. The call at the bottom is used before it is named: its thought, call-it, is taken after return, where the idea that a function is a query can be said once the learner has seen something come out."
 
-  # 4
+  # 3
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "def"]
@@ -153,10 +141,10 @@ steps:
       narration:
         - "4. The steps were given a name, and the name was used to run them."
         - "A def, with the steps pushed in, and a line at the left that runs it."
-      note: "Return for step 4."
+      note: "Return for step 3."
     note: "The first function the learner writes: no inputs, so the only new thing is the def and the call. Every line inside is from PY-1."
 
-  # 5
+  # 4
   - kind: "give"
     lang: "python"
     new: ["what-goes-in"]
@@ -182,7 +170,7 @@ steps:
     after_run: "3.0 and 30.0. One function, used twice, on two lists. The first time, values meant [2, 4]. The second time it meant [10, 20, 60]. The name in the brackets is yours to choose, and it only exists inside the function."
     note: "The loop's item is the model: a name that stands for whatever it is given at each turn. The name exists only inside the function is said and not tested, because a lucky guess could teach a false generalisation."
 
-  # 6
+  # 5
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "def", "what-goes-in"]
@@ -229,10 +217,10 @@ steps:
       narration:
         - "2. The list went in through the brackets, and len counted it inside."
         - "A name for what goes in, and the list itself when it was used."
-      note: "Return for step 6."
+      note: "Return for step 5."
     note: "The learner now writes a function with a parameter, one step after seeing it. The wrong answers are the missing input, the missing argument and the missing call."
 
-  # 7
+  # 6
   - kind: "give"
     lang: "python"
     new: ["what-comes-out"]
@@ -258,7 +246,7 @@ steps:
     after_run: "5.0. The function showed nothing itself. It handed its answer back, and the answer was given the name result, and the last line showed it. A function that returns can be used anywhere a value can: after an equals sign, inside print, in a question."
     note: "Return before print inside a function is used for contrast, so the difference between showing and handing back is met in the classmate step, where it is the real reason."
 
-  # 8
+  # 7
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "def", "what-goes-in", "what-comes-out"]
@@ -311,10 +299,10 @@ steps:
       narration:
         - "91.7. The function handed the total back, and print showed it."
         - "Something in, something out: the list in, the total out."
-      note: "Return for step 8."
+      note: "Return for step 7."
     note: "The hidden check adds one to what the function hands back. A function that only prints hands back nothing, and the check stops with an error. This is how a step can tell showing from handing back, which the checker could not see otherwise."
 
-  # 9
+  # 8
   - kind: "give"
     lang: "python"
     new: ["call-it"]
@@ -344,7 +332,7 @@ steps:
     after_run: "5.326666666666667 and True. The second line asked a question about the average, and the call was replaced by its answer, 61.39, before the sign was applied. A function is a query: something goes in, something comes out. You have used functions that way since len and sum. This one is yours."
     note: "The strand's idea made explicit: a function is a query, which is the SQL idea of a table going in and a table coming out, with a value in each place."
 
-  # 10
+  # 9
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "commas", "running-result", "def", "what-goes-in", "what-comes-out", "call-it"]
@@ -420,10 +408,10 @@ steps:
       narration:
         - "2. Two things in, a list and a limit, and one number out."
         - "The loop and the running count from the first lesson, with a name and a return."
-      note: "Return for step 10."
+      note: "Return for step 9."
     note: "The first function with two inputs and a loop, and a climb: the loop of PY-1 wrapped. The second wrong answer is the classic one, the return pushed in too far, and the real reason for it is that return ends the function."
 
-  # 11
+  # 10
   - kind: "classmate"
     lang: "python"
     new: ["show-or-return"]
@@ -498,13 +486,13 @@ steps:
       note: "Return for the Ana step."
     note: "Ana makes the classic slip before the learner can (rule E6), and Python's own message is the real reason. print and return are contrasted here, after the learner has seen both used on their own. The word NoneType in the message prepares the next thought, and the narration does not name it."
 
-  # 12
+  # 11
   - kind: "aside"
     lang: "python"
     text: "Something that is only interesting, with nothing in it to keep. The word function comes from mathematics. In school you may have met f of x equals two x: put a number in, and a number comes out, always the same one for the same input. Mathematicians were saying it long before there were computers. Programmers borrowed the word, and the idea. That is why the picture of something going in and something coming out fits so well, in SQL, in a function, and in a great deal that comes after."
-    note: "Relief after the climb of steps 10 and 11 (rule C8). A real origin of the word, and an import from mathematics (rule B7). It restates something in and something out, which is the strand's idea."
+    note: "Relief after the climb of steps 9 and 10 (rule C8). A real origin of the word, and an import from mathematics (rule B7). It restates something in and something out, which is the strand's idea."
 
-  # 13
+  # 12
   - kind: "give"
     lang: "python"
     new: ["nothing"]
@@ -530,7 +518,7 @@ steps:
     after_run: "None, then True, then False. There is no acai in the dict, so get handed back nothing, and the question said yes. Pizza is there, so the question said no. Python has exactly one None, so the question is whether the value is that one, and the word for that is is. In SQL, nothing equals NULL, so IS NULL was a different word. Here it is the same idea."
     note: "Names the NULL of SQL-3 as the same idea in Python, which the learner owns. The reason for is is the true one: there is only one None. The grade is core: PY-6 and PY-9 need is None and is not None."
 
-  # 14
+  # 13
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "get-with-default", "nothing"]
@@ -570,10 +558,10 @@ steps:
       narration:
         - "False. Pizza is there, so get handed back its price and not nothing."
         - "Get with no second thing, and is None: this time the answer was no."
-      note: "Return for step 14."
+      note: "Return for step 13."
     note: "The wrong answer with 0 is the confusion between zero and nothing, which is the confusion SQL-3 dealt with for NULL. The step is written as a question, not as a recipe, so the learner has to put get and is None together."
 
-  # 15
+  # 14
   - kind: "give"
     lang: "python"
     new: ["empty-case"]
@@ -603,7 +591,7 @@ steps:
     after_run: "3.0 and None. For the empty list, the if said yes, and return handed back None, and the division was never reached. SQL answers the same way: the AVG of no rows is NULL, not an error. That is a good answer, and it is the same one."
     note: "The empty case, as a habit, arrives with its reason: dividing by zero stops the program. It is the first of the three checks that PY-10 names (the ordinary case, the empty case and the awkward case)."
 
-  # 16
+  # 15
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "list", "sorted", "position", "last", "def", "what-goes-in", "what-comes-out", "call-it", "show-or-return", "nothing", "empty-case"]
@@ -673,10 +661,10 @@ steps:
       narration:
         - "8.99 and None. The ordinary case worked, and the empty one had its own answer."
         - "Ask first whether the list is empty, then hand back a position."
-      note: "Return for step 16."
+      note: "Return for step 15."
     note: "The empty case in a new function that the learner writes from nothing. It weaves sorted, position and last from PY-2, and the check requires the function to hand back, not only show."
 
-  # 17
+  # 16
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "commas", "dict", "get-with-default", "if-question", "otherwise", "block", "def", "what-goes-in", "what-comes-out", "call-it", "nothing"]
@@ -753,10 +741,10 @@ steps:
       narration:
         - "60. The function handed back the price, and the question about None said no."
         - "A function that hands back nothing when there is nothing, and code that asks."
-      note: "Return for step 17."
+      note: "Return for step 16."
     note: "None from get, handed back by a function, and asked about outside it: three thoughts that arrived separately come together. The dict is passed in, not read from outside, so that the function stays a query: everything it needs goes in."
 
-  # 18
+  # 17
   - kind: "give"
     lang: "python"
     new: ["check-with-assert"]
@@ -786,7 +774,7 @@ steps:
     after_run: "still here. The assert said nothing, because the check held: the average of 2 and 4 is 3. Silence means it held. If you had written 4, Python would have stopped before the print. You decide what the answer should be before you run the function, and the assert tells you whether the function agrees. This is the habit of writing a check of your own."
     note: "The testing habit starts here (pass-bar task 12). The two equals signs are the learner's own from PY-1. A failing assert cannot be shown as the step's sentence, because a shown sentence must run, so it is described."
 
-  # 19
+  # 18
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-in-list", "text-quotes", "equals-asks", "running-result", "empty-case", "def", "what-goes-in", "what-comes-out", "call-it", "check-with-assert"]
@@ -869,10 +857,10 @@ steps:
       narration:
         - "1, with the checks silent. The function was checked on two lists before it was trusted."
         - "A function, and two checks of your own: one ordinary and one empty."
-      note: "Return for step 19."
+      note: "Return for step 18."
     note: "The first free attempt at assert. The checker cannot tell whether the asserts were written, only that they do not fail: a learner who leaves them out passes. The note is for the writer, not for the learner. A wrong answer with a false check stops the program, which is how a learner sees an AssertionError for themselves."
 
-  # 20
+  # 19
   - kind: "give"
     lang: "python"
     new: ["comment"]
@@ -902,7 +890,7 @@ steps:
     after_run: "3.0. The note changed nothing, because Python did not read it. Say what the function is for, in a few words, and not what each line does: the lines can be read already. This is a note for people, and it is where a good habit of naming things, and of checking them, shows."
     note: "A comment cannot be judged by what the program prints, so it is given here and asked for in the prompts of the steps after it. It is also what PY-10's closing sentence asks for, with the cost of a function in words."
 
-  # 21
+  # 20
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-in-list", "dict", "get-with-default", "one-entry-per-pile", "update-the-pile", "def", "what-goes-in", "what-comes-out", "call-it", "comment"]
@@ -977,10 +965,10 @@ steps:
       narration:
         - "{'delivered': 3, 'cancelled': 1}. The same function, used on other items."
         - "A list in, a dict of counts out."
-      note: "Return for step 21."
+      note: "Return for step 20."
     note: "Weaves the piles of PY-4 with the function of this lesson, and requires the note. The empty dict before the loop is the classic place for a slip, as the empty list was in PY-2."
 
-  # 22
+  # 21
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "list", "show", "how-many", "total", "build-average", "block", "if-question", "equals-asks", "text-quotes", "def", "what-goes-in", "what-comes-out", "call-it", "show-or-return", "nothing", "empty-case", "check-with-assert", "comment"]
@@ -1073,7 +1061,7 @@ steps:
       note: "Return for the closing step. Not broken down, like the step."
     note: "The closing sentence of the lesson, as in the map. The map's version shows nothing, which is the point of silent checks, but a step must print something to be judged, so the learner also shows the average of four real fees, and a hidden check confirms the function hands back instead of showing. Deliberate friction (rule C9). The note above the function cannot be judged, so it is asked for and not checked."
 
-  # 23
+  # 22
   - kind: "recap"
     lang: "python"
     text: |-
@@ -1084,7 +1072,7 @@ steps:
       Don't go over any of this before next time. One more question, cold, and then we stop.
     note: "States the limit again (rule F2) and tells the learner not to revise (rule A3). The last line introduces the habit that later narration asks for: a quick check."
 
-  # 24
+  # 23
   - kind: "cold-check"
     lang: "python"
     requires: ["name-a-value", "list", "show", "how-many", "text-in-list", "text-quotes", "for-each", "block", "if-question", "equals-asks", "running-result", "build-average", "def", "what-goes-in", "what-comes-out", "call-it", "nothing", "empty-case"]

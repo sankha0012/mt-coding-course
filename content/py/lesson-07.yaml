@@ -11,21 +11,32 @@ thoughts:
 steps:
   # 1
   - kind: "cold-check"
-    requires: ["conditional-count", "buckets", "piles", "one-row-per-pile", "pile-name", "commas"]
-    any_column_order: true
-    text: "Show each promised_minutes value with how many of its orders were cancelled."
-    model: "SELECT promised_minutes, SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) FROM orders GROUP BY promised_minutes"
-    rows: 3
-    result: [[30, 117], [40, 140], [50, 142]]
+    lang: "python"
+    requires: ["def", "what-goes-in", "what-comes-out", "row-is-dict", "table-is-list-of-rows", "cell", "missing-is-none", "nothing", "for-each", "block", "if-question", "running-result"]
+    text: "Write a function called `count_missing` that takes the rows of a table and the name of a column, and hands back how many of the rows have an empty cell in that column. An empty cell is None."
+    check: |-
+      rows = [{'subtotal': 81.1, 'fee': 5.0}, {'subtotal': None, 'fee': 4.0}, {'subtotal': 57.72, 'fee': None}, {'subtotal': None, 'fee': 6.0}]
+      print(count_missing(rows, 'subtotal'))
+      print(count_missing(rows, 'fee'))
+    model: |-
+      def count_missing(rows, column):
+          count = 0
+          for row in rows:
+              if row[column] is None:
+                  count = count + 1
+          return count
+    output: |-
+      2
+      1
     after_run: "That is where we stopped last time. On we go."
-    note: "Opening cold check from SQL-9: a count of only some of the rows in each pile, on a combination not practised. Never scored. SQL, so no lang."
+    note: "Opening cold check from PY-6: a function over rows, a column name passed in, the empty cell, and a running count, on a combination not practised (PY-6 skipped the empty cells, and never counted them). Never scored."
 
   # 2
   - kind: "give"
     lang: "python"
     new: ["pair"]
     text: |-
-      Back to Python. Your dicts hold things under names. Sometimes two values simply belong together, and have no name between them: a dish and how many times it was ordered. Python calls two values that travel together a pair, and writes it in round brackets.
+      Your dicts hold things under names. Sometimes two values simply belong together, and have no name between them: a dish and how many times it was ordered. Python calls two values that travel together a pair, and writes it in round brackets.
 
       ```python
       pair = ('pizza', 3)

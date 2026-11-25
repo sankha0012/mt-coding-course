@@ -14,18 +14,6 @@ thoughts:
   first-few: "`[:3]` takes the first three. That is `LIMIT`."
 steps:
   # 1
-  - kind: "cold-check"
-    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "cut", "sort-by-summary"]
-    ordered: true
-    any_column_order: true
-    text: "Show the two cities with the most restaurants, each with its number of restaurants."
-    model: "SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC LIMIT 2"
-    rows: 2
-    result: [["São Paulo", 25], ["Belo Horizonte", 15]]
-    after_run: "That is where we stopped last time. On we go."
-    note: "Opening cold check from SQL-2: piles, a sort by the count and a cut, on restaurants, which the lesson's own cold checks did not use. Never scored. PY-2 is itself sort and cut by hand, so the SQL sentence is the one it will echo."
-
-  # 2
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "list", "how-many", "total", "show", "for-each", "block", "if-question", "compare-signs"]
@@ -71,10 +59,10 @@ steps:
       narration:
         - "4.99 and 0. Each fee was asked the question, and only the yes ones were shown."
         - "A loop with a question inside it: WHERE fee < 5, by hand."
-      note: "Return for step 2."
+      note: "Return for step 1."
     note: "A warm start from PY-1: the loop and the question that PY-2's closing sentence is built on. Cold checks are one blank-page sentence, so this is where Python restarts."
 
-  # 3
+  # 2
   - kind: "give"
     lang: "python"
     new: ["position"]
@@ -94,9 +82,9 @@ steps:
         print(fees[0])
         print(fees[2])
     after_run: "8.99 and 0. Positions count from 0, so the first fee is number 0 and the third is number 2. That one just is. There is a real reason, and I will tell you it in a little while. For now, the first is 0."
-    note: "Marked as a rule that has no hook. Rule B5 and B6: say early that this just is, and promise the real reason (the aside at step 7) rather than invent a trick. The square brackets are used again for dicts in PY-3 and for columns in pandas, and always mean get from inside."
+    note: "Marked as a rule that has no hook. Rule B5 and B6: say early that this just is, and promise the real reason (the aside at step 6) rather than invent a trick. The square brackets are used again for dicts in PY-3 and for columns in pandas, and always mean get from inside."
 
-  # 4
+  # 3
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "position"]
@@ -136,10 +124,10 @@ steps:
       narration:
         - "24.8. The second item is number 1."
         - "The name of the list, and the position in square brackets."
-      note: "Return for step 4."
+      note: "Return for step 3."
     note: "The first position the learner has to work out. The wrong answers are the off-by-one slip and the brackets slip. The off-by-one slip is the expected one and the question leads to the rule without restating it."
 
-  # 5
+  # 4
   - kind: "give"
     lang: "python"
     new: ["last"]
@@ -159,7 +147,7 @@ steps:
     after_run: "4.99. Minus one is the last, minus two the one before it. It saves you counting, and it keeps working however long the list grows."
     note: "The count from the end is given and not asked, because a lucky guess could teach a false generalisation (rule B4)."
 
-  # 6
+  # 5
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "position", "last"]
@@ -197,16 +185,16 @@ steps:
       narration:
         - "84.23. Minus one is the last, whatever the length."
         - "The last item, with a minus sign in the brackets."
-      note: "Return for step 6."
+      note: "Return for step 5."
     note: "The position thought and the minus-one thought are not edited from each other: the previous answer used a plain number and this one a minus sign."
 
-  # 7
+  # 6
   - kind: "aside"
     lang: "python"
     text: "Something that is only interesting, with nothing in it to keep. Why does counting start at 0? Because a position is really a distance from the start. The first item is no steps from the start, the second is one step along, and so on. The early programming languages worked that way on the computer's memory, and nearly every language since has copied them. So the odd rule has a real reason, even if it does not feel natural."
-    note: "The real reason promised in step 3 (rules B5 and B6). It is labelled as an aside, so it does not add to the load. It relieves the learner after two positions in a row."
+    note: "The real reason promised in step 2 (rules B5 and B6). It is labelled as an aside, so it does not add to the load. It relieves the learner after two positions in a row."
 
-  # 8
+  # 7
   - kind: "give"
     lang: "python"
     new: ["add-to-end"]
@@ -228,7 +216,7 @@ steps:
     after_run: "[8.99, 6.99, 0, 4.99]. The new fee went on the end. The dot is new: it says, do this to that list. The list itself grew where it stood, which is why the print shows it longer."
     note: "The dot meets the learner for the first time. It is read as 'do this to that', which is also how pandas methods will read in PD-1."
 
-  # 9
+  # 8
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "add-to-end"]
@@ -271,10 +259,10 @@ steps:
       narration:
         - "[35.2, 24.8, 31.7]. The new time went on the end."
         - "A dot, append, and the new item in brackets."
-      note: "Return for step 9."
+      note: "Return for step 8."
     note: "A list is grown by hand before it is grown in a loop (rule C4), so the loop step expands something familiar."
 
-  # 10
+  # 9
   - kind: "give"
     lang: "python"
     new: ["new-list-in-loop"]
@@ -302,7 +290,7 @@ steps:
     after_run: "[8.99, 6.99, 6.99]. Last time the running result was a number: it started at 0 and grew by adding. This time it is a list: it starts empty and grows by append. The empty list is made before the loop and the print is after it, just as the count was. This is keeping the rows, by hand: SELECT * FROM fees WHERE fee > 5."
     note: "Marked as essential. The running result is the same idea as PY-1's count, now holding a list. The empty list before the loop is the place where the classmate will slip."
 
-  # 11
+  # 10
   - kind: "classmate"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop"]
@@ -382,7 +370,7 @@ steps:
       note: "Return for the classmate step."
     note: "Ana makes the slip the learner is most likely to make, before the learner can (rule E6). The program runs, so the reason is stated by the teacher from what happened, not by a Python message. The step introduces nothing new: it is the repair of the thought just given."
 
-  # 12
+  # 11
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop"]
@@ -442,10 +430,10 @@ steps:
       narration:
         - "[24.8, 28.2]. The two quick deliveries, in the order they came."
         - "Empty list, loop, question, append: the rows were kept, by hand."
-      note: "Return for step 12."
+      note: "Return for step 11."
     note: "The first time the learner writes the whole shape from nothing, one step after the classmate. Both lists of numbers are real values from the orders table."
 
-  # 13
+  # 12
   - kind: "give"
     lang: "python"
     new: ["and-or"]
@@ -469,7 +457,7 @@ steps:
     after_run: "6.99. Only that one is both above 5 and under 8. Each side of and has its own question, with its own name, sign and number. With or in its place, a fee would be kept if either said yes."
     note: "Imports the thought from SQL-2 (two-questions) and says so in the text. The or half is described and not run, so a lucky guess cannot teach a false generalisation: it is asked in the next step, where the learner has to think out which of the two words is wanted."
 
-  # 14
+  # 13
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "equals-asks", "and-or"]
@@ -526,10 +514,10 @@ steps:
       narration:
         - "35.2 and 31.7. Both questions said yes for those two."
         - "And wants both. Each side has its own name, sign and number."
-      note: "Return for step 14."
+      note: "Return for step 13."
     note: "The or is asked and the and is given, so the learner has to think out which word is wanted. The second wrong answer is the same slip as SQL-2 step 11's second wrong answer, and the question is a deliberate echo of it."
 
-  # 15
+  # 14
   - kind: "give"
     lang: "python"
     new: ["otherwise"]
@@ -565,7 +553,7 @@ steps:
     after_run: "[8.99, 6.99] and then [0, 4.99]. The yes rows went one way and the no rows the other. SQL had no word for this: WHERE simply threw the no rows away. Here you can keep them. The else sits level with the if it belongs to."
     note: "Without a SQL equivalent, so it is given and then asked. The picture of two lists is the one a learner will need for the closing thought of the strand: a question splits the rows."
 
-  # 16
+  # 15
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "otherwise"]
@@ -635,10 +623,10 @@ steps:
       narration:
         - "[24.8, 28.2] and [35.2, 31.7, 43.7]. Each time went into exactly one list."
         - "A question, and else for the others: nothing is lost."
-      note: "Return for step 16."
+      note: "Return for step 15."
     note: "Two lists are filled by one loop. A learner who asks a second question (if subtotal < 50) instead of using else gets the same lists on this data, so that is not listed as a wrong answer, and the narration is what says that every subtotal went into exactly one list."
 
-  # 17
+  # 16
   - kind: "give"
     lang: "python"
     new: ["sorted"]
@@ -660,7 +648,7 @@ steps:
     after_run: "[0, 4.99, 6.99, 8.99], and then the original, still in its old order. Sorted hands you a sorted copy and leaves the list alone, as ORDER BY left the table alone."
     note: "The after_run says what is unchanged (rule B3). A learner who knows list.sort() from elsewhere is not helped here: it is left out on purpose, because it changes the list where it stands and returns nothing, and that is a confusion of its own."
 
-  # 18
+  # 17
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "sorted"]
@@ -696,10 +684,10 @@ steps:
       narration:
         - "[18.85, 31.3, 81.1, 84.23]. Sorted, smallest first."
         - "Sorted, with the list inside its brackets: ORDER BY, by hand."
-      note: "Return for step 18."
+      note: "Return for step 17."
     note: "An easy step after the give, so the thought is placed before the climb of the next two."
 
-  # 19
+  # 18
   - kind: "ask"
     lang: "python"
     new: ["reverse"]
@@ -740,10 +728,10 @@ steps:
       narration:
         - "[8.99, 6.99, 4.99, 0]. Sorted, then turned round."
         - "Reverse=True after a comma: DESC in Python."
-      note: "Return for step 19."
+      note: "Return for step 18."
     note: "reverse=True is given inline in the prompt because spelling a keyword argument cannot be built from anything the learner owns. It is core, not shape, and it comes back in the closing sentence and the closing cold check. The wrong answers show where the closing bracket sits."
 
-  # 20
+  # 19
   - kind: "give"
     lang: "python"
     new: ["first-few"]
@@ -763,7 +751,7 @@ steps:
     after_run: "[8.99, 6.99, 6.99]. Sorted, turned round, cut to three: ORDER BY fee DESC LIMIT 3, by hand. The colon means from the start, and the 3 means up to but not including position 3, so you get positions 0, 1 and 2: three items."
     note: "The square brackets are the same ones as for a position, with a colon. The real reason for the 3 is given. Sort then cut: the order of events one more time, as in SQL-2."
 
-  # 21
+  # 20
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "sorted", "reverse", "first-few"]
@@ -802,10 +790,10 @@ steps:
       narration:
         - "[91.11, 84.23]. Sorted, turned round, cut to two."
         - "ORDER BY DESC and LIMIT, by hand."
-      note: "Return for step 21."
+      note: "Return for step 20."
     note: "Three words in one sentence, as SQL-2 step 17 was for ORDER BY, DESC and LIMIT. The returns are the strand's version of the top-k tasks."
 
-  # 22
+  # 21
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "sorted", "position", "last"]
@@ -840,10 +828,10 @@ steps:
       narration:
         - "18.85. The sorted list starts with the smallest, so position 0 is the one."
         - "Sorted, and then one item by its position."
-      note: "Return for step 22."
+      note: "Return for step 21."
     note: "Weaves position and last, a few steps old, with sorted. A reminder that the position brackets and the cut brackets are two different things in the same place, which is where a mistake is most likely."
 
-  # 23
+  # 22
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "and-or", "sorted", "reverse", "first-few"]
@@ -911,7 +899,7 @@ steps:
       note: "Return for the closing step. Not broken down, like the step."
     note: "The closing sentence of the lesson. The map's sentence was the three biggest subtotals above 50. With the map's list the question above 50 does nothing, because the three biggest subtotals are all above 50, and a learner who left it out would get the right answer, so the checker could not tell. The sentence here adds and under 100, with a list that has subtotals over 100, so that the question is needed, and it uses and. Reported to the owner in the lesson report. Deliberate friction (rule C9)."
 
-  # 24
+  # 23
   - kind: "recap"
     lang: "python"
     text: |-
@@ -922,7 +910,7 @@ steps:
       Don't go over any of this before next time. One more question, cold, and then we stop.
     note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
 
-  # 25
+  # 24
   - kind: "cold-check"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "otherwise", "sorted", "reverse"]

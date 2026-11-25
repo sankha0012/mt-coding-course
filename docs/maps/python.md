@@ -46,7 +46,7 @@ Note: this is the draft opening C1 to C13 from `docs/research/02-panorama-and-op
 
 ### PY-2. Lists that grow
 
-Assumes: PY-1. Opens with: a cold check from PY-1.
+Assumes: PY-1. Opens with: no cold check. The owner removed the SQL one on 25 Nov 2026, so a Python lesson does not open with an SQL question.
 
 | # | Identifier | The thought | Grade |
 |---|---|---|---|
@@ -204,7 +204,7 @@ Note: the capstone of the Python foundation, and the doorway to pandas. Nothing 
 
 ### PY-7. Sort by a rule
 
-Assumes: PY-6. Opens with: a cold check from SQL-9.
+Assumes: PY-6. Opens with: a cold check from PY-6. (Changed on 25 Nov 2026: it was an SQL one from SQL-9.)
 
 | # | Identifier | The thought | Grade |
 |---|---|---|---|

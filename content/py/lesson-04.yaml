@@ -11,18 +11,6 @@ thoughts:
   average-from-two-dicts: "A total per pile and a count per pile give an average per pile."
 steps:
   # 1
-  - kind: "cold-check"
-    requires: ["from-table", "more-summaries", "summary-column", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary"]
-    ordered: true
-    any_column_order: true
-    text: "Show each promised_minutes value with the largest actual_minutes of its orders, the largest first."
-    model: "SELECT promised_minutes, MAX(actual_minutes) FROM orders GROUP BY promised_minutes ORDER BY MAX(actual_minutes) DESC"
-    rows: 3
-    result: [[50, 109.9], [40, 95.5], [30, 63.9]]
-    after_run: "That is where we stopped last time. On we go."
-    note: "Opening cold check from SQL-2: MAX in place of a count, piles, and a sort by the summary. Never scored. A summary per pile with the pile's name beside it is what the dicts of PY-4 hold, so the SQL sentence is the one the lesson will echo."
-
-  # 2
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names"]
@@ -68,10 +56,10 @@ steps:
       narration:
         - "pizza 40 and acai 25. The question was asked of each price."
         - "Both halves named, and a question about the value."
-      note: "Return for step 2."
+      note: "Return for step 1."
     note: "A warm start from PY-3: the pairs of a dict and a question about a value. The dict is the one the next step turns into piles, with real counts from the couriers table."
 
-  # 3
+  # 2
   - kind: "give"
     lang: "python"
     new: ["one-entry-per-pile"]
@@ -93,7 +81,7 @@ steps:
     after_run: "{'bike': 74, 'moto': 110, 'carro': 17}. The bike pile went from 73 to 74. The pile's name is the name in the dict, and its running result is the value. To update a pile you read its value, change it, and put it back under the same name. That is count = count + 1, with the count kept under a name."
     note: "The thought, given on a dict of finished piles whose numbers are the real ones from SQL-1 (73, 110 and 17). The learner has already used both halves: reading by name and setting by name."
 
-  # 4
+  # 3
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "show", "one-entry-per-pile"]
@@ -137,10 +125,10 @@ steps:
       narration:
         - "{'bike': 73, 'moto': 111, 'carro': 17}. The moto pile was read, raised and put back."
         - "A pile is a value under a name, and updating it is read, change and put back."
-      note: "Return for step 4."
+      note: "Return for step 3."
     note: "Updates a pile that exists. The next step is the pile that does not, which is the reason for the thought after it."
 
-  # 5
+  # 4
   - kind: "give"
     lang: "python"
     new: ["pile-starts-at-zero"]
@@ -166,7 +154,7 @@ steps:
     after_run: "{'pizza': 0}. The dict started empty, so there was no pizza pile. The if saw that and started one at zero. Now the pile can be raised. An empty dict is two curly brackets with nothing in them, as an empty list was two square ones."
     note: "Taught first with an explicit check, so that .get arrives later as a shorter way to say something already understood and not as a rule (the map's note). not in is introduced as vocabulary in the same breath: the learner owns in from PY-3."
 
-  # 6
+  # 5
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "show", "if-question", "block", "is-it-there", "pile-starts-at-zero"]
@@ -219,10 +207,10 @@ steps:
       narration:
         - "{'moto': 0}. No moto pile existed, so one was started."
         - "A name that is not in the dict gets a pile at zero."
-      note: "Return for step 6."
+      note: "Return for step 5."
     note: "An easy step after the give. The wrong answers lead to the reason: a pile has to exist before it can be raised, and a new pile has counted nothing."
 
-  # 7
+  # 6
   - kind: "give"
     lang: "python"
     new: ["update-the-pile"]
@@ -252,7 +240,7 @@ steps:
     after_run: "{'pizza': 2, 'coca': 1, 'sushi': 1}. That is SELECT dish, COUNT(*) FROM dishes GROUP BY dish, by hand. The loop went through each row, and each row went to its pile and raised it. One name per pile, one count under it: one row per pile, in SQL's words."
     note: "Marked as essential. This is the commonest shape in plain-Python interview tasks, and the strand's version of the piles from SQL-1."
 
-  # 8
+  # 7
   - kind: "classmate"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "is-it-there", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile"]
@@ -333,13 +321,13 @@ steps:
       note: "Return for the classmate step."
     note: "Ana makes the slip the learner is most likely to make, before the learner can (rule E6), and Python's KeyError is the real reason. The learner repairs it by typing the whole program, so the thought is exercised before the first free attempt."
 
-  # 9
+  # 8
   - kind: "aside"
     lang: "python"
     text: "Something that is only interesting, with nothing in it to keep. People were making piles by hand long before computers. Counting votes, or counting sheep in a field, you make a mark for each one under its own heading and then read off the marks. The tally marks you may have seen, four strokes and a fifth across them, are the same idea: one pile for each kind of thing, and a count that goes up by one. What you just wrote is a tally, kept in a dict."
-    note: "Relief after the climb of steps 7 and 8 (rule C8). A real thing, not a mnemonic. It makes the pile idea concrete and can be skipped without loss."
+    note: "Relief after the climb of steps 6 and 7 (rule C8). A real thing, not a mnemonic. It makes the pile idea concrete and can be skipped without loss."
 
-  # 10
+  # 9
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "is-it-there", "go-through-dict", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile"]
@@ -412,10 +400,10 @@ steps:
       narration:
         - "bike 4, moto 2, carro 1. Piles made in one loop and read out in a second."
         - "The piles, then the showing: two loops, one after the other."
-      note: "Return for step 10."
+      note: "Return for step 9."
     note: "The first free attempt at the whole shape, after the classmate. Showing the piles with a second loop is the thing the closing sentence needs too. The cuisine names are real ones from restaurants.csv."
 
-  # 11
+  # 10
   - kind: "give"
     lang: "python"
     new: ["get-with-default"]
@@ -441,7 +429,7 @@ steps:
     after_run: "{'pizza': 2, 'coca': 1, 'sushi': 1}, the same as before. The check and the starting at zero went inside the get: look for the pile, and if it is not there, use zero. Same idea, fewer words. The dot and the brackets are as with append: do this to that dict."
     note: "Arrives as a shorter way to say something already understood (the map's note), so it is a labour saved and not a rule to remember."
 
-  # 12
+  # 11
   - kind: "classmate"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
@@ -514,7 +502,7 @@ steps:
       note: "Return for the Davi step."
     note: "Davi makes the slip before the learner can (rule E6). None appears here for the first time, as the real reason for the zero. PY-5 gives it a proper step as 'nothing' with the question is None. Nothing is asked about it yet, and the narration says only that it is nothing."
 
-  # 13
+  # 12
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
@@ -577,10 +565,10 @@ steps:
       narration:
         - "FRETEGRATIS 3, BEMVINDO10 1 and PIZZA20 1. Each code found its pile and raised it."
         - "What is there, or zero, plus one: for each item. Then the piles read out."
-      note: "Return for step 13."
-    note: "The first free attempt at the short way, after the classmate. It adds the second loop that step 10 asked for, so it is not the repair of Davi's program with other words. The codes in the return are real ones from the orders table."
+      note: "Return for step 12."
+    note: "The first free attempt at the short way, after the classmate. It adds the second loop that step 9 asked for, so it is not the repair of Davi's program with other words. The codes in the return are real ones from the orders table."
 
-  # 14
+  # 13
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
@@ -635,10 +623,10 @@ steps:
       narration:
         - "delivered 3. Only that pile had more than two."
         - "The question was asked of the finished piles: HAVING, by hand."
-      note: "Return for step 14."
+      note: "Return for step 13."
     note: "Weaves PY-3's pairs and PY-2's question with the piles. The question after the loop, and not inside it, is the same distinction as WHERE and HAVING in SQL-3: a question about a row, and a question about a pile. The narration names it."
 
-  # 15
+  # 14
   - kind: "ask"
     lang: "python"
     new: ["total-per-pile"]
@@ -702,10 +690,10 @@ steps:
       narration:
         - "delivered 22.97 and cancelled 13.98. A total for each pile, found by adding."
         - "The same shape as counting, with the fee added where the one was."
-      note: "Return for step 15."
+      note: "Return for step 14."
     note: "The thought, as the map has it: the same shape with a total where the count was. The pairs in a list are given inline in the prompt, with the reason that the for line can name both halves. The cancelled subtotals are real ones, from rows of the orders table."
 
-  # 16
+  # 15
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "equals-asks", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
@@ -772,10 +760,10 @@ steps:
       narration:
         - "delivered 2 and cancelled 1. Only the big orders were piled."
         - "Keep, then pile: the question first, then the raise."
-      note: "Return for step 16."
+      note: "Return for step 15."
     note: "Echoes SQL-1 step 21 (keep-before-piles) in Python. Keeping happens before the pile is touched, which is the same order of events. The coupons and statuses are real values, and their pairing is illustrative."
 
-  # 17
+  # 16
   - kind: "give"
     lang: "python"
     new: ["average-from-two-dicts"]
@@ -807,7 +795,7 @@ steps:
     after_run: "pizza 45.0 and sushi 60.0. Pizza was sold twice, for 40 and 50, so its total is 90 and its count is 2. That is SELECT dish, AVG(price) FROM sales GROUP BY dish, by hand. AVG did two jobs for you, the total and the count, and here you do them one at a time. The averaging happens after the first loop, when the piles are complete."
     note: "Two dicts are built in one loop and read in a second. The learner owns both halves: a count per pile and a total per pile, and the average of a plain list from PY-1."
 
-  # 18
+  # 17
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "build-average", "average-from-two-dicts"]
@@ -880,10 +868,10 @@ steps:
       narration:
         - "delivered about 7.66 and cancelled 6.99. Total over count, for each status."
         - "Two dicts, one loop, one division each."
-      note: "Return for step 18."
+      note: "Return for step 17."
     note: "The first free attempt at the thought, with real pairs: the coupon and its order's subtotal come from consecutive coupon rows of the orders table. The third wrong answer is the one most likely from a learner who writes it inside the loop."
 
-  # 19
+  # 18
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "average-from-two-dicts"]
@@ -944,10 +932,10 @@ steps:
       narration:
         - "delivered 3 22.97 and cancelled 2 13.98. A count and a total for each pile."
         - "Two dicts, one loop: COUNT and SUM together."
-      note: "Return for step 19."
+      note: "Return for step 18."
     note: "A recombination after the climb: two dicts, no division. It is the closing shape without its one new idea, so the closing sentence cannot be reached by changing one slot of this one."
 
-  # 20
+  # 19
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "build-average", "average-from-two-dicts"]
@@ -1033,7 +1021,7 @@ steps:
       note: "Return for the closing step. Not broken down, like the step."
     note: "The closing sentence of the lesson, exactly as in the map. Deliberate friction (rule C9). The dish names are invented, as in the map: dishes are not in the data."
 
-  # 21
+  # 20
   - kind: "recap"
     lang: "python"
     text: |-
@@ -1044,7 +1032,7 @@ steps:
       Don't go over any of this before next time. One more question, cold, and then we stop.
     note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
 
-  # 22
+  # 21
   - kind: "cold-check"
     lang: "python"
     requires: ["list", "text-in-list", "text-quotes", "show", "for-each", "block", "if-question", "compare-signs", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names", "one-entry-per-pile", "update-the-pile", "get-with-default"]

@@ -12,17 +12,6 @@ thoughts:
   two-names: "`for dish, price in prices.items():` names both halves at once."
 steps:
   # 1
-  - kind: "cold-check"
-    requires: ["from-table", "summary-column", "keep-rows", "compare-signs", "text-quotes", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "keep-before-piles"]
-    any_column_order: true
-    text: "Looking only at the delivered orders, show each promised_minutes value with the average delivery_fee of its orders."
-    model: "SELECT promised_minutes, AVG(delivery_fee) FROM orders WHERE status = 'delivered' GROUP BY promised_minutes"
-    rows: 3
-    result: [[30, 5.14], [40, 5.19], [50, 5.27]]
-    after_run: "That is where we stopped last time. On we go."
-    note: "Opening cold check from SQL-1: keep, then pile, with a name for each pile and an average for each. Never scored. A pile with its name beside it is what PY-3's dict is, so the SQL sentence is the one the lesson will echo. The promised times (30, 40 and 50) are the pile names a dict will hold in PY-4."
-
-  # 2
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "sorted", "reverse", "first-few"]
@@ -57,10 +46,10 @@ steps:
       narration:
         - "[43.7, 35.2]. Sorted, turned round, then cut to two."
         - "ORDER BY DESC, then LIMIT, by hand."
-      note: "Return for step 2."
+      note: "Return for step 1."
     note: "A warm start from PY-2: sort, turn round and cut, which the learner owns from SQL-2 and PY-2. It is the first Python step since the opening cold check, which was SQL."
 
-  # 3
+  # 2
   - kind: "give"
     lang: "python"
     new: ["dict"]
@@ -80,7 +69,7 @@ steps:
     after_run: "{'pizza': 40, 'sushi': 60}. Each name sits in front of its value, and the names are text, so they wear quotes. The commas are the same ones as in a list."
     note: "Lists have had two full lessons to themselves (rule C6) before dicts begin. Curly brackets, colon and comma are given. The names are quoted because they are text, which the learner owns from SQL."
 
-  # 4
+  # 3
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "commas", "dict"]
@@ -119,10 +108,10 @@ steps:
       narration:
         - "{'pizza': 40, 'acai': 25}. Names in quotes, a colon, the value."
         - "Two names and their values, in curly brackets."
-      note: "Return for step 4."
+      note: "Return for step 3."
     note: "The dict is asked for once the learner has seen one. The values are real: the coupon codes and discounts are from coupons.csv."
 
-  # 5
+  # 4
   - kind: "give"
     lang: "python"
     new: ["get-by-name"]
@@ -142,7 +131,7 @@ steps:
     after_run: "40. Square brackets after a name always mean get from inside. With a list you put a position in them, with a dict you put the name, and the name wears its quotes because it is text."
     note: "The rule that square brackets always mean get from inside is the strand's. It returns for pandas columns and rows."
 
-  # 6
+  # 5
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "commas", "dict", "get-by-name"]
@@ -181,10 +170,10 @@ steps:
       narration:
         - "60. The dish's name in square brackets gave its price."
         - "A dict, asked by name."
-      note: "Return for step 6."
-    note: "The wrong answer discounts[2] is the list habit meeting a dict. It is predictable and leads to step 12, where the two are contrasted."
+      note: "Return for step 5."
+    note: "The wrong answer discounts[2] is the list habit meeting a dict. It is predictable and leads to step 11, where the two are contrasted."
 
-  # 7
+  # 6
   - kind: "give"
     lang: "python"
     new: ["set-by-name"]
@@ -208,7 +197,7 @@ steps:
     after_run: "{'pizza': 45, 'sushi': 60, 'acai': 25}. Acai was added at the end, and pizza kept its place but changed its value. The equals sign is the same one: it gives a name to a value. Here the name lives inside the dict."
     note: "Both halves of set-by-name, add and change, are given together because they are one movement. The asked steps take them one at a time."
 
-  # 8
+  # 7
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "get-by-name", "set-by-name"]
@@ -251,10 +240,10 @@ steps:
       narration:
         - "{'pizza': 45, 'sushi': 60}. A name that was already there got a new value."
         - "The same brackets and equals sign, now changing a value."
-      note: "Return for step 8."
+      note: "Return for step 7."
     note: "Adding a name is asked here, and changing one is asked in the return, so the learner meets both halves of the thought. The wrong answer with append is the list habit again."
 
-  # 9
+  # 8
   - kind: "give"
     lang: "python"
     new: ["is-it-there"]
@@ -276,7 +265,7 @@ steps:
     after_run: "True and then False. The question is the name, then in, then the dict, and the answer is a yes or a no: the same yes or no each row gave to a WHERE question. Python writes them True and False, with capital letters. That just is."
     note: "True and False are given with the thought and said to just be (rule B6). The learner has already met the yes or no value, if only in a wrong answer in PY-1, where printing a comparison showed it."
 
-  # 10
+  # 9
   - kind: "classmate"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "get-by-name", "is-it-there", "if-question", "otherwise", "block"]
@@ -335,10 +324,10 @@ steps:
       narration:
         - "60. Sushi is there, so the yes branch ran and showed its price."
         - "Ask whether the name is there, then ask for its value. The else only runs on a no."
-      note: "Return for step 10."
+      note: "Return for step 9."
     note: "Davi makes the slip before the learner can (rule E6), and Python's own message is the real reason. The thought in is not a rule to remember: it is the answer to the KeyError. VOLTA15 appears on no order in the data, which is a fact the learner will meet again in SQL."
 
-  # 11
+  # 10
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "is-it-there"]
@@ -376,10 +365,10 @@ steps:
       narration:
         - "True. Sushi is a name in that dict, so the answer is yes."
         - "A name, in, and a dict: True or False."
-      note: "Return for step 11."
+      note: "Return for step 10."
     note: "The question is asked on its own and shown, not used in an if, so the learner sees the True or the False. It is typed one step after the classmate (rule C1)."
 
-  # 12
+  # 11
   - kind: "ask"
     lang: "python"
     new: ["position-or-name"]
@@ -433,16 +422,16 @@ steps:
       narration:
         - "0 and 60. The list by a position from the end, the dict by a name."
         - "Two questions in the same brackets: one by place, one by name."
-      note: "Return for step 12."
+      note: "Return for step 11."
     note: "The contrast of the pair, which has had two lessons of comfortable lists and four steps of comfortable dicts first (rule C6). The first wrong answer is the list habit in a dict, and the second is the dict habit in a list."
 
-  # 13
+  # 12
   - kind: "aside"
     lang: "python"
     text: "Something that is only interesting, with nothing in it to keep. A dict is called a dictionary in full, because you look a word up to find what it means: the name is the word and the value is the meaning. And a dict is quick. Python does not read through every name to find the one you asked for. It can go almost straight to the entry, however many names there are. So a dict of a million coupons is not much slower to ask than a dict of three."
-    note: "Relief after the climb of steps 9 to 12 (rule C8). A real origin of the word, and a first mention that a dict is fast, which PY-10 spells out as cost. Nothing to remember."
+    note: "Relief after the climb of steps 8 to 12 (rule C8). A real origin of the word, and a first mention that a dict is fast, which PY-10 spells out as cost. Nothing to remember."
 
-  # 14
+  # 13
   - kind: "give"
     lang: "python"
     new: ["go-through-dict"]
@@ -464,7 +453,7 @@ steps:
     after_run: "Three lines, each a name and its price. Going through a dict gives you the names, one at a time, in the order they were put in. By the way, print can show more than one thing: put commas between them and it leaves a space."
     note: "The print with two things is mentioned in the after_run and used here first, which is why it is given and not asked. It is vocabulary and not a thought of the strand."
 
-  # 15
+  # 14
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "go-through-dict"]
@@ -514,10 +503,10 @@ steps:
       narration:
         - "pizza 40, sushi 60 and acai 25. For each name, the name and its value."
         - "A loop through the names, and a lookup by name inside it."
-      note: "Return for step 15."
+      note: "Return for step 14."
     note: "An easy step after the give. The wrong answers are the half-printed ones, each of which shows what is missing."
 
-  # 16
+  # 15
   - kind: "give"
     lang: "python"
     new: ["two-names"]
@@ -539,7 +528,7 @@ steps:
     after_run: "The same three lines as before. There is no lookup inside the loop this time, because price is already the value that goes with dish. You wrote two names after for, with a comma between them, as you would in a list."
     note: "Given and not asked, because a lucky guess could teach a false generalisation: without .items(), a loop with two names fails. That is the next step's wrong answer."
 
-  # 17
+  # 16
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "go-through-dict", "two-names", "and-or"]
@@ -592,10 +581,10 @@ steps:
       narration:
         - "pizza 40 and burger 35. The loop named both halves, and both questions were asked of the price."
         - "Two questions joined, asked of the value, with the name beside it."
-      note: "Return for step 17."
+      note: "Return for step 16."
     note: "The coupon table, in full: these are the four real rows of coupons.csv, so the learner will meet VOLTA15 again, as the coupon no order used. The two questions are joined with and, so that and-or returns one lesson after it was taught."
 
-  # 18
+  # 17
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "dict", "for-each", "block", "two-names", "running-result"]
@@ -649,10 +638,10 @@ steps:
       narration:
         - "45. Started at zero, added each discount, shown at the end."
         - "A running total over the values of a dict."
-      note: "Return for step 18."
+      note: "Return for step 17."
     note: "A recombination of the running result from PY-1 with the pairs from this lesson, a few steps after they were last needed together. The wrong answers are the three classic slips, as in PY-1."
 
-  # 19
+  # 18
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "dict", "two-names", "add-to-end", "new-list-in-loop"]
@@ -711,10 +700,10 @@ steps:
       narration:
         - "['PIZZA20', 'VOLTA15']. The coupons that gave more than 14, kept by name."
         - "A question about the value, and the name on each yes."
-      note: "Return for step 19."
+      note: "Return for step 18."
     note: "Weaves the list built in a loop from PY-2 with the pairs of this lesson. The names, not the values, are kept: a thought the learner will use in PY-4 when the piles' names are the result."
 
-  # 20
+  # 19
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "is-it-there", "otherwise", "position-or-name"]
@@ -779,10 +768,10 @@ steps:
       narration:
         - "sushi 60, acai 0, pizza 40. Each dish was looked up, and the missing one got a 0."
         - "Ask first, then fetch, with an else for the no."
-      note: "Return for step 20."
+      note: "Return for step 19."
     note: "Looking each item of a list up in a dict is what the closing sentence needs, and what a join does. The 0 for a missing name is the thought that PY-4 turns into .get, so this step is the plain version of what it will shorten."
 
-  # 21
+  # 20
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "position-or-name", "running-result"]
@@ -854,7 +843,7 @@ steps:
       note: "Return for the closing step. Not broken down, like the step."
     note: "The closing sentence of the lesson, as in the map. Deliberate friction (rule C9). The narration echoes SQL-4's join, which the learner has just done: the price list is the other table, and the dish name is the column that matches. Only echoed, never relied on."
 
-  # 22
+  # 21
   - kind: "recap"
     lang: "python"
     text: |-
@@ -865,7 +854,7 @@ steps:
       Don't go over any of this before next time. One more question, cold, and then we stop.
     note: "States the limit again (rule F2) and tells the learner not to revise (rule A3)."
 
-  # 23
+  # 22
   - kind: "cold-check"
     lang: "python"
     requires: ["name-a-value", "show", "dict", "text-in-list", "text-quotes", "for-each", "block", "get-by-name", "running-result"]
