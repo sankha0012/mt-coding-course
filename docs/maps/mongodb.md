@@ -267,7 +267,7 @@ The owner's rule (25 Nov 2026): a learner must be able to finish SQL, Python and
 
 ## The cold sitting for this strand
 
-Cold sitting C (`content/cold/lesson-03.yaml`) closes the extra on the real Nobel Prize data, as the SQL cold sittings use Olist (decision C17). It is optional like the rest of the strand. It is written after the Nobel data has been fetched and its fields confirmed, and it has its own short map. It is not part of this map.
+Cold sitting C closes the extra on the real Nobel Prize data, as the SQL cold sittings use Olist (decision C17). It is optional like the rest of the strand. It was written on 25 Nov 2026, after the Nobel data was fetched and its fields confirmed (see "Cold sitting C, as written" below).
 
 ## Checks done on this map
 
@@ -297,4 +297,21 @@ All six lessons are in `content/mongo/` and listed under `extras` in `content/co
 - **MG-6** follows the correction above: `update-one` is judged by the report `[true, 1, 1, 0]`, with no follow-up `find`. The classmate asks for each customer's biggest order, not the latest, so that the closing sentence is not a one-slot edit of it. Extra steps recombine `first-in-pile` with the month, `$topN`, a conditional count by rain, and a lookup with a late count by cuisine.
 
 Found while writing, and fixed in the runtime: an update without a `$` operator raised an uncaught `ValueError` and now gives the driver's own words as an error. An unsorted `$group` has no fixed order, so a wrong answer that depends on it can pass by luck: such answers were replaced by a sort the wrong way round.
+
+## Cold sitting C, as written, 25 Nov 2026
+
+`content/mongo/lesson-07.yaml`, lesson id `cold-c`. It lives in the `mongo` strand and not in `cold`, so that it opens after MG-6 and never waits for the core course (a lesson in the `cold` strand would wait for cold sitting B). It is the last of the extras. The data is the Nobel laureates in `data/real/nobel/` (CC0, committed; see `data/README.md`): 1,028 documents, with a list of prizes in each laureate and a list of affiliations in each prize.
+
+An opening give runs a `findOne` so that the learner meets a document with lists in lists, then six unscored blank-page prompts, no ladder, as rule F1 says. Every model answer was run on the data:
+
+| # | Prompt, in short | Thoughts it needs | Result |
+|---|---|---|---|
+| 1 | women with a Physics prize: `_id` and name | question, two names, choose fields, dotted name through a list | 5 (Marie Curie to Anne L'Huillier) |
+| 2 | no `gender` and a Peace prize: how many | count, absent field, dotted name through a list | 28, the organisations |
+| 3 | prizes per category, the biggest first | unwind, pile, count, sort | six categories, 235 down to 101 |
+| 4 | one prize in Chemistry with a year above 2015: `_id` and name | `$elemMatch`, operator document, choose fields | 30 laureates |
+| 5 | the 4 countries most often among all affiliations | unwind twice, pile, sort, limit | USA 453, United Kingdom 100, Germany 89, France 46 |
+| 6 | persons: birth countries with more than 20, the biggest first | match, pile, match after pile, sort | seven countries, USA 299 down to Canada 23 |
+
+There is no `$lookup` prompt, because the data is one collection. Prompt 5 cuts at 4 because the fifth and sixth countries tie at 25. Prompts 3, 5 and 6 are judged in order, and have no tie.
 

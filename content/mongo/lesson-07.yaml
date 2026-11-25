@@ -1,0 +1,109 @@
+lesson: cold-c
+title: "Cold sitting C: documents you have never seen"
+strand: mongo
+stage: 2
+steps:
+  # 1
+  - kind: "give"
+    lang: "mongo"
+    data: "real/nobel"
+    text: |-
+      This sitting is on real data you have never seen: the Nobel Prize laureates, from 1901 to 2026, as the Nobel Prize organisation publishes them. There is one collection, `laureates`, with a document for every person or organisation that has received a prize.
+
+      The first thing anyone does with a collection they have not met is look at one document. Run this:
+
+      ```mongo
+      db.laureates.findOne({_id: 745})
+      ```
+
+      The panel at the bottom of the page, "Try your own code", and its Data tab are there for looking at the rest, and they only ever read. Use them whenever you like. Nothing here is timed or scored. It only shows us where to go back.
+    shows:
+      - "db.laureates.findOne({_id: 745})"
+    after_run: "A name, a kind, a gender, a birth with a place inside it, and a list of prizes. Each prize has its own year, category and a list of affiliations. An organisation, such as the Red Cross, has no gender and no birth, and a prize may have no affiliations at all."
+    note: "Cold sitting C, the closing sitting of the optional MongoDB extra. Real data never seen by the learner (decision C17 applies to it as to Olist). The Nobel Prize API data is CC0, so it is committed in data/real/nobel/. Its opening step runs a findOne, so the learner meets a document with lists in lists first."
+
+  # 2
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "real/nobel"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "id-comes-unless-off", "dotted-through-list"]
+    text: "In the laureates collection, show the `_id` and `name` of each laureate whose `gender` is \"female\" and who has a prize whose `category` is \"Physics\"."
+    model: "db.laureates.find({gender: \"female\", \"prizes.category\": \"Physics\"}, {name: 1})"
+    rows: 5
+    note: "A question with two names, one of them reaching through a list with a dotted name, and a choice of fields. Five women, from Marie Curie to Anne L'Huillier."
+
+  # 3
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "real/nobel"
+    requires: ["count-documents", "question-is-a-document", "two-names-both-hold", "absent-field", "dotted-through-list"]
+    text: "Count the laureates in the laureates collection that have no `gender` field and have a prize whose `category` is \"Peace\"."
+    model: "db.laureates.countDocuments({gender: {$exists: false}, \"prizes.category\": \"Peace\"})"
+    rows: 1
+    result: [[28]]
+    note: "An absent field and a dotted name through a list. The 28 are the organisations, and all of them won the Peace prize."
+
+  # 4
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "real/nobel"
+    requires: ["pipeline-of-stages", "unwind-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "list-inside-document"]
+    ordered: true
+    text: "Each laureate holds a list in `prizes`, one item for each prize received. Show each prize `category` with `n`, the number of those items that have that category, the biggest `n` first."
+    model: |-
+      db.laureates.aggregate([
+        {$unwind: "$prizes"},
+        {$group: {_id: "$prizes.category", n: {$sum: 1}}},
+        {$sort: {n: -1}}
+      ])
+    rows: 6
+    result: [["Physiology or Medicine", 235], ["Physics", 231], ["Chemistry", 202], ["Peace", 144], ["Literature", 123], ["Economic Sciences", 101]]
+    note: "A list comes out as one document each, then piles, a count and a sort. No tie in the counts."
+
+  # 5
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "real/nobel"
+    requires: ["question-is-a-document", "choose-fields", "elem-match", "operator-documents", "list-inside-document"]
+    text: "Show the `_id` and `name` of each laureate who has one prize whose `category` is \"Chemistry\" and whose `year` is above 2015."
+    model: "db.laureates.find({prizes: {$elemMatch: {category: \"Chemistry\", year: {$gt: 2015}}}}, {name: 1})"
+    rows: 30
+    note: "Two questions about one prize, which is the case for $elemMatch. Two dotted names would let two different prizes answer."
+
+  # 6
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "real/nobel"
+    requires: ["pipeline-of-stages", "unwind-stage", "group-after-unwind", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "dotted-name"]
+    ordered: true
+    text: "Each prize in `prizes` may hold a list in `affiliations`, one item for each institution the laureate belonged to when the prize was awarded. Show the 4 countries that appear most often among all those affiliations, each with `n`, the number of times it appears, the biggest `n` first."
+    model: |-
+      db.laureates.aggregate([
+        {$unwind: "$prizes"},
+        {$unwind: "$prizes.affiliations"},
+        {$group: {_id: "$prizes.affiliations.country", n: {$sum: 1}}},
+        {$sort: {n: -1}},
+        {$limit: 4}
+      ])
+    rows: 4
+    result: [["USA", 453], ["United Kingdom", 100], ["Germany", 89], ["France", 46]]
+    note: "A list inside a list, unwound twice. The 270 prizes with no affiliations drop out at the second unwind. The fifth and sixth countries tie at 25, so the cut is at 4."
+
+  # 7
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "real/nobel"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "match-after-group", "sort-and-limit-stages", "operator-documents", "dotted-name"]
+    ordered: true
+    text: "Among the laureates whose `kind` is \"person\", show each birth country, which is `born.country`, with `n`, the number of laureates born there, but only the countries with more than 20, the biggest `n` first."
+    model: |-
+      db.laureates.aggregate([
+        {$match: {kind: "person"}},
+        {$group: {_id: "$born.country", n: {$sum: 1}}},
+        {$match: {n: {$gt: 20}}},
+        {$sort: {n: -1}}
+      ])
+    rows: 7
+    result: [["USA", 299], ["United Kingdom", 94], ["Germany", 82], ["France", 61], ["Japan", 31], ["Sweden", 30], ["Canada", 23]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Keep rows, make piles, keep piles, sort: the whole pipeline in thinking order, on a collection never seen. No tie in the counts."

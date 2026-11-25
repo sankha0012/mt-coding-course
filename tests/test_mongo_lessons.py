@@ -50,6 +50,7 @@ def test_a_learner_who_types_every_model_answer_finishes_the_lesson_and_is_never
 def test_a_learner_who_misses_every_step_once_is_laddered_and_still_finishes_with_every_return_accepted(path):
     steps = yaml.safe_load(path.read_text(encoding="utf-8"))["steps"]
     outcomes = play(steps, miss_first=True)
-    assert outcomes.count("miss") >= 5 and "correct" in outcomes
+    if any(s["kind"] in ("ask", "classmate") for s in steps):  # a cold sitting has no ladder, so no misses
+        assert outcomes.count("miss") >= 5 and "correct" in outcomes
     # after a miss, the model answer is the right way to answer, and so is the return that comes back later
     assert set(outcomes) <= {"correct", "miss", "shown"}

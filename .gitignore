@@ -4,5 +4,6 @@ __pycache__/
 .pytest_cache/
 progress/
 .claude/settings.local.json
-data/real/
+data/real/*
+!data/real/nobel/
 .env

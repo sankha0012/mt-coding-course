@@ -56,6 +56,16 @@ The checker and the player load every CSV in this folder, so both tables are vis
 
 The dishes and their prices are made up, like the rest of the data. Dates are written as extended JSON (`{"$date": "2026-08-01T00:00:00Z"}`), which `bson.json_util` and `mongoimport` read. Loaded into a throwaway `mongod`, the counts match the tables (4,116 orders without a coupon, 1,089 with rain), and the items add up to the same total as the subtotals (360,885.35).
 
+## Nobel Prize laureates, committed
+
+`data/real/nobel/laureates.jsonl` holds the **Nobel Prize laureates** for cold sitting C of the MongoDB extra (decisions C17 and C28): 1,028 documents, one to a line, 509 KB. It is committed, unlike Olist, because its licence allows it.
+
+- Source: the Nobel Prize API v2.1, `https://api.nobelprize.org/2.1/laureates`, by Nobel Prize Outreach, fetched on 25 Nov 2026 (two pages, 1,000 and 28 laureates).
+- Licence: **CC0**, by the API's terms of use (`https://www.nobelprize.org/about/terms-of-use-for-api-nobelprize-org-and-data-nobelprize-org/`).
+- `tools/fetch_nobel.py` fetches it again and keeps a small, stable shape: the API's own fields, its three languages and its links are dropped.
+- Shape: `_id` (the laureate id), `name`, `kind` ("person" 1,000 or "organisation" 28), `gender` (absent for organisations), `born: {year, date, city, country}` (absent for organisations; `date` is absent where only the year is known, 23 times), and `prizes`, a list of `{year, category, shared_by, amount, status, motivation, affiliations}`. `shared_by` is the denominator of the prize's portion (1, 2, 3 or 4). `affiliations`, a list of `{name, city, country}`, is absent on the 270 prizes that have none. Seven laureates have more than one prize.
+- Six categories: Physiology or Medicine (235 prizes), Physics (231), Chemistry (202), Peace (144), Literature (123), Economic Sciences (101). Years run from 1901 to 2026. Three prizes were declined or restricted.
+
 ## Real data, kept out of git
 
 `data/real/olist/` holds the **Brazilian E-Commerce Public Dataset by Olist**: about 100,000 real orders from 2016 to 2018, in nine CSV files (126 MB). The two cold sittings use it (decision C17). The lessons do not.

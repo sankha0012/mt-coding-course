@@ -74,3 +74,5 @@ def test_the_real_course_opens_as_the_owner_asked():
     assert pre["pd-05"] >= {"pd-04"} and "ml-01" not in pre["pd-05"]
     assert "py-08" in pre["ml-03"] and "py-09" not in pre["ml-03"]
     assert pre["cold-a"] >= sql_foundation | py_foundation | {"pd-04"}
+    assert pre["cold-c"] == {"mg-06"}                       # the Mongo extra closes on itself and never waits for the core
+    assert pre["mg-01"] == sql_foundation and pre["mg-04"] == sql_foundation | {"mg-03"}  # no SQL interview layer, no Python
