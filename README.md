@@ -16,6 +16,10 @@ The Ask tab beside the code editor sends a question to Gemini or Groq, as you ch
 
 The pane on the right has a Data tab. It shows the tables of the step you are on, with their columns and the first 10 rows, so you need not scroll up to find a column name.
 
+## The course panel
+
+The Course button at the top left opens a map of the whole course. Finished lessons can be sat again, later ones are locked, and "Start over" begins the current lesson from the beginning. Your earlier attempts stay in the progress file.
+
 ## Read in this order
 
 | File | What it gives you |

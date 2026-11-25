@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from checker.lesson import load_content, ui_path
+from checker.lesson import lesson_titles, load_content, ui_path
 
 from . import ai, llm, tables
 from .engine import Engine
@@ -36,6 +36,7 @@ class Player:
         self.lessons = [(n, s) for n, s in lessons if all(self.runner.available(x.get("data", "")) for x in s)]
         self.skipped = [n for n, _ in lessons if n not in {m for m, _ in self.lessons}]
         self.names = [name for name, _ in self.lessons]
+        self.outline = {o["lesson"]: o for o in lesson_titles(content)}
         self.engines = {name: Engine(steps, self.runner, ui, rng) for name, steps in self.lessons}
         self.store = Store(progress_dir)
         self.lock = threading.Lock()
@@ -93,6 +94,36 @@ class Player:
         if key not in self._tables:  # the lock is free while a big folder is read
             self._tables[key] = tables.sample(self.runner.path(key[0]), ext=key[1])
         return {"data": key[0], "tables": self._tables[key]}
+
+    def _states(self, current):
+        """Where each lesson stands: the one on screen, finished ones, the next one to open, and the rest locked."""
+        done = self.store.finished_lessons()
+        frontier = next((n for n in self.names if n not in done), None)
+        return {n: "current" if n == current else "done" if n in done else "next" if n == frontier else "locked"
+                for n in self.names}, done
+
+    def course(self):
+        """The whole course in played order, for the Course panel. Read only, not logged."""
+        with self.lock:
+            _, current, _ = self._current()
+            states, done = self._states(current)
+        passes, out = 0, []
+        for n in self.names:
+            o = self.outline.get(n, {})
+            out.append({"lesson": n, "title": o.get("title", n), "strand": o.get("strand", ""),
+                        "state": states[n], "finished": n in done, "pass": passes})
+            if o.get("strand") == "cold":
+                passes += 1  # a cold sitting closes a pass
+        labels = self.ui.get("course_passes", [])
+        return {"lessons": out, "passes": [labels[i] if i < len(labels) else "" for i in range(passes + 1)]}
+
+    def start_lesson(self, name):
+        """A fresh sitting of the current lesson, a finished one, or the next. Runs are only ever added."""
+        with self.lock:
+            _, current, _ = self._current()
+            if self._states(current)[0][name] == "locked":
+                raise Conflict("that lesson is not open yet")
+            return self._view(*self._start(name))
 
     def _met(self, name, st):
         """Ids of the thoughts introduced up to the step now playing, in course order."""
@@ -155,6 +186,10 @@ class Ask(BaseModel):
     provider: str | None = None
 
 
+class StartLesson(BaseModel):
+    lesson: str
+
+
 class NewRun(BaseModel):
     next: bool = False
 
@@ -198,6 +233,16 @@ def make_app(content_dir, data_dir, progress_dir, rng=None, chat=None, providers
     @app.get("/api/data")
     def get_data():
         return player.data()
+
+    @app.get("/api/course")
+    def get_course():
+        return player.course()
+
+    @app.post("/api/lesson/start")
+    def post_lesson_start(body: StartLesson):
+        if body.lesson not in player.names:
+            raise HTTPException(400, "unknown lesson")
+        return player.start_lesson(body.lesson)
 
     @app.get("/api/providers")
     def get_providers():

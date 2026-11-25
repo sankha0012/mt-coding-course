@@ -61,3 +61,19 @@ def ui_path(content_dir):
     """The teacher's course-wide lines: beside course.yaml, or one folder above a single strand."""
     d = Path(content_dir)
     return d / "ui.yaml" if is_course(d) else d.parent / "ui.yaml"
+
+
+def lesson_titles(content_dir):
+    """Name, title and strand of every lesson, in the order they are played."""
+    d = Path(content_dir)
+    if is_course(d):
+        manifest = yaml.safe_load((d / "course.yaml").read_text(encoding="utf-8"))["course"]
+        paths = [d / f"{entry}.yaml" for entry in manifest]
+    else:
+        paths = sorted(d.glob("lesson-*.yaml"))
+    out = []
+    for path in paths:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        out.append({"lesson": data["lesson"], "title": data.get("title", data["lesson"]),
+                    "strand": data.get("strand", path.parent.name)})
+    return out

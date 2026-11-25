@@ -3,7 +3,7 @@ const inputEl = document.getElementById('input');
 let shown = 0;
 
 async function api(path, body) {
-  const options = ['/api/run', '/api/providers', '/api/data'].includes(path) ? {} : {
+  const options = ['/api/run', '/api/providers', '/api/data', '/api/course'].includes(path) ? {} : {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) };
   const r = await fetch(path, options);
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -276,7 +276,7 @@ function renderInput(pending) {
   show('code');
 }
 
-let onView = () => {};
+const viewHooks = [];  // things that follow the lesson on screen: the Data tab, the Course panel
 
 function render(view) {
   if (view.items.length < shown) { shown = 0; threads.length = 0; }  // a new sitting starts clean
@@ -294,7 +294,7 @@ function render(view) {
   lastTeacher = t ? { text: t.text, lang: t.lang || 'sql' } : null;
   renderInput(view.pending);
   inputEl.scrollIntoView({ block: 'end', behavior: 'smooth' });
-  onView();
+  viewHooks.forEach(f => f());
 }
 
 async function send(path, body) {
@@ -414,7 +414,7 @@ function initPlay() {
     Object.entries(viewButtons).forEach(([n, b]) => b.classList.toggle('on', n === v));
     if (v === 'try') { ed.sync(); ed.box.focus(); } else loadData();
   };
-  onView = loadData;
+  viewHooks.push(loadData);
 
   const MIN = 280;
   const setWidth = px => {
@@ -454,5 +454,74 @@ function initPlay() {
   setOpen(keep.get('play-open') === '1');
 }
 
+// ---- the course panel: the whole course as a map. Finished lessons can be sat again, future ones are locked.
+
+const STRANDS = { sql: 'SQL', py: 'Python', pd: 'pandas', ml: 'ML', cold: 'Cold' };
+
+function initCourse() {
+  const split = document.getElementById('split');
+  const panel = el('aside'); panel.id = 'course';
+  const opener = button('Course', () => setOpen(true), 'tab'); opener.id = 'course-open';
+  const head = el('div', 'play-head');
+  head.append(el('span', null, 'The course'), button('\u00d7', () => setOpen(false), 'close'));
+  head.lastChild.setAttribute('aria-label', 'Close the course panel');
+  const list = el('div', 'course-list');
+  const hint = el('p', 'hint');
+  panel.append(head, list, hint);
+  let confirming = null;  // the lesson whose "from the beginning?" question is showing
+
+  const start = async id => {
+    try {
+      shown = 0; threads.length = 0;  // a new sitting starts clean
+      confirming = null;
+      render(await api('/api/lesson/start', { lesson: id }));
+    } catch (e) { hint.textContent = 'That did not go through.'; }
+  };
+
+  const row = l => {
+    const li = el('div', 'course-row ' + l.state + (l.finished ? ' finished' : ''));
+    const mark = l.state === 'locked' ? '\ud83d\udd12' : l.state === 'current' ? '\u25b8' : l.finished ? '\u2713' : '';
+    li.append(el('span', 'mark', mark), el('span', 'strand', STRANDS[l.strand] || l.strand), el('span', 'ltitle', l.title));
+    if (l.state === 'locked') { li.setAttribute('aria-disabled', 'true'); return li; }
+    const act = el('span', 'act');
+    if (l.state === 'next') act.append(button('Start', () => start(l.lesson), 'link'));
+    else if (confirming === l.lesson) {
+      act.append(el('span', null, 'From the beginning? '), button('Yes', () => start(l.lesson), 'link'),
+                 button('Cancel', () => { confirming = null; draw(); }, 'link'));
+    } else act.append(button(l.state === 'current' ? 'Start over' : 'Sit again', () => { confirming = l.lesson; draw(); }, 'link'));
+    li.appendChild(act);
+    return li;
+  };
+
+  let data = null;
+  const draw = () => {
+    if (!data) return;
+    const nodes = []; let pass = -1;
+    data.lessons.forEach(l => {
+      if (l.pass !== pass) {
+        pass = l.pass;
+        if (data.passes.length > 1 && data.passes[pass]) nodes.push(el('h3', null, data.passes[pass]));
+      }
+      nodes.push(row(l));
+    });
+    list.replaceChildren(...nodes);
+  };
+
+  const load = async () => {
+    if (!panel.isConnected) return;
+    try { data = await api('/api/course'); hint.textContent = ''; draw(); }
+    catch (e) { hint.textContent = 'The course did not load.'; }
+  };
+
+  const setOpen = on => {
+    keep.set('course-open', on ? '1' : '0');
+    if (on) { split.prepend(panel); opener.remove(); load(); }
+    else { panel.remove(); document.body.appendChild(opener); }
+  };
+  viewHooks.push(load);
+  setOpen(keep.get('course-open') === '1');
+}
+
 initPlay();
+initCourse();
 Promise.all([api('/api/providers'), api('/api/run')]).then(([p, view]) => { providers = p.providers; render(view); });

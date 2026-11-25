@@ -5,6 +5,9 @@ again:
 differs:
   - One piece is different from the line above. You wrote `{yours}`, and the line has `{usual}`. Compare the two letter by letter.
   - Look at one piece of it again. Yours has `{yours}` where the line above has `{usual}`.
+course_passes:
+  - The foundation
+  - The interview layer
 walk_intro:
   - Let's take it in small pieces.
   - Let's go through it one piece at a time.

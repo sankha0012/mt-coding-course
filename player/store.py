@@ -47,6 +47,10 @@ class Store:
             self._add_items(cur.lastrowid, items)
         return cur.lastrowid
 
+    def finished_lessons(self):
+        rows = self.conn.execute("SELECT DISTINCT lesson FROM runs WHERE finished_at IS NOT NULL")
+        return {r[0] for r in rows}
+
     def apply(self, run_id, state, items, events, finished=False):
         with self.conn:
             self._add_items(run_id, items)
