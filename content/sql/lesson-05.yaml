@@ -11,16 +11,13 @@ thoughts:
 steps:
   # 1
   - kind: "cold-check"
-    lang: "python"
-    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes"]
-    text: "A moment in Python first, from the pandas sitting. Start from nothing: read orders.csv, and print the average delivery fee of the cancelled orders."
-    model: |
-      import pandas as pd
-      orders = pd.read_csv('orders.csv')
-      print(orders[orders['status'] == 'cancelled']['delivery_fee'].mean())
-    output: "5.368245614035088"
-    after_run: "That was the same question as one in SQL, asked the other way round. Back to SQL now. On we go."
-    note: "Opening cold check from PD-1 (requirement R4): read, keep by a yes-no column, pick a column, summarise, on a combination never practised (the mean of the cancelled orders' fee, 5.37, which SQL-1 gave). Judged by its printed output, with the number compared to six places. Never scored."
+    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "summary-per-pile", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
+    text: "Show each city with the number of orders placed at the restaurants in it. Use o and r for the tables."
+    model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
+    rows: 4
+    result: [["Belo Horizonte", 1494], ["Curitiba", 639], ["Rio de Janeiro", 1375], ["São Paulo", 2492]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from SQL-4: a join, short names, and piles by a looked-up column, on a question not asked in SQL-4 (orders per city, counting rows rather than averaging). Stays inside SQL, with no cross-module opener. Never scored."
 
   # 2
   - kind: "give"

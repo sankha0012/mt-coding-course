@@ -105,7 +105,7 @@ These follow the Python and pandas foundations, so they may import Python though
 
 ### SQL-5. A result can be queried again
 
-Assumes: SQL-4, and `name-a-value` from PY-1. Opens with: a cold check from the pandas foundation.
+Assumes: SQL-4, and `name-a-value` from PY-1. Opens with: a cold check from SQL-4.
 
 | # | Identifier | The thought | Grade |
 |---|---|---|---|
