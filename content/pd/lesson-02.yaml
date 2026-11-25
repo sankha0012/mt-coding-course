@@ -14,15 +14,16 @@ thoughts:
 steps:
   # 1
   - kind: "cold-check"
-    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "sort", "sort-direction", "sort-by-summary"]
-    ordered: true
-    any_column_order: true
-    text: "From restaurants, show each city with how many restaurants it has, the biggest number first."
-    model: "SELECT city, COUNT(*) FROM restaurants GROUP BY city ORDER BY COUNT(*) DESC"
-    rows: 4
-    result: [["São Paulo", 25], ["Belo Horizonte", 15], ["Rio de Janeiro", 14], ["Curitiba", 6]]
-    after_run: "That one is SQL, from a few lessons back. Hold on to what it did: piles, a count for each, the biggest first. Today we write it in Python."
-    note: "Opening cold check, from SQL-1 and SQL-2: piles, the pile's name, a count, a sort by the count. It is deliberately SQL. Step 10 writes the same sentence in one word of pandas. No two cities share a count, so the order is stable. Never scored."
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes"]
+    text: "Show the biggest subtotal among the delivered orders. Start from nothing."
+    model: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      print(orders[orders['status'] == 'delivered']['subtotal'].max())
+    output: "281.15"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PD-1: keep the rows, take the column, say the summary, with max on a kept set, a combination PD-1 did not practise. Never scored."
 
   # 2
   - kind: "give"

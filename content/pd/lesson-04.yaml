@@ -11,14 +11,17 @@ thoughts:
 steps:
   # 1
   - kind: "cold-check"
-    requires: ["count-rows", "from-table", "piles", "one-row-per-pile", "pile-name", "commas", "join", "join-on", "whose-column", "short-names", "pile-by-looked-up"]
-    any_column_order: true
-    text: "The orders table has no city. How many orders did the restaurants of each city get? Show each city with its count."
-    model: "SELECT r.city, COUNT(*) FROM orders o JOIN restaurants r ON o.restaurant_id = r.restaurant_id GROUP BY r.city"
-    rows: 4
-    result: [["Belo Horizonte", 1494], ["Curitiba", 639], ["Rio de Janeiro", 1375], ["São Paulo", 2492]]
-    after_run: "That one is SQL, from a while back: stick the restaurant on each order, then make piles by its city. Today the same two movements, in Python."
-    note: "Opening cold check from SQL-4, on a combination never practised (SQL-4 asked for an average, not a count). It is SQL on purpose: PD-4 writes the same sentence in step 4. Never scored."
+    lang: "python"
+    requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "column-sums"]
+    text: "Add a column called total to the orders: the subtotal plus the delivery_fee. Then show the biggest total among the cancelled orders. Start from nothing."
+    model: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      orders['total'] = orders['subtotal'] + orders['delivery_fee']
+      print(orders[orders['status'] == 'cancelled']['total'].max())
+    output: "174.24"
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from PD-3: a new column made from two others, then the rows kept and a summary, on a combination PD-3 did not practise. Never scored."
 
   # 2
   - kind: "give"
@@ -125,7 +128,7 @@ steps:
     lang: "python"
     new: ["pile-by-merged"]
     text: |-
-      Once the city is on the order's row, it is a column like any other, and a column can make the piles. This is the sentence you wrote in SQL at the start of the sitting:
+      Once the city is on the order's row, it is a column like any other, and a column can make the piles. This is the question SQL answered with a JOIN, how many orders the restaurants of each city got, now in Python:
 
       ```python
       import pandas as pd
@@ -143,8 +146,8 @@ steps:
         restaurants = pd.read_csv('restaurants.csv')
         joined = orders.merge(restaurants, on='restaurant_id')
         print(joined.groupby('city').size())
-    after_run: "1,494, 639, 1,375 and 2,492: the same four numbers SQL gave, one for each city. The orders never had a city. The merge put one on each row, and from then on it was an ordinary column, so it could make piles. The sentence reads in the order it happens: stick on, pile, count."
-    note: "The echo of step 1, deliberate: the learner sees the same four numbers with a different spelling. It is a discovery, because a merged column behaves exactly as any other, and nothing about piles had to be learned again."
+    after_run: "1,494, 639, 1,375 and 2,492: one for each city. The orders never had a city. The merge put one on each row, and from then on it was an ordinary column, so it could make piles. The sentence reads in the order it happens: stick on, pile, count."
+    note: "The echo of the JOIN question from SQL-4, deliberate: the same four numbers as SQL gives, with a different spelling. (The SQL opening cold check that used to ask it was removed on 25 Nov 2026.) It is a discovery, because a merged column behaves exactly as any other, and nothing about piles had to be learned again."
 
   # 5
   - kind: "ask"
