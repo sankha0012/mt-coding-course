@@ -12,7 +12,7 @@ The lessons use short lists typed into the code, with values taken from `data/`,
 
 ### PY-1. Name a thing, then do something with it
 
-Assumes: SQL-1 to SQL-4. Opens with: a cold check from SQL-4.
+Assumes: SQL-1 to SQL-4. Opens with: no cold check. The owner removed it on 25 Nov 2026 so that a new language does not open with an SQL question.
 
 | # | Identifier | The thought | Grade |
 |---|---|---|---|

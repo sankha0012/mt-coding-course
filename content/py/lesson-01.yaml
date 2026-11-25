@@ -17,17 +17,6 @@ thoughts:
   running-result: "A result starts before the loop, is updated inside it, and is ready after it."
 steps:
   # 1
-  - kind: "cold-check"
-    requires: ["join", "join-on", "whose-column", "short-names", "pile-by-looked-up", "summary-column", "from-table", "piles", "pile-name", "commas"]
-    any_column_order: true
-    text: "Show each vehicle with the average actual_minutes of the orders its couriers carried."
-    model: "SELECT c.vehicle, AVG(o.actual_minutes) FROM orders o JOIN couriers c ON o.courier_id = c.courier_id GROUP BY c.vehicle"
-    rows: 3
-    result: [["bike", 39.4], ["carro", 39.81], ["moto", 39.26]]
-    after_run: "That is where we stopped last time. On we go."
-    note: "Opening cold check from SQL-4: a join, whose column is whose, short names, and piling by a looked-up column, on a pairing (orders with couriers) that SQL-4's closing sentence did not use. Never scored. The python strand starts next, so a miss tells the script that the SQL habits it is about to import were shaky."
-
-  # 2
   - kind: "give"
     lang: "python"
     new: ["name-a-value"]
@@ -45,9 +34,9 @@ steps:
         fee = 8.99
         print(fee)
     after_run: "8.99. The first line named the number: from now on, fee means 8.99. The name is yours to invent, so choose one that says what it is. That equals sign asks nothing. It only names. The second line is print, and for now it just puts on the screen what is inside its brackets."
-    note: "The overarching idea of the strand ('give a thing a name, then do something with it') in the first sentence. The equals sign is introduced as naming from its very first appearance, so that step 17 can contrast it with asking. print is used before it is explained (rule B3), as COUNT(*) was in SQL-1, and its thought is taken in the next step. print has to arrive this early because a program prints only what it is told to print."
+    note: "The overarching idea of the strand ('give a thing a name, then do something with it') in the first sentence. The equals sign is introduced as naming from its very first appearance, so that step 16 can contrast it with asking. print is used before it is explained (rule B3), as COUNT(*) was in SQL-1, and its thought is taken in the next step. print has to arrive this early because a program prints only what it is told to print."
 
-  # 3
+  # 2
   - kind: "ask"
     lang: "python"
     new: ["show"]
@@ -81,10 +70,10 @@ steps:
       narration:
         - "35.2. The name, the equals sign and the number, and then print to show it."
         - "A number named, then shown."
-      note: "Return for step 3. Early step: only the name and the number can change."
-    note: "First typed program. print is named as 'show me' here, one step after it was used. Only the name and the number change from step 2, on purpose: it fixes which side the name goes on. This is the one place where a one-slot change is wanted."
+      note: "Return for step 2. Early step: only the name and the number can change."
+    note: "First typed program. print is named as 'show me' here, one step after it was used. Only the name and the number change from step 1, on purpose: it fixes which side the name goes on. This is the one place where a one-slot change is wanted."
 
-  # 4
+  # 3
   - kind: "give"
     lang: "python"
     new: ["list"]
@@ -104,7 +93,7 @@ steps:
     after_run: "[8.99, 6.99, 0]. One name, three values, kept in the order you wrote them. The whole list is a thing in its own right: it has a name and you can show it."
     note: "Commas arrive as an import from SQL and are named as one. The values are real delivery fees from the orders table."
 
-  # 5
+  # 4
   - kind: "ask"
     lang: "python"
     requires: ["name-a-value", "show", "list", "commas"]
@@ -141,10 +130,10 @@ steps:
       narration:
         - "Four numbers under one name, in the order you gave them."
         - "[35.2, 24.8, 31.7, 28.2]. Square brackets and commas, then print."
-      note: "Return for step 5. Other name, other numbers."
+      note: "Return for step 4. Other name, other numbers."
     note: "The list is asked for once the learner has seen one. The next three steps all use a list, so this one has to be comfortable."
 
-  # 6
+  # 5
   - kind: "ask"
     lang: "python"
     new: ["how-many"]
@@ -184,10 +173,10 @@ steps:
       narration:
         - "5. Many values in, one number out: how many there are."
         - "The list inside len, and print to show it: 5."
-      note: "Return for step 6. Other name, other numbers, and 'how many orders' as the signal."
+      note: "Return for step 5. Other name, other numbers, and 'how many orders' as the signal."
     note: "Imports the shape of AVG(subtotal). 'Short for length' is a real origin, not a hook. The list is retyped each time because each program stands alone. This is also the first step in which print has to wrap another call."
 
-  # 7
+  # 6
   - kind: "ask"
     lang: "python"
     new: ["total"]
@@ -224,10 +213,10 @@ steps:
       narration:
         - "91.7. The list went inside sum, as it went inside len."
         - "Three times added: 91.7 minutes."
-      note: "Return for step 7. Other name, other numbers; 'altogether' is the signal for a total."
+      note: "Return for step 6. Other name, other numbers; 'altogether' is the signal for a total."
     note: "The list changes as well as the word, so the previous answer cannot just be edited. The fees are the first three of the earlier give."
 
-  # 8
+  # 7
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "how-many", "total"]
@@ -269,10 +258,10 @@ steps:
       narration:
         - "184.18 and 3, in the order I asked for them."
         - "The total, then how many. Each got its own print."
-      note: "Return for step 8. Same two thoughts, in the other order, on other numbers."
-    note: "An easy recombination after the climb of steps 7 and 8 (rule C8). It also puts the idea in front of the learner that one list can be asked several questions."
+      note: "Return for step 7. Same two thoughts, in the other order, on other numbers."
+    note: "An easy recombination after the climb of steps 6 and 7 (rule C8). It also puts the idea in front of the learner that one list can be asked several questions."
 
-  # 9
+  # 8
   - kind: "ask"
     lang: "python"
     new: ["build-average"]
@@ -308,10 +297,10 @@ steps:
       narration:
         - "About 30.57. The total of the minutes, divided by how many deliveries."
         - "Sum over len, again: an average built from two parts."
-      note: "Return for step 9. 'Average' is the signal."
+      note: "Return for step 8. 'Average' is the signal."
     note: "The first small surprise: the learner builds something that was never given (draft C5). The second wrong answer is the slip most likely to come from careless thinking."
 
-  # 10
+  # 9
   - kind: "ask"
     lang: "python"
     new: ["text-in-list"]
@@ -351,10 +340,10 @@ steps:
       narration:
         - "Four words under one name, each in quotes."
         - "Words in a list wear quotes, as they did in SQL."
-      note: "Return for step 10. Other name, other words."
+      note: "Return for step 9. Other name, other words."
     note: "Quotes are imported from SQL, and the wrong answer says so. The list is typed from words the learner has seen in the status column."
 
-  # 11
+  # 10
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "text-in-list", "how-many"]
@@ -389,10 +378,10 @@ steps:
       narration:
         - "5. One item per courier, however long each word is."
         - "How many, from a list of words."
-      note: "Return for step 11. Other words, other length."
-    note: "A list of words meets len for the first time, while text-in-list is one step old (rule C1, gap of 1). It also gets the learner to say the difference between a name and a word out loud, which step 17 needs."
+      note: "Return for step 10. Other words, other length."
+    note: "A list of words meets len for the first time, while text-in-list is one step old (rule C1, gap of 1). It also gets the learner to say the difference between a name and a word out loud, which step 16 needs."
 
-  # 12
+  # 11
   - kind: "give"
     lang: "python"
     new: ["for-each"]
@@ -414,7 +403,7 @@ steps:
     after_run: "Three lines, one for each fee. The line with for reads: for each fee in fees. The name fee stands for whichever item the loop is on at that moment, and it changes at every turn. That name is yours to choose, as always. This is FROM, by hand: SQL went through the rows of a table, and you go through the items of a list."
     note: "Marked as essential. The colon and the pushed-in line are used here and explained in the next step (rule B3). The echo of FROM is the strand's first explicit link back to SQL."
 
-  # 13
+  # 12
   - kind: "ask"
     lang: "python"
     new: ["block"]
@@ -466,10 +455,10 @@ steps:
       narration:
         - "Four lines, one for each courier. The colon opened the block and the push put the print inside it."
         - "For each vehicle in vehicles, show it."
-      note: "Return for step 13. Other list, other names."
+      note: "Return for step 12. Other list, other names."
     note: "The colon and the push, as one idea that will be used for if and def as well. The first typed step in which spacing matters, and the slip view does not exist for Python: the player will show the model."
 
-  # 14
+  # 13
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "how-many", "for-each", "block"]
@@ -520,9 +509,9 @@ steps:
         - "The three times, one per line, and then 91.7: the total, shown once, after the loop."
         - "A loop, and then a line back at the left that runs when the loop is finished."
       note: "Return for the relief step before the if."
-    note: "An easy recombination after the climb of steps 12 and 13 (rule C8), and the preparation for running-result: the learner has already put a line after a loop and seen that it runs once."
+    note: "An easy recombination after the climb of steps 11 and 12 (rule C8), and the preparation for running-result: the learner has already put a line after a loop and seen that it runs once."
 
-  # 15
+  # 14
   - kind: "give"
     lang: "python"
     new: ["if-question"]
@@ -546,7 +535,7 @@ steps:
     after_run: "8.99 and 6.99. The zero answered no, so the print did not run for it. Each fee was asked the question, and only the yes ones ran the line pushed in under it. That was WHERE, by hand. The signs are the ones from maths, as they were in SQL."
     note: "The colon and push are used a second time without being re-taught. compare-signs is imported from SQL and named as such."
 
-  # 16
+  # 15
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs"]
@@ -601,10 +590,10 @@ steps:
       narration:
         - "24.8 and 28.2. Each time was asked the question, and only the yes ones were shown."
         - "A loop, a question, a print pushed in twice: the same shape with another sign."
-      note: "Return for step 16. Other list, other sign."
+      note: "Return for step 15. Other list, other sign."
     note: "Prompt in thinking order for the first time in Python. The wrong answer that prints True and False is the learner's first look at a yes or no as a value, which PY-3 uses."
 
-  # 17
+  # 16
   - kind: "classmate"
     lang: "python"
     new: ["equals-asks"]
@@ -673,10 +662,10 @@ steps:
       narration:
         - "Two bikes. Two equals signs asked, and the word wore quotes."
         - "For each vehicle, if it is a bike, show it. WHERE vehicle = 'bike', by hand."
-      note: "Return for step 17. Other list, other word."
+      note: "Return for step 16. Other list, other word."
     note: "The preventative correction from draft C11: Ana makes the slip before the learner can (rule E6), and Python's own message is the real reason. The learner repairs it by typing the program. The confusable pair, one and two equals signs, is met here through a classmate."
 
-  # 18
+  # 17
   - kind: "give"
     lang: "python"
     new: ["running-result"]
@@ -704,7 +693,7 @@ steps:
     after_run: "2. Look at where each line sits. The count is named before the loop. It goes up inside the loop, on each yes. And the print is back at the left edge, because it belongs after the loop, when the count is done. Reading count = count + 1: the new count is the old count plus one."
     note: "The heaviest step of the lesson, so it comes after a classmate and before an aside. The three thoughts in the map, start before, update inside and ready after, are one thought here because they come as one shape. The last line of the give is deliberately back at the left, which the next step's wrong answers use."
 
-  # 19
+  # 18
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "running-result"]
@@ -764,16 +753,16 @@ steps:
       narration:
         - "2. The count started at zero, went up on each yes, and was shown at the end."
         - "A question inside a loop, and a result kept: COUNT with a WHERE."
-      note: "Return for step 19. Other list and other numbers."
+      note: "Return for step 18. Other list and other numbers."
     note: "The first time the learner has to place the print, the start and the update. The wrong answers are the three classic places to put them wrong, each with a real reason."
 
-  # 20
+  # 19
   - kind: "aside"
     lang: "python"
     text: "Something that is only interesting, with nothing in it to keep. Why is the word print used for putting words on a screen? Because early computers often answered on paper: a printer typed the result out, and the word stuck. Python is far newer than that, but the word was already everyone's word for it. And len, which you met earlier, is just the first three letters of length, to save typing."
-    note: "Relief after the climb of steps 18 and 19 (rule C8). A real origin, not a mnemonic. The remark about len repeats a thing the learner already holds."
+    note: "Relief after the climb of steps 17 and 18 (rule C8). A real origin, not a mnemonic. The remark about len repeats a thing the learner already holds."
 
-  # 21
+  # 20
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "running-result"]
@@ -823,10 +812,10 @@ steps:
       narration:
         - "15.98. Started at zero, added the fee on each yes, shown at the end."
         - "The same shape: a running total behind a question."
-      note: "Return for step 21. Other list; the total of the yes ones is 8.99 plus 6.99."
-    note: "The shape of step 19 with the item added instead of one. Not a one-slot repeat: the update line changes as well as the start and the print. This is the same step as 'total per pile' will be in PY-4."
+      note: "Return for step 20. Other list; the total of the yes ones is 8.99 plus 6.99."
+    note: "The shape of step 18 with the item added instead of one. Not a one-slot repeat: the update line changes as well as the start and the print. This is the same step as 'total per pile' will be in PY-4."
 
-  # 22
+  # 21
   - kind: "ask"
     lang: "python"
     requires: ["list", "text-in-list", "show", "for-each", "block", "if-question", "text-quotes", "equals-asks", "running-result"]
@@ -897,7 +886,7 @@ steps:
       note: "Return for the closing step. Not broken down, like the step."
     note: "The closing sentence of the lesson, and the closing of the loop back to the first SQL question the learner ever answered (draft C13). Deliberate friction (rule C9)."
 
-  # 23
+  # 22
   - kind: "recap"
     lang: "python"
     text: |-
@@ -908,7 +897,7 @@ steps:
       Don't go over any of this before next time. One more question, cold, and then we stop.
     note: "States the limit (rule F2) and says, in other words, that the learner is not to revise (rule A3)."
 
-  # 24
+  # 23
   - kind: "cold-check"
     lang: "python"
     requires: ["list", "text-in-list", "show", "how-many", "for-each", "block", "if-question", "text-quotes", "equals-asks", "running-result", "build-average"]
