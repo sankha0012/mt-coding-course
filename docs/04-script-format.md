@@ -62,6 +62,17 @@ A step is SQL unless it says `lang: python`. Python covers plain Python, pandas 
 - Python has no slip view. Its ladder ends in a Python code block.
 - The learner's code runs in a long-lived worker process that imports pandas and scikit-learn once, in a temporary folder whose CSV files are read-only links to private copies. A program that runs for too long is stopped.
 
+## MongoDB steps
+
+A step is a MongoDB step when it says `lang: mongo`, and it names its data folder with `data: mongo` (the course documents in `data/mongo/`). The lessons are in the optional MongoDB extra (decision C28).
+
+- **One sentence per answer**, in the mongosh shell's spelling: `db.<collection>.<method>(...)`, with `.sort()`, `.limit()` and `.skip()` chained after a `find`. No JavaScript is run. The runner reads the sentence, so anything it does not read, such as a variable, gets a calm line.
+- **Answers are judged by the values of the documents.** A computed field may be called anything, and the order of fields inside a document is free. Row order matters only with `ordered: true`.
+- `rows` is the number of documents, and `result` lists the expected values of each document, as for SQL.
+- A step that writes (`updateOne` and the like) says `scratch: true`. It runs on a copy of the data that is made for that sentence and dropped afterwards, so the course data never changes.
+- Text is written in double quotes. A learner may type single quotes.
+- The learner's sentence is run on a real `mongod`, which the program starts privately. Where there is none, the MongoDB lessons are left out and named at start up.
+
 ## Several lessons
 
 A strand folder holds `lesson-01.yaml`, `lesson-02.yaml` and so on, and its own `thoughts.yaml`. `content/course.yaml` lists the lessons as `strand/lesson-01`, in the order they are played, which interleaves the strands. An id may be defined in one strand's `thoughts.yaml` only, and any lesson may require any earlier thought, whichever strand it came from. The checker takes either a course folder or a single strand folder. A lesson opens with a cold check from an earlier lesson by starting with a step of kind `cold-check`. The audit lets it require any thought from any earlier lesson. When a lesson ends, the player offers the next one, or to sit the same lesson again.

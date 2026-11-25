@@ -9,6 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from checker import mongo
 from checker.lesson import lesson_titles, load_content, prerequisites, ui_path
 
 from . import ai, llm, tables
@@ -109,9 +110,11 @@ class Player:
         with self.lock:
             _, name, st = self._current()
             step = self.engines[name].steps[st["playing"]["step"]]
-            key = (step.get("data", ""), Engine._lang(step) == "python")
+            key = (step.get("data", ""), Engine._lang(step))
         if key not in self._tables:  # the lock is free while a big folder is read
-            self._tables[key] = tables.sample(self.runner.path(key[0]), ext=key[1])
+            path = self.runner.path(key[0])
+            self._tables[key] = (tables.documents(path) if key[1] == "mongo"
+                                 else tables.sample(path, ext=key[1] == "python"))
         return {"data": key[0], "tables": self._tables[key]}
 
     def _open_unfinished(self):
@@ -275,6 +278,10 @@ def make_app(content_dir, data_dir, progress_dir, rng=None, chat=None, providers
         if body.lesson not in player.names:
             raise HTTPException(400, "unknown lesson")
         return player.start_lesson(body.lesson)
+
+    @app.get("/api/features")
+    def get_features():
+        return {"mongo": mongo.available()}
 
     @app.get("/api/providers")
     def get_providers():

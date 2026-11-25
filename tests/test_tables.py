@@ -43,3 +43,34 @@ def test_only_csv_files_of_the_folder_itself_count(tmp_path):
 def test_file_names_keep_the_extension_when_asked(tmp_path):
     write(tmp_path, "a.csv", "x\n1\n")
     assert sample(tmp_path, ext=True)[0]["name"] == "a.csv"
+
+
+# ---- MongoDB collections: a .jsonl file is a collection of documents
+
+import json  # noqa: E402
+
+from player.tables import documents  # noqa: E402
+
+
+def write_docs(folder, name, docs):
+    (folder / name).write_text("".join(json.dumps(d) + "\n" for d in docs), encoding="utf-8")
+
+
+def test_a_collection_shows_its_count_and_its_first_three_documents(tmp_path):
+    write_docs(tmp_path, "orders.jsonl", [{"_id": i, "n": {"a": i}} for i in range(10)])
+    [c] = documents(tmp_path)
+    assert c["name"] == "orders" and c["total"] == 10
+    assert c["docs"] == [{"_id": 0, "n": {"a": 0}}, {"_id": 1, "n": {"a": 1}}, {"_id": 2, "n": {"a": 2}}]
+    assert c["columns"] == [] and c["rows"] == []
+
+
+def test_dates_in_a_collection_are_shown_as_text(tmp_path):
+    write_docs(tmp_path, "a.jsonl", [{"_id": 1, "at": {"$date": "2026-08-01T10:30:00Z"}}])
+    assert documents(tmp_path)[0]["docs"] == [{"_id": 1, "at": "2026-08-01T10:30:00Z"}]
+
+
+def test_only_jsonl_files_count_as_collections(tmp_path):
+    write_docs(tmp_path, "b.jsonl", [{"_id": 1}])
+    write_docs(tmp_path, "a.jsonl", [{"_id": 1}])
+    (tmp_path / "x.csv").write_text("x\n1\n", encoding="utf-8")
+    assert [c["name"] for c in documents(tmp_path)] == ["a", "b"]

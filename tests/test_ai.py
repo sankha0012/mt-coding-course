@@ -55,3 +55,19 @@ def test_code_candidates_find_fences_and_inline_spans():
     assert ai.code_candidates(reply)[:2] == ["SELECT 1", "SELECT 2"]
     assert "SELECT 3" in ai.code_candidates(reply)
     assert ai.code_candidates("no code here") == []
+
+
+def test_schema_lines_for_collections_list_every_field_path(tmp_path):
+    import json
+    docs = [{"_id": 1, "status": "x", "delivery": {"rain": True, "bag_size": 1}, "items": [{"name": "a", "qty": 1}]},
+            {"_id": 2, "status": "y", "coupon_code": "C", "items": [{"name": "b", "qty": 2}]}]
+    (tmp_path / "orders.jsonl").write_text("".join(json.dumps(d) + "\n" for d in docs), encoding="utf-8")
+    assert ai.schema_lines(tmp_path) == [
+        "orders (documents): _id, status, delivery.rain, delivery.bag_size, items.name, items.qty, coupon_code"]
+
+
+def test_what_a_mongo_sentence_gave_is_told_to_the_model_in_a_few_documents():
+    items = [{"type": "learner", "sql": "db.x.find()", "lang": "mongo"},
+             {"type": "result", "lang": "mongo", "docs": [{"_id": i} for i in range(8)], "total": 8, "error": None}]
+    text = ai.attempt_text(items)
+    assert "db.x.find()" in text and "Gave 8 documents" in text and '{"_id": 0}' in text and '{"_id": 5}' not in text

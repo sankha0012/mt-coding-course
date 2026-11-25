@@ -63,3 +63,17 @@ def test_a_mongo_error_in_the_try_panel_is_calm(content, tmp_path, data_dir):
     c.get("/api/run")
     item = c.post("/api/play", json={"lang": "mongo", "code": "db.orders.find({a: })"}).json()
     assert item["error"] and item["docs"] == []
+
+
+@needs_mongod
+def test_the_data_tab_shows_documents_on_a_mongo_step(content, tmp_path, data_dir):
+    c = TestClient(make_app(content, data_dir, tmp_path / "progress"))
+    c.get("/api/run")
+    c.post("/api/next")
+    c.post("/api/run/new", json={"next": True})
+    body = c.get("/api/data").json()
+    assert body["data"] == "mongo"
+    names = {t["name"]: t for t in body["tables"]}
+    assert set(names) == {"coupons", "couriers", "orders", "restaurants"}
+    assert names["orders"]["total"] == 6000 and len(names["orders"]["docs"]) == 3
+    assert isinstance(names["orders"]["docs"][0]["created_at"], str)

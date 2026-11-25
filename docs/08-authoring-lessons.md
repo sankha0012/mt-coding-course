@@ -37,6 +37,16 @@ Add `lang: python` to every step, including `give` steps. Python is judged by wh
 - Output is compared by its words and numbers, whatever the spacing, with numbers to six places. Print rounded numbers when the lesson is about a result, so the learner is not judged on the 12th digit.
 - Multi-line `model`, `check` and `shows` strings are fine. They are written as readable blocks.
 
+## MongoDB steps
+
+Add `lang: mongo` and `data: mongo` to every step, including `give` steps. The map for the strand is `docs/maps/mongodb.md`.
+
+- One sentence is one `db.<collection>.<method>(...)`. Write text in double quotes. A pipeline may run over several lines.
+- Every prompt names the collection and the fields it uses, and says what to show. `_id` is the primary key. Say "the restaurant's `_id`" where the data does.
+- **Ties.** A `$sort` that has ties has no fixed order between the tied documents, so `ordered: true` fails a correct answer now and then. Sort by something with no ties, add a tie-break (`{n: -1, _id: 1}`), or compare as a set. The five restaurants of MG-3 tie at 109, so that step is judged as a set.
+- A step that writes needs `scratch: true`. Everything else only reads.
+- Results are judged by values, so a computed field's name never matters, and `_id` counts as a value when it is shown.
+
 ## Things the checker will catch, and why
 
 - **Every sentence must run** against `data/`. Run your whole lesson through the checker often.

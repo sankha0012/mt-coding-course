@@ -196,3 +196,35 @@ def test_the_runner_runs_a_mongo_step_and_the_try_panel_may_write_on_a_scratch_c
     item = runner.play("mongo", 'db.coupons.deleteMany({})', "mongo")
     assert item["error"] is None
     assert runner.run({"lang": "mongo", "data": "mongo"}, "db.coupons.countDocuments()").full == [(4,)]
+
+
+@needs_mongod
+def test_a_program_that_is_killed_leaves_no_server_and_no_folder(tmp_path):
+    import signal
+    import subprocess
+    import sys
+    import time
+    code = ("import sys; sys.path.insert(0, %r)\n"
+            "from checker import mongo\n"
+            "s = mongo.Server(%r); s.start()\n"
+            "print(s._proc.pid, s.folder, flush=True)\n"
+            "import time; time.sleep(60)\n") % (str(ROOT), str(ROOT / "data"))
+    p = subprocess.Popen([sys.executable, "-c", code], stdout=subprocess.PIPE, text=True)
+    pid, folder = p.stdout.readline().split()
+    assert Path(folder).is_dir()
+    p.send_signal(signal.SIGKILL)  # no time to clean up
+    p.wait()
+    for _ in range(300):
+        try:
+            os.kill(int(pid), 0)
+        except ProcessLookupError:
+            break
+        time.sleep(0.1)
+    else:
+        os.kill(int(pid), signal.SIGKILL)
+        pytest.fail("the server was left running")
+    for _ in range(50):
+        if not Path(folder).exists():
+            break
+        time.sleep(0.1)
+    assert not Path(folder).exists()

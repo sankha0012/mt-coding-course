@@ -77,6 +77,7 @@ button.primary:focus-visible { outline: none; box-shadow: 0 0 0 4px var(--ring);
 .hint { font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0 0; min-height: 1.2rem; }
 
 pre.printed { background: var(--code); }
+pre.doc { margin: 0.35rem 0; }
 #split { display: flex; height: 100vh; }
 #lesson { flex: 1 1 0; min-width: 0; overflow-y: auto; }
 #gutter { flex: 0 0 9px; cursor: col-resize; touch-action: none; background: var(--line); border-left: 1px solid var(--line); border-right: 1px solid var(--line); outline: none; }

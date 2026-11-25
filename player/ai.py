@@ -1,6 +1,7 @@
 """What the teacher tells the model, and the pieces of the guard. Nothing here ever receives a step's
 model answer, wrong answers, walk or return: the caller passes only what the learner has already seen."""
 import csv
+import json
 import re
 from pathlib import Path
 
@@ -18,12 +19,32 @@ def thought_lines(thoughts, ids):
     return out
 
 
+def _paths(doc, prefix=""):
+    """The field paths of a document, as a dotted name reaches them: delivery.rain, items.name."""
+    out = []
+    for k, v in doc.items():
+        name = prefix + k
+        for item in (v if isinstance(v, list) else [v]):
+            if isinstance(item, dict):
+                out += _paths(item, name + ".")
+            elif name not in out:
+                out.append(name)
+    return out
+
+
 def schema_lines(folder):
+    """Each table of a folder with its columns, and each collection with its field paths. Never any rows."""
     lines = []
     for f in sorted(Path(folder).glob("*.csv")):
         with open(f, newline="", encoding="utf-8") as h:
             header = next(csv.reader(h), [])
         lines.append(f"{f.stem}: {', '.join(header)}")
+    for f in sorted(Path(folder).glob("*.jsonl")):
+        paths = []
+        with open(f, encoding="utf-8") as h:
+            for _, line in zip(range(50), h):
+                paths += [p for p in _paths(json.loads(line)) if p not in paths]
+        lines.append(f"{f.stem} (documents): {', '.join(paths)}")
     return lines
 
 
@@ -40,6 +61,9 @@ def attempt_text(items):
         return out + f"\nGave an error: {res['error']}"
     if res.get("lang") == "python":
         return out + f"\nPrinted:\n{res.get('text') or '(nothing)'}"
+    if res.get("lang") == "mongo":
+        shown = "\n".join(json.dumps(d, ensure_ascii=False) for d in res["docs"][:3])
+        return out + f"\nGave {res['total']} documents" + (f", the first few:\n{shown}" if shown else "")
     rows = "\n".join(", ".join(str(v) for v in r) for r in res["rows"][:5])
     return out + f"\nGave columns {', '.join(res['columns'])} and rows:\n{rows}"
 

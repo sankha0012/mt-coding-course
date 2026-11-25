@@ -7,10 +7,12 @@ Course data is only ever read. A sentence that writes runs on a scratch copy tha
 afterwards, so the original data never changes."""
 import atexit
 import contextlib
+import os
 import re
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import time
@@ -41,10 +43,37 @@ class Unavailable(Exception):
     pass
 
 
+# A watcher that outlives a program that was killed without time to clean up (a stop signal, a crash): it waits for
+# the program or the server to end, then stops the server and removes its folder, so nothing is left running.
+_WATCHER = """
+import os, shutil, signal, sys, time
+parent, child, folder = int(sys.argv[1]), int(sys.argv[2]), sys.argv[3]
+def alive(pid):
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    return True
+while alive(parent) and alive(child):
+    time.sleep(0.5)
+if alive(child):
+    os.kill(child, signal.SIGTERM)
+    for _ in range(100):
+        if not alive(child):
+            break
+        time.sleep(0.1)
+    else:
+        os.kill(child, signal.SIGKILL)
+shutil.rmtree(folder, ignore_errors=True)
+"""
+
+
 class Server:
     def __init__(self, data_dir):
         self.data_dir = Path(data_dir)
-        self.folder = self.port = self.client = self._proc = None
+        self.folder = self.port = self.client = self._proc = self._watcher = None
         self._loaded = set()
         self._lock = threading.RLock()
 
@@ -66,6 +95,9 @@ class Server:
             self._proc = subprocess.Popen(
                 [exe, "--dbpath", self.folder, "--port", str(self.port), "--bind_ip", "127.0.0.1", "--nounixsocket",
                  "--wiredTigerCacheSizeGB", "0.25"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            self._watcher = subprocess.Popen(
+                [sys.executable, "-c", _WATCHER, str(os.getpid()), str(self._proc.pid), self.folder],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
             atexit.register(self.stop)
             client = MongoClient("127.0.0.1", self.port, serverSelectionTimeoutMS=500, connectTimeoutMS=500)
             deadline = time.monotonic() + 40
@@ -98,6 +130,9 @@ class Server:
                     except subprocess.TimeoutExpired:
                         self._proc.kill()
                         self._proc.wait()
+            if self._watcher is not None:
+                self._watcher.terminate()
+                self._watcher = None
             if self.folder:
                 shutil.rmtree(self.folder, ignore_errors=True)
                 self.folder = None
@@ -179,12 +214,12 @@ def to_rows(value):
     return [(_cv(value),)]
 
 
-def _plain(v):
+def plain(v):
     """A value as the screen shows it: dates as text, ids as text."""
     if isinstance(v, dict):
-        return {k: _plain(x) for k, x in v.items()}
+        return {k: plain(x) for k, x in v.items()}
     if isinstance(v, (list, tuple)):
-        return [_plain(x) for x in v]
+        return [plain(x) for x in v]
     if isinstance(v, datetime):
         return _cv(v)
     if isinstance(v, (bool, int, float, str)) or v is None:
@@ -205,7 +240,7 @@ class MongoResult:
         return canon(self.full, any_column_order=True, ordered=bool(flags.get("ordered")))
 
     def item(self, label=None):
-        out = {"type": "result", "lang": "mongo", "docs": [_plain(d) for d in self.docs[:SHOWN]],
+        out = {"type": "result", "lang": "mongo", "docs": [plain(d) for d in self.docs[:SHOWN]],
                "total": self.total, "error": self.error}
         if label:
             out["label"] = label

@@ -1,9 +1,10 @@
 const itemsEl = document.getElementById('items');
 const inputEl = document.getElementById('input');
 let shown = 0;
+let features = { mongo: false };  // what this machine can run, from /api/features
 
 async function api(path, body) {
-  const options = ['/api/run', '/api/providers', '/api/data', '/api/course'].includes(path) ? {} : {
+  const options = ['/api/run', '/api/providers', '/api/data', '/api/course', '/api/features'].includes(path) ? {} : {
     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) };
   const r = await fetch(path, options);
   if (!r.ok) throw new Error(path + ' ' + r.status);
@@ -33,10 +34,21 @@ const WORDS = {
       + 'map filter any all isinstance split join append get items keys values lower upper strip').split(' ')),
     token: /("""[\s\S]*?(?:"""|$)|'''[\s\S]*?(?:'''|$)|'(?:\\.|[^'\\\n])*'?|"(?:\\.|[^"\\\n])*"?)|(#[^\n]*)|(\d+(?:\.\d+)?)|([A-Za-z_][A-Za-z_0-9]*)|(\s+|.)/g,
   },
+  mongo: {
+    keywords: new Set('db true false null'.split(' ')),
+    functions: new Set(('find findone aggregate countdocuments estimateddocumentcount distinct sort limit skip insertone insertmany '
+      + 'updateone updatemany deleteone deletemany isodate').split(' ')),
+    token: /("(?:\\.|[^"\\\n])*"?|'(?:\\.|[^'\\\n])*'?)|(\/\/[^\n]*)|(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)|([$A-Za-z_][$A-Za-z_0-9]*)|(\s+|.)/g,
+  },
 };
 
+function langKey(lang) {
+  return lang === 'python' ? 'python' : (lang === 'mongo' || lang === 'js') ? 'mongo' : 'sql';
+}
+
 function highlight(text, lang) {
-  const w = WORDS[lang === 'python' ? 'python' : 'sql'];
+  const key = langKey(lang);
+  const w = WORDS[key];
   const frag = document.createDocumentFragment();
   w.token.lastIndex = 0;
   let m;
@@ -46,7 +58,10 @@ function highlight(text, lang) {
     if (str) cls = 'str';
     else if (com) cls = 'com';
     else if (num) cls = 'num';
-    else if (word) { const x = lang === 'python' ? word : word.toLowerCase(); cls = w.keywords.has(x) ? 'kw' : w.functions.has(x.toLowerCase()) ? 'fn' : null; }
+    else if (word) {
+      const x = key === 'sql' ? word.toLowerCase() : word;
+      cls = w.keywords.has(x) || (key === 'mongo' && word[0] === '$') ? 'kw' : w.functions.has(key === 'python' ? x.toLowerCase() : x.toLowerCase()) ? 'fn' : null;
+    }
     frag.appendChild(cls ? el('span', cls, tok) : document.createTextNode(tok));
   }
   return frag;
@@ -84,9 +99,41 @@ function renderText(text, cls, lang) {
   return box;
 }
 
+// a value as the mongo shell prints it: names bare, one line when it fits
+function shellValue(v, depth = 0) {
+  if (v === null || typeof v !== 'object') return JSON.stringify(v);
+  const list = Array.isArray(v);
+  const parts = list ? v.map(x => shellValue(x, depth + 1))
+    : Object.entries(v).map(([k, x]) => (/^[A-Za-z_$][\w$]*$/.test(k) ? k : JSON.stringify(k)) + ': ' + shellValue(x, depth + 1));
+  const [open, close] = list ? ['[', ']'] : ['{', '}'];
+  if (!parts.length) return open + close;
+  const gap = list ? '' : ' ';
+  const flat = open + gap + parts.join(', ') + gap + close;
+  if (flat.length + depth * 2 <= 88 && !flat.includes('\n')) return flat;
+  const pad = '  '.repeat(depth + 1);
+  return open + '\n' + parts.map(p => pad + p).join(',\n') + '\n' + '  '.repeat(depth) + close;
+}
+
+function docBlock(d) {
+  return codeBlock(shellValue(d), 'doc', 'mongo');
+}
+
 function renderResult(item) {
   const box = el('div');
   if (item.label) box.appendChild(el('div', 'label', item.label));
+  if (item.lang === 'mongo') {
+    if (item.error) { box.appendChild(el('pre', 'output', item.error)); return box; }
+    if (!item.docs.length) { box.appendChild(el('div', 'total', 'No documents.')); return box; }
+    const plain = item.docs.every(d => d === null || typeof d !== 'object');  // a count, or a list of values
+    if (plain) box.appendChild(el('pre', 'printed', item.docs.map(String).join('\n')));
+    else item.docs.forEach(d => box.appendChild(docBlock(d)));
+    if (!plain || item.total > item.docs.length) {
+      const n = item.total.toLocaleString();
+      box.appendChild(el('div', 'total', item.total > item.docs.length ? n + ' documents, first ' + item.docs.length + ' shown'
+        : n + (item.total === 1 ? ' document' : ' documents')));
+    }
+    return box;
+  }
   if (item.lang === 'python') {
     if (item.text) box.appendChild(el('pre', 'printed', item.text.replace(/\n$/, '')));
     else if (!item.error) box.appendChild(el('div', 'total', 'Nothing was printed.'));
@@ -339,10 +386,12 @@ function initPlay() {
     lang = l; ed.setLang(l);
     Object.entries(tabButtons).forEach(([name, b]) => b.classList.toggle('on', name === l));
   };
-  [['sql', 'SQL'], ['python', 'Python']].forEach(([l, label]) => {
+  [['sql', 'SQL'], ['python', 'Python'], ['mongo', 'MongoDB']].forEach(([l, label]) => {
     tabButtons[l] = button(label, () => pick(l), 'tab');
     tabs.appendChild(tabButtons[l]);
   });
+  tabButtons.mongo.hidden = true;  // shown once the page knows there is a mongod
+  viewHooks.push(() => { tabButtons.mongo.hidden = !features.mongo; });
   const go = async () => {
     if (!ed.box.value.trim()) { hint.textContent = 'Type some code first.'; return; }
     hint.textContent = '';
@@ -362,6 +411,11 @@ function initPlay() {
 
   const dataTable = t => {
     const box = el('div');
+    if (t.docs) {  // a collection: its count and its first documents
+      box.appendChild(el('div', 'total', t.total.toLocaleString() + ' documents, first ' + t.docs.length + ' shown'));
+      t.docs.forEach(d => box.appendChild(docBlock(d)));
+      return box;
+    }
     const n = t.total.toLocaleString();
     const note = t.total > t.rows.length ? n + ' rows, first ' + t.rows.length + ' shown' : n + ' rows';
     const table = el('table');
@@ -537,4 +591,4 @@ function initCourse() {
 
 initPlay();
 initCourse();
-Promise.all([api('/api/providers'), api('/api/run')]).then(([p, view]) => { providers = p.providers; render(view); });
+Promise.all([api('/api/providers'), api('/api/run'), api('/api/features')]).then(([p, view, f]) => { providers = p.providers; features = f; render(view); });
