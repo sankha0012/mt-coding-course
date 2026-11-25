@@ -1,0 +1,200 @@
+{"_id": 1, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 2, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 3, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 4, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 5, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 6, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 7, "vehicle": "carro", "city": "Curitiba"}
+{"_id": 8, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 9, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 10, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 11, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 12, "vehicle": "carro", "city": "Rio de Janeiro"}
+{"_id": 13, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 14, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 15, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 16, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 17, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 18, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 19, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 20, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 21, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 22, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 23, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 24, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 25, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 26, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 27, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 28, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 29, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 30, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 31, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 32, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 33, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 34, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 35, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 36, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 37, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 38, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 39, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 40, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 41, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 42, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 43, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 44, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 45, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 46, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 47, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 48, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 49, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 50, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 51, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 52, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 53, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 54, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 55, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 56, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 57, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 58, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 59, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 60, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 61, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 62, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 63, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 64, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 65, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 66, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 67, "vehicle": "carro", "city": "Belo Horizonte"}
+{"_id": 68, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 69, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 70, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 71, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 72, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 73, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 74, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 75, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 76, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 77, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 78, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 79, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 80, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 81, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 82, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 83, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 84, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 85, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 86, "vehicle": "carro", "city": "Belo Horizonte"}
+{"_id": 87, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 88, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 89, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 90, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 91, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 92, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 93, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 94, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 95, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 96, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 97, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 98, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 99, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 100, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 101, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 102, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 103, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 104, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 105, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 106, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 107, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 108, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 109, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 110, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 111, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 112, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 113, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 114, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 115, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 116, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 117, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 118, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 119, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 120, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 121, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 122, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 123, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 124, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 125, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 126, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 127, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 128, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 129, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 130, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 131, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 132, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 133, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 134, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 135, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 136, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 137, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 138, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 139, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 140, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 141, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 142, "vehicle": "bike", "city": "Curitiba"}
+{"_id": 143, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 144, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 145, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 146, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 147, "vehicle": "carro", "city": "Rio de Janeiro"}
+{"_id": 148, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 149, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 150, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 151, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 152, "vehicle": "carro", "city": "Belo Horizonte"}
+{"_id": 153, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 154, "vehicle": "bike", "city": "Belo Horizonte"}
+{"_id": 155, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 156, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 157, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 158, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 159, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 160, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 161, "vehicle": "carro", "city": "Belo Horizonte"}
+{"_id": 162, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 163, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 164, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 165, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 166, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 167, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 168, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 169, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 170, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 171, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 172, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 173, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 174, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 175, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 176, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 177, "vehicle": "carro", "city": "Rio de Janeiro"}
+{"_id": 178, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 179, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 180, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 181, "vehicle": "bike", "city": "Rio de Janeiro"}
+{"_id": 182, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 183, "vehicle": "carro", "city": "Curitiba"}
+{"_id": 184, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 185, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 186, "vehicle": "carro", "city": "São Paulo"}
+{"_id": 187, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 188, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 189, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 190, "vehicle": "moto", "city": "Belo Horizonte"}
+{"_id": 191, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 192, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 193, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 194, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 195, "vehicle": "moto", "city": "Rio de Janeiro"}
+{"_id": 196, "vehicle": "bike", "city": "São Paulo"}
+{"_id": 197, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 198, "vehicle": "moto", "city": "São Paulo"}
+{"_id": 199, "vehicle": "moto", "city": "Curitiba"}
+{"_id": 200, "vehicle": "moto", "city": "São Paulo"}

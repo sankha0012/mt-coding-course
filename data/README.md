@@ -43,6 +43,19 @@ What that gives: 37.5 percent late without rain and 63.8 percent with it. A logi
 
 The checker and the player load every CSV in this folder, so both tables are visible to SQL.
 
+## MongoDB documents, added on 25 Nov 2026
+
+`data/mongo/` holds the same orders, restaurants, couriers and coupons as documents, for the MongoDB strand (decision C26). `tools/build_mongo_data.py` builds it from the CSV tables with a fixed seed, so the files are identical on every run and are committed. The CSV tables were not changed.
+
+| File | Documents | Shape |
+|---|---|---|
+| `orders.jsonl` | 6,000 | `_id` is the order id. `customer_id`, `restaurant_id` and `courier_id` are references. `created_at` is a date. A missing cell is an absent field: `subtotal` (25 orders), `courier_id` and `actual_minutes` (399 each), `coupon_code` (4,116). `delivery: {distance_km, rain, bag_size}` is embedded on the 5,601 orders that have one, with `rain` as true or false and `distance_km` absent on 112. `items: [{name, qty, price}]` holds one to four dishes of the restaurant's cuisine whose quantity times price adds up to the subtotal to the cent. An order with no subtotal has no `items`. |
+| `restaurants.jsonl` | 60 | `_id` is the restaurant id, then `name`, `city`, `cuisine`, `signup_date` (a date). |
+| `couriers.jsonl` | 200 | `_id` is the courier id, then `vehicle`, `city`. |
+| `coupons.jsonl` | 4 | `_id` is the coupon code, then `discount_pct`. `VOLTA15` is used by no order. |
+
+The dishes and their prices are made up, like the rest of the data. Dates are written as extended JSON (`{"$date": "2026-08-01T00:00:00Z"}`), which `bson.json_util` and `mongoimport` read. Loaded into a throwaway `mongod`, the counts match the tables (4,116 orders without a coupon, 1,089 with rain), and the items add up to the same total as the subtotals (360,885.35).
+
 ## Real data, kept out of git
 
 `data/real/olist/` holds the **Brazilian E-Commerce Public Dataset by Olist**: about 100,000 real orders from 2016 to 2018, in nine CSV files (126 MB). The two cold sittings use it (decision C17). The lessons do not.

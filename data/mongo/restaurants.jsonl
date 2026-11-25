@@ -1,0 +1,60 @@
+{"_id": 1, "name": "Rest 01", "city": "Belo Horizonte", "cuisine": "brasileira", "signup_date": {"$date": "2025-07-16T00:00:00Z"}}
+{"_id": 2, "name": "Rest 02", "city": "São Paulo", "cuisine": "saudavel", "signup_date": {"$date": "2024-04-01T00:00:00Z"}}
+{"_id": 3, "name": "Rest 03", "city": "Curitiba", "cuisine": "hamburguer", "signup_date": {"$date": "2024-10-25T00:00:00Z"}}
+{"_id": 4, "name": "Rest 04", "city": "Rio de Janeiro", "cuisine": "brasileira", "signup_date": {"$date": "2025-02-21T00:00:00Z"}}
+{"_id": 5, "name": "Rest 05", "city": "São Paulo", "cuisine": "arabe", "signup_date": {"$date": "2024-10-24T00:00:00Z"}}
+{"_id": 6, "name": "Rest 06", "city": "Curitiba", "cuisine": "hamburguer", "signup_date": {"$date": "2024-09-24T00:00:00Z"}}
+{"_id": 7, "name": "Rest 07", "city": "Belo Horizonte", "cuisine": "japonesa", "signup_date": {"$date": "2024-04-09T00:00:00Z"}}
+{"_id": 8, "name": "Rest 08", "city": "Belo Horizonte", "cuisine": "saudavel", "signup_date": {"$date": "2024-08-16T00:00:00Z"}}
+{"_id": 9, "name": "Rest 09", "city": "São Paulo", "cuisine": "hamburguer", "signup_date": {"$date": "2024-05-23T00:00:00Z"}}
+{"_id": 10, "name": "Rest 10", "city": "Rio de Janeiro", "cuisine": "hamburguer", "signup_date": {"$date": "2024-06-29T00:00:00Z"}}
+{"_id": 11, "name": "Rest 11", "city": "São Paulo", "cuisine": "hamburguer", "signup_date": {"$date": "2025-02-14T00:00:00Z"}}
+{"_id": 12, "name": "Rest 12", "city": "Curitiba", "cuisine": "hamburguer", "signup_date": {"$date": "2025-01-13T00:00:00Z"}}
+{"_id": 13, "name": "Rest 13", "city": "Rio de Janeiro", "cuisine": "japonesa", "signup_date": {"$date": "2024-12-30T00:00:00Z"}}
+{"_id": 14, "name": "Rest 14", "city": "Belo Horizonte", "cuisine": "hamburguer", "signup_date": {"$date": "2024-08-05T00:00:00Z"}}
+{"_id": 15, "name": "Rest 15", "city": "São Paulo", "cuisine": "saudavel", "signup_date": {"$date": "2025-07-29T00:00:00Z"}}
+{"_id": 16, "name": "Rest 16", "city": "São Paulo", "cuisine": "pizza", "signup_date": {"$date": "2024-02-22T00:00:00Z"}}
+{"_id": 17, "name": "Rest 17", "city": "Rio de Janeiro", "cuisine": "hamburguer", "signup_date": {"$date": "2024-07-24T00:00:00Z"}}
+{"_id": 18, "name": "Rest 18", "city": "São Paulo", "cuisine": "japonesa", "signup_date": {"$date": "2024-03-11T00:00:00Z"}}
+{"_id": 19, "name": "Rest 19", "city": "Belo Horizonte", "cuisine": "brasileira", "signup_date": {"$date": "2024-07-22T00:00:00Z"}}
+{"_id": 20, "name": "Rest 20", "city": "Rio de Janeiro", "cuisine": "brasileira", "signup_date": {"$date": "2025-07-31T00:00:00Z"}}
+{"_id": 21, "name": "Rest 21", "city": "Belo Horizonte", "cuisine": "arabe", "signup_date": {"$date": "2024-08-07T00:00:00Z"}}
+{"_id": 22, "name": "Rest 22", "city": "São Paulo", "cuisine": "pizza", "signup_date": {"$date": "2025-06-29T00:00:00Z"}}
+{"_id": 23, "name": "Rest 23", "city": "Curitiba", "cuisine": "pizza", "signup_date": {"$date": "2024-10-24T00:00:00Z"}}
+{"_id": 24, "name": "Rest 24", "city": "Curitiba", "cuisine": "brasileira", "signup_date": {"$date": "2025-02-23T00:00:00Z"}}
+{"_id": 25, "name": "Rest 25", "city": "Belo Horizonte", "cuisine": "arabe", "signup_date": {"$date": "2024-10-01T00:00:00Z"}}
+{"_id": 26, "name": "Rest 26", "city": "São Paulo", "cuisine": "arabe", "signup_date": {"$date": "2024-06-08T00:00:00Z"}}
+{"_id": 27, "name": "Rest 27", "city": "Rio de Janeiro", "cuisine": "japonesa", "signup_date": {"$date": "2025-04-03T00:00:00Z"}}
+{"_id": 28, "name": "Rest 28", "city": "São Paulo", "cuisine": "pizza", "signup_date": {"$date": "2025-08-04T00:00:00Z"}}
+{"_id": 29, "name": "Rest 29", "city": "São Paulo", "cuisine": "saudavel", "signup_date": {"$date": "2024-06-07T00:00:00Z"}}
+{"_id": 30, "name": "Rest 30", "city": "Rio de Janeiro", "cuisine": "japonesa", "signup_date": {"$date": "2025-04-12T00:00:00Z"}}
+{"_id": 31, "name": "Rest 31", "city": "Belo Horizonte", "cuisine": "arabe", "signup_date": {"$date": "2024-06-05T00:00:00Z"}}
+{"_id": 32, "name": "Rest 32", "city": "Curitiba", "cuisine": "pizza", "signup_date": {"$date": "2025-03-06T00:00:00Z"}}
+{"_id": 33, "name": "Rest 33", "city": "São Paulo", "cuisine": "arabe", "signup_date": {"$date": "2025-04-18T00:00:00Z"}}
+{"_id": 34, "name": "Rest 34", "city": "São Paulo", "cuisine": "pizza", "signup_date": {"$date": "2024-09-26T00:00:00Z"}}
+{"_id": 35, "name": "Rest 35", "city": "Rio de Janeiro", "cuisine": "brasileira", "signup_date": {"$date": "2025-03-18T00:00:00Z"}}
+{"_id": 36, "name": "Rest 36", "city": "São Paulo", "cuisine": "hamburguer", "signup_date": {"$date": "2024-06-12T00:00:00Z"}}
+{"_id": 37, "name": "Rest 37", "city": "São Paulo", "cuisine": "japonesa", "signup_date": {"$date": "2024-02-17T00:00:00Z"}}
+{"_id": 38, "name": "Rest 38", "city": "Rio de Janeiro", "cuisine": "hamburguer", "signup_date": {"$date": "2024-02-27T00:00:00Z"}}
+{"_id": 39, "name": "Rest 39", "city": "São Paulo", "cuisine": "hamburguer", "signup_date": {"$date": "2024-09-25T00:00:00Z"}}
+{"_id": 40, "name": "Rest 40", "city": "Rio de Janeiro", "cuisine": "saudavel", "signup_date": {"$date": "2025-06-25T00:00:00Z"}}
+{"_id": 41, "name": "Rest 41", "city": "São Paulo", "cuisine": "arabe", "signup_date": {"$date": "2024-03-17T00:00:00Z"}}
+{"_id": 42, "name": "Rest 42", "city": "Belo Horizonte", "cuisine": "hamburguer", "signup_date": {"$date": "2024-09-30T00:00:00Z"}}
+{"_id": 43, "name": "Rest 43", "city": "Belo Horizonte", "cuisine": "brasileira", "signup_date": {"$date": "2025-02-26T00:00:00Z"}}
+{"_id": 44, "name": "Rest 44", "city": "São Paulo", "cuisine": "brasileira", "signup_date": {"$date": "2024-05-01T00:00:00Z"}}
+{"_id": 45, "name": "Rest 45", "city": "Belo Horizonte", "cuisine": "brasileira", "signup_date": {"$date": "2025-03-08T00:00:00Z"}}
+{"_id": 46, "name": "Rest 46", "city": "Belo Horizonte", "cuisine": "saudavel", "signup_date": {"$date": "2024-07-02T00:00:00Z"}}
+{"_id": 47, "name": "Rest 47", "city": "São Paulo", "cuisine": "pizza", "signup_date": {"$date": "2025-04-30T00:00:00Z"}}
+{"_id": 48, "name": "Rest 48", "city": "São Paulo", "cuisine": "pizza", "signup_date": {"$date": "2024-12-13T00:00:00Z"}}
+{"_id": 49, "name": "Rest 49", "city": "Rio de Janeiro", "cuisine": "brasileira", "signup_date": {"$date": "2024-11-24T00:00:00Z"}}
+{"_id": 50, "name": "Rest 50", "city": "São Paulo", "cuisine": "japonesa", "signup_date": {"$date": "2024-04-16T00:00:00Z"}}
+{"_id": 51, "name": "Rest 51", "city": "São Paulo", "cuisine": "japonesa", "signup_date": {"$date": "2024-10-04T00:00:00Z"}}
+{"_id": 52, "name": "Rest 52", "city": "São Paulo", "cuisine": "japonesa", "signup_date": {"$date": "2025-05-28T00:00:00Z"}}
+{"_id": 53, "name": "Rest 53", "city": "Belo Horizonte", "cuisine": "saudavel", "signup_date": {"$date": "2024-01-12T00:00:00Z"}}
+{"_id": 54, "name": "Rest 54", "city": "Rio de Janeiro", "cuisine": "saudavel", "signup_date": {"$date": "2025-03-31T00:00:00Z"}}
+{"_id": 55, "name": "Rest 55", "city": "Belo Horizonte", "cuisine": "saudavel", "signup_date": {"$date": "2024-10-22T00:00:00Z"}}
+{"_id": 56, "name": "Rest 56", "city": "Belo Horizonte", "cuisine": "brasileira", "signup_date": {"$date": "2025-03-07T00:00:00Z"}}
+{"_id": 57, "name": "Rest 57", "city": "Rio de Janeiro", "cuisine": "saudavel", "signup_date": {"$date": "2025-02-01T00:00:00Z"}}
+{"_id": 58, "name": "Rest 58", "city": "Rio de Janeiro", "cuisine": "japonesa", "signup_date": {"$date": "2024-09-16T00:00:00Z"}}
+{"_id": 59, "name": "Rest 59", "city": "São Paulo", "cuisine": "arabe", "signup_date": {"$date": "2024-07-04T00:00:00Z"}}
+{"_id": 60, "name": "Rest 60", "city": "São Paulo", "cuisine": "hamburguer", "signup_date": {"$date": "2025-01-11T00:00:00Z"}}
