@@ -8,6 +8,10 @@ Two passes over three strands, about 27 lessons and eight hours. This file is th
 
 The earlier version of this file had three stages, the third a timed one. The goal was restated on 24 Nov 2026 (see `docs/01-scope.md`), and the timed stage moved to `live-coding-gym`.
 
+## Order and unlocking
+
+The order in `content/course.yaml` is the recommended path. What can be started is decided by prerequisites (decision C27): a lesson opens when the lesson before it in its own strand is finished and the lessons that introduce what it requires are finished. A thought from another strand's foundation needs that whole foundation. An opening cold check that borrows from a lesson not yet finished is skipped.
+
 ## The overarching ideas
 
 One per strand. Each is the first thing the learner meets and the thing everything else hangs from.

@@ -1,7 +1,7 @@
 lesson: sql-05
 title: "A result can be queried again"
 strand: sql
-stage: 1
+stage: 2
 thoughts:
   in-a-list: "`IN ('pizza', 'japonesa')` asks whether a cell is one of several, listed in brackets with commas."
   query-a-result: "A table comes out, so it can go in: a query in brackets can stand after `FROM`, with its columns named by `AS`."
@@ -160,9 +160,8 @@ steps:
   # 7
   - kind: "give"
     new: ["name-a-table"]
-    requires: ["name-a-value"]
     text: |-
-      A sentence folded inside itself is hard to read: you have to start in the middle. In Python you gave a value a name with one equals sign, and then used the name. We can do the same with a table. Put WITH, the name you choose, AS, and the table in brackets, and the sentence under it uses the name:
+      A sentence folded inside itself is hard to read: you have to start in the middle. We can give a table a name, and then use the name. Put WITH, the name you choose, AS, and the table in brackets, and the sentence under it uses the name:
 
       ```sql
       WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id)
@@ -172,8 +171,8 @@ steps:
       Run it.
     shows:
       - "WITH counts AS (SELECT restaurant_id, COUNT(*) AS n FROM orders GROUP BY restaurant_id) SELECT MAX(n) FROM counts"
-    after_run: "120 again: the same table in the brackets, and the same answer as a minute ago. Now the table has a name, counts, and the sentence below uses it. Name a thing, then do something with it, as in Python. It reads from the top, in the order it happens."
-    note: "Imports 'name a thing, then do something with it' from PY-1, said out loud, and ties it to the PD-1 echo (name what came out). The step requires name-a-value and does not import it again, because the checker allows an id to be introduced once."
+    after_run: "120 again: the same table in the brackets, and the same answer as a minute ago. Now the table has a name, counts, and the sentence below uses it. Name a thing, then do something with it. It reads from the top, in the order it happens."
+    note: "The idea of naming a thing and then using the name is stated on its own, without leaning on Python, so that SQL-5 opens as soon as the SQL foundation is passed (decision C27)."
 
   # 8
   - kind: "ask"

@@ -1,7 +1,7 @@
 lesson: py-09
 title: "A loop that remembers"
 strand: py
-stage: 1
+stage: 2
 thoughts:
   remember-previous: "Keep the last item under a name, and give the name its new value at the end of each turn."
   compare-with-previous: "Each item is judged against the one before it. On the first turn there is nothing before it, so ask about `None` first: `and` never looks at its second half when the first says no."

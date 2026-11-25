@@ -20,8 +20,10 @@ class Engine:
 
     # ---- public
 
-    def start(self):
-        st = {"pos": 0, "phase": "continue", "playing": {"step": 0, "variant": "main"},
+    def start(self, skip=()):
+        """Begin a sitting. `skip` lists steps to step over: an opening cold check that borrows from a lesson
+        the learner has not met yet."""
+        st = {"skip": list(skip), "pos": 0, "phase": "continue", "playing": {"step": 0, "variant": "main"},
               "misses": 0, "rung": 0, "why": None, "queue": [], "returned": [],
               "last_narration": None, "last_ui": {}}
         items = []
@@ -104,6 +106,9 @@ class Engine:
 
     def _enter(self, st, items):
         j = st["pos"]
+        while j in st.get("skip", ()):
+            j += 1
+        st["pos"] = j
         if j >= len(self.steps):
             if st["queue"]:
                 return self._begin_return(st, items, st["queue"].pop(0)["step"])

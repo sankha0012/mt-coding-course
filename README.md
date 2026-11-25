@@ -18,7 +18,7 @@ The pane on the right has a Data tab. It shows the tables of the step you are on
 
 ## The course panel
 
-The Course button at the top left opens a map of the whole course. Finished lessons can be sat again, later ones are locked, and "Start over" begins the current lesson from the beginning. Your earlier attempts stay in the progress file.
+The Course button at the top left opens a map of the whole course. Finished lessons can be sat again. A lesson opens once the lessons it is built on are finished, so finishing the SQL foundation opens its interview layer and Python together. Locked lessons say what they open after, and "Start over" begins the current lesson from the beginning. Your earlier attempts stay in the progress file.
 
 ## Read in this order
 

@@ -39,6 +39,13 @@ def test_a_progress_file_from_before_the_change_still_runs_a_give_step(make_engi
     assert kinds(items) == ["learner", "result", "teacher"] and e.pending(st) == {"mode": "continue"}
 
 
+def test_steps_to_skip_are_stepped_over_when_the_lesson_starts(make_engine):
+    e = make_engine()
+    st, items, _ = e.start(skip=[0])
+    assert texts(items) == ["How many restaurants?"]
+    assert e.pending(st) == {"mode": "answer", "step": 2, "variant": "main"}
+
+
 def test_running_the_shown_sentence_then_continuing(make_engine):
     e = make_engine()
     st, _, _ = e.start()

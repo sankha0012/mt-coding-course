@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from checker.lesson import lesson_titles, load_content, ui_path
+from checker.lesson import lesson_titles, load_content, prerequisites, ui_path
 
 from . import ai, llm, tables
 from .engine import Engine
@@ -37,6 +37,13 @@ class Player:
         self.skipped = [n for n, _ in lessons if n not in {m for m, _ in self.lessons}]
         self.names = [name for name, _ in self.lessons]
         self.outline = {o["lesson"]: o for o in lesson_titles(content)}
+        # what each lesson waits for. A lesson whose data is missing here can never be finished, so nothing waits for it
+        self.prereq = {n: {p for p in ps if p in self.names} for n, ps in prerequisites(content).items() if n in self.names}
+        self.intro = {}
+        for n, steps in self.lessons:
+            for s in steps:
+                for t in s.get("new", []):
+                    self.intro.setdefault(t, n)
         self.engines = {name: Engine(steps, self.runner, ui, rng) for name, steps in self.lessons}
         self.store = Store(progress_dir)
         self.lock = threading.Lock()
@@ -46,14 +53,22 @@ class Player:
         """(run id, lesson name, state) of the newest run, starting the first lesson if there is none."""
         return self.store.latest_any() or self._start(self.names[0])
 
+    def _skip(self, name):
+        """Opening cold checks that borrow a thought of a lesson not finished yet. They are unscored, so they wait."""
+        if self.outline.get(name, {}).get("strand") == "cold":
+            return []
+        done = self.store.finished_lessons()
+        return [i for i, s in enumerate(self.engines[name].steps) if s.get("kind") == "cold-check"
+                and any(self.intro.get(t, name) not in done | {name} for t in s.get("requires", []))]
+
     def _start(self, name):
-        st, items, _ = self.engines[name].start()
+        st, items, _ = self.engines[name].start(skip=self._skip(name))
         return self.store.new_run(name, st, items, finished=st["phase"] == "done"), name, st
 
     def _view(self, run_id, name, st):
         pending = self.engines[name].pending(st)
         if pending["mode"] == "done":
-            pending["next"] = self.names.index(name) + 1 < len(self.names)
+            pending["next"] = bool(self._open_unfinished())
         return {"run_id": run_id, "lesson": name, "items": self.store.items(run_id), "pending": pending}
 
     def view(self):
@@ -95,27 +110,37 @@ class Player:
             self._tables[key] = tables.sample(self.runner.path(key[0]), ext=key[1])
         return {"data": key[0], "tables": self._tables[key]}
 
-    def _states(self, current):
-        """Where each lesson stands: the one on screen, finished ones, the next one to open, and the rest locked."""
+    def _open_unfinished(self):
+        """Lessons that can be started and have not been finished, in the order of the course."""
         done = self.store.finished_lessons()
-        frontier = next((n for n in self.names if n not in done), None)
-        return {n: "current" if n == current else "done" if n in done else "next" if n == frontier else "locked"
-                for n in self.names}, done
+        return [n for n in self.names if n not in done and self.prereq[n] <= done]
+
+    def _states(self, current):
+        """Where each lesson stands: the one on screen, finished ones, open ones, and the rest locked.
+        A lesson opens when every lesson it is built on is finished."""
+        done = self.store.finished_lessons()
+        return {n: "current" if n == current else "done" if n in done else "open" if self.prereq[n] <= done
+                else "locked" for n in self.names}, done
 
     def course(self):
         """The whole course in played order, for the Course panel. Read only, not logged."""
         with self.lock:
             _, current, _ = self._current()
             states, done = self._states(current)
-        passes, out = 0, []
+        out = []
         for n in self.names:
             o = self.outline.get(n, {})
+            # what an unopened lesson is waiting for: the lessons it is built on that are not finished
+            waits = [self.outline[p]["title"] for p in self.names
+                     if p in self.prereq[n] and p not in done] if states[n] == "locked" else []
             out.append({"lesson": n, "title": o.get("title", n), "strand": o.get("strand", ""),
-                        "state": states[n], "finished": n in done, "pass": passes})
-            if o.get("strand") == "cold":
-                passes += 1  # a cold sitting closes a pass
-        labels = self.ui.get("course_passes", [])
-        return {"lessons": out, "passes": [labels[i] if i < len(labels) else "" for i in range(passes + 1)]}
+                        "layer": o.get("layer", "foundation"), "state": states[n], "finished": n in done,
+                        "waits": waits})
+        names = self.ui.get("course_strands", {})
+        present = {i["strand"] for i in out}
+        ids = [i for i in names if i in present] + sorted(present - set(names))
+        return {"lessons": out, "strands": [{"id": i, "name": names.get(i, i)} for i in ids],
+                "layers": self.ui.get("course_layers", {})}
 
     def start_lesson(self, name):
         """A fresh sitting of the current lesson, a finished one, or the next. Runs are only ever added."""
@@ -126,13 +151,15 @@ class Player:
             return self._view(*self._start(name))
 
     def _met(self, name, st):
-        """Ids of the thoughts introduced up to the step now playing, in course order."""
+        """Ids of the thoughts the learner has met: finished lessons, and the one playing up to its step."""
+        done = self.store.finished_lessons()
         ids = []
         for lesson, steps in self.lessons:
-            upto = st["playing"]["step"] + 1 if lesson == name else len(steps)
-            ids += [t for s in steps[:upto] for t in s.get("new", [])]
             if lesson == name:
-                break
+                steps = steps[:st["playing"]["step"] + 1]
+            elif lesson not in done:
+                continue
+            ids += [t for s in steps for t in s.get("new", [])]
         return list(dict.fromkeys(ids))
 
     def ask(self, question, thread, provider=None):
@@ -169,10 +196,10 @@ class Player:
             if st["phase"] != "done":
                 raise Conflict("the sitting is not over")
             if go_next:
-                i = self.names.index(name) + 1
-                if i >= len(self.names):
+                ahead = self._open_unfinished()
+                if not ahead:
                     raise Conflict("there is no next lesson")
-                name = self.names[i]
+                name = ahead[0]
             return self._view(*self._start(name))
 
 

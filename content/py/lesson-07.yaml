@@ -1,7 +1,7 @@
 lesson: py-07
 title: "Sort by a rule"
 strand: py
-stage: 1
+stage: 2
 thoughts:
   pair: "`('pizza', 3)` is a pair: two values that travel together, in round brackets, reached by position like a list."
   dict-as-pairs: "`counts.items()` hands a dict over as pairs, a name and its value together."

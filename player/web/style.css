@@ -95,12 +95,12 @@ button.close:hover { background: var(--code); }
 #course-open:hover { color: var(--accent); border-color: var(--accent); }
 #course { flex: 0 0 19rem; min-width: 0; overflow-y: auto; background: var(--card); border-right: 1px solid var(--line); padding: 1rem 1rem 2rem; font: 0.88rem system-ui, sans-serif; }
 #course h3 { margin: 1.1rem 0 0.4rem; font: 600 0.7rem/1 system-ui, sans-serif; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-.course-row { display: grid; grid-template-columns: 1.3rem auto 1fr; column-gap: 0.4rem; align-items: baseline; padding: 0.4rem 0.5rem; border-radius: 8px; }
+.course-row { display: grid; grid-template-columns: 1.3rem 1fr; column-gap: 0.4rem; align-items: baseline; padding: 0.35rem 0.5rem; border-radius: 8px; }
+#course h4 { margin: 0.7rem 0 0.2rem 0.5rem; font: 500 0.75rem system-ui, sans-serif; color: var(--muted); }
 .course-row .mark { color: var(--accent); text-align: center; }
-.course-row .strand { font: 600 0.65rem/1 system-ui, sans-serif; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); background: var(--code); border-radius: 999px; padding: 0.2rem 0.45rem; }
 .course-row.current { background: var(--accent-soft); }
 .course-row.locked { color: var(--muted); opacity: 0.6; }
-.course-row .act { grid-column: 2 / -1; font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
+.course-row .act { grid-column: 2; font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }
 button.link { margin: 0 0.5rem 0 0; padding: 0; border: 0; background: transparent; color: var(--accent); font: inherit; cursor: pointer; text-decoration: underline; }
 @media (max-width: 48rem) { #course { border-right: 0; border-bottom: 1px solid var(--line); } #course-open { top: 0.5rem; } }
 .empty { color: var(--muted); font-style: italic; opacity: 0.7; }

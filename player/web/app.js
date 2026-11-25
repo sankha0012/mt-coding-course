@@ -456,8 +456,6 @@ function initPlay() {
 
 // ---- the course panel: the whole course as a map. Finished lessons can be sat again, future ones are locked.
 
-const STRANDS = { sql: 'SQL', py: 'Python', pd: 'pandas', ml: 'ML', cold: 'Cold' };
-
 function initCourse() {
   const split = document.getElementById('split');
   const panel = el('aside'); panel.id = 'course';
@@ -481,10 +479,14 @@ function initCourse() {
   const row = l => {
     const li = el('div', 'course-row ' + l.state + (l.finished ? ' finished' : ''));
     const mark = l.state === 'locked' ? '\ud83d\udd12' : l.state === 'current' ? '\u25b8' : l.finished ? '\u2713' : '';
-    li.append(el('span', 'mark', mark), el('span', 'strand', STRANDS[l.strand] || l.strand), el('span', 'ltitle', l.title));
-    if (l.state === 'locked') { li.setAttribute('aria-disabled', 'true'); return li; }
+    li.append(el('span', 'mark', mark), el('span', 'ltitle', l.title));
+    if (l.state === 'locked') {
+      li.setAttribute('aria-disabled', 'true');
+      if (l.waits.length) li.appendChild(el('span', 'act', 'Opens after ' + l.waits.slice(0, 2).join(', ') + (l.waits.length > 2 ? ' and ' + (l.waits.length - 2) + ' more' : '')));
+      return li;
+    }
     const act = el('span', 'act');
-    if (l.state === 'next') act.append(button('Start', () => start(l.lesson), 'link'));
+    if (l.state === 'open') act.append(button('Start', () => start(l.lesson), 'link'));
     else if (confirming === l.lesson) {
       act.append(el('span', null, 'From the beginning? '), button('Yes', () => start(l.lesson), 'link'),
                  button('Cancel', () => { confirming = null; draw(); }, 'link'));
@@ -496,13 +498,18 @@ function initCourse() {
   let data = null;
   const draw = () => {
     if (!data) return;
-    const nodes = []; let pass = -1;
-    data.lessons.forEach(l => {
-      if (l.pass !== pass) {
-        pass = l.pass;
-        if (data.passes.length > 1 && data.passes[pass]) nodes.push(el('h3', null, data.passes[pass]));
-      }
-      nodes.push(row(l));
+    const nodes = [];
+    data.strands.forEach(s => {
+      const mine = data.lessons.filter(l => l.strand === s.id);
+      if (!mine.length) return;
+      nodes.push(el('h3', null, s.name));
+      const layered = new Set(mine.map(l => l.layer)).size > 1;  // only a strand with both layers gets sub-headings
+      let layer = null;
+      mine.forEach(l => {
+        if (layered && l.layer !== layer) nodes.push(el('h4', null, data.layers[l.layer] || l.layer));
+        layer = l.layer;
+        nodes.push(row(l));
+      });
     });
     list.replaceChildren(...nodes);
   };
