@@ -66,6 +66,7 @@ def ui():
         "again": ["AGAIN-1", "AGAIN-2"],
         "walk_intro": ["WALK-1", "WALK-2"],
         "show_answer": ["SHOW-1", "SHOW-2"],
+        "differs": ["DIFF yours={yours} usual={usual}"],
     }
 
 

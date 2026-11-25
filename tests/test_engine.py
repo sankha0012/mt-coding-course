@@ -216,6 +216,39 @@ def test_a_miss_after_the_walk_shows_the_answer_to_type(make_engine, reach):
     assert e.pending(st)["mode"] == "answer"
 
 
+def test_a_repeat_miss_after_the_answer_is_shown_points_at_the_piece_that_differs(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, _, _ = miss(e, st, "SELECT 2")
+    st, shown, _ = miss(e, st)
+    assert not any(t.startswith("DIFF") for t in texts(shown))
+    st, again, _ = e.answer(st, "SELECT COUNT(*) FROM restaurant")
+    assert texts(again)[-1] == "DIFF yours=restaurant usual=restaurants"
+    assert not any("wrong" in t.lower() for t in texts(again))
+
+
+def test_a_repeat_miss_with_a_missing_piece_says_so(make_engine, reach):
+    e = make_engine()
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, _, _ = miss(e, st, "SELECT 2")
+    st, _, _ = miss(e, st)
+    st, again, _ = e.answer(st, "SELECT COUNT(*) restaurants")
+    assert texts(again)[-1] == "DIFF yours=(nothing) usual=FROM"
+
+
+def test_an_exact_known_wrong_answer_beats_an_earlier_one_with_the_same_result(make_engine, reach, play_steps):
+    play_steps[1]["wrong"] = [
+        {"sql": "SELECT COUNT(*) FROM restaurants WHERE city = 'x'", "ask": "FIRST"},
+        {"sql": "SELECT COUNT(*) FROM restaurants WHERE cuisine = 'y'", "ask": "SECOND"}]
+    e = make_engine(play_steps)
+    st = reach(e, 2)
+    st, _, _ = miss(e, st)
+    st, items, _ = e.answer(st, "SELECT COUNT(*) FROM restaurants WHERE cuisine = 'y'")
+    assert texts(items)[-1] == "SECOND"
+
+
 def test_with_no_walk_the_ladder_goes_from_again_to_the_answer(make_engine, reach):
     e = make_engine()
     st = reach(e, 5)

@@ -1,6 +1,7 @@
 import copy
+from difflib import SequenceMatcher
 
-from .sql import normalise
+from .sql import normalise, tokens
 
 
 def _teacher(text, style=None):
@@ -204,14 +205,26 @@ class Engine:
 
     def _match_wrong(self, cur, text, res):
         mine = self._norm(cur, text)
-        for w in cur.get("wrong", []):
-            code = w.get("sql") or w.get("code")
-            if self._norm(cur, code) == mine:
+        wrong = cur.get("wrong", [])
+        for w in wrong:  # the very sentence first, so a look-alike result cannot steal it
+            if self._norm(cur, w.get("sql") or w.get("code")) == mine:
                 return w
-            if res.error is None:
-                want = self._run(cur, code)
+        if res.error is None:
+            for w in wrong:
+                want = self._run(cur, w.get("sql") or w.get("code"))
                 if want is not None and res.key(self._flags(cur)) == want.key(self._flags(cur)):
                     return w
+        return None
+
+    def _differs(self, cur, text):
+        """The first piece where the learner's SQL and the model answer part. None in Python or if equal."""
+        if self._lang(cur) != "sql":
+            return None
+        mine, usual = tokens(text), tokens(cur["model"])
+        key = lambda ts: [t if t.startswith("'") else t.lower() for t in ts]
+        for tag, i1, i2, j1, j2 in SequenceMatcher(None, key(mine), key(usual), autojunk=False).get_opcodes():
+            if tag != "equal":
+                return " ".join(mine[i1:i2]) or "(nothing)", " ".join(usual[j1:j2]) or "(nothing)"
         return None
 
     def _next_rung(self, st, cur, text, res):
@@ -226,6 +239,7 @@ class Engine:
 
     def _on_miss(self, st, cur, text, res, items):
         st["misses"] += 1
+        before = st["rung"]
         rung = st["rung"] = self._next_rung(st, cur, text, res)
         if rung == 1:
             items.append(_teacher(self._pick(st, "again")))
@@ -240,3 +254,7 @@ class Engine:
             items.append(_teacher(f"{self._pick(st, 'walk_intro')}\n\n{steps}"))
         else:
             items.append(_teacher(f"{self._pick(st, 'show_answer')}\n\n```{self._lang(cur)}\n{cur['model']}\n```"))
+            # the answer was already on the screen and the learner still missed: say which piece differs
+            d = self._differs(cur, text) if before == 4 else None
+            if d:
+                items.append(_teacher(self._pick(st, "differs").format(yours=d[0], usual=d[1])))

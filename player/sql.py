@@ -25,10 +25,14 @@ def fix_quotes(text):
         for i, p in enumerate(parts))
 
 
+def tokens(text):
+    """The pieces of a sentence as typed: quote style and a final semicolon already put right."""
+    return _TOKEN.findall(re.sub(r";\s*$", "", fix_quotes(text).strip()))
+
+
 def normalise(text):
     """Text in a form that is equal when only case, spacing, quote style or a final semicolon differ."""
-    t = re.sub(r";\s*$", "", fix_quotes(text).strip())
-    return " ".join(tok if tok.startswith("'") else tok.lower() for tok in _TOKEN.findall(t))
+    return " ".join(tok if tok.startswith("'") else tok.lower() for tok in tokens(text))
 
 
 @dataclass
