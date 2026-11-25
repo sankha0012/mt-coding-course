@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 
+from checker import mongo
 from checker.pyrun import output_key, run_python
 
 from .sql import Result, open_database, run_sql
@@ -38,8 +39,10 @@ class Runner:
     def path(self, dataset=""):
         return self.data_dir / dataset if dataset else self.data_dir
 
-    def available(self, dataset=""):
-        return self.path(dataset).is_dir()
+    def available(self, dataset="", lang="sql"):
+        """Whether a step in this language can run on this machine: its data folder is here, and for MongoDB,
+        so is a mongod."""
+        return self.path(dataset).is_dir() and (lang != "mongo" or mongo.available())
 
     def _db(self, dataset):
         if dataset not in self._dbs:
@@ -47,10 +50,14 @@ class Runner:
         return self._dbs[dataset]
 
     def run(self, step, code, check=True):
-        dataset = step.get("data", "")
-        if not self.available(dataset):
+        dataset, lang = step.get("data", ""), step.get("lang", "sql")
+        if not self.path(dataset).is_dir():
             return Result(f"The data folder was not found: {dataset or self.data_dir}", [], [], 0)
-        if step.get("lang", "sql") == "python":
+        if lang == "mongo":
+            if not mongo.available():
+                return mongo.MongoResult("MongoDB is not installed on this machine. The MongoDB lessons need it.")
+            return mongo.run_mongo(mongo.server_for(self.data_dir), dataset, code, scratch=bool(step.get("scratch")))
+        if lang == "python":
             shown = run_python(code, self.path(dataset))
             if check and step.get("check"):
                 return PyRun(shown, run_python(code + "\n" + step["check"], self.path(dataset)))
@@ -59,4 +66,5 @@ class Runner:
 
     def play(self, lang, code, dataset=""):
         """The learner's own code in the try-it panel: shown, never judged, never logged."""
-        return self.run({"lang": lang, "data": dataset}, code, check=False).item()
+        # the try-it panel may write in MongoDB, on a scratch copy that is dropped afterwards
+        return self.run({"lang": lang, "data": dataset, "scratch": True}, code, check=False).item()

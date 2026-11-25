@@ -33,7 +33,8 @@ class Player:
         self.ui, self.chat = ui, chat or llm.chat
         self.runner, rng = Runner(data_dir), rng or random.Random()
         # a lesson whose data folder is not on this machine is left out, and said so at start up
-        self.lessons = [(n, s) for n, s in lessons if all(self.runner.available(x.get("data", "")) for x in s)]
+        self.lessons = [(n, s) for n, s in lessons
+                        if all(self.runner.available(x.get("data", ""), x.get("lang", "sql")) for x in s)]
         self.skipped = [n for n, _ in lessons if n not in {m for m, _ in self.lessons}]
         self.names = [name for name, _ in self.lessons]
         self.outline = {o["lesson"]: o for o in lesson_titles(content)}
@@ -98,7 +99,10 @@ class Player:
         with self.lock:
             _, name, st = self._current()
             step = self.engines[name].steps[st["playing"]["step"]]
-            return self.runner.play(lang, code, step.get("data", ""))
+            # MongoDB has its own data: the step's if it is a MongoDB step, the course's documents otherwise
+            dataset = (step.get("data", "") if step.get("lang") == "mongo" else "mongo") if lang == "mongo" \
+                else step.get("data", "")
+            return self.runner.play(lang, code, dataset)
 
     def data(self):
         """The tables of the step now waiting, for the Data tab. Read only, not logged."""
@@ -252,7 +256,7 @@ def make_app(content_dir, data_dir, progress_dir, rng=None, chat=None, providers
 
     @app.post("/api/play")
     def post_play(p: Play):
-        if p.lang not in ("sql", "python"):
+        if p.lang not in ("sql", "python", "mongo"):
             raise HTTPException(400, "unknown language")
         if not p.code.strip():
             raise HTTPException(400, "empty code")

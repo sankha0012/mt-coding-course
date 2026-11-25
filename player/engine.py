@@ -1,6 +1,8 @@
 import copy
 from difflib import SequenceMatcher
 
+from checker.mongoparse import normalise as mongo_normalise
+
 from .sql import normalise, tokens
 
 
@@ -31,11 +33,12 @@ class Engine:
         return st, self._tag(st, items), []
 
     def _tag(self, st, items):
-        """Teacher text in a Python step says so, so the screen colours its inline code as Python."""
-        if st["phase"] != "done" and self._lang(self.steps[st["playing"]["step"]]) == "python":
+        """Teacher text in a Python or MongoDB step says so, so the screen colours its inline code that way."""
+        lang = self._lang(self.steps[st["playing"]["step"]]) if st["phase"] != "done" else "sql"
+        if lang != "sql":
             for item in items:
                 if item["type"] == "teacher":
-                    item["lang"] = "python"
+                    item["lang"] = lang
         return items
 
     def pending(self, st):
@@ -46,8 +49,8 @@ class Engine:
             out = {"mode": "answer", "step": step + 1, "variant": st["playing"]["variant"]}
         else:
             return {"mode": phase}
-        if self._lang(self.steps[step]) == "python":
-            out["lang"] = "python"
+        if self._lang(self.steps[step]) != "sql":
+            out["lang"] = self._lang(self.steps[step])
         return out
 
     def advance(self, state):
@@ -152,13 +155,16 @@ class Engine:
 
     def _learner(self, cur, text):
         item = {"type": "learner", "sql": text}
-        if self._lang(cur) == "python":
-            item["lang"] = "python"
+        if self._lang(cur) != "sql":
+            item["lang"] = self._lang(cur)
         return item
 
     def _norm(self, cur, text):
         """Text in a form that is equal when only trivial things differ."""
-        return " ".join(text.split()) if self._lang(cur) == "python" else normalise(text)
+        lang = self._lang(cur)
+        if lang == "mongo":
+            return mongo_normalise(text)
+        return " ".join(text.split()) if lang == "python" else normalise(text)
 
     # ---- judging an answer
 
@@ -172,7 +178,9 @@ class Engine:
 
     @staticmethod
     def _flags(cur):
-        return {"ordered": cur.get("ordered", False), "any_column_order": cur.get("any_column_order", False)}
+        # a MongoDB document is judged by its values, so the order of its fields is always free
+        return {"ordered": cur.get("ordered", False),
+                "any_column_order": cur.get("any_column_order", False) or cur.get("lang") == "mongo"}
 
     def _correct(self, cur, res):
         if res.error:

@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 
+from . import mongo
 from .data import load_db
 
 
@@ -16,10 +17,16 @@ class Env:
     def path(self, dataset=""):
         return self.data_dir / dataset if dataset else self.data_dir
 
-    def available(self, dataset=""):
+    def available(self, dataset="", lang="sql"):
+        """Whether a step can run here: its data folder is present, and for MongoDB so is a mongod."""
+        if lang == "mongo" and not mongo.available():
+            return False
         if dataset in self._conns:
             return True
         return self.data_dir is not None and self.path(dataset).is_dir()
+
+    def mongo(self):
+        return mongo.server_for(self.data_dir)
 
     def sql(self, dataset=""):
         if dataset not in self._conns:

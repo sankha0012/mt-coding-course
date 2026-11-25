@@ -3,12 +3,19 @@ import sqlite3
 
 from .data import run, same_rows
 from .env import as_env
+from .mongo import run_mongo
+from .mongoparse import ParseError, normalise as mongo_normalise, parse as mongo_parse
 from .pyrun import run_python, same_output
 
 
+def _is_mongo(step):
+    return step.get("lang", "sql") == "mongo"
+
+
 def _flags(step):
+    # a MongoDB document is judged by its values, so the order of its fields is always free
     return {"ordered": step.get("ordered", False),
-            "any_column_order": step.get("any_column_order", False)}
+            "any_column_order": step.get("any_column_order", False) or _is_mongo(step)}
 
 
 def _is_python(step):
@@ -30,6 +37,9 @@ def _run(env, step, code, check=True):
         return (r.output, None) if r.error is None else (None, r.error)
     if not env.available(dataset):
         return None, f"The data folder was not found: {dataset}"
+    if _is_mongo(step):
+        r = run_mongo(env.mongo(), dataset, code, scratch=bool(step.get("scratch")))
+        return (r.full, None) if r.error is None else (None, r.error)
     try:
         return run(env.sql(dataset), code), None
     except sqlite3.Error as e:
@@ -41,6 +51,8 @@ def _empty(step, value):
 
 
 def _same(step, a, b, **flags):
+    if _is_mongo(step):
+        flags["any_column_order"] = True
     return same_output(a, b) if _is_python(step) else same_rows(a, b, **flags)
 
 
@@ -122,6 +134,8 @@ def check_narration(lesson, steps):
 
 
 def _norm_code(step, code):
+    if _is_mongo(step):
+        return mongo_normalise(code)
     return " ".join(code.split()) if _is_python(step) else _tokens(code)
 
 
@@ -235,11 +249,35 @@ def _changed_runs(a, b):
     return sum(1 for tag, *_ in ops if tag != "equal")
 
 
+def _mongo_slots(sentence):
+    """The pieces of a MongoDB sentence: the collection and method, each argument (each stage of a pipeline),
+    and each chained word. A piece is a slot."""
+    try:
+        c = mongo_parse(sentence)
+    except ParseError:
+        return None
+    args = c.args[0] if c.method == "aggregate" and c.args and isinstance(c.args[0], list) else c.args
+    return [f"{c.collection}.{c.method}", *[repr(x) for x in args], *[f"{n}{a!r}" for n, a in c.mods]]
+
+
+def _changed_pieces(a, b):
+    pa, pb = _mongo_slots(a), _mongo_slots(b)
+    if pa is None or pb is None:
+        return 99
+    return sum(1 for x, y in zip(pa, pb) if x != y) + abs(len(pa) - len(pb))
+
+
+def _lang(step):
+    return step.get("lang", "sql")
+
+
 def _slots_changed(a, b):
-    if _is_python(a) != _is_python(b):
+    if _lang(a) != _lang(b):
         return 99
     if _is_python(a):
         return _changed_runs(a["model"], b["model"])
+    if _is_mongo(a):
+        return _changed_pieces(a["model"], b["model"])
     return _changed_clauses(a["model"], b["model"])
 
 
@@ -301,8 +339,11 @@ def check_all(env, thoughts, lessons):
     fails, skipped = [], []
     for lesson, steps in lessons:
         missing = sorted({s["data"] for s in steps if s.get("data") and not env.available(s["data"])})
-        if missing:
+        no_mongo = any(_is_mongo(s) for s in steps) and not env.available(lang="mongo")
+        if missing or no_mongo:
             skipped += [f"WARN {lesson}: the data folder '{d}' was not found, so its answers were not run" for d in missing]
+            if no_mongo:
+                skipped.append(f"WARN {lesson}: MongoDB is not installed here, so its answers were not run")
             fails += check_narration(lesson, steps)
             continue
         fails += (check_sql(env, lesson, steps) + check_narration(lesson, steps)
