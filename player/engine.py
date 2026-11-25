@@ -47,6 +47,8 @@ class Engine:
             out = {"mode": "run", "sql": self.steps[step]["shows"][st.get("ran", 0)]}
         elif phase == "answer":
             out = {"mode": "answer", "step": step + 1, "variant": st["playing"]["variant"]}
+            if self._cur(st).get("start"):  # the editor opens with the data already typed
+                out["start"] = self._cur(st)["start"]
         else:
             return {"mode": phase}
         if self._lang(self.steps[step]) != "sql":

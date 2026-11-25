@@ -120,3 +120,13 @@ def test_a_python_return_needs_its_own_check_if_its_step_has_one(env):
     assert has(check_returns(env, "t-01", [step]), "step 1: return: needs its own check, because its step has one")
     step["return"]["check"] = "print(g(2))"
     assert check_returns(env, "t-01", [step]) == []
+
+
+def test_start_must_begin_the_model_answer():
+    from checker.checks import check_start
+    step = {"lang": "python", "model": "x = 4\nprint(x)", "start": "x = 4"}
+    assert check_start("t-01", [step]) == []
+    step["start"] = "x = 5"
+    assert "model answer must begin with its start text" in check_start("t-01", [step])[0]
+    step.update(lang="sql", start="x")
+    assert "for Python steps only" in check_start("t-01", [step])[0]

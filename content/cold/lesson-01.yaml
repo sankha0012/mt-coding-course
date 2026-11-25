@@ -51,6 +51,7 @@ steps:
     data: "real/olist"
     requires: ["list", "for-each", "block", "dict", "set-by-name", "get-with-default", "update-the-pile", "go-through-dict", "sorted", "show"]
     text: "Here are ten review scores: 5, 4, 5, 1, 3, 5, 4, 4, 1, 5. In Python, count how many of each there are, and print each score with its count on its own line, the smallest score first."
+    start: "scores = [5, 4, 5, 1, 3, 5, 4, 4, 1, 5]"
     model: |-
       scores = [5, 4, 5, 1, 3, 5, 4, 4, 1, 5]
       counts = {}

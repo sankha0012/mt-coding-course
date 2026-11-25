@@ -54,6 +54,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "list-of-columns", "look-at-rows", "join-on"]
     text: "Stick the restaurants onto the orders, and show me the order id, the restaurant's name and its cuisine, for the first four orders."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -101,11 +105,14 @@ steps:
           print(joined[['order_id', 'name', 'cuisine']].head(4))
         ask: "Python has not heard of joined yet. What makes it, and what does it have to be given?"
     walk:
-      - "Read the orders file and the restaurants file, each into a table of its own."
       - "Stick the restaurants onto the orders: the orders first, then merge, the other table, and the shared column after on. Give the result a name."
       - "Ask that table for the three columns, as a list, and for its first four rows."
     return:
       text: "Stick the restaurants onto the orders, and show me the order id, the subtotal and the city of the first three orders."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -154,6 +161,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "pile-by-merged", "groupby", "pick-then-summarise", "pile-names-on-left"]
     text: "Show each cuisine with the average delivery_fee of the orders placed at its restaurants."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -195,11 +206,15 @@ steps:
           print(joined.groupby('cuisine')['subtotal'].mean())
         ask: "That is the average subtotal. Which column did I ask the average of?"
     walk:
-      - "Read both files, and stick the restaurants onto the orders."
+      - "Stick the restaurants onto the orders."
       - "Make piles by the cuisine column, which came from the other table."
       - "Pick the delivery fee, and say its average."
     return:
       text: "Show each restaurant city with the average subtotal of the orders placed there."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -224,6 +239,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "merge", "name-the-result", "pile-by-merged", "groupby", "pick-then-summarise", "pile-names-on-left", "keep-before-piles"]
     text: "For the delivered orders only, show each restaurant city with the average subtotal of the orders placed there."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -265,11 +284,15 @@ steps:
           print(delivered.groupby('city')['status'].mean())
         ask: "Which column is the average about? Averaging a word does not mean anything."
     walk:
-      - "Read both files and stick the restaurants onto the orders."
+      - "Stick the restaurants onto the orders."
       - "Keep only the delivered rows, and give them a name."
       - "Make piles by city, pick the subtotal, and say the average."
     return:
       text: "Among the cancelled orders only, show each cuisine with the average delivery_fee of the orders placed at its restaurants."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -327,6 +350,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "only-matches-survive", "name-the-result", "how-many", "name-a-value"]
     text: "Without looking at the status, show how many orders have no delivery."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -361,11 +388,15 @@ steps:
           print(len(joined) - len(orders))
         ask: "Which is the bigger number, the rows that went in or the rows that came out? Take the smaller from the bigger."
     walk:
-      - "Read the orders and the deliveries, and merge them on the order's number."
+      - "Merge the orders with the deliveries on the order's number."
       - "Count the rows that went in, and the rows that came out."
       - "Take one away from the other."
     return:
       text: "Do the same with the restaurants: show how many orders have no matching restaurant."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -418,6 +449,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise", "names-back-as-column", "name-the-result", "yes-no-column", "brackets-keep-yes", "compare-signs"]
     text: "For each restaurant, work out the average subtotal as a table that has restaurant_id as a column. Then show only the restaurants numbered above 55."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -455,11 +489,14 @@ steps:
           print(by_restaurant[by_restaurant['subtotal'] > 55])
         ask: "That asks about the average. Which column holds the restaurant's number?"
     walk:
-      - "Read the orders, make piles by restaurant, pick the subtotal and say the average."
+      - "Make piles by restaurant, pick the subtotal and say the average."
       - "Turn the pile names back into an ordinary column, and give the table a name."
       - "Ask the restaurant column whether each is above 55, and keep those rows."
     return:
       text: "For each promised_minutes value, work out the average delivery_fee as a table that has promised_minutes as a column. Then show only the rows whose promised_minutes is above 30."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -508,6 +545,10 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "pile-by-merged", "groupby", "pick-then-summarise", "several-summaries"]
     supplies: [".agg(['mean', 'count'])"]
     text: "For each cuisine, show the average delivery fee and how many orders there were. The spelling is `.agg(['mean', 'count'])`, after the column."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -542,11 +583,15 @@ steps:
           print(joined.groupby('cuisine')['delivery_fee'].agg(['mean', 'sum']))
         ask: "The first is right. Which second summary did I ask for: how many orders?"
     walk:
-      - "Read both files, and stick the restaurants onto the orders."
+      - "Stick the restaurants onto the orders."
       - "Make piles by cuisine, and pick the delivery fee."
       - "Say both summaries at once, with the spelling you were given."
     return:
       text: "For each city, show the average subtotal and how many orders there were, with `.agg(['mean', 'count'])`."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        restaurants = pd.read_csv('restaurants.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -596,6 +641,9 @@ steps:
       - "Ask the table who it is: the action that reports its columns, their kinds and how full each is."
     return:
       text: "Now the coupons file, coupons.csv. Show its summary in the same way."
+      start: |-
+        import pandas as pd
+        coupons = pd.read_csv('coupons.csv')
       model: |
         import pandas as pd
         coupons = pd.read_csv('coupons.csv')
@@ -612,6 +660,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "value-counts", "text-quotes"]
     text: "Show how many deliveries had rain, and how many did not. The rain column holds 1 for rain and 0 for none."
+    start: |-
+      import pandas as pd
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       deliveries = pd.read_csv('deliveries.csv')
@@ -642,11 +693,13 @@ steps:
           print(deliveries['rain'])
         ask: "That is the whole column. Which word counts how many of each?"
     walk:
-      - "Read deliveries.csv into a table."
       - "Take the rain column out."
       - "Ask it how many of each."
     return:
       text: "The bag_size column says how many orders the courier carried at once. Show each bag_size with how many deliveries have it."
+      start: |-
+        import pandas as pd
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         deliveries = pd.read_csv('deliveries.csv')
@@ -680,6 +733,10 @@ steps:
       Python answered: KeyError: 'rain'. Ana, does the orders table have a rain column? ... No. Where did we just see one? ... In deliveries. So before she can pile by rain, the deliveries have to be stuck onto the orders, as the restaurants were when we needed a city.
 
       To check the merge, ask for the number of deliveries in each rain pile. It should match what you saw in the last step.
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -722,10 +779,14 @@ steps:
           print(len(joined))
         ask: "That is one number, how many survived. Ana wanted the count in each rain pile. What makes the piles?"
     walk:
-      - "Read the orders and the deliveries, and merge them on the order's number."
+      - "Merge the orders with the deliveries on the order's number."
       - "Make piles by rain, and count the rows of each pile."
     return:
       text: "Merge the orders with the deliveries, and show each bag_size with how many deliveries have it."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -750,6 +811,10 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "only-matches-survive", "pile-by-merged", "groupby", "pick-then-summarise", "several-summaries", "names-back-as-column"]
     supplies: [".agg(['mean', 'count'])"]
     text: "For each rain pile, show the average distance and how many deliveries, as a table that has rain as a column. The spelling is `.agg(['mean', 'count'])`."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -780,11 +845,15 @@ steps:
           print(joined.groupby('rain')['distance_km'].mean().reset_index())
         ask: "That has the average only. How do we ask for the count in the same line?"
     walk:
-      - "Read both files, and merge the orders with the deliveries."
+      - "Merge the orders with the deliveries."
       - "Make piles by rain, pick the distance, and say both summaries."
       - "Turn the pile names back into a column."
     return:
       text: "For each bag size, show the average distance and how many deliveries, as a table that has bag_size as a column, using `.agg(['mean', 'count'])`."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -807,6 +876,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "only-matches-survive", "new-column", "yes-no-as-column", "mean-of-yes-no"]
     text: "Merge the orders with the deliveries, add a late column, and print the share of those deliveries that was late."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -843,11 +916,15 @@ steps:
           print(joined['late'].mean())
         ask: "That is the share that came early. Which way round does late compare the two times?"
     walk:
-      - "Read both files, and merge them on the order's number."
+      - "Merge them on the order's number."
       - "Add a late column: was the real time more than the promised time?"
       - "Print the average of that column."
     return:
       text: "Merge the orders with the deliveries, add a column called quick that says whether the order was promised in under 40 minutes, and print the share of those deliveries that were quick."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -869,6 +946,10 @@ steps:
     supplies: [".agg(['mean', 'count'])"]
     friction: true
     text: "This one I won't break down. Show each bag_size with the share of its deliveries that were late, and how many deliveries it has. The spelling is `.agg(['mean', 'count'])`."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -904,11 +985,15 @@ steps:
           print(orders.groupby('bag_size')['late'].agg(['mean', 'count']))
         ask: "Does the orders table have a bag_size column? Where does it live?"
     walk:
-      - "Read both files, merge them, and add the late column."
+      - "Merge them, and add the late column."
       - "Make piles by bag size, pick the late column."
       - "Say both summaries at once, with the spelling you were given."
     return:
       text: "Show each rain value with the share of its deliveries that were late, and how many deliveries it has. Use `.agg(['mean', 'count'])`."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -928,6 +1013,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "merge", "name-the-result", "only-matches-survive", "new-column", "yes-no-as-column", "mean-of-yes-no", "pile-by-merged", "groupby", "pick-then-summarise", "pile-names-on-left"]
     text: "The last one, from nothing. Is a delivery more often late when it rains? Show the share of late deliveries with rain and without."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -976,11 +1065,15 @@ steps:
           print(joined.groupby('rain')['late'].mean())
         ask: "Does the deliveries table have a restaurant_id column? Which column do these two tables share?"
     walk:
-      - "Read the two files, and merge the orders with the deliveries."
+      - "Merge the orders with the deliveries."
       - "Add a late column: was the real time more than the promised time?"
       - "Make piles by rain, pick the late column, and say its average."
     return:
       text: "From nothing: is a delivery more often late when the courier carries three orders at once? Show the share late for a bag of 3 and for the other bag sizes, as one pile each."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')

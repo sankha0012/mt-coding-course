@@ -74,6 +74,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise"]
     text: "Show each status with the average delivery_fee of its orders."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -109,6 +112,9 @@ steps:
       - "Say the average, and print."
     return:
       text: "Show each promised_minutes value with the largest actual_minutes of its orders."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -131,6 +137,9 @@ steps:
     new: ["pile-names-on-left"]
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise"]
     text: "The promised_minutes column holds 30, 40 or 50. For each promised_minutes value, show the average subtotal of its orders. In SQL you had to ask for the pile's name, or the numbers came out unlabelled. Look at what pandas does about that when you run it."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -162,11 +171,14 @@ steps:
           print(orders['subtotal'].mean())
         ask: "That is one number for every order. Where do the piles come in?"
     walk:
-      - "Read orders.csv. Then, after the table, make the piles: groupby, with the column to pile by in quotes."
+      - "After the table, make the piles: groupby, with the column to pile by in quotes."
       - "Pick the column the average is about."
       - "Say the summary, and print."
     return:
       text: "Show each status with the average promised_minutes of its orders."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -209,6 +221,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "groupby", "size", "pile-names-on-left"]
     text: "Show each vehicle with how many couriers ride it."
+    start: |-
+      import pandas as pd
+      couriers = pd.read_csv('couriers.csv')
     model: |
       import pandas as pd
       couriers = pd.read_csv('couriers.csv')
@@ -240,11 +255,13 @@ steps:
           print(couriers.groupby('city').size())
         ask: "Those are the cities. Which column holds the vehicle?"
     walk:
-      - "Read couriers.csv into a table."
       - "Make piles by the vehicle column."
       - "Count the rows of each pile, and print."
     return:
       text: "The restaurants have a cuisine. Show each cuisine with how many restaurants serve it."
+      start: |-
+        import pandas as pd
+        restaurants = pd.read_csv('restaurants.csv')
       model: |
         import pandas as pd
         restaurants = pd.read_csv('restaurants.csv')
@@ -269,6 +286,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "pile-names-on-left", "compare-signs", "keep-before-piles"]
     text: "Among the orders with a subtotal above 100, show each promised_minutes value with how many of those orders have it."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -301,11 +321,14 @@ steps:
           print(len(orders[orders['subtotal'] > 100]))
         ask: "That is how many big orders there are in all. How many for each promised time?"
     walk:
-      - "Read orders.csv. Keep only the orders above 100, as before."
+      - "Keep only the orders above 100, as before."
       - "Of what is left, make the piles by promised time."
       - "Count the rows of each pile, and print."
     return:
       text: "Among the cancelled orders, show each promised_minutes value with how many of those orders have it."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -349,6 +372,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "value-counts"]
     text: "Show each restaurant city with how many restaurants are in it, the biggest number first."
+    start: |-
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       restaurants = pd.read_csv('restaurants.csv')
@@ -381,11 +407,13 @@ steps:
           print(restaurants['city'].count())
         ask: "That is one number: how many cities were written down. What do we want for each city?"
     walk:
-      - "Read restaurants.csv into a table."
       - "Take the city column out."
       - "Ask it how many of each: value_counts, with its brackets."
     return:
       text: "The couriers work in cities too. Show me each city and how many couriers it has, the biggest first."
+      start: |-
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
       model: |
         import pandas as pd
         couriers = pd.read_csv('couriers.csv')
@@ -430,6 +458,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "groupby", "pick-then-summarise", "pile-names-on-left", "sort-values"]
     text: "For each status, what did the delivery fees add up to? Show the biggest first."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -465,6 +496,9 @@ steps:
       - "Turn it round so the biggest is first."
     return:
       text: "Show each promised_minutes value with the average actual_minutes of its orders, the biggest average first."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -516,6 +550,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "keep-piles-again", "name-the-result", "how-many", "compare-signs"]
     text: "Show how many restaurants had more than 100 delivered orders."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -552,6 +589,9 @@ steps:
       - "Hand it to the brackets, and count what is left."
     return:
       text: "Show how many customers placed more than 7 orders."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -605,6 +645,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "row-by-row-and", "how-many", "compare-signs"]
     text: "Show how many orders had a delivery_fee of 0 and a subtotal above 100."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -643,6 +686,9 @@ steps:
       - "Join them with the sign that asks both of every row, hand that to the table's brackets, and count."
     return:
       text: "The promised_minutes column holds 30, 40 or 50. Show how many orders had a promised_minutes of 30 and a subtotal below 20."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -659,6 +705,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "yes-no-column", "brackets-keep-yes", "row-by-row-and", "how-many", "text-quotes"]
     text: "Show how many restaurants serve pizza or japonesa."
+    start: |-
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       restaurants = pd.read_csv('restaurants.csv')
@@ -690,6 +739,9 @@ steps:
       - "Join them with the sign for either, keep the rows, and count."
     return:
       text: "The couriers ride a bike, a moto or a carro. Show how many couriers ride a moto or a carro."
+      start: |-
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
       model: |
         import pandas as pd
         couriers = pd.read_csv('couriers.csv')
@@ -707,6 +759,9 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "pick-then-summarise", "pile-names-on-left", "sort-values", "name-the-result", "keep-before-piles"]
     friction: true
     text: "This one I won't break down. For the delivered orders only, show each promised_minutes value with the average subtotal of its orders, the biggest average first."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -745,6 +800,9 @@ steps:
       - "Sort the averages, the biggest first."
     return:
       text: "Among the cancelled orders only, show each promised_minutes value with the total delivery_fee of its orders, the biggest total first."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -767,6 +825,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "groupby", "size", "pile-names-on-left", "sort-values", "look-at-rows", "keep-before-piles"]
     text: "The last one, from nothing: show the restaurant_id of each of the five restaurants with the most delivered orders, with how many delivered orders each had."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -810,6 +871,9 @@ steps:
       - "Keep only the first five, with the action that shows the first rows."
     return:
       text: "Among the delivered orders, show the three restaurants with the biggest total of subtotals, with each total."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')

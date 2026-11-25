@@ -15,6 +15,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names"]
     text: "Let's start with where we stopped. The dict counts holds bike at 73, moto at 110 and carro at 17. Show each vehicle with its count, but only the ones that have more than 50."
+    start: "counts = {'bike': 73, 'moto': 110, 'carro': 17}"
     model: |-
       counts = {'bike': 73, 'moto': 110, 'carro': 17}
       for vehicle, n in counts.items():
@@ -40,11 +41,11 @@ steps:
               print(vehicle, n)
         ask: "Carro is here, with only 17. Where is the question?"
     walk:
-      - "Make the dict with its three vehicles."
       - "Go through its pairs: two names after for, and a dot and items after the dict."
       - "Ask the question about the count, and show the vehicle and the count."
     return:
       text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Show each dish with its price, but only the dishes that cost less than 50."
+      start: "prices = {'pizza': 40, 'sushi': 60, 'acai': 25}"
       model: |-
         prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
         for dish, price in prices.items():
@@ -86,6 +87,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "show", "one-entry-per-pile"]
     text: "The dict counts holds bike at 73, moto at 110 and carro at 17. Two new carro couriers join. Raise the carro pile by 2, and show the dict."
+    start: "counts = {'bike': 73, 'moto': 110, 'carro': 17}"
     model: |-
       counts = {'bike': 73, 'moto': 110, 'carro': 17}
       counts['carro'] = counts['carro'] + 2
@@ -112,11 +114,11 @@ steps:
           print(counts)
         ask: "Is carro a name you made, or a word we are looking for?"
     walk:
-      - "Make the dict."
       - "Read the carro pile: the dict's name, and carro in square brackets. Add 2."
       - "Put the result back under carro with an equals sign, then show the dict."
     return:
       text: "The dict counts holds bike at 73, moto at 110 and carro at 17. A new moto courier joins. Raise the moto pile by 1, and show the dict."
+      start: "counts = {'bike': 73, 'moto': 110, 'carro': 17}"
       model: |-
         counts = {'bike': 73, 'moto': 110, 'carro': 17}
         counts['moto'] = counts['moto'] + 1
@@ -256,6 +258,7 @@ steps:
       ```
 
       Python answered: KeyError: 'delivered'. Ana, was there a delivered pile the first time round? ... No. She raised a pile that did not exist. What does a pile need before it can grow? Type the whole program as she should have written it.
+    start: "statuses = ['delivered', 'cancelled', 'delivered']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered']
       counts = {}
@@ -306,6 +309,7 @@ steps:
       - "Before the raise, ask whether the status is not in counts yet, and if so start it at zero."
     return:
       text: "Count how many couriers ride each vehicle: bike, moto, bike, carro and bike. Show the dict."
+      start: "vehicles = ['bike', 'moto', 'bike', 'carro', 'bike']"
       model: |-
         vehicles = ['bike', 'moto', 'bike', 'carro', 'bike']
         counts = {}
@@ -333,6 +337,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "is-it-there", "go-through-dict", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile"]
     text: "Six restaurants serve these cuisines: pizza, japonesa, pizza, arabe, japonesa and pizza. Count the restaurants for each cuisine in a dict, and then show each cuisine with its count, one line each."
     thinking_order: "Make the list, and an empty dict. For each cuisine, start its pile if it is new, and raise it. Then go through the piles and show each with its count."
+    start: "cuisines = ['pizza', 'japonesa', 'pizza', 'arabe', 'japonesa', 'pizza']"
     model: |-
       cuisines = ['pizza', 'japonesa', 'pizza', 'arabe', 'japonesa', 'pizza']
       counts = {}
@@ -379,11 +384,12 @@ steps:
           print(counts)
         ask: "The piles are made, but I asked for one line for each. What goes through them to show each?"
     walk:
-      - "Make the list of cuisines and an empty dict called counts."
+      - "Make an empty dict called counts."
       - "For each cuisine: if it is not in counts, start it at zero. Then raise it by one."
       - "After that loop, go through counts, and show each cuisine with its count."
     return:
       text: "Seven couriers ride bike, moto, bike, carro, bike, moto and bike. Count the couriers for each vehicle in a dict, and show each vehicle with its count, one line each."
+      start: "vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto', 'bike']"
       model: |-
         vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto', 'bike']
         counts = {}
@@ -445,6 +451,7 @@ steps:
       ```
 
       Python answered: TypeError: unsupported operand type(s) for +: 'NoneType' and 'int'. Davi, what does get hand back when the name is not there, and you have given it nothing to hand back instead? ... Nothing at all, which Python calls None. And you cannot add one to nothing. The second thing in the brackets is what get hands back for a pile that is not there yet. Type the whole program as Davi should have written it.
+    start: "statuses = ['delivered', 'cancelled', 'delivered']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered']
       counts = {}
@@ -489,6 +496,7 @@ steps:
       - "Inside its brackets, after the name, put what a missing pile should count as."
     return:
       text: "Count how many couriers ride each vehicle the short way: bike, bike and moto. Show the dict."
+      start: "vehicles = ['bike', 'bike', 'moto']"
       model: |-
         vehicles = ['bike', 'bike', 'moto']
         counts = {}
@@ -507,6 +515,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
     text: "Orders came back with these statuses: delivered, cancelled, delivered, delivered and cancelled. Count the orders for each status in a dict, the short way, and then show each status with its count, one line each."
+    start: "statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled']
       counts = {}
@@ -546,11 +555,12 @@ steps:
               print(status, counts[status])
         ask: "The piles are shown at every turn. When are they ready?"
     walk:
-      - "Make the list and an empty dict."
+      - "Make an empty dict."
       - "For each status, put under its name: what is there, or 0, and one more."
       - "After that loop, go through the piles and show each status with its count."
     return:
       text: "Count the orders for each coupon, the short way: FRETEGRATIS, BEMVINDO10, FRETEGRATIS, FRETEGRATIS and PIZZA20. Show each coupon with its count, one line each."
+      start: "codes = ['FRETEGRATIS', 'BEMVINDO10', 'FRETEGRATIS', 'FRETEGRATIS', 'PIZZA20']"
       model: |-
         codes = ['FRETEGRATIS', 'BEMVINDO10', 'FRETEGRATIS', 'FRETEGRATIS', 'PIZZA20']
         counts = {}
@@ -573,6 +583,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
     text: "Six couriers ride bike, moto, bike, carro, bike and moto. Count them for each vehicle, and show only the vehicles that have more than one courier, each with its count."
+    start: "vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto']"
     model: |-
       vehicles = ['bike', 'moto', 'bike', 'carro', 'bike', 'moto']
       counts = {}
@@ -611,6 +622,7 @@ steps:
       - "Ask the question about the count: more than one. Show the vehicle and its count."
     return:
       text: "Five orders have the statuses delivered, cancelled, delivered, cancelled and delivered. Count them for each status, and show only the statuses that have more than two orders, each with its count."
+      start: "statuses = ['delivered', 'cancelled', 'delivered', 'cancelled', 'delivered']"
       model: |-
         statuses = ['delivered', 'cancelled', 'delivered', 'cancelled', 'delivered']
         counts = {}
@@ -632,6 +644,7 @@ steps:
     new: ["total-per-pile"]
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile"]
     text: "A pile does not have to count. It can hold a total. Here each order is a pair: its status and its subtotal. A for line can name both halves of a pair, as it did with items(). The orders: delivered 81.1, cancelled 31.3, delivered 18.85, cancelled 44.67 and delivered 84.23. What did each status add up to? Show each status with its total, one line each."
+    start: "sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]"
     model: |-
       sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
       totals = {}
@@ -672,11 +685,12 @@ steps:
               print(status, totals[status])
         ask: "Python stopped. Each item is a pair. How many names go after for?"
     walk:
-      - "Make the list of five pairs, and an empty dict called totals."
+      - "Make an empty dict called totals."
       - "Go through the pairs, naming both halves. Under the status, put what is there or 0, plus the subtotal."
       - "After the loop, go through the totals and show each status with its total."
     return:
       text: "The delivery fees of five orders were: delivered 8.99, delivered 6.99, cancelled 4.99, delivered 6.99 and cancelled 8.99. What did each status add up to? Show each status with its total, one line each."
+      start: "fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]"
       model: |-
         fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]
         totals = {}
@@ -698,6 +712,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "equals-asks", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default"]
     text: "Now keep first, then pile, as in SQL. Six orders came with a coupon and a status: FRETEGRATIS delivered, PIZZA20 cancelled, FRETEGRATIS delivered, BEMVINDO10 delivered, FRETEGRATIS cancelled and PIZZA20 delivered. For each coupon, count only the delivered orders. Show each coupon with its count, one line each."
+    start: "orders = [['FRETEGRATIS', 'delivered'], ['PIZZA20', 'cancelled'], ['FRETEGRATIS', 'delivered'], ['BEMVINDO10', 'delivered'], ['FRETEGRATIS', 'cancelled'], ['PIZZA20', 'delivered']]"
     model: |-
       orders = [['FRETEGRATIS', 'delivered'], ['PIZZA20', 'cancelled'], ['FRETEGRATIS', 'delivered'], ['BEMVINDO10', 'delivered'], ['FRETEGRATIS', 'cancelled'], ['PIZZA20', 'delivered']]
       counts = {}
@@ -741,11 +756,12 @@ steps:
               print(code, counts[code])
         ask: "Python stopped at the question. What do two equals signs do that one does not?"
     walk:
-      - "Make the list of six pairs, and an empty dict."
+      - "Make an empty dict."
       - "Go through the pairs, and ask first: is the status delivered?"
       - "Only on a yes, raise the coupon's pile. Then, after the loop, show each pile."
     return:
       text: "Six orders came with a status and a subtotal: delivered 81.1, cancelled 31.3, delivered 18.85, cancelled 74.19, delivered 84.23 and cancelled 44.67. For each status, count only the orders above 50. Show each status with its count, one line each."
+      start: "sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 74.19], ['delivered', 84.23], ['cancelled', 44.67]]"
       model: |-
         sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 74.19], ['delivered', 84.23], ['cancelled', 44.67]]
         counts = {}
@@ -800,6 +816,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "build-average", "average-from-two-dicts"]
     text: "Five orders used these coupons, with these subtotals: FRETEGRATIS 18.85, BEMVINDO10 91.11, FRETEGRATIS 39.91, PIZZA20 29.05 and BEMVINDO10 74.38. What was the average subtotal for each coupon? Show each coupon with its average, one line each."
+    start: "sales = [['FRETEGRATIS', 18.85], ['BEMVINDO10', 91.11], ['FRETEGRATIS', 39.91], ['PIZZA20', 29.05], ['BEMVINDO10', 74.38]]"
     model: |-
       sales = [['FRETEGRATIS', 18.85], ['BEMVINDO10', 91.11], ['FRETEGRATIS', 39.91], ['PIZZA20', 29.05], ['BEMVINDO10', 74.38]]
       totals = {}
@@ -848,11 +865,12 @@ steps:
               print(code, totals[code] / counts[code])
         ask: "That divides at every turn, before a pile is complete. When is a pile's average ready?"
     walk:
-      - "Make the list of five pairs, and two empty dicts: totals and counts."
+      - "Make two empty dicts: totals and counts."
       - "In one loop, for each pair, raise the code's total by the subtotal and its count by one."
       - "After the loop, go through the totals and show each code with its total divided by its count."
     return:
       text: "The delivery fees of five orders were: delivered 8.99, delivered 6.99, cancelled 4.99, delivered 6.99 and cancelled 8.99. What was the average fee for each status? Show each status with its average, one line each."
+      start: "fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]"
       model: |-
         fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]
         totals = {}
@@ -876,6 +894,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "average-from-two-dicts"]
     text: "Same five orders: delivered 81.1, cancelled 31.3, delivered 18.85, cancelled 44.67 and delivered 84.23. This time, for each status, show how many orders there were and what they added up to: the status, the count and then the total, one line each."
+    start: "sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]"
     model: |-
       sales = [['delivered', 81.1], ['cancelled', 31.3], ['delivered', 18.85], ['cancelled', 44.67], ['delivered', 84.23]]
       totals = {}
@@ -912,11 +931,12 @@ steps:
               print(status, totals[status])
         ask: "Where is the count of orders for each status?"
     walk:
-      - "Make the list, and two empty dicts: totals and counts."
+      - "Make two empty dicts: totals and counts."
       - "In one loop, raise each status's total by the subtotal and its count by one."
       - "After the loop, show each status, then its count, then its total."
     return:
       text: "The delivery fees were: delivered 8.99, delivered 6.99, cancelled 4.99, delivered 6.99 and cancelled 8.99. For each status, show the status, how many orders there were and the total fee, one line each."
+      start: "fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]"
       model: |-
         fees = [['delivered', 8.99], ['delivered', 6.99], ['cancelled', 4.99], ['delivered', 6.99], ['cancelled', 8.99]]
         totals = {}
@@ -941,6 +961,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "get-by-name", "set-by-name", "text-in-list", "go-through-dict", "two-names", "one-entry-per-pile", "pile-starts-at-zero", "update-the-pile", "get-with-default", "total-per-pile", "build-average", "average-from-two-dicts"]
     friction: true
     text: "The last one, and I won't break it down. Five dishes were sold, in this order: pizza at 40, sushi at 60, pizza at 50, acai at 25 and sushi at 70. What was the average price for each dish? Show each dish with its average, one line each."
+    start: "sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]"
     model: |-
       sales = [['pizza', 40], ['sushi', 60], ['pizza', 50], ['acai', 25], ['sushi', 70]]
       totals = {}
@@ -997,11 +1018,12 @@ steps:
           print(total / len(sales))
         ask: "That is one average for all the dishes. What did I ask for each dish to have?"
     walk:
-      - "Make the list of five pairs, and two empty dicts."
+      - "Make two empty dicts."
       - "In one loop, for each pair, raise the dish's total by the price and its count by one, the short way."
       - "After the loop, go through the totals and show each dish with its total divided by its count."
     return:
       text: "Five orders used these coupons and had these delivery fees: FRETEGRATIS 6.99, BEMVINDO10 4.99, FRETEGRATIS 8.99, PIZZA20 0 and BEMVINDO10 6.99. What was the average fee for each coupon? Show each coupon with its average, one line each."
+      start: "fees = [['FRETEGRATIS', 6.99], ['BEMVINDO10', 4.99], ['FRETEGRATIS', 8.99], ['PIZZA20', 0], ['BEMVINDO10', 6.99]]"
       model: |-
         fees = [['FRETEGRATIS', 6.99], ['BEMVINDO10', 4.99], ['FRETEGRATIS', 8.99], ['PIZZA20', 0], ['BEMVINDO10', 6.99]]
         totals = {}
@@ -1037,6 +1059,7 @@ steps:
     lang: "python"
     requires: ["list", "text-in-list", "text-quotes", "show", "for-each", "block", "if-question", "compare-signs", "dict", "get-by-name", "set-by-name", "go-through-dict", "two-names", "one-entry-per-pile", "update-the-pile", "get-with-default"]
     text: "Six orders came with a status and a subtotal: cancelled 58.66, delivered 46.82, delivered 91.11, cancelled 49.29, delivered 59.1 and cancelled 74.19. For each status, count only the orders above 50. Show each status with its count, one line each."
+    start: "sales = [['cancelled', 58.66], ['delivered', 46.82], ['delivered', 91.11], ['cancelled', 49.29], ['delivered', 59.1], ['cancelled', 74.19]]"
     model: |-
       sales = [['cancelled', 58.66], ['delivered', 46.82], ['delivered', 91.11], ['cancelled', 49.29], ['delivered', 59.1], ['cancelled', 74.19]]
       counts = {}

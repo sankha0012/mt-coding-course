@@ -133,6 +133,21 @@ def check_narration(lesson, steps):
     return fails
 
 
+def check_start(lesson, steps):
+    """Check 14: `start` is the text the editor opens with. It is Python only, and the model answer begins with it,
+    so the learner's finished program is the model's."""
+    fails = []
+    for n, s in enumerate(steps, 1):
+        for where, t in (("", s), ("return ", s.get("return") or {})):
+            if "start" not in t:
+                continue
+            if not _is_python(s):
+                fails.append(f"FAIL {lesson} step {n}: {where}start is for Python steps only")
+            elif not str(t.get("model", "")).startswith(t["start"]):
+                fails.append(f"FAIL {lesson} step {n}: the {where}model answer must begin with its start text")
+    return fails
+
+
 def _norm_code(step, code):
     if _is_mongo(step):
         return mongo_normalise(code)
@@ -344,10 +359,10 @@ def check_all(env, thoughts, lessons):
             skipped += [f"WARN {lesson}: the data folder '{d}' was not found, so its answers were not run" for d in missing]
             if no_mongo:
                 skipped.append(f"WARN {lesson}: MongoDB is not installed here, so its answers were not run")
-            fails += check_narration(lesson, steps)
+            fails += check_narration(lesson, steps) + check_start(lesson, steps)
             continue
         fails += (check_sql(env, lesson, steps) + check_narration(lesson, steps)
-                  + check_returns(env, lesson, steps))
+                  + check_returns(env, lesson, steps) + check_start(lesson, steps))
     fails += (check_audit(thoughts, lessons) + check_new_limit(lessons) + check_shapes(lessons)
               + check_shape(thoughts, lessons))
     load, warns = report_load(lessons)

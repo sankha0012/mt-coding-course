@@ -93,3 +93,15 @@ def test_teacher_text_in_a_python_step_is_marked_python_and_in_sql_it_is_not(mak
     sql_engine = make_engine(play_steps)
     st, items, _ = sql_engine.start()
     assert "lang" not in items[0]
+
+
+def test_a_step_with_a_start_opens_the_editor_with_it(make_engine, reach):
+    steps = py_steps()
+    steps[1]["start"] = "x = 4"
+    steps[1]["model"] = "x = 4\nprint(x * 2)"
+    steps[1]["check"] = ""
+    steps[1]["return"]["start"] = "y = 4"
+    steps[1]["return"]["model"] = "y = 4\nprint(y * 3)"
+    e = make_engine(steps)
+    st = reach(e, 2)
+    assert e.pending(st) == {"mode": "answer", "step": 2, "variant": "main", "lang": "python", "start": "x = 4"}

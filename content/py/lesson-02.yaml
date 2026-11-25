@@ -18,6 +18,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "list", "how-many", "total", "show", "for-each", "block", "if-question", "compare-signs"]
     text: "Let's start with where we stopped. Five order subtotals: 28.04, 57.72, 39.91, 46.82 and 59.1. Go through them and show only the ones above 50."
+    start: "subtotals = [28.04, 57.72, 39.91, 46.82, 59.1]"
     model: |-
       subtotals = [28.04, 57.72, 39.91, 46.82, 59.1]
       for subtotal in subtotals:
@@ -43,11 +44,12 @@ steps:
               print(subtotal)
         ask: "What shows that the print belongs to the if, and runs only on a yes?"
     walk:
-      - "Make the list, and go through it: for each subtotal."
+      - "Go through the list: for each subtotal."
       - "Ask the question inside the loop: if, the name, a sign, 50, and a colon."
       - "Show the subtotal, pushed in once more."
     return:
       text: "The delivery fees were 8.99, 6.99, 4.99 and 0. Show only the ones under 5."
+      start: "fees = [8.99, 6.99, 4.99, 0]"
       model: |-
         fees = [8.99, 6.99, 4.99, 0]
         for fee in fees:
@@ -117,6 +119,7 @@ steps:
       - "Show it: print, with the list's name and the position in square brackets."
     return:
       text: "The delivery times were 35.2, 24.8, 31.7, 28.2 and 43.7 minutes. Show the second one."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
         print(minutes[1])
@@ -178,6 +181,7 @@ steps:
       - "Show one item by its position, counting from the end: minus one."
     return:
       text: "Show the last of these subtotals: 81.1, 18.85 and 84.23."
+      start: "subtotals = [81.1, 18.85, 84.23]"
       model: |-
         subtotals = [81.1, 18.85, 84.23]
         print(subtotals[-1])
@@ -221,6 +225,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "add-to-end"]
     text: "A list called fees holds 8.99 and 6.99. Add 0 to the end of it, and then show the list."
+    start: "fees = [8.99, 6.99]"
     model: |-
       fees = [8.99, 6.99]
       fees.append(0)
@@ -246,11 +251,11 @@ steps:
           print(fees)
         ask: "Look at the brackets after append. Which kind carry what is being added: the ones after a list's name, or the ones after a word like len?"
     walk:
-      - "Make the list with the two fees."
       - "Add to it: the list's name, a dot, append, and the new item in brackets."
       - "Show the list."
     return:
       text: "A list called minutes holds 35.2 and 24.8. Add 31.7 to it, and then show the list."
+      start: "minutes = [35.2, 24.8]"
       model: |-
         minutes = [35.2, 24.8]
         minutes.append(31.7)
@@ -307,6 +312,7 @@ steps:
       ```
 
       It ran, and showed [43.7]. Ana, how many of the times were over 30? ... Three. And her list holds one. Each time round the loop, the line slow = [] made a fresh empty list and threw the earlier ones away. Where should the empty list be made? Type the whole program as she should have written it.
+    start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
     model: |-
       minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
       slow = []
@@ -356,6 +362,7 @@ steps:
       - "Make the empty list before the loop starts, so that it is made only once."
     return:
       text: "Collect the subtotals above 50 into a list, and show it. The subtotals: 57.72, 39.91, 46.82, 29.05 and 59.1."
+      start: "subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]"
       model: |-
         subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]
         big = []
@@ -376,6 +383,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop"]
     text: "Your turn from the start. The delivery fees were 8.99, 4.99, 6.99, 0 and 4.99. Collect the ones under 5 into a list called cheap, and show it."
     thinking_order: "Make the list. Make an empty list called cheap. For each fee, if it is under 5, add it to cheap. Then show cheap."
+    start: "fees = [8.99, 4.99, 6.99, 0, 4.99]"
     model: |-
       fees = [8.99, 4.99, 6.99, 0, 4.99]
       cheap = []
@@ -414,11 +422,12 @@ steps:
           print(cheap)
         ask: "Those are the dear ones. Which way does the sign point for under?"
     walk:
-      - "Make the list of fees, and an empty list called cheap."
+      - "Make an empty list called cheap."
       - "Go through the fees. If a fee is under 5, add it to cheap."
       - "Show cheap, after the loop."
     return:
       text: "Collect the delivery times under 30 minutes into a list, and show it. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
         quick = []
@@ -463,6 +472,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "equals-asks", "and-or"]
     text: "Five delivery fees: 8.99, 6.99, 0, 4.99 and 8.99. Go through them and show the ones that are either free, that is 0, or above 8."
     thinking_order: "Make the list. For each fee, if it is 0 or it is above 8, show it."
+    start: "fees = [8.99, 6.99, 0, 4.99, 8.99]"
     model: |-
       fees = [8.99, 6.99, 0, 4.99, 8.99]
       for fee in fees:
@@ -498,11 +508,12 @@ steps:
                   print(fee)
         ask: "Python stopped at the first question. What do two equals signs do that one does not?"
     walk:
-      - "Make the list, and go through it."
+      - "Go through the list."
       - "Write the first question: the fee is 0."
       - "Join a second question with or: the fee is above 8. Then show the fee."
     return:
       text: "Show the delivery times between 30 and 40 minutes: both above 30 and under 40. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
         for minute in minutes:
@@ -558,6 +569,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "otherwise"]
     text: "Split these subtotals into two lists: big for the ones above 50, and small for the rest. Then show big, and then small. The subtotals: 57.72, 39.91, 46.82, 29.05 and 59.1."
+    start: "subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]"
     model: |-
       subtotals = [57.72, 39.91, 46.82, 29.05, 59.1]
       big = []
@@ -601,11 +613,12 @@ steps:
           print(small)
         ask: "Python stopped at the else. Which question does an else belong to, and what shows that?"
     walk:
-      - "Make the list, and two empty lists, big and small."
+      - "Make two empty lists, big and small."
       - "Go through the subtotals. If one is above 50, add it to big."
       - "Else, add it to small. Then show big, and show small."
     return:
       text: "Split the delivery times into quick, under 30 minutes, and slow, the rest, and show quick and then slow. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
         quick = []
@@ -653,6 +666,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "sorted"]
     text: "The delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. Show them in order, the shortest first."
+    start: "minutes = [35.2, 24.8, 31.7, 28.2]"
     model: |-
       minutes = [35.2, 24.8, 31.7, 28.2]
       print(sorted(minutes))
@@ -673,10 +687,10 @@ steps:
         ask: "The sorting happened, but you showed the old list. What did sorted hand back, and where did it go?"
         why: "sorted gives a new list and leaves the old one alone, so the new one has to be shown, or given a name."
     walk:
-      - "Make the list of four times."
       - "Show it in order: print, with sorted inside it, and the list's name inside that."
     return:
       text: "Show these subtotals in order, the smallest first: 81.1, 18.85, 84.23 and 31.3."
+      start: "subtotals = [81.1, 18.85, 84.23, 31.3]"
       model: |-
         subtotals = [81.1, 18.85, 84.23, 31.3]
         print(sorted(subtotals))
@@ -693,6 +707,7 @@ steps:
     new: ["reverse"]
     requires: ["list", "show", "sorted", "reverse"]
     text: "To turn the order round, as DESC did, put a comma after the list inside the brackets, and then reverse=True. Show the delivery times with the longest first: 35.2, 24.8, 31.7, 28.2 and 43.7."
+    start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
     model: |-
       minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
       print(sorted(minutes, reverse=True))
@@ -716,11 +731,11 @@ steps:
           print(sorted(minutes), reverse=True)
         ask: "Python stopped: reverse is not for print. Look where the closing bracket of sorted is."
     walk:
-      - "Make the list of five times."
       - "Show it sorted: print, sorted, the list inside."
       - "Turn the order round: after the list, a comma, then reverse=True, still inside the brackets of sorted."
     return:
       text: "Show these fees with the dearest first: 8.99, 6.99, 0 and 4.99."
+      start: "fees = [8.99, 6.99, 0, 4.99]"
       model: |-
         fees = [8.99, 6.99, 0, 4.99]
         print(sorted(fees, reverse=True))
@@ -756,6 +771,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "sorted", "reverse", "first-few"]
     text: "The delivery times were 35.2, 24.8, 31.7, 28.2, 43.7 and 45.2 minutes. Show the three longest, the longest first."
+    start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]"
     model: |-
       minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
       print(sorted(minutes, reverse=True)[:3])
@@ -778,11 +794,11 @@ steps:
           print(sorted(minutes, reverse=True)[3])
         ask: "That is one item, the fourth. What does a colon in the brackets do?"
     walk:
-      - "Make the list of six times."
       - "Sort them with the longest first."
       - "Cut the sorted list down to the first three: square brackets, a colon, and the number."
     return:
       text: "Show the two biggest subtotals, the biggest first: 81.1, 18.85, 84.23, 91.11 and 31.3."
+      start: "subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]"
       model: |-
         subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
         print(sorted(subtotals, reverse=True)[:2])
@@ -798,6 +814,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "sorted", "position", "last"]
     text: "Show just the longest of the delivery times, as a single number and not a list. Sort them first, then take the one you want. The times: 35.2, 24.8, 31.7, 28.2, 43.7 and 45.2."
+    start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]"
     model: |-
       minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
       print(sorted(minutes)[-1])
@@ -817,10 +834,11 @@ steps:
         ask: "That is a list holding one item. Which of the two kinds of square brackets takes the item itself?"
         why: "a position gives the item, and a colon gives a smaller list."
     walk:
-      - "Make the list and sort it."
+      - "Sort the list."
       - "Take one item from the sorted list by its position: which end is the longest at?"
     return:
       text: "Show just the smallest of the subtotals, as a single number and not a list. The subtotals: 81.1, 18.85, 84.23 and 31.3."
+      start: "subtotals = [81.1, 18.85, 84.23, 31.3]"
       model: |-
         subtotals = [81.1, 18.85, 84.23, 31.3]
         print(sorted(subtotals)[0])
@@ -837,6 +855,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "and-or", "sorted", "reverse", "first-few"]
     friction: true
     text: "The last one, and I won't break it down. Eight order subtotals: 81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72 and 117.91. Show the three biggest of the ones that are above 50 and under 100, the biggest first."
+    start: "subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]"
     model: |-
       subtotals = [81.1, 18.85, 84.23, 91.11, 31.3, 106.41, 57.72, 117.91]
       kept = []
@@ -879,12 +898,13 @@ steps:
           print(sorted(kept, reverse=True)[:3])
         ask: "Every subtotal passes that question. Should a subtotal need both to be kept, or only one?"
     walk:
-      - "Make the list of eight, and an empty list for the ones we keep."
+      - "Make an empty list for the ones we keep."
       - "Go through the subtotals. Keep one if it is above 50 and under 100."
       - "After the loop, sort the kept ones with the biggest first."
       - "Cut the sorted list to the first three, and show it."
     return:
       text: "The delivery times were 35.2, 24.8, 31.7, 28.2, 43.7, 45.2 and 77 minutes. Show the two longest of the ones under 50 minutes, the longest first."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2, 77]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2, 77]
         kept = []
@@ -915,6 +935,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "add-to-end", "new-list-in-loop", "otherwise", "sorted", "reverse"]
     text: "The delivery times were 35.2, 24.8, 31.7, 28.2, 43.7 and 45.2 minutes. Split them into two lists, quick for the ones under 30 and slow for the rest. Then show the slow ones, longest first."
+    start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]"
     model: |-
       minutes = [35.2, 24.8, 31.7, 28.2, 43.7, 45.2]
       quick = []

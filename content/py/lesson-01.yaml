@@ -182,6 +182,7 @@ steps:
     new: ["total"]
     requires: ["list", "show", "how-many", "total"]
     text: "For the total, the word is sum, and it works just as len does. The delivery fees were 8.99, 6.99 and 0. Show what they add up to."
+    start: "fees = [8.99, 6.99, 0]"
     model: |-
       fees = [8.99, 6.99, 0]
       print(sum(fees))
@@ -202,10 +203,10 @@ steps:
       - code: "print(sum(fees))"
         ask: "Python has never heard of fees. What makes the list, with its name?"
     walk:
-      - "Make a list called fees holding the three fees."
       - "Show the total: print, with sum inside it and the list inside that."
     return:
       text: "Three deliveries really took 35.2, 24.8 and 31.7 minutes. Show how many minutes that is altogether."
+      start: "minutes = [35.2, 24.8, 31.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7]
         print(sum(minutes))
@@ -221,6 +222,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "how-many", "total"]
     text: "Four fees: 8.99, 6.99, 6.99 and 4.99. Show me how many there are, and then what they add up to: two lines."
+    start: "fees = [8.99, 6.99, 6.99, 4.99]"
     model: |-
       fees = [8.99, 6.99, 6.99, 4.99]
       print(len(fees))
@@ -243,11 +245,11 @@ steps:
           print(len(fees))
         ask: "That is the first line. What do I want on the second?"
     walk:
-      - "Make the list."
       - "Show how many."
       - "Show the total on the next line."
     return:
       text: "Show the total of these subtotals first, and then how many there are: 81.1, 18.85 and 84.23."
+      start: "subtotals = [81.1, 18.85, 84.23]"
       model: |-
         subtotals = [81.1, 18.85, 84.23]
         print(sum(subtotals))
@@ -267,6 +269,7 @@ steps:
     new: ["build-average"]
     requires: ["list", "show", "how-many", "total", "build-average"]
     text: "Python has no word for the average of a list, like AVG. But you know what an average is made of, and a slash is divided by, as on a calculator. The four subtotals were 81.1, 18.85, 84.23 and 91.11. Show their average."
+    start: "subtotals = [81.1, 18.85, 84.23, 91.11]"
     model: |-
       subtotals = [81.1, 18.85, 84.23, 91.11]
       print(sum(subtotals) / len(subtotals))
@@ -285,11 +288,11 @@ steps:
           print(len(subtotals) / sum(subtotals))
         ask: "Total over how many, or how many over the total? Think of dividing 10 sweets among 2 children."
     walk:
-      - "Make the list of four subtotals."
       - "What is an average made of? A total, and how many things were added. Write each as you have before."
       - "Put a slash between them, total first, and show the whole thing."
     return:
       text: "Three deliveries took 35.2, 24.8 and 31.7 minutes. Show the average delivery time in minutes."
+      start: "minutes = [35.2, 24.8, 31.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7]
         print(sum(minutes) / len(minutes))
@@ -348,6 +351,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "text-in-list", "how-many"]
     text: "The list of statuses again, four words in this order: delivered, cancelled, delivered, delivered. Delivered repeats on purpose, one word for each order. Show how many orders are in it."
+    start: "statuses = ['delivered', 'cancelled', 'delivered', 'delivered']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered', 'delivered']
       print(len(statuses))
@@ -367,10 +371,10 @@ steps:
         ask: "Those quotes make it the word statuses, which has eight letters. Is statuses a word we are looking for, or the name of our list?"
         why: "the name of a list is a bare word, and it never wears quotes. Quotes make text."
     walk:
-      - "Make the list of four statuses."
       - "Show how many items it has."
     return:
       text: "The first five couriers ride bike, bike, carro, bike and bike. Show how many couriers there are."
+      start: "vehicles = ['bike', 'bike', 'carro', 'bike', 'bike']"
       model: |-
         vehicles = ['bike', 'bike', 'carro', 'bike', 'bike']
         print(len(vehicles))
@@ -409,6 +413,7 @@ steps:
     new: ["block"]
     requires: ["list", "text-in-list", "show", "for-each", "block"]
     text: "Look again at what you ran. The line with for ends in a colon, and the line under it is pushed in. The colon opens what is to be done for each item, and the lines pushed in underneath are inside it. Python needs that push, so it knows where the loop ends. The three statuses, in order, are delivered, cancelled and delivered. Show me each status, one at a time."
+    start: "statuses = ['delivered', 'cancelled', 'delivered']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered']
       for status in statuses:
@@ -438,7 +443,6 @@ steps:
           print(statuses)
         ask: "That shows the list in one go. What makes Python do something for each item?"
     walk:
-      - "Make the list of statuses."
       - "Write the going-through: for, a name for one status, in, the list, and a colon."
       - "Push one line in underneath it, and show the status."
     return:
@@ -463,6 +467,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "how-many", "for-each", "block"]
     text: "Three fees: 8.99, 0 and 6.99. Show each fee on its own line, and when you have been through them all, show how many there were."
+    start: "fees = [8.99, 0, 6.99]"
     model: |-
       fees = [8.99, 0, 6.99]
       for fee in fees:
@@ -491,10 +496,11 @@ steps:
               print(fee)
         ask: "Each fee is there. What did I ask for afterwards?"
     walk:
-      - "Make the list, and show each fee: a loop with a print pushed in."
+      - "Show each fee: a loop with a print pushed in."
       - "Then, back at the left edge, show how many fees there are."
     return:
       text: "Show each of these delivery times on its own line, and afterwards what they add up to: 35.2, 24.8 and 31.7."
+      start: "minutes = [35.2, 24.8, 31.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7]
         for minute in minutes:
@@ -541,6 +547,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs"]
     text: "Five order subtotals: 81.1, 18.85, 84.23, 91.11 and 31.3. Go through them and show only the ones above 50."
     thinking_order: "Make the list. For each subtotal in it, if the subtotal is above 50, show it."
+    start: "subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]"
     model: |-
       subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
       for subtotal in subtotals:
@@ -574,11 +581,12 @@ steps:
               print(subtotal > 50)
         ask: "That shows each answer, yes or no, but keeps nothing. Which word makes the line run only on a yes?"
     walk:
-      - "Make the list, and go through it: for each subtotal."
+      - "Go through the list: for each subtotal."
       - "Inside, ask the question: if, the name, the sign and the number, then a colon."
       - "Pushed in once more, show the subtotal."
     return:
       text: "The delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. Show only the ones under 30."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2]
         for minute in minutes:
@@ -609,6 +617,7 @@ steps:
       ```
 
       Python answered: SyntaxError: invalid syntax. Ana, what does one equals sign do in Python? ... It gives a name. Ana is not naming anything here, she is asking, and asking is written with two equals signs. Type the whole program as she should have written it.
+    start: "statuses = ['delivered', 'cancelled', 'delivered']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered']
       for status in statuses:
@@ -651,6 +660,7 @@ steps:
       - "One equals sign gives a name. Which sign asks whether two things are the same?"
     return:
       text: "Go through these vehicles and show only the bikes: bike, moto, bike, carro."
+      start: "vehicles = ['bike', 'moto', 'bike', 'carro']"
       model: |-
         vehicles = ['bike', 'moto', 'bike', 'carro']
         for vehicle in vehicles:
@@ -699,6 +709,7 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "running-result"]
     text: "Five subtotals: 81.1, 18.85, 84.23, 91.11 and 31.3. Show how many of them are above 50."
     thinking_order: "Make the list. Start a count at zero. For each subtotal, if it is above 50, add one to the count. Then show the count."
+    start: "subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]"
     model: |-
       subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
       count = 0
@@ -742,6 +753,7 @@ steps:
       - "Show the count, after the loop is finished: back at the left edge."
     return:
       text: "The delivery times were 35.2, 24.8, 31.7 and 28.2 minutes. Show how many of them are above 30."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2]
         count = 0
@@ -767,6 +779,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "running-result"]
     text: "The same shape, with a total where the count was. The subtotals were 81.1, 18.85, 84.23, 91.11 and 31.3. Show what the ones above 50 add up to."
+    start: "subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]"
     model: |-
       subtotals = [81.1, 18.85, 84.23, 91.11, 31.3]
       total = 0
@@ -801,6 +814,7 @@ steps:
       - "Show the total once the loop is done."
     return:
       text: "The delivery fees were 8.99, 6.99, 0 and 4.99. Show what the fees above 5 add up to."
+      start: "fees = [8.99, 6.99, 0, 4.99]"
       model: |-
         fees = [8.99, 6.99, 0, 4.99]
         total = 0
@@ -821,6 +835,7 @@ steps:
     requires: ["list", "text-in-list", "show", "for-each", "block", "if-question", "text-quotes", "equals-asks", "running-result"]
     friction: true
     text: "The last one, and I won't break it down. Six orders came back with these statuses: delivered, cancelled, delivered, delivered, cancelled, delivered. Show how many were delivered."
+    start: "statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']"
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered', 'delivered', 'cancelled', 'delivered']
       count = 0
@@ -866,12 +881,12 @@ steps:
           print(count)
         ask: "That counts the cancelled ones. Which word are we looking for?"
     walk:
-      - "Make the list of six statuses."
       - "Start a count at zero."
       - "Go through the statuses. If the status is delivered, add one to the count."
       - "Show the count, after the loop."
     return:
       text: "The first six couriers ride bike, bike, carro, bike, bike and bike. Show how many ride a bike."
+      start: "vehicles = ['bike', 'bike', 'carro', 'bike', 'bike', 'bike']"
       model: |-
         vehicles = ['bike', 'bike', 'carro', 'bike', 'bike', 'bike']
         count = 0
@@ -902,6 +917,7 @@ steps:
     lang: "python"
     requires: ["list", "text-in-list", "show", "how-many", "for-each", "block", "if-question", "text-quotes", "equals-asks", "running-result", "build-average"]
     text: "Here are the statuses of five orders: delivered, delivered, cancelled, delivered, delivered. Show what fraction of them were cancelled, as a number between 0 and 1."
+    start: "statuses = ['delivered', 'delivered', 'cancelled', 'delivered', 'delivered']"
     model: |-
       statuses = ['delivered', 'delivered', 'cancelled', 'delivered', 'delivered']
       count = 0

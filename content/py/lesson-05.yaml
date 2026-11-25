@@ -18,6 +18,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "text-in-list", "dict", "get-by-name", "set-by-name", "one-entry-per-pile", "update-the-pile", "get-with-default"]
     text: "Let's start with where we stopped. Five couriers ride bike, carro, bike, moto and bike. Count the couriers for each vehicle, the short way, and show the dict."
+    start: "vehicles = ['bike', 'carro', 'bike', 'moto', 'bike']"
     model: |-
       vehicles = ['bike', 'carro', 'bike', 'moto', 'bike']
       counts = {}
@@ -45,11 +46,12 @@ steps:
               print(counts)
         ask: "The dict is shown at every turn. When are the piles ready?"
     walk:
-      - "Make the list and an empty dict."
+      - "Make an empty dict."
       - "For each vehicle, put under its name: what is there, or 0, and one more."
       - "Show the dict, after the loop."
     return:
       text: "Count the orders for each status, the short way: delivered, delivered and cancelled. Show the dict."
+      start: "statuses = ['delivered', 'delivered', 'cancelled']"
       model: |-
         statuses = ['delivered', 'delivered', 'cancelled']
         counts = {}
@@ -523,6 +525,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "get-with-default", "nothing"]
     text: "The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Show True or False: is there no discount for VOLTA15 in it?"
+    start: "discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}"
     model: |-
       discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
       print(discounts.get('VOLTA15') is None)
@@ -546,11 +549,11 @@ steps:
           print(discounts.get('VOLTA15'))
         ask: "That shows what get handed back. What did I ask: what is it, or whether it is nothing?"
     walk:
-      - "Make the dict with its two coupons."
       - "Ask the dict for VOLTA15 with get, and give it nothing to hand back instead."
       - "Ask whether that is None, and show the answer."
     return:
       text: "The dict prices holds pizza at 40 and sushi at 60. Show True or False: is there no price for pizza in it?"
+      start: "prices = {'pizza': 40, 'sushi': 60}"
       model: |-
         prices = {'pizza': 40, 'sushi': 60}
         print(prices.get('pizza') is None)

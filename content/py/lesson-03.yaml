@@ -16,6 +16,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "sorted", "reverse", "first-few"]
     text: "Let's start with where we stopped. Six order subtotals: 57.72, 39.91, 46.82, 29.05, 59.1 and 68.97. Show the three biggest, the biggest first."
+    start: "subtotals = [57.72, 39.91, 46.82, 29.05, 59.1, 68.97]"
     model: |-
       subtotals = [57.72, 39.91, 46.82, 29.05, 59.1, 68.97]
       print(sorted(subtotals, reverse=True)[:3])
@@ -34,11 +35,11 @@ steps:
           print(sorted(subtotals, reverse=True))
         ask: "They are all in order. Which part keeps only the first few?"
     walk:
-      - "Make the list of six subtotals."
       - "Sort it, with the biggest first."
       - "Cut it to the first three: square brackets, a colon, and the number."
     return:
       text: "Show the two longest delivery times, the longest first. The times: 35.2, 24.8, 31.7, 28.2 and 43.7."
+      start: "minutes = [35.2, 24.8, 31.7, 28.2, 43.7]"
       model: |-
         minutes = [35.2, 24.8, 31.7, 28.2, 43.7]
         print(sorted(minutes, reverse=True)[:2])
@@ -202,6 +203,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "get-by-name", "set-by-name"]
     text: "The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Add VOLTA15 at 15, and then show the dict."
+    start: "discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}"
     model: |-
       discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
       discounts['VOLTA15'] = 15
@@ -227,11 +229,11 @@ steps:
           print(discounts)
         ask: "Is VOLTA15 a name you made, or a word we are looking for?"
     walk:
-      - "Make the dict with its two coupons."
       - "Add the new one: the dict's name, the new name in square brackets and quotes, an equals sign, and the value."
       - "Show the dict."
     return:
       text: "The dict prices holds pizza at 40 and sushi at 60. Raise the price of pizza to 45, and show the dict."
+      start: "prices = {'pizza': 40, 'sushi': 60}"
       model: |-
         prices = {'pizza': 40, 'sushi': 60}
         prices['pizza'] = 45
@@ -278,6 +280,7 @@ steps:
       ```
 
       Python answered: KeyError: 'VOLTA15'. Davi, is VOLTA15 in the dict? ... No, and Python will not guess. A name that is not there stops the program. The fix is to ask first. Type the whole program so that it shows the discount of VOLTA15 if it is there, and shows the words no such coupon if it is not.
+    start: "discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}"
     model: |-
       discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20}
       if 'VOLTA15' in discounts:
@@ -332,6 +335,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "show", "text-quotes", "dict", "is-it-there"]
     text: "The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Show True or False: is FRETEGRATIS one of the coupons in it?"
+    start: "discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}"
     model: |-
       discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
       print('FRETEGRATIS' in discounts)
@@ -354,10 +358,10 @@ steps:
           print('PIZZA20' in discounts)
         ask: "That asks about a different coupon. Which one did I ask about?"
     walk:
-      - "Make the dict with its two coupons."
       - "Ask the question: the name in quotes, then in, then the dict. Show the answer."
     return:
       text: "The dict prices holds pizza at 40 and sushi at 60. Show True or False: is sushi on the list?"
+      start: "prices = {'pizza': 40, 'sushi': 60}"
       model: |-
         prices = {'pizza': 40, 'sushi': 60}
         print('sushi' in prices)
@@ -374,6 +378,9 @@ steps:
     new: ["position-or-name"]
     requires: ["name-a-value", "show", "list", "dict", "position", "get-by-name", "text-quotes", "position-or-name"]
     text: "A list is asked by position, and a dict by name, and the brackets look the same, so you have to know which one you are holding. Here are both: fees = [8.99, 6.99, 0] and discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}. Show the second fee, and then the discount for PIZZA20."
+    start: |-
+      fees = [8.99, 6.99, 0]
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
     model: |-
       fees = [8.99, 6.99, 0]
       discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
@@ -406,11 +413,13 @@ steps:
           print(discounts['PIZZA20'])
         ask: "That is the third fee. What number does the first fee have, and so the second?"
     walk:
-      - "Make both: the list and the dict."
       - "The list is asked by position. Which position has the second fee?"
       - "The dict is asked by name. Show the discount for PIZZA20."
     return:
       text: "Here are fees = [8.99, 6.99, 0] and prices = {'pizza': 40, 'sushi': 60}. Show the last fee, and then the price of sushi."
+      start: |-
+        fees = [8.99, 6.99, 0]
+        prices = {'pizza': 40, 'sushi': 60}
       model: |-
         fees = [8.99, 6.99, 0]
         prices = {'pizza': 40, 'sushi': 60}
@@ -492,6 +501,7 @@ steps:
       - "Pushed in, show the coupon and then its discount, found by the coupon's name."
     return:
       text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Show each dish with its price."
+      start: "prices = {'pizza': 40, 'sushi': 60, 'acai': 25}"
       model: |-
         prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
         for dish in prices:
@@ -570,6 +580,7 @@ steps:
       - "Inside, ask the two questions about the value, joined, and show the name and the value."
     return:
       text: "The dict prices holds pizza at 40, sushi at 60, acai at 25 and burger at 35. Show only the dishes that cost more than 30 and less than 50, each with its price."
+      start: "prices = {'pizza': 40, 'sushi': 60, 'acai': 25, 'burger': 35}"
       model: |-
         prices = {'pizza': 40, 'sushi': 60, 'acai': 25, 'burger': 35}
         for dish, price in prices.items():
@@ -589,6 +600,7 @@ steps:
     lang: "python"
     requires: ["name-a-value", "show", "dict", "for-each", "block", "two-names", "running-result"]
     text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Show what all the prices add up to. Use a loop, with a running result."
+    start: "prices = {'pizza': 40, 'sushi': 60, 'acai': 25}"
     model: |-
       prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
       total = 0
@@ -628,6 +640,7 @@ steps:
       - "Show the total, after the loop."
     return:
       text: "The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Show what the discounts add up to."
+      start: "discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}"
       model: |-
         discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
         total = 0
@@ -646,6 +659,7 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "dict", "two-names", "add-to-end", "new-list-in-loop"]
     text: "The dict prices holds pizza at 40, sushi at 60 and acai at 25. Make a list called dear holding the names of the dishes that cost more than 30, and show it."
+    start: "prices = {'pizza': 40, 'sushi': 60, 'acai': 25}"
     model: |-
       prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
       dear = []
@@ -684,11 +698,12 @@ steps:
           print(dear)
         ask: "That is the cheap one. Which way does the sign point for more than?"
     walk:
-      - "Make the dict, and an empty list called dear."
+      - "Make an empty list called dear."
       - "Go through the pairs. If the price is above 30, add the dish's name to dear."
       - "Show dear, after the loop."
     return:
       text: "The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Make a list of the coupons that give 15 or more, and show it."
+      start: "discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}"
       model: |-
         discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
         kept = []
@@ -708,6 +723,9 @@ steps:
     lang: "python"
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "is-it-there", "otherwise", "position-or-name"]
     text: "Customers used these coupon codes on three orders, in this order: PIZZA20, VOLTA15 and BEMVINDO10. The dict discounts holds BEMVINDO10 at 10 and PIZZA20 at 20. Show each code with its discount, and a 0 for a code the dict does not have."
+    start: |-
+      discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
+      codes = ['PIZZA20', 'VOLTA15', 'BEMVINDO10']
     model: |-
       discounts = {'BEMVINDO10': 10, 'PIZZA20': 20}
       codes = ['PIZZA20', 'VOLTA15', 'BEMVINDO10']
@@ -748,11 +766,13 @@ steps:
                   print(code, 0)
         ask: "Which one are you going through, the codes that were used, or the dict itself?"
     walk:
-      - "Make the dict, and the list of three codes used."
       - "Go through the codes. If a code is in the dict, show it with its discount."
       - "Else, show the code with a 0."
     return:
       text: "The dict prices holds pizza at 40 and sushi at 60. An order has sushi, acai and pizza. Show each dish with its price, and a 0 for a dish that is not on the list."
+      start: |-
+        prices = {'pizza': 40, 'sushi': 60}
+        order = ['sushi', 'acai', 'pizza']
       model: |-
         prices = {'pizza': 40, 'sushi': 60}
         order = ['sushi', 'acai', 'pizza']
@@ -777,6 +797,9 @@ steps:
     requires: ["list", "show", "for-each", "block", "if-question", "compare-signs", "name-a-value", "text-quotes", "dict", "text-in-list", "get-by-name", "position-or-name", "running-result"]
     friction: true
     text: "The last one, and I won't break it down. The dict prices holds pizza at 40, sushi at 60 and acai at 25. An order has pizza, acai and pizza. Show what the order costs in all."
+    start: |-
+      prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+      order = ['pizza', 'acai', 'pizza']
     model: |-
       prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
       order = ['pizza', 'acai', 'pizza']
@@ -823,12 +846,14 @@ steps:
           print(total)
         ask: "That keeps only the last price. What does the total have to be at each turn?"
     walk:
-      - "Make the price dict, and the order as a list of three dishes."
       - "Start a total at zero."
       - "Go through the order. For each dish, find its price in the dict, and add it to the total."
       - "Show the total, after the loop."
     return:
       text: "Same price list. A different order has sushi, sushi and acai. Show what it costs in all."
+      start: |-
+        prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
+        order = ['sushi', 'sushi', 'acai']
       model: |-
         prices = {'pizza': 40, 'sushi': 60, 'acai': 25}
         order = ['sushi', 'sushi', 'acai']
@@ -859,6 +884,9 @@ steps:
     lang: "python"
     requires: ["name-a-value", "show", "dict", "text-in-list", "text-quotes", "for-each", "block", "get-by-name", "running-result"]
     text: "Four orders used coupons, in this order: PIZZA20, BEMVINDO10, PIZZA20 and FRETEGRATIS. The dict discounts holds BEMVINDO10 at 10, FRETEGRATIS at 0, PIZZA20 at 20 and VOLTA15 at 15. Show what the four discounts add up to."
+    start: |-
+      discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
+      codes = ['PIZZA20', 'BEMVINDO10', 'PIZZA20', 'FRETEGRATIS']
     model: |-
       discounts = {'BEMVINDO10': 10, 'FRETEGRATIS': 0, 'PIZZA20': 20, 'VOLTA15': 15}
       codes = ['PIZZA20', 'BEMVINDO10', 'PIZZA20', 'FRETEGRATIS']

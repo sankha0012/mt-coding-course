@@ -6,7 +6,7 @@ Eight lessons. PD-1 to PD-4 are the foundation in pass 1, after PY-6. PD-5 and M
 
 The strand's idea: **the same movements as SQL, written in thinking order, in Python.** Every lesson asks a question the learner has already answered in SQL, on the same data, and gets the same number. Nothing about the movements is new. Only the spelling is, and the spelling is Python the learner already owns: square brackets get from inside, quotes mean text, two equals signs ask.
 
-**Every script starts by reading its files.** From PD-1 on, each closing sentence and each cold prompt begins with its own `pd.read_csv(...)` lines, and the learner types them every time (the owner's decision, 24 Nov 2026). Reading is the first line of every real script, and it is the line a blank page most easily freezes on. It needs no thought of its own after PD-1. It simply returns in every lesson, spaced for free.
+**Every script starts by reading its files.** From PD-1 on, each closing sentence and each cold prompt begins with its own `pd.read_csv(...)` lines, and the learner typed them every time (the owner's decision, 24 Nov 2026). From 25 Nov 2026 the editor opens with those lines already in it (`start`, `docs/04-script-format.md`) from PD-2 on, except in cold checks and where a step is about reading or importing, because retyping them cost time and taught nothing new. Reading is the first line of every real script, and it is the line a blank page most easily freezes on. It needs no thought of its own after PD-1. It simply returns in every lesson, spaced for free.
 
 Decisions carried over from the panorama, which keep things to remember down: a column is always written with brackets and quotes and never with a dot, single quotes everywhere, and no dictionary aggregation.
 

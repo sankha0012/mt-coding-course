@@ -242,6 +242,11 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row"]
     supplies: ["import numpy as np"]
     text: "With `import numpy as np`, give every row of X a fold number for four folds. Drop the rows with no distance, and let X hold all four columns. Print how many rows are in fold 0, and then how many in fold 3."
+    start: |-
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       import pandas as pd
@@ -304,6 +309,11 @@ steps:
       - "Ask which rows are in fold 0, keep the yes rows, count them. Then the same for fold 3."
     return:
       text: "And with three folds. With `import numpy as np`, drop the rows with no distance, and let X hold all four columns. Print how many rows are in fold 0, and then how many in fold 2."
+      start: |-
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         import pandas as pd
@@ -369,6 +379,11 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not"]
     supplies: ["import numpy as np"]
     text: "Use `import numpy as np` and five folds again, with the rows with no distance dropped and all four columns in X. Print how many rows are not in fold 4."
+    start: |-
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       import pandas as pd
@@ -429,6 +444,11 @@ steps:
       - "Turn the answers round, keep the yes rows, and count them."
     return:
       text: "With `import numpy as np`, four folds, the rows with no distance dropped and all four columns in X. Print how many rows are not in fold 0."
+      start: |-
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         import pandas as pd
@@ -502,6 +522,13 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score"]
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Score one fold of your own. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: five folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. Hold fold 2 back, train a logistic regression on the other folds, and print its AUC on fold 2, rounded to three places."
+    start: |-
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -586,6 +613,13 @@ steps:
       - "Make, fit, predict the chances, and print the AUC on the test rows."
     return:
       text: "Once more, with `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: four folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. Hold fold 3 back, train a logistic regression on the others, and print its AUC on fold 3, rounded to three places."
+      start: |-
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression
@@ -616,6 +650,11 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score"]
     supplies: ["import numpy as np"]
     text: "How big are the two halves? With `import numpy as np`: four folds, the rows with no distance dropped, and all four columns in X. Hold fold 3 back. Print how many rows are in the training part, and then how many in the test part, of X."
+    start: |-
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       import pandas as pd
@@ -673,6 +712,11 @@ steps:
       - "Print the length of each part of X, the training part first."
     return:
       text: "And with three folds. With `import numpy as np`, drop the rows with no distance and put all four columns in X. Hold fold 2 back. Print how many rows are in the training part, and then in the test part, of X."
+      start: |-
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         import pandas as pd
@@ -702,6 +746,11 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result"]
     supplies: ["import numpy as np"]
     text: "Every row should be held back exactly once. Check it. With `import numpy as np`: four folds, the rows with no distance dropped, and all four columns in X. Go through the folds in turn, add up how many rows each holds, and print the total. It should be the number of rows in X."
+    start: |-
+      import numpy as np
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       import pandas as pd
@@ -770,6 +819,11 @@ steps:
       - "After the loop, print the total."
     return:
       text: "Now check the other half. With `import numpy as np`: five folds, the rows with no distance dropped, and all four columns in X. Go through the folds in turn, add up how many rows are outside each fold, and print the total."
+      start: |-
+        import numpy as np
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         import pandas as pd
@@ -796,6 +850,13 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result"]
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Now give every fold its turn. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: five folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. For each fold in turn, hold it back, train a logistic regression on the others, and print its AUC on the held-back fold, rounded to three places."
+    start: |-
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -881,6 +942,13 @@ steps:
       - "Still inside the loop, print the AUC on this fold, rounded."
     return:
       text: "Again, with three folds and a different question. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: the rows with no distance dropped, all four columns in X, and y whether a delivery was more than 10 minutes late. For each fold in turn, hold it back, train a logistic regression on the others, and print its AUC on the held-back fold, rounded to three places."
+      start: |-
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression
@@ -942,6 +1010,13 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores"]
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Average the folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: four folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was late. For each fold in turn, train a logistic regression on the other folds and score it on that one. Keep the scores in a list, and print their mean, rounded to three places."
+    start: |-
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -1030,6 +1105,13 @@ steps:
       - "After the loop, the total divided by how many, rounded and printed."
     return:
       text: "And once more, for a different question. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: three folds, the rows with no distance dropped, all four columns in X, and y whether a delivery was more than 10 minutes late. Keep each fold's score in a list, and print the mean of the list, rounded to three places."
+      start: |-
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression
@@ -1068,6 +1150,13 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "sorted", "what-comes-out", "show-or-return"]
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Wrap the loop in a function. `fold_scores` takes a model, the table X, the answers y and the number of folds k, and hands back the list of the k scores, one for each fold. Then, with `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, call `fold_scores` with a logistic regression and five folds, and print the lowest score and then the highest, rounded to three places."
+    start: |-
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -1168,9 +1257,16 @@ steps:
     walk:
       - "Inside the function: the fold numbers, an empty list for the scores, and a loop over the folds."
       - "In each turn: this fold is the test, train on the others, and add the score on this fold to the list. After the loop, hand the list back."
-      - "Outside: read the files, build X and y, call the function with a logistic regression and five folds, sort the list, and print the first and the last."
+      - "Outside: build X and y, call the function with a logistic regression and five folds, sort the list, and print the first and the last."
     return:
       text: "And with four folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, write `fold_scores` again, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and call it with a logistic regression and four folds. Print the lowest score and then the highest, rounded to three places."
+      start: |-
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression
@@ -1214,6 +1310,13 @@ steps:
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     friction: true
     text: "The last one, and I won't break it down. Cross-validation, written without the library. Write `cross_validate(model, X, y, k)`: it holds back each fold in turn, trains the model on the others, and hands back the mean AUC of the folds. Then, in the same script, read the two files, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC of a logistic regression over five folds, rounded to three places. The lines you may look up are `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+    start: |-
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -1323,9 +1426,16 @@ steps:
     walk:
       - "Inside the function: a number for each row, a fold for each number, and an empty list for the scores before the loop."
       - "For each fold: the rows of this fold are the test, the others are the training rows. Fit on the training rows, and add the score on the test rows to the list."
-      - "After the loop, hand back the total divided by how many. Outside: read, merge, build X and y, and print the function called with a logistic regression and five folds."
+      - "After the loop, hand back the total divided by how many. Outside: merge, build X and y, and print the function called with a logistic regression and five folds."
     return:
       text: "And not broken down either. Write `cross_validate(model, X, y, k)` again, and use it on a different question: whether a delivery was more than 10 minutes late, with all four columns in X, the rows with no distance dropped, and four folds, for a logistic regression. Print the mean AUC, rounded to three places. The lines you may look up are `import numpy as np`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`."
+      start: |-
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression
@@ -1358,6 +1468,14 @@ steps:
     requires: ["name-a-value", "list", "how-many", "total", "build-average", "for-each", "block", "show", "running-result", "add-to-end", "position", "last", "sorted", "positions", "def", "what-goes-in", "what-comes-out", "call-it", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "yes-no-column", "brackets-keep-yes", "summary-follows", "features-and-target", "make-fit-predict", "probabilities", "ml-imports", "bring-numpy-in", "fold-number-per-row", "row-by-row-not", "this-fold-and-the-rest", "score", "running-result", "build-average", "add-to-end", "average-the-scores", "what-comes-out", "swap-the-model", "show-or-return"]
     supplies: ["import numpy as np", "from sklearn.linear_model import LogisticRegression", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
     text: "Put your function to work. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate` once more, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over five folds of a logistic regression, and then of gradient boosting, rounded to three places. Use `random_state=0` for the model."
+    start: |-
+      import numpy as np
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import numpy as np
       from sklearn.linear_model import LogisticRegression
@@ -1433,10 +1551,18 @@ steps:
         ask: "Which model did I ask you to print first?"
     walk:
       - "Write the function, with the model as something that goes in."
-      - "Read, merge, build X and y."
+      - "Merge, build X and y."
       - "Call it with the plain model, and then with the boosted one, and print each, rounded."
     return:
       text: "The same with three folds. With `import numpy as np`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: write `cross_validate`, drop the rows with no distance, put all four columns in X, let y be whether a delivery was late, and print the mean AUC over three folds of a logistic regression, and then of gradient boosting, rounded to three places. Use `random_state=0` for the model."
+      start: |-
+        import numpy as np
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import numpy as np
         from sklearn.linear_model import LogisticRegression

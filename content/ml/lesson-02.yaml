@@ -82,6 +82,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Is the promise enough on its own? Using `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, put only the promised minutes in X, drop the rows with no distance, hold back a fifth, and print the AUC of a logistic regression on the held-back rows, rounded to three places. y is whether a delivery was late. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -153,6 +160,13 @@ steps:
       - "Take the chance of late for the held-back rows, and print the AUC rounded."
     return:
       text: "And the distance on its own? With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, put only the distance in X, drop the rows with no distance, hold back a fifth, and print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -180,6 +194,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Now put the two together. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, let X hold the distance and the promised minutes. Drop the rows with no distance, hold back 25 percent, and print the AUC of a logistic regression on the held-back rows, rounded to three places. y is whether a delivery was late. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -236,6 +257,13 @@ steps:
       - "Print the AUC from the chance of late on the held-back rows."
     return:
       text: "Try the bag size beside the promise, instead. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the bag size and the promised minutes, drop the rows with no distance, hold back a fifth, and print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -306,6 +334,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
     text: "Swap it yourself. With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, the rows with no distance are dropped, a quarter of the rows are held back, and the model is gradient boosting. Print its AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split and for the model."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.ensemble import GradientBoostingClassifier
@@ -362,6 +397,13 @@ steps:
       - "Print the AUC from the chance of late."
     return:
       text: "Once more, with `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`. X holds the distance, the bag size and the promised minutes, the rows with no distance are dropped, a fifth of the rows are held back, and the model is gradient boosting. Print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split and for the model."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.ensemble import GradientBoostingClassifier
@@ -389,6 +431,14 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
     text: "Put the two models side by side on the very same split. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, the rows with no distance are dropped, and a fifth of the rows are held back. Fit a logistic regression and a gradient boosting model, and print the AUC of each on the held-back rows, rounded to three places, the plain one first. Use `random_state=0` for the split and for the model."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -458,6 +508,14 @@ steps:
       - "Print the AUC of each, the plain one first."
     return:
       text: "Again both models, on another table. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, the rows with no distance are dropped, and a quarter of the rows are held back. Print the AUC of the logistic regression and then of gradient boosting, rounded to three places. Use `random_state=0` for the split and for the model."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -525,6 +583,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "summary-follows"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Now keep the rows with no distance, and do it honestly. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, a fifth of the rows are held back, and the empty distances are filled with the mean of the training rows. Print that mean, rounded to four places, and then the AUC of a logistic regression on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -596,6 +661,13 @@ steps:
       - "Fill the empty distances of the training part and of the test part with it. Then make and fit the model, and print the number and the AUC."
     return:
       text: "And with gradient boosting. With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, 30 percent of the rows are held back, and the empty distances are filled with the mean of the training rows. Print that mean, rounded to four places, then the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split and for the model."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.ensemble import GradientBoostingClassifier
@@ -629,6 +701,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Same honesty, a different table. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the bag size and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression and print its AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -691,6 +770,13 @@ steps:
       - "Make the plain model, fit it, and print its AUC on the held-back rows."
     return:
       text: "And boosted. With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: keep all the rows, X holds the distance, the rain and the promised minutes, 30 percent of the rows are held back, and the empty distances are filled with the median of the training rows. Fit gradient boosting and print its AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split and for the model."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.ensemble import GradientBoostingClassifier
@@ -778,6 +864,12 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "column-sums", "mean-of-yes-no"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
     text: "Before you trust a score on a rare question, look at how rare it is. Keep all the rows. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`: X holds all four columns, y is whether a delivery was more than 15 minutes late, a fifth of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression. Print how many of the held-back rows were very late, and then how many of the held-back rows the model guessed were very late. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -848,6 +940,12 @@ steps:
       - "The truth first: add up the yes answers in y_test. Then add up the yes guesses."
     return:
       text: "The same for more than 10 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`: X holds the distance, the rain and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression. Print how many of the held-back rows were more than 10 minutes late, and then how many the model guessed were. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -881,6 +979,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "column-sums", "mean-of-yes-no"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import accuracy_score"]
     text: "A rarer question: more than 20 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`: X holds all four columns, a fifth of the rows are held back, and the empty distances are filled with the median of the training rows. Fit a logistic regression. Print its accuracy on the held-back rows, and then the accuracy you would get by answering no every time, each rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import accuracy_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -972,6 +1077,13 @@ steps:
       - "Print the accuracy on the held-back rows, then 1 minus the share of yes in y_test."
     return:
       text: "And more than 10 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import accuracy_score`: X holds the distance, the rain and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Print the model's accuracy on the held-back rows, and then the accuracy of answering no every time, each rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import accuracy_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1006,6 +1118,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "pick-the-metric", "column-sums"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Now ask a different question of the same model. For more than 20 minutes late, keep all the rows, fill the empty distances with the median of the training rows, and hold back a fifth. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`, fit a logistic regression on all four columns and print its AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1071,6 +1190,13 @@ steps:
       - "Print the AUC from the chance of late on the held-back rows."
     return:
       text: "And the AUC for more than 10 minutes late. Keep all the rows. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, a quarter of the rows are held back, and the empty distances are filled with the median of the training rows. Print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1121,6 +1247,13 @@ steps:
       ```
 
       One line lets the model see rows it will be graded on. Find it, and write the whole script again so that the number can be trusted. Print the AUC on the held-back rows, rounded to three places.
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.ensemble import GradientBoostingClassifier
@@ -1179,6 +1312,13 @@ steps:
       - "Score it on the held-back rows, and print the AUC rounded."
     return:
       text: "\nHere is another script from Davi. It runs, it prints 0.806, and he is very pleased with it.\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id').dropna(subset=['distance_km'])\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0)\nmodel = LogisticRegression()\nmodel.fit(X_train, y_train)\nprint(round(roc_auc_score(y_train, model.predict_proba(X_train)[:, 1]), 3))\n```\n\nRead it, find what the model has seen that it should not have, and write the whole script again so that the number can be trusted. Print the AUC on the held-back rows, rounded to three places.\n"
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1229,6 +1369,13 @@ steps:
       ```
 
       Read it a line at a time, and ask where each number came from. Write the whole script again so that nothing learned from the held-back rows reaches the model. Print the mean you fill with, rounded to four places, and then the AUC on the held-back rows, rounded to three places.
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1300,6 +1447,13 @@ steps:
       - "Fill both parts with that name, make and fit the model, and print the number and the AUC."
     return:
       text: "\nAnd one more from Ana. She uses gradient boosting this time and holds back a quarter. It prints a mean of 4.439 and an AUC of 0.792.\n\n```python\nfrom sklearn.model_selection import train_test_split\nfrom sklearn.ensemble import GradientBoostingClassifier\nfrom sklearn.metrics import roc_auc_score\nimport pandas as pd\norders = pd.read_csv('orders.csv')\ndeliveries = pd.read_csv('deliveries.csv')\ndata = orders.merge(deliveries, on='order_id')\nX = data[['distance_km', 'rain', 'bag_size', 'promised_minutes']]\ny = data['actual_minutes'] > data['promised_minutes']\nX_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=0)\nfill = X['distance_km'].mean()\nX_train['distance_km'] = X_train['distance_km'].fillna(fill)\nX_test['distance_km'] = X_test['distance_km'].fillna(fill)\nmodel = GradientBoostingClassifier(random_state=0)\nmodel.fit(X_train, y_train)\nprint(round(fill, 4))\nprint(round(roc_auc_score(y_test, model.predict_proba(X_test)[:, 1]), 3))\n```\n\nWrite the whole script again so that nothing learned from the held-back rows reaches the model. Print the mean you fill with, rounded to four places, and then the AUC on the held-back rows, rounded to three places.\n"
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.ensemble import GradientBoostingClassifier
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.ensemble import GradientBoostingClassifier
@@ -1333,6 +1487,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports", "engineer-then-fit", "swap-the-model", "fit-on-train-only", "fill-or-drop", "read-and-criticise"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.ensemble import GradientBoostingClassifier", "from sklearn.metrics import roc_auc_score"]
     text: "How much does a score on the rows the model learned from flatter it? With `from sklearn.model_selection import train_test_split`, `from sklearn.ensemble import GradientBoostingClassifier` and `from sklearn.metrics import roc_auc_score`: X holds all four columns, the rows with no distance are dropped, and a fifth of the rows are held back. Fit gradient boosting on the training rows. Print its AUC on the training rows, and then its AUC on the held-back rows, each rounded to three places. Use `random_state=0` for the split and for the model."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.ensemble import GradientBoostingClassifier
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.ensemble import GradientBoostingClassifier
@@ -1393,6 +1554,13 @@ steps:
       - "Then the same for the held-back rows, and print both."
     return:
       text: "And the plain model. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: X holds the distance, the rain and the promised minutes, the rows with no distance are dropped, and a quarter of the rows are held back. Fit a logistic regression on the training rows. Print its AUC on the training rows, and then on the held-back rows, each rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression

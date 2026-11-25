@@ -71,6 +71,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "yes-no-as-column", "column-sums", "mean-of-yes-no", "look-at-rows"]
     text: "Now build them yourself, with your own choices. Leave out the deliveries that have no distance, as before. X holds the distance and the bag size and nothing else. y is whether a delivery was more than 5 minutes late. Print the first three rows of X, and then the share of y that is yes, rounded to three places."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -128,6 +132,10 @@ steps:
       - "y is a yes-or-no column: the actual minutes are more than the promised minutes plus 5. Print what was asked."
     return:
       text: "One more split, a different one. Leave out the deliveries with no distance again. X holds the rain and the distance. y is whether a delivery took more than 40 minutes. Print the first three rows of X and the share of y that is yes, rounded to three places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -154,6 +162,10 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "mean-of-yes-no", "look-at-rows"]
     text: "The column to guess can be any column. This time guess whether it rained. X holds the distance, the bag size and the promised minutes, with the same rows dropped. y is the rain column itself. Print the first three rows of X, and the mean of y rounded to three places."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -201,6 +213,10 @@ steps:
       - "Print the first three rows of X, and the mean of y."
     return:
       text: "Guess whether the courier carried more than one order. X holds the rain, the distance and the promised minutes. y is whether the bag size is more than 1. Print the first three rows of X, and the share of y that is yes, rounded to three places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -332,6 +348,11 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "ml-imports", "mean-of-yes-no"]
     supplies: ["from sklearn.model_selection import train_test_split"]
     text: "The held-back rows should look like the rest. Using `from sklearn.model_selection import train_test_split`, take all three columns for X and lateness for y, and hold back a fifth. Print the share of late deliveries among the training rows, and then among the test rows, each rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       import pandas as pd
@@ -381,6 +402,11 @@ steps:
       - "Print the two means, training first."
     return:
       text: "Using `from sklearn.model_selection import train_test_split` again, take the distance and the rain for X and whether the delivery took more than 40 minutes for y. Hold back 33 percent of the rows. Print the share of yes in the training rows and then in the test rows, rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         import pandas as pd
@@ -555,6 +581,12 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "hold-rows-back", "make-fit-predict", "ml-imports", "yes-no-as-column", "mean-of-yes-no"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
     text: "How often were the guesses right? Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, with all three columns for X and lateness for y, a fifth held back, and a model fitted on the training rows. Then compare each prediction with the true answer: ask each row whether the two are equal, and take the mean of that column. Print it rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -612,6 +644,12 @@ steps:
       - "The mean of that column is the share of yes. Print it rounded."
     return:
       text: "Use `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression` again, with the rain and the distance for X, lateness for y, and 33 percent held back. Fit a model and predict the held-back rows. What share of the held-back rows were both guessed late and truly late? Print it rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -900,6 +938,12 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression"]
     text: "A probability can answer a question of its own. With `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`, take the rain and the distance for X, lateness for y, and hold back a fifth. Fit a model, and take its chance of late for the held-back rows. Print how many of those rows got a chance above 0.5. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -956,6 +1000,12 @@ steps:
       - "Keep the chances above 0.5, and count them."
     return:
       text: "Once more, with `from sklearn.model_selection import train_test_split` and `from sklearn.linear_model import LogisticRegression`. X holds the distance and the bag size, y is whether a delivery was late, and a quarter of the rows are held back. Fit a model, and print how many of the held-back rows got a chance of late above 0.6. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -983,6 +1033,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Which single column knows the most? With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the distance in X, let y be whether a delivery was late, hold back a fifth, and print the AUC of a logistic regression on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1039,6 +1096,13 @@ steps:
       - "Print the AUC from the chance of late on the held-back rows."
     return:
       text: "And the bag size on its own. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: put only the bag size in X, let y be whether a delivery was late, hold back a quarter, and print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1066,6 +1130,13 @@ steps:
     requires: ["bring-pandas-in", "read-a-table", "merge", "fill-or-drop", "column", "list-of-columns", "show", "features-and-target", "hold-rows-back", "make-fit-predict", "score", "probabilities", "ml-imports"]
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     text: "Try a different guess: whether it rained. Use `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. X holds the distance, the bag size and the promised minutes, y is the rain column, and 33 percent of the rows are held back. Print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1122,6 +1193,13 @@ steps:
       - "Print the AUC from the chance of the second answer."
     return:
       text: "And one more. With `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`: guess whether the courier carried more than one order. X holds the rain, the distance and the promised minutes, and a fifth of the rows are held back. Print the AUC on the held-back rows, rounded to three places. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression
@@ -1156,6 +1234,13 @@ steps:
     supplies: ["from sklearn.model_selection import train_test_split", "from sklearn.linear_model import LogisticRegression", "from sklearn.metrics import roc_auc_score"]
     friction: true
     text: "The last one, and I won't break it down. Predict late deliveries and report how good the prediction is. X holds the distance, the rain and the bag size, y is whether a delivery was late, with the rows with no distance dropped. Hold back a fifth. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. Use `random_state=0` for the split."
+    start: |-
+      from sklearn.model_selection import train_test_split
+      from sklearn.linear_model import LogisticRegression
+      from sklearn.metrics import roc_auc_score
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       from sklearn.model_selection import train_test_split
       from sklearn.linear_model import LogisticRegression
@@ -1226,6 +1311,13 @@ steps:
       - "Take the chance of late for the held-back rows, and hold it up against the truth with AUC. Print it rounded."
     return:
       text: "Not broken down either. Predict whether a delivery took more than 40 minutes, from the distance, the rain and the bag size, with the rows with no distance dropped and a quarter held back. Print the AUC on the held-back rows, rounded to three places. The lines you may look up are `from sklearn.model_selection import train_test_split`, `from sklearn.linear_model import LogisticRegression` and `from sklearn.metrics import roc_auc_score`. Use `random_state=0` for the split."
+      start: |-
+        from sklearn.model_selection import train_test_split
+        from sklearn.linear_model import LogisticRegression
+        from sklearn.metrics import roc_auc_score
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         from sklearn.model_selection import train_test_split
         from sklearn.linear_model import LogisticRegression

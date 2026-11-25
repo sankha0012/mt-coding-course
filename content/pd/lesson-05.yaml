@@ -61,6 +61,9 @@ steps:
       ```
 
       No error came, but look at what printed. The first row is empty, and the next four hold numbers that cannot be right for their rows. In fact 5,940 of the 6,000 rows are empty. Ana, how many numbers does `.mean()` give, and how many rows does the table have? ... Sixty numbers against 6,000 rows. pandas lines a new column up with the rows by their labels, so sixty numbers land on sixty rows and the rest stay empty. Write the whole script again, the way she should have.
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -104,6 +107,9 @@ steps:
       - "Put it in a new column called rest_avg, and print the first five."
     return:
       text: "Write the average delivery fee of each courier beside its orders, in a column called `courier_fee`, and print the first five values of that column. Write the whole script."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -127,6 +133,9 @@ steps:
     lang: "python"
     requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "look-at-rows"]
     text: "Now one of your own. Beside every order, write the average delivery fee that order's customer pays, in a column called `usual_fee`. Then print the first five values of that column."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -163,6 +172,9 @@ steps:
       - "Keep it in a column called usual_fee, and print its first five values."
     return:
       text: "For each restaurant, the average promised_minutes of its orders, written beside each order in a column called `rest_promise`. Print the first five values of that column."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -186,6 +198,9 @@ steps:
     lang: "python"
     requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
     text: "Now use it. How many orders had a subtotal above the average subtotal of their own restaurant? Print the number."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -215,6 +230,9 @@ steps:
       - "Keep the yes rows and count them."
     return:
       text: "How many orders carried a delivery fee below their own customer's average fee? Print the number."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -232,6 +250,9 @@ steps:
     lang: "python"
     requires: ["transform-beside", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
     text: "The summary does not have to be the average. How many orders were the biggest order their own restaurant ever took? Print the number."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -261,6 +282,9 @@ steps:
       - "Ask each row whether its subtotal equals that number, then keep the yes rows and count them."
     return:
       text: "How many orders carried the biggest delivery fee their own customer ever paid? Print the number."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -313,6 +337,9 @@ steps:
     lang: "python"
     requires: ["top-n-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
     text: "For each courier, keep the two orders that took the longest, by actual minutes. Print how many rows are left, and then their actual minutes added up, rounded to one place with `round(total, 1)`."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -359,6 +386,9 @@ steps:
       - "Print how many rows are left, then the total of their actual minutes."
     return:
       text: "For each customer, keep the three orders with the biggest subtotal. Print how many rows are left, and the total of their subtotals, rounded to two places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -380,6 +410,9 @@ steps:
     lang: "python"
     requires: ["top-n-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
     text: "Now the other end. For each restaurant, the two cheapest orders by subtotal. Print how many rows you kept, and the total of their subtotals, rounded to two places."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -416,6 +449,9 @@ steps:
       - "Make the piles by restaurant, take the first two of each, and print the two numbers."
     return:
       text: "For each restaurant, keep only its single longest delivery, by actual minutes. Print how many rows that leaves and the total of those actual minutes, rounded to one place."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -462,6 +498,9 @@ steps:
     lang: "python"
     requires: ["latest-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
     text: "Take each customer's latest order. Print how many rows that is, and then the average subtotal of those orders, rounded to two places."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -497,6 +536,9 @@ steps:
       - "Print how many rows, then the average subtotal of those rows."
     return:
       text: "Take each restaurant's latest order. Print how many rows that is, and the total of their subtotals, rounded to two places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -517,6 +559,9 @@ steps:
     lang: "python"
     requires: ["latest-in-pandas", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "summary-follows", "name-the-result"]
     text: "For each restaurant, the very first order it took. Print how many rows that is, and the average promised minutes of those orders, rounded to two places. A real table is not always in order of time, so sort it yourself first."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -551,6 +596,9 @@ steps:
       - "Print how many rows, then the average promised minutes."
     return:
       text: "For each courier, the most recent order they carried. Print how many rows that is, and the average actual minutes of those orders, rounded to two places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -603,6 +651,9 @@ steps:
     requires: ["text-to-date", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "column", "show", "summary-follows"]
     supplies: ["pd.to_datetime(orders['created_at'])", ".dt.month"]
     text: "Make the month column again, with `pd.to_datetime(orders['created_at'])` and `.dt.month` to look up. Then add up the subtotals for each month, and print the result."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -643,6 +694,9 @@ steps:
       - "Print what comes out."
     return:
       text: "Make the same month column, using `pd.to_datetime(orders['created_at'])` and `.dt.month`. Then, for each month, work out the average delivery fee, and print it."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -666,6 +720,9 @@ steps:
     requires: ["text-to-date", "top-n-in-pandas", "bring-pandas-in", "read-a-table", "new-column", "sort-values", "groupby", "column", "show", "summary-follows"]
     supplies: ["pd.to_datetime(orders['created_at'])", ".dt.month"]
     text: "A month is a pile like any other. Using `pd.to_datetime(orders['created_at'])` and `.dt.month` again, find the biggest order of each month. Print how many rows that is, and the total of their subtotals, rounded to two places."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -705,6 +762,9 @@ steps:
       - "Pile them by month, keep the first row of each, and print the two numbers."
     return:
       text: "Make the month column once more, with `pd.to_datetime(orders['created_at'])` and `.dt.month`. Take the latest order of each month, and print how many rows that is and the total of their subtotals, rounded to two places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -758,6 +818,9 @@ steps:
     requires: ["shift", "text-to-date", "bring-pandas-in", "read-a-table", "new-column", "groupby", "size", "column-sums", "show", "name-the-result"]
     supplies: ["pd.to_datetime(orders['created_at'])", ".dt.month", ".shift()"]
     text: "How much did the number of orders change from each month to the next? The spellings to look up are `pd.to_datetime(orders['created_at'])`, `.dt.month` and `.shift()`. Make the month column, count the orders in each month, and print each count minus the month's before."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -796,6 +859,9 @@ steps:
       - "Subtract the slid counts from the counts, and print that."
     return:
       text: "How much did the total of the delivery fees change from each month to the next? Make the month column with `pd.to_datetime(orders['created_at'])` and `.dt.month`, add up the fees in each month, and print each total minus the month's before, using `.shift()`."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -820,6 +886,10 @@ steps:
     requires: ["latest-in-pandas", "merge", "only-matches-survive", "mean-of-yes-no", "bring-pandas-in", "read-a-table", "sort-values", "groupby", "column", "show", "name-the-result", "summary-follows"]
     friction: true
     text: "This one I won't break down. The deliveries table says whether it rained, one row for each delivered order. Take each customer's latest delivery. Print how many customers that is, and then what share of those deliveries happened in the rain, rounded to three places. Think about what comes first, the join or picking the latest."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
+      deliveries = pd.read_csv('deliveries.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -860,6 +930,10 @@ steps:
       - "Print how many rows, and the mean of the rain column rounded to three places."
     return:
       text: "Take each restaurant's latest delivery, with the rain from the deliveries table. Print how many restaurants that is, and what share of those deliveries happened in the rain, rounded to three places."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
+        deliveries = pd.read_csv('deliveries.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -883,6 +957,9 @@ steps:
     requires: ["transform-beside", "latest-in-pandas", "bring-pandas-in", "read-a-table", "new-column", "groupby", "pick-then-summarise", "sort-values", "column", "show", "how-many", "yes-no-column", "brackets-keep-yes", "name-the-result"]
     friction: true
     text: "The last one, and I won't break it down. How many customers' latest order was bigger than that customer's own average subtotal, counted over all of their orders? Print the number. Think about what has to sit beside each row before you keep only the latest."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -915,6 +992,9 @@ steps:
       - "Keep the rows whose subtotal is above their average, and count them."
     return:
       text: "How many restaurants' latest order was bigger than the average subtotal of all that restaurant's orders? Print the number. Think about what has to sit beside each row before you keep only the latest."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')

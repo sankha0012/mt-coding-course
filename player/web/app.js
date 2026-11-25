@@ -307,6 +307,7 @@ function renderInput(pending) {
   } else if (pending.mode === 'answer') {
     const { wrap, box, sync } = makeEditor(lang);
     const hint = el('p', 'hint');
+    if (pending.start) { box.value = pending.start + '\n'; sync(); }
     const run = () => {
       if (!box.value.trim()) { hint.textContent = 'Type an answer first.'; return; }
       send('/api/answer', { sql: box.value });
@@ -314,7 +315,7 @@ function renderInput(pending) {
     box.addEventListener('input', () => { hint.textContent = ''; });
     box.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); run(); } });
     codePane.append(wrap, button('Run', run), hint);
-    focusCode = () => { sync(); box.focus(); };
+    focusCode = () => { sync(); box.focus(); box.setSelectionRange(box.value.length, box.value.length); };
   } else if (pending.mode === 'done') {
     if (pending.next) codePane.appendChild(button('Next lesson', () => send('/api/run/new', { next: true })));
     codePane.appendChild(button('Sit this lesson again', () => send('/api/run/new')));

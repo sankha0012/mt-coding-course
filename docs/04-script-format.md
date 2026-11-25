@@ -31,6 +31,7 @@ A lesson is one sitting of roughly ten to twenty minutes. It is an ordered list 
 | Prompt | The teacher's line. Plain language. Its wording should differ from the last prompt that used the same movement. |
 | Thinking-order version | Optional. The same request phrased table first, for early lessons and for the correction ladder. |
 | Model answer | One answer that runs against the data. |
+| Start | Optional, Python only. Text the editor opens with, usually the data the prompt gives, such as `subtotals = [28.04, 57.72]`. The model answer must begin with it. Use it where typing the data is not the thought being practised. Keep it typed in the steps that introduce or return to a list, a dict or a name. |
 | Check | How an answer is judged. Normally by running it and comparing the result with the model answer's result. |
 | New thought | At most one identifier, or none for a recombination step. |
 | Required thoughts | Every thought the answer needs. The audit checks each was introduced earlier. |
@@ -100,6 +101,7 @@ These should be automated early. They are the equivalent of the gym's content ch
 5. **Spacing.** For each thought, report the steps at which it is required after its introduction, so gaps and pile-ups are visible. The target is a return at roughly 1, 3, 8 and 20 steps.
 6. **Narration variety.** Flag an Ask step with fewer than two narration lines.
 7. **Load shape.** Report where new thoughts fall, so that three in a row without relief stands out.
+8. **Start text.** A `start` is for a Python step, and the model answer begins with it.
 
 ## Writing guidance
 

@@ -57,6 +57,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "first-look", "text-quotes"]
     text: "The restaurants file is another table. Show its summary, the way `orders.info()` did for orders: its columns, their kinds, and how many cells are filled."
+    start: |-
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       restaurants = pd.read_csv('restaurants.csv')
@@ -84,10 +87,12 @@ steps:
           restaurants.head()
         ask: "Nothing came out at all. Head gives a table back, and nothing shows it. And is that what I asked for?"
     walk:
-      - "Bring pandas in and read restaurants.csv."
       - "Ask the table who it is: the action that reports its columns, their kinds and how full each is."
     return:
       text: "Now the couriers file. Show its summary in the same way."
+      start: |-
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
       model: |
         import pandas as pd
         couriers = pd.read_csv('couriers.csv')
@@ -126,6 +131,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "list-of-columns", "look-at-rows", "list", "get-by-name"]
     text: "Show me the name and the cuisine of the first three restaurants."
+    start: |-
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       restaurants = pd.read_csv('restaurants.csv')
@@ -157,11 +165,13 @@ steps:
           print(restaurants[['name', 'cuisine']])
         ask: "That is the whole table, as much as fits. Which action asks for only the first few rows?"
     walk:
-      - "Read restaurants.csv."
       - "Ask for two columns: a list of two names, in quotes, inside the table's brackets."
       - "Ask for the first three rows of what came out."
     return:
       text: "From the couriers, show me the id and the vehicle of the first two."
+      start: |-
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
       model: |
         import pandas as pd
         couriers = pd.read_csv('couriers.csv')
@@ -181,6 +191,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "list-of-columns", "look-at-rows", "compare-signs"]
     text: "For the orders above 100, show me the id and the subtotal of the first five."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -218,6 +231,9 @@ steps:
       - "Show the first rows."
     return:
       text: "For the cancelled orders, show me the order id and the delivery fee of the first four."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -263,6 +279,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "new-column", "list-of-columns", "look-at-rows", "set-by-name"]
     text: "Give the restaurants table a column called country that says Brazil on every row, and show the name, the city and the country of its first three."
+    start: |-
+      import pandas as pd
+      restaurants = pd.read_csv('restaurants.csv')
     model: |
       import pandas as pd
       restaurants = pd.read_csv('restaurants.csv')
@@ -298,11 +317,13 @@ steps:
           print(restaurants[['name', 'city', 'country']].head(3))
         ask: "Is Brazil a name in your program, or a word we are looking for?"
     walk:
-      - "Read restaurants.csv."
       - "Give the table the new column: its name in brackets and quotes, an equals sign, and the word Brazil in quotes."
       - "Ask for the three columns as a list, and the first three rows."
     return:
       text: "Give the couriers table a column called team that says north on every row, and show the id and the team of its first two."
+      start: |-
+        import pandas as pd
+        couriers = pd.read_csv('couriers.csv')
       model: |
         import pandas as pd
         couriers = pd.read_csv('couriers.csv')
@@ -347,6 +368,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "new-column", "column-sums", "list-of-columns", "look-at-rows"]
     text: "Add a column called minutes_over that holds the real minutes minus the promised minutes, and show the order id and minutes_over for the first four."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -382,11 +406,13 @@ steps:
           print(orders[['order_id', 'minutes_over']].head(4))
         ask: "Those are two words in quotes, not the columns. How do you ask the table for a column's values?"
     walk:
-      - "Read orders.csv."
       - "Give the table a new column called minutes_over, worked out from two columns: the real minutes take away the promised minutes."
       - "Show the order id and the new column, for the first four rows."
     return:
       text: "Add a column called minutes_early that holds the promised minutes minus the real minutes, and show the order id and minutes_early for the first four."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -433,6 +459,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "new-column", "yes-no-as-column", "yes-no-column", "list-of-columns", "look-at-rows", "compare-signs"]
     text: "Add a column called pricey that says whether the subtotal is above 80, and show the order id and pricey for the first five."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -470,11 +499,13 @@ steps:
           print(orders[['order_id', 'pricey']].head())
         ask: "Is 80 a word we are looking for, or a number?"
     walk:
-      - "Read orders.csv."
       - "Ask the subtotal column the question, with the sign for above."
       - "Keep the answers as a new column called pricey, and show it with the order id."
     return:
       text: "Add a column called quick that says whether promised_minutes is below 40, and show the order id and quick for the first five."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -524,6 +555,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no", "name-the-result", "equals-asks"]
     text: "Show the share of the delivered orders that had a delivery_fee of 0, as a number between 0 and 1."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -562,6 +596,9 @@ steps:
       - "Say the average of the new column for those orders."
     return:
       text: "Show the share of the delivered orders with a promised_minutes below 40, as a number between 0 and 1."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -602,6 +639,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "find-missing", "yes-no-as-column"]
     text: "Show how many orders have no actual_minutes."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -628,11 +668,14 @@ steps:
           print(orders['actual_minutes'].isna().count())
         ask: "That counted every answer, yes and no alike. Which summary adds up the ones?"
     walk:
-      - "Read orders.csv, and take the actual minutes column."
+      - "Take the actual minutes column."
       - "Ask every cell whether it is empty."
       - "Add up the True's, and print."
     return:
       text: "Show how many orders have an empty coupon_code."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -716,6 +759,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "fill-or-drop", "list-of-columns", "how-many"]
     text: "Drop the orders that have no actual_minutes, and show how many are left."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -742,11 +788,13 @@ steps:
           print(len(orders.dropna(['actual_minutes'])))
         ask: "Python did not know what to do with the list. What word names the columns to look at?"
     walk:
-      - "Read orders.csv."
       - "Drop the rows that have an empty actual time: dropna, and the column in a list after subset."
       - "Count what is left."
     return:
       text: "Fill the empty subtotals with 0, and print the average subtotal."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -764,6 +812,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "new-column", "yes-no-as-column", "mean-of-yes-no", "name-the-result", "groupby", "pick-then-summarise", "pile-names-on-left"]
     text: "This one I won't break down. For the delivered orders, show each promised_minutes value with the share of its orders that were late: actual_minutes above promised_minutes."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -806,6 +857,9 @@ steps:
       - "Make piles by promised time, pick the late column, and say the average."
     return:
       text: "For the delivered orders, show each promised_minutes value with the share of its orders that had a delivery_fee of 0."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
@@ -829,6 +883,9 @@ steps:
     lang: "python"
     requires: ["bring-pandas-in", "read-a-table", "column", "summary-follows", "yes-no-column", "brackets-keep-yes", "text-quotes", "find-missing", "fill-or-drop", "new-column", "column-sums", "yes-no-as-column", "mean-of-yes-no"]
     text: "The last one, from nothing. Fill the empty subtotals with the median. Add a total column and a late column. Print how many subtotals were empty before, how many after, the average total, and the share of delivered orders that were late."
+    start: |-
+      import pandas as pd
+      orders = pd.read_csv('orders.csv')
     model: |
       import pandas as pd
       orders = pd.read_csv('orders.csv')
@@ -883,11 +940,14 @@ steps:
           print(orders['late'].mean())
         ask: "That share counts the cancelled orders as on time. Which rows should the share be about?"
     walk:
-      - "Read orders.csv, and print how many subtotals are empty."
+      - "Print how many subtotals are empty."
       - "Fill them with the median, and put the result back into the subtotal column."
       - "Add the two new columns, count the empties again, and print the average total and the share of delivered orders that were late."
     return:
       text: "From nothing: drop the orders that have no subtotal, add a total column, and print how many orders are left and the average total."
+      start: |-
+        import pandas as pd
+        orders = pd.read_csv('orders.csv')
       model: |
         import pandas as pd
         orders = pd.read_csv('orders.csv')
