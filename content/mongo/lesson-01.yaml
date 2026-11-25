@@ -1,0 +1,647 @@
+lesson: mg-01
+title: "Documents in, documents out"
+strand: mongo
+stage: 1
+thoughts:
+  collection: "A collection is the table: `db.orders` is the table named orders."
+  find-all: "`db.orders.find()` shows every document. A document is one row, written as names with values in braces."
+  count-documents: "`db.orders.countDocuments()` counts the documents, where `COUNT(*)` counted rows."
+  question-is-a-document: "The question is a document too: `find({status: \"delivered\"})`. A name, a colon, the value it must have. There is no `WHERE`. Words wear quotes, numbers do not. An empty question, `{}`, keeps every document."
+  two-names-both-hold: "Two names in one question must both hold: `{status: \"delivered\", promised_minutes: 30}`. A comma between them is `AND`."
+  choose-fields: "A second document picks the fields to show: `find({...}, {subtotal: 1})`. A `1` means show it. The first document is the question and the second is the choice, so with no question the first is `{}`."
+  id-comes-unless-off: "`_id` comes along with every document unless it is turned off with `_id: 0`. This just is."
+steps:
+  # 1
+  - kind: "cold-check"
+    requires: ["count-rows", "from-table", "keep-rows", "text-quotes", "text-is-exact", "piles", "one-row-per-pile", "pile-name", "commas", "keep-before-piles", "keep-piles", "rows-or-piles"]
+    any_column_order: true
+    text: "From couriers, keep the couriers whose vehicle is bike. Show each city with its number of those couriers, only the cities that have more than 12 of them."
+    model: "SELECT city, COUNT(*) FROM couriers WHERE vehicle = 'bike' GROUP BY city HAVING COUNT(*) > 12"
+    rows: 3
+    result: [["Curitiba", 13], ["Rio de Janeiro", 18], ["São Paulo", 33]]
+    after_run: "That was SQL, and it is where we stopped last time: a table, a question about rows, piles, and a question about piles. Keep that sentence in mind. Today the same kind of questions, about the same business, get asked in a different tool."
+    note: "Opening cold check from SQL-3: keep rows, make piles, keep piles, on a table and a pile column not combined that way before (WHERE then GROUP BY then HAVING). Curitiba 13, Rio 18, São Paulo 33; Belo Horizonte has 9 and is dropped. It is deliberately SQL (plain, no lang or data), because MG-1 is the first Mongo lesson and the learner has only the SQL foundation. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["collection"]
+    requires: ["from-table"]
+    text: |-
+      MongoDB keeps the same business in a different shape. What SQL called a table, MongoDB calls a collection, and what SQL called a row, it calls a document. Where SQL said FROM orders, MongoDB says db.orders: the database, a dot, and the collection. Then, after another dot, what you want done with it. Here is the sentence that shows what is in orders:
+
+      ```js
+      db.orders.find()
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.find()"
+    after_run: |-
+      6,000 documents, and what you see are the first few. Each one is one order, written the way MongoDB keeps it: names, each with its value, inside braces. customer_id is 977, status is "delivered", and so on, a column name and its cell, side by side.
+
+      Look at the very first name in each one: _id. Nobody asked for it. It is the order's id, the column that was order_id in the CSV, and it arrives with every document. Keep an eye on it. db.orders is the table named orders, and find, with nothing in its brackets, shows what is inside.
+    note: "First Mongo step, and the first look at a document, on orders as the brief requires. find() is used before it is explained (rule B3) and it is asked in step 3, so only `collection` is new here. The _id that arrives unasked is seeded here and pays off in step 20 (the closing sentence). The first three orders shown are 100001, 100002 and 100003; 100003 returns in step 19."
+
+  # 3
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    new: ["find-all"]
+    requires: ["from-table", "star", "collection", "find-all"]
+    text: "Now the same thing for another collection. In SQL, showing everything was the star: SELECT * FROM couriers. Show every document in the couriers collection. Stop and think it out before you type."
+    model: "db.couriers.find()"
+    rows: 200
+    narration:
+      - "200 documents, one for each courier, each with its _id and its own names and values. The collection's name went after db, and find with nothing in its brackets showed everything."
+      - "Every courier, as a document. db.couriers is the table, and find() is the star: show it all."
+      - "200. Only the collection changed from the orders sentence."
+    wrong:
+      - code: "db.couriers.count()"
+        ask: "That is a word for counting, and we want to see the documents themselves. Which word showed the orders?"
+      - code: "db.orders.find()"
+        ask: "Those are the orders. Which collection does the prompt name?"
+      - code: "db.couriers"
+        ask: "That names the collection, and nothing is done with it yet. What did you type after the dot in the orders sentence?"
+    walk:
+      - "Start with db, a dot, and the collection you want."
+      - "After another dot, the word that shows documents, with brackets and nothing inside them."
+    return:
+      text: "The restaurants collection holds one document for every restaurant. Show every document in restaurants."
+      model: "db.restaurants.find()"
+      rows: 60
+      narration:
+        - "60 restaurants, each a document with its own _id. A different collection after db, and find() with nothing inside."
+        - "Every document of restaurants, shown. The collection changed and nothing else."
+      note: "Return for step 3."
+    note: "Early in the lesson almost nothing is taught, so only the collection changes from step 2, on purpose (as SQL-1 step 2 does). The prompt says aloud that this is SELECT * from SQL-1. The step says find-all is the new thought: the learner built it from a sentence that was shown in use."
+
+  # 4
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["count-documents"]
+    requires: ["count-rows", "from-table", "collection"]
+    text: |-
+      To count, SQL said COUNT of the star. MongoDB has a word for counting documents, and it sits where find sat:
+
+      ```js
+      db.orders.countDocuments()
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.countDocuments()"
+    after_run: "6,000, the number SQL gave you on the very first day. countDocuments counts documents as COUNT(*) counted rows, and it needs no star because there is nothing to count but the documents themselves. One number comes back."
+    note: "count-documents is COUNT(*) in a new spelling. The learner has seen 6,000 in SQL-1 step 1 and in step 2 of this lesson."
+
+  # 5
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["question-is-a-document"]
+    requires: ["keep-rows", "text-quotes", "collection", "find-all"]
+    text: |-
+      In SQL, a question about rows came after the table, behind the word WHERE. MongoDB has no WHERE. The question is a document too, written in braces inside the brackets of find: a name, a colon, and the value that name must have. A word is in quotes, as it was in SQL, and a number is not. Here are the pizza restaurants, and then the orders that were promised in 30 minutes:
+
+      ```js
+      db.restaurants.find({cuisine: "pizza"})
+      db.orders.find({promised_minutes: 30})
+      ```
+
+      Run them.
+    shows:
+      - "db.restaurants.find({cuisine: \"pizza\"})"
+      - "db.orders.find({promised_minutes: 30})"
+    after_run: |-
+      Eight restaurants, each with "pizza" in its cuisine, the eight SQL found. And 2,019 orders, each promised in 30 minutes. The documents that said yes stayed, and the rest were dropped, as WHERE did.
+
+      The brackets of find held nothing before, and now they hold a question. A question with no names in it, empty braces, asks nothing, so every document passes. find() with nothing inside is exactly that, and it is why it showed everything.
+    note: "The question document, in two sentences: a word in quotes and a number without (text-quotes from SQL-1). The reason for find() showing everything is the empty question, said once here so that `{}` is not a surprise in step 14. It follows the count give directly (two gives in a row), because a typed count straight after step 3 would differ from it in one slot only (the checker's shape rule); the typed count comes in step 7. No new count beyond the 8 pizza restaurants of SQL-1 and the 2,019 orders (promised_minutes 30)."
+
+  # 6
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["keep-rows", "text-quotes", "text-is-exact", "collection", "find-all", "question-is-a-document"]
+    text: "Show every document in the restaurants collection whose cuisine is japonesa."
+    model: "db.restaurants.find({cuisine: \"japonesa\"})"
+    rows: 10
+    narration:
+      - "Ten documents. The question went inside find, a name, a colon, and the word in quotes. That was WHERE cuisine = 'japonesa'."
+      - "Ten japonesa restaurants: the name of the field, a colon, the value it must have."
+      - ""
+    wrong:
+      - code: "db.restaurants.find({cuisine: japonesa})"
+        ask: "MongoDB does not know what japonesa is. Is it the name of a field, or the word we are looking for?"
+        why: "a bare word is read as a name, so the word we are looking for wears quotes, exactly as in SQL."
+      - code: "db.restaurants.find({city: \"japonesa\"})"
+        ask: "Which field of a restaurant holds the word japonesa?"
+      - code: "db.restaurants.find({cuisine: \"Japonesa\"})"
+        ask: "Look at how the cuisine field writes its words. Is yours written the same way, letter for letter?"
+        why: "data inside quotes is matched letter for letter, capitals included."
+      - code: "db.restaurants.find()"
+        ask: "That shows all 60. What decides which documents stay?"
+    walk:
+      - "Show documents from the restaurants collection."
+      - "Inside the brackets of find, open braces: the name of the field, a colon, the value it must have."
+      - "The value is a word, so it wears quotes."
+    return:
+      text: "Show every document in the couriers collection whose vehicle is carro."
+      model: "db.couriers.find({vehicle: \"carro\"})"
+      rows: 17
+      narration:
+        - "17 couriers drive a carro. The field, a colon, the word in quotes, inside find."
+        - "A question as a document: vehicle must be carro."
+      note: "Return for step 6."
+    note: "The question document, built by the learner. It differs from step 3 in the collection and the question. It does not use countDocuments with a question, which the classmate meets in step 8."
+
+  # 7
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-rows", "from-table", "collection", "count-documents"]
+    text: "Count the documents in the restaurants collection."
+    model: "db.restaurants.countDocuments()"
+    rows: 1
+    result: [[60]]
+    narration:
+      - "60. db and the collection, then the word that counts."
+      - "60 restaurants. The same count as SQL, asked of the collection."
+      - ""
+    wrong:
+      - code: "db.restaurants.find()"
+        ask: "That shows the documents, and we want how many. Which word counts?"
+      - code: "db.orders.countDocuments()"
+        ask: "Check the collection the prompt names."
+    walk:
+      - "Start with db and a dot, then the collection to count."
+      - "After the next dot, the word that counts documents, with its brackets."
+    return:
+      text: "Count the documents in the couriers collection."
+      model: "db.couriers.countDocuments()"
+      rows: 1
+      result: [[200]]
+      narration:
+        - "200 couriers. The collection after db, the counting word after it."
+        - "200: how many documents, from which collection."
+      note: "Return for step 7."
+    note: "The first typed count, three steps after the give of step 4 (the question of step 5 and the find of step 6 sit between, so it is a return of count-documents at a gap of 3). It differs from step 6 in the method and the question."
+
+  # 8
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-rows", "keep-rows", "text-quotes", "collection", "count-documents", "question-is-a-document"]
+    text: |-
+      Davi wants to know how many delivered orders there are. The question goes inside countDocuments in the same place as it went inside find, and he has remembered that. He types:
+
+      ```js
+      db.orders.countDocuments({status: delivered})
+      ```
+
+      It does not run. MongoDB says it does not know delivered. Davi, is delivered the name of a field, or is it the word we are looking for? ... The word. A word with no quotes is read as a name, and there is no field or thing called delivered, so MongoDB stops. It is the same reason as in SQL: the quotes are what say this is data and not a name. What should he have written?
+    model: "db.orders.countDocuments({status: \"delivered\"})"
+    rows: 1
+    result: [[5601]]
+    narration:
+      - "5,601 delivered orders. The word wears quotes, and the question sits inside countDocuments just as it sat inside find."
+      - "5,601. Nothing to fix but the quotes: bare words are names, and quoted words are data."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({status: \"Delivered\"})"
+        ask: "Look at how the status field writes its word. Is yours the same, letter for letter?"
+        why: "data inside quotes is matched letter for letter, so a capital D is a different word."
+      - code: "db.orders.countDocuments()"
+        ask: "That counts every order. Where does the question go?"
+      - code: "db.orders.countDocuments(\"delivered\")"
+        ask: "The question is a document, with a name in it. What is missing around the word?"
+    walk:
+      - "Davi's sentence is shaped right. Look only at the word after the colon."
+      - "A word we are looking for wears quotes."
+    return:
+      text: "Count the documents in the couriers collection whose vehicle is moto."
+      model: "db.couriers.countDocuments({vehicle: \"moto\"})"
+      rows: 1
+      result: [[110]]
+      narration:
+        - "110 couriers ride a moto. The question inside countDocuments, the word in quotes."
+        - "110. A count with a question: the name, a colon, the word that wears quotes."
+      note: "Return for step 8."
+    note: "Davi makes the predictable slip before the learner can (rule E6): the bare word, which SQL-1 taught as a column's name. It is also where the learner first meets countDocuments taking a question, said aloud in the text. The runner's calm line about the unknown word is what the learner sees. 5,601 is the delivered count of SQL-1."
+
+  # 9
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["keep-rows", "text-quotes", "collection", "find-all", "question-is-a-document"]
+    text: "Show every document in the coupons collection whose discount_pct is 20."
+    model: "db.coupons.find({discount_pct: 20})"
+    rows: 1
+    result: [["PIZZA20", 20]]
+    narration:
+      - "One coupon: PIZZA20, with a discount of 20. A number is not in quotes, so the 20 stands bare."
+      - "PIZZA20. The field, a colon, and the number as it is."
+      - ""
+    wrong:
+      - code: "db.coupons.find({discount_pct: \"20\"})"
+        ask: "A number is not a word. Does 20 wear quotes?"
+        why: "in quotes it would be the word 20, and the field holds the number 20, so nothing matches."
+      - code: "db.coupons.find({discount: 20})"
+        ask: "Check the name of the field in the prompt."
+      - code: "db.coupons.find()"
+        ask: "That shows every coupon. What decides which one stays?"
+    walk:
+      - "Show documents from the coupons collection."
+      - "Inside find, braces, the field's name, a colon."
+      - "The value is a number, so it stands without quotes."
+    return:
+      text: "Count the documents in the orders collection whose promised_minutes is 40."
+      model: "db.orders.countDocuments({promised_minutes: 40})"
+      rows: 1
+      result: [[2003]]
+      narration:
+        - "2,003 orders were promised in 40 minutes. The field, a colon, and the number with no quotes."
+        - "2,003: a count of the documents that pass a question about a number."
+      note: "Return for step 9."
+    note: "Numbers do not wear quotes. The learner has seen it in step 5, and this is the first sentence where a number is the whole point. The coupon's _id is its code, and is seen in step 12."
+
+  # 10
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["two-names-both-hold"]
+    requires: ["two-questions", "keep-rows", "text-quotes", "collection", "question-is-a-document"]
+    text: |-
+      In SQL, two questions about a row were joined with the word AND, and a row stayed only if both said yes. MongoDB needs no word: put two names in the one question, with a comma between them, and a document stays only if both hold. The pizza restaurants in São Paulo, and the number of delivered orders promised in 30 minutes:
+
+      ```js
+      db.restaurants.find({city: "São Paulo", cuisine: "pizza"})
+      db.orders.countDocuments({status: "delivered", promised_minutes: 30})
+      ```
+
+      Run them.
+    shows:
+      - "db.restaurants.find({city: \"São Paulo\", cuisine: \"pizza\"})"
+      - "db.orders.countDocuments({status: \"delivered\", promised_minutes: 30})"
+    after_run: "Six pizza restaurants, all in São Paulo, and 1,902 orders that were both delivered and promised in 30 minutes. A document that passes only one of the two names is dropped. In this question a comma means AND. In English a comma only separates things in a list, so this is a small new use of it, and it is how every question with two names is written."
+    note: "Comma is AND. The learner has two-questions (AND) from SQL-2. OR is not met here (MG-2)."
+
+  # 11
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-rows", "two-questions", "keep-rows", "text-quotes", "collection", "count-documents", "question-is-a-document", "two-names-both-hold"]
+    text: "Count the documents in the couriers collection whose city is Curitiba and whose vehicle is bike."
+    thinking_order: "From couriers, the ones in Curitiba that also ride a bike, and how many there are."
+    model: "db.couriers.countDocuments({city: \"Curitiba\", vehicle: \"bike\"})"
+    rows: 1
+    result: [[13]]
+    narration:
+      - "13. Two names in one question, a comma between them, and both must hold. SQL called that AND."
+      - "13 bike couriers in Curitiba. Each name has its colon and its word in quotes."
+      - ""
+    wrong:
+      - code: "db.couriers.countDocuments({city: \"Curitiba\"})"
+        ask: "That counts every courier in Curitiba, riding anything. What does the prompt also ask of the vehicle?"
+      - code: "db.couriers.countDocuments({vehicle: \"bike\"})"
+        ask: "That counts the bikes in every city. What does the prompt also ask of the city?"
+      - code: "db.couriers.countDocuments({city: Curitiba, vehicle: bike})"
+        ask: "MongoDB does not know those words. Which kind of thing wears quotes?"
+      - code: "db.couriers.countDocuments({city: \"Curitiba\"}, {vehicle: \"bike\"})"
+        ask: "How many documents did you write for the question? How many names must both hold?"
+        why: "the brackets take one question, and the second document is not part of it."
+    walk:
+      - "Count the documents of couriers."
+      - "Open the question with braces, and put the city in it."
+      - "The vehicle is a second name in the same question, after a comma."
+    return:
+      text: "Count the documents in the restaurants collection whose city is Curitiba and whose cuisine is hamburguer."
+      model: "db.restaurants.countDocuments({city: \"Curitiba\", cuisine: \"hamburguer\"})"
+      rows: 1
+      result: [[3]]
+      narration:
+        - "Three hamburguer restaurants in Curitiba. Two names in one question, both must hold, a comma between them."
+        - "3. The comma is AND."
+      note: "Return for step 11."
+    note: "Two names, both must hold, asked with a count. It differs from step 9 in the collection, the method and the question. The exact wording of the prompt keeps the words 'whose city is ... and whose vehicle is ...' so that no second sentence could answer it."
+
+  # 12
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["from-table", "star", "collection", "find-all"]
+    text: "A short one. Show every document in the coupons collection."
+    model: "db.coupons.find()"
+    rows: 4
+    result: [["BEMVINDO10", 10], ["FRETEGRATIS", 0], ["PIZZA20", 20], ["VOLTA15", 15]]
+    narration:
+      - "Four coupons. Look at their _id: it is not a number this time, it is the coupon's own code. The _id is whatever identifies the document."
+      - "Four documents, and each is named by its code. BEMVINDO10, FRETEGRATIS, PIZZA20, VOLTA15."
+      - ""
+    wrong:
+      - code: "db.coupons.countDocuments()"
+        ask: "That gives one number. Which word showed the documents themselves?"
+      - code: "db.couriers.find()"
+        ask: "Check the collection the prompt names."
+    walk:
+      - "db, a dot, the collection."
+      - "After another dot, find, with brackets and nothing inside."
+    return:
+      text: "Show every document in the couriers collection."
+      model: "db.couriers.find()"
+      rows: 200
+      narration:
+        - "200 couriers, every document. find() with nothing inside shows the lot."
+        - "The collection after db, and find with empty brackets."
+      note: "Return for step 12."
+    note: "Relief after a climb (rule C8) and a return of find-all at a gap of about 9 steps. It also lets the learner see that _id is not always a number: in coupons it is the code. It is an edit of step 3 in one slot, but the steps are not consecutive."
+
+  # 13
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["choose-fields"]
+    requires: ["choose-columns", "collection", "question-is-a-document"]
+    text: |-
+      In SQL you chose columns by naming them after SELECT. In MongoDB, find takes a second document, after the question and a comma, and that one picks the fields to show: each field's name, a colon, and a 1 that means show it. The names of the pizza restaurants, and then the name and cuisine of the restaurants in Curitiba:
+
+      ```js
+      db.restaurants.find({cuisine: "pizza"}, {name: 1})
+      db.restaurants.find({city: "Curitiba"}, {name: 1, cuisine: 1})
+      ```
+
+      Run them.
+    shows:
+      - "db.restaurants.find({cuisine: \"pizza\"}, {name: 1})"
+      - "db.restaurants.find({city: \"Curitiba\"}, {name: 1, cuisine: 1})"
+    after_run: |-
+      Now each document is cut down to the fields you chose. The first document, the question, decides which documents stay. The second, the choice, decides what is left of each one. Two documents, two jobs, in that order, with a comma between them, as SELECT and WHERE both had jobs.
+
+      And look: the _id is still there beside each name. You did not choose it. We will come to that in a moment.
+    note: "choose-fields is the SQL-1 'name the columns you want' (choose-columns). The _id in the output is deliberately seen here and named only in step 16, so that its arrival is a discovery. The learner has seen it unasked since step 2. The empty question {} is not used in this step, so that its first use is Ana's."
+
+  # 14
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["choose-columns", "keep-rows", "collection", "find-all", "question-is-a-document", "choose-fields"]
+    text: |-
+      Ana wants only the vehicle of every courier, nothing else. She remembers that the 1 means show, and writes:
+
+      ```js
+      db.couriers.find({vehicle: 1})
+      ```
+
+      No error. Just nothing: zero documents. Ana, the braces she wrote come first inside find. Which of the two documents is that, the question or the choice? ... The question. She asked for the couriers whose vehicle is 1, and nobody's vehicle is 1. The choice is the second document. But she wants every courier, so what goes in the first place, the one that keeps every document? ... Empty braces. The empty question asks nothing, so every document stays. What should she have written?
+    model: "db.couriers.find({}, {vehicle: 1})"
+    rows: 200
+    shows:
+      - "db.couriers.find({vehicle: 1})"
+    narration:
+      - "200 documents, each cut down to its vehicle, and its _id beside it. Empty braces held the first place, the question, and the choice came second."
+      - "Every courier, showing only the vehicle. The question is first, even when it has nothing to ask."
+      - ""
+    wrong:
+      - code: "db.couriers.find({vehicle: 1}, {})"
+        ask: "Which document is the question, and which is the choice? Which of yours holds the vehicle?"
+      - code: "db.couriers.find({}, {})"
+        ask: "Nothing was chosen, so everything shows. Where does the vehicle go?"
+      - code: "db.couriers.find({}, {city: 1})"
+        ask: "Check the field the prompt names."
+    walk:
+      - "The first document inside find is the question. This time it has nothing to ask."
+      - "The second document is the choice: the vehicle, a colon, a 1."
+    return:
+      text: "Show the city of every document in the restaurants collection."
+      model: "db.restaurants.find({}, {city: 1})"
+      rows: 60
+      narration:
+        - "60 restaurants, each cut down to its city, with the _id beside it. An empty question first, then the choice."
+        - "Every document kept, one field chosen. Empty braces, then the field with its 1."
+      note: "Return for step 14."
+    note: "The predictable slip of the second document: the learner has only ever seen the choice after a question. The classmate's sentence gives 0 documents with no error, which is why it is worth a classmate. Empty braces are introduced in step 5 and used here for the first time."
+
+  # 15
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["choose-columns", "keep-rows", "text-quotes", "collection", "question-is-a-document", "choose-fields"]
+    text: "In the couriers collection, keep the documents whose vehicle is carro. Show each one's city."
+    thinking_order: "From couriers, keep the ones that drive a carro, then show their city."
+    model: "db.couriers.find({vehicle: \"carro\"}, {city: 1})"
+    rows: 17
+    narration:
+      - "17 documents, each cut down to its city. The question came first, to keep the carro couriers, and the choice came second."
+      - "The question keeps, the choice cuts: vehicle first, then city with its 1. The _id comes along, as before."
+      - ""
+    wrong:
+      - code: "db.couriers.find({vehicle: \"carro\"})"
+        ask: "That shows every field of the carro couriers. What do you add to show only the city?"
+      - code: "db.couriers.find({city: 1}, {vehicle: \"carro\"})"
+        ask: "Which document is the question, and which is the choice? Which comes first?"
+      - code: "db.couriers.find({}, {city: 1})"
+        ask: "That shows the city of all 200 couriers. What keeps only the carro ones?"
+      - code: "db.couriers.find({vehicle: \"carro\"}, {vehicle: 1})"
+        ask: "Which field does the prompt want to see?"
+    walk:
+      - "Find in couriers, with the question first: the vehicle must be carro."
+      - "A comma, then the second document: the field to show, a colon, a 1."
+    return:
+      text: "In the restaurants collection, keep the documents whose cuisine is pizza. Show each one's city."
+      model: "db.restaurants.find({cuisine: \"pizza\"}, {city: 1})"
+      rows: 8
+      narration:
+        - "Eight documents, each cut down to its city, with the _id beside it. The question keeps the pizza restaurants and the choice picks the city."
+        - "Keep first, choose second: cuisine in the question, city in the choice."
+      note: "Return for step 15."
+    note: "The choice with a question, built from the pieces. The result includes the _id of each courier (it is a value and is judged). The prompt asks for 'each one's city', and the _id arriving beside it is what step 16 explains. It differs from step 14 in the question and the field."
+
+  # 16
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["id-comes-unless-off"]
+    requires: ["choose-fields", "choose-columns", "collection"]
+    text: |-
+      You have noticed what we promised to come back to. The _id keeps arriving beside the fields you chose, though you did not choose it. Every document has an _id, and it is how MongoDB tells the documents apart: it is what the CSV called order_id or restaurant_id. It comes along unless you turn it off. To turn it off you name it in the choice, with a 0 where the others have a 1:
+
+      ```js
+      db.restaurants.find({cuisine: "pizza"}, {name: 1, _id: 0})
+      ```
+
+      Run it.
+    shows:
+      - "db.restaurants.find({cuisine: \"pizza\"}, {name: 1, _id: 0})"
+    after_run: "Just the names now, and no _id. A 1 means show this, and a 0 means hide this. _id is the one field that shows unless you say 0. This just is: there is no reason for it beyond MongoDB wanting every document to carry its id with it. You only have to say 0 when you do not want it."
+    note: "This just is (rule B5, B6): no reason is invented. It is seen in step 2 and step 13, and named here. The only reason given is the true one: every document has an _id, which tells documents apart."
+
+  # 17
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["choose-columns", "keep-rows", "text-quotes", "collection", "question-is-a-document", "choose-fields", "id-comes-unless-off"]
+    text: "In the restaurants collection, keep the documents whose cuisine is arabe. Show each one's name and city, and not the _id."
+    thinking_order: "From restaurants, keep the arabe ones, then show the name and the city without the id."
+    model: "db.restaurants.find({cuisine: \"arabe\"}, {name: 1, city: 1, _id: 0})"
+    rows: 8
+    narration:
+      - "Eight documents with a name and a city, and no _id. Two fields chosen with a 1 each, and the _id turned off with a 0."
+      - "The question keeps the arabe restaurants. The choice names two fields and switches the _id off."
+      - ""
+    wrong:
+      - code: "db.restaurants.find({cuisine: \"arabe\"}, {name: 1, city: 1})"
+        ask: "Is the _id in your result? What turns it off?"
+      - code: "db.restaurants.find({cuisine: \"arabe\"}, {_id: 0})"
+        ask: "You turned off the _id and chose nothing, so every other field shows. What should show?"
+      - code: "db.restaurants.find({cuisine: \"arabe\"}, {name: 1, _id: 0})"
+        ask: "Which two fields does the prompt want?"
+      - code: "db.restaurants.find({}, {name: 1, city: 1, _id: 0})"
+        ask: "That shows every restaurant. What keeps only the arabe ones?"
+    walk:
+      - "Find in restaurants, with the question first: the cuisine must be arabe."
+      - "The choice: the name and the city, each with a 1."
+      - "Then the _id, with a 0, to turn it off."
+    return:
+      text: "In the couriers collection, keep the documents whose vehicle is carro. Show each one's city, and not the _id."
+      model: "db.couriers.find({vehicle: \"carro\"}, {city: 1, _id: 0})"
+      rows: 17
+      narration:
+        - "17 cities, and no _id. The question keeps the carro couriers, the choice shows the city and turns the _id off."
+        - "A 1 for what to show, a 0 for the _id that arrives unasked."
+      note: "Return for step 17."
+    note: "The _id turned off, with two chosen fields. It differs from step 15 in the question, the field list and the 0."
+
+  # 18
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-rows", "two-questions", "keep-rows", "text-quotes", "collection", "count-documents", "question-is-a-document", "two-names-both-hold"]
+    text: "Count the documents in the orders collection whose status is cancelled and whose promised_minutes is 30."
+    thinking_order: "From orders, the cancelled ones that were promised in 30 minutes, and how many."
+    model: "db.orders.countDocuments({status: \"cancelled\", promised_minutes: 30})"
+    rows: 1
+    result: [[117]]
+    narration:
+      - "117. A word in quotes and a number without, two names in one question, and a count."
+      - "117 cancelled orders that had been promised in 30 minutes. Both hold, so the comma is AND."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({status: \"cancelled\"})"
+        ask: "That counts every cancelled order. What else must hold?"
+      - code: "db.orders.countDocuments({promised_minutes: 30})"
+        ask: "That counts every order promised in 30 minutes. What else must hold?"
+      - code: "db.orders.countDocuments({status: \"cancelled\", promised_minutes: \"30\"})"
+        ask: "Does the number wear quotes?"
+        why: "in quotes it would be the word 30, and the field holds the number 30."
+    walk:
+      - "Count the documents of orders."
+      - "The question: the status, cancelled, in quotes, then a comma."
+      - "The second name, promised_minutes, with its number and no quotes."
+    return:
+      text: "Count the documents in the orders collection whose status is delivered and whose promised_minutes is 50."
+      model: "db.orders.countDocuments({status: \"delivered\", promised_minutes: 50})"
+      rows: 1
+      result: [[1836]]
+      narration:
+        - "1,836 delivered orders that were promised in 50 minutes. Two names, both must hold."
+        - "1,836. The comma is AND, again."
+      note: "Return for step 18."
+    note: "Collection, method, two names with a word and a number. It is a count again, at a gap of 7 steps from step 11, and not an edit of step 17, which is a find with a choice."
+
+  # 19
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["keep-rows", "collection", "find-all", "question-is-a-document", "id-comes-unless-off"]
+    text: "In the orders collection, show the document whose _id is 100003."
+    model: "db.orders.find({_id: 100003})"
+    rows: 1
+    narration:
+      - "One document: the third order of the first sentence we ran. _id is a name like any other, and its value is a number, so there are no quotes."
+      - "Order 100003, and the _id is the order's id. It can be asked about as any other field is."
+      - ""
+    wrong:
+      - code: "db.orders.find({_id: \"100003\"})"
+        ask: "Does the id wear quotes? Is it a word or a number?"
+        why: "in quotes it would be the word 100003, and the _id holds the number 100003."
+      - code: "db.orders.find({id: 100003})"
+        ask: "What is the name of the field that holds the order's id?"
+      - code: "db.orders.find()"
+        ask: "That shows all 6,000 orders. What decides which one stays?"
+    walk:
+      - "Find in orders, with a question."
+      - "The name is _id, a colon, and the number with no quotes."
+    return:
+      text: "In the restaurants collection, show the document whose _id is 7."
+      model: "db.restaurants.find({_id: 7})"
+      rows: 1
+      result: [[7, "Rest 07", "Belo Horizonte", "japonesa", "2024-04-09T00:00:00Z"]]
+      narration:
+        - "Restaurant 7, in Belo Horizonte. _id is a field like another, asked with its number."
+        - "One document. The name _id, a colon, and the number."
+      note: "Return for step 19."
+    note: "The _id as an ordinary name in a question, which prepares the closing sentence: the id the learner will be asked to show is this same field. 100003 is the third document of step 2 and has a cancelled order of 50.56 in the closing result."
+
+  # 20
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["from-table", "choose-columns", "keep-rows", "text-quotes", "two-questions", "collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "id-comes-unless-off"]
+    friction: true
+    text: "Now all of it at once. At the start of today's sitting you could not have written this one. In the orders collection, keep the documents whose status is cancelled and whose promised_minutes is 50. Show each one's id and its subtotal."
+    thinking_order: "From orders, keep the cancelled ones that were promised in 50 minutes, then show the id and the subtotal."
+    model: "db.orders.find({status: \"cancelled\", promised_minutes: 50}, {subtotal: 1})"
+    rows: 142
+    narration:
+      - "142 documents, each with its _id and its subtotal. The first is 100003 with 50.56, the order you looked up a minute ago. Two names in the question, one field in the choice, and the id came without being asked."
+      - "142 cancelled orders promised in 50 minutes. The question keeps them, the choice picks the subtotal, and the _id arrives by itself, as it did in the very first sentence."
+      - ""
+    wrong:
+      - code: "db.orders.find({status: \"cancelled\", promised_minutes: 50}, {subtotal: 1, _id: 0})"
+        ask: "The prompt asks for each one's id. Is it in your result?"
+      - code: "db.orders.find({status: \"cancelled\"}, {subtotal: 1})"
+        ask: "That keeps all the cancelled orders. What else must hold?"
+      - code: "db.orders.find({status: \"cancelled\", promised_minutes: 50})"
+        ask: "That shows every field of each order. What picks the subtotal?"
+      - code: "db.orders.find({subtotal: 1}, {status: \"cancelled\", promised_minutes: 50})"
+        ask: "Which document is the question, and which is the choice? Which comes first?"
+    walk:
+      - "Find in orders, with a question: the status is cancelled, and a comma."
+      - "The second name of the question: promised_minutes, 50, without quotes."
+      - "Then a comma and the choice: the subtotal, with a 1. What happens to the _id when you say nothing about it?"
+    return:
+      text: "In the restaurants collection, keep the documents whose city is Curitiba and whose cuisine is pizza. Show each one's id and its name."
+      model: "db.restaurants.find({city: \"Curitiba\", cuisine: \"pizza\"}, {name: 1})"
+      rows: 2
+      result: [[23, "Rest 23"], [32, "Rest 32"]]
+      narration:
+        - "Two documents: restaurant 23 and restaurant 32, each with its _id and its name. Two names in the question, one field in the choice, and the id arrives by itself."
+        - "The question keeps two restaurants, the choice picks the name, and the _id came along unasked."
+      note: "Return for step 20."
+    note: "The closing sentence of MG-1, as the map gives it, with the result judged as a set (142 documents; the first three are 100003 at 50.56, 100009 at 42.27 and 100039 at 38.24, in the order the data is stored). It is the lesson's friction: nothing is broken down, and the _id has to be remembered to arrive unasked, set up in steps 2, 13 and 16. A learner who types {_id: 1, subtotal: 1} gets the same documents and is right. The prompt says 'id' where the field is _id."
+
+  # 21
+  - kind: "recap"
+    lang: "mongo"
+    data: "mongo"
+    text: |-
+      Stop there. Today you met MongoDB: a collection is the table, a document is a row, and a question about the rows is a document of its own, with a comma where AND was. You counted, you chose what to show, and you met an _id that arrives whether you ask or not.
+
+      You are not fast at this, and you are not meant to be. The aim today was to think each sentence out, and you have been doing that.
+
+      Don't go over any of it before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["choose-columns", "keep-rows", "text-quotes", "two-questions", "collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "id-comes-unless-off"]
+    text: "In the restaurants collection, keep the documents whose city is Rio de Janeiro and whose cuisine is japonesa. Show each one's name, and not the _id."
+    model: "db.restaurants.find({city: \"Rio de Janeiro\", cuisine: \"japonesa\"}, {name: 1, _id: 0})"
+    rows: 4
+    result: [["Rest 13"], ["Rest 27"], ["Rest 30"], ["Rest 58"]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: two names, a choice and the _id turned off, on a city and a cuisine never combined that way. Four restaurants. Never scored."

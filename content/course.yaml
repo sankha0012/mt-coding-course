@@ -35,3 +35,12 @@ course:
   - ml/lesson-02
   - ml/lesson-03
   - cold/lesson-02
+
+# optional extra: MongoDB (decision C28). Open after the SQL foundation; the core never needs them.
+extras:
+  - mongo/lesson-01
+  - mongo/lesson-02
+  - mongo/lesson-03
+  - mongo/lesson-04
+  - mongo/lesson-05
+  - mongo/lesson-06

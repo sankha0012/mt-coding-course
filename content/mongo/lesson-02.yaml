@@ -1,0 +1,652 @@
+lesson: mg-02
+title: "Sharper questions, and looking inside"
+strand: mongo
+stage: 1
+thoughts:
+  operator-documents: "A question of more than or less than is a document with a dollar word in it: `{subtotal: {$gt: 100}}`. `$gt`, `$gte`, `$lt` and `$lte` are the signs you know."
+  one-of: "`{cuisine: {$in: [\"pizza\", \"japonesa\"]}}` asks whether a value is one of a list. SQL has `IN` too."
+  or-takes-a-list: "`$or` takes a list of questions, and a document stays if any of them holds."
+  document-inside-document: "A value can itself be a document. An order holds its `delivery` inside it: `{distance_km: 4.2, rain: false, bag_size: 1}`."
+  dotted-name: "To ask about a field inside a field, join the names with a dot, in quotes: `\"delivery.rain\": true`."
+  absent-field: "A field can be absent. `{coupon_code: {$exists: false}}` asks for the orders with no coupon. This is the empty cell of SQL-3."
+  sort-spelling: "`.sort({subtotal: -1})` sorts what came out. `-1` puts the biggest first, `1` the smallest."
+  limit-spelling: "`.limit(5)` keeps the first few of what is left."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "id-comes-unless-off"]
+    text: "From the `restaurants` collection, show only the `name` of each restaurant whose `city` is \"Curitiba\" and whose `cuisine` is \"pizza\". Leave out the `_id`."
+    model: "db.restaurants.find({city: \"Curitiba\", cuisine: \"pizza\"}, {name: 1, _id: 0})"
+    rows: 2
+    result: [["Rest 23"], ["Rest 32"]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from MG-1: two names that must both hold, and the fields chosen with `_id` turned off, on a collection and a pair of values not combined that way before. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["operator-documents"]
+    text: |-
+      Last time a question was a name, a colon and the value the name must have. Now a question of more than. In SQL you wrote it with a sign, `subtotal > 100`. MongoDB writes no sign there. The value after the colon becomes a document of its own, and the sign becomes a word that starts with a dollar sign: `$gt`, for greater than. Here are the orders with a subtotal above 100, counted:
+
+      ```js
+      db.orders.countDocuments({subtotal: {$gt: 100}})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.countDocuments({subtotal: {$gt: 100}})"
+    after_run: "632, the very number SQL gave you in the first lesson. Read it as you built it: in orders, the subtotal, greater than 100. `$gt` has three brothers for the other signs you know: `$gte` is greater than or equal, `$lt` is less than and `$lte` is less than or equal. They all start with a dollar sign, and there is a real reason: a plain word inside the braces is read as the name of a field, and the dollar sign is what tells MongoDB this word is an operator."
+    note: "The sign becomes a word in a document (rule B8: reframe, not a rule to memorise). The dollar sign has a real reason, so nothing is left over. 632 is the SQL-1 number, echoed aloud."
+
+  # 3
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "choose-fields", "id-comes-unless-off", "operator-documents", "compare-signs"]
+    text: "From `orders`, show the `_id` and `subtotal` of each order whose `subtotal` is below 12."
+    thinking_order: "From orders, keeping the ones whose subtotal is below 12, show the subtotal."
+    model: "db.orders.find({subtotal: {$lt: 12}}, {subtotal: 1})"
+    rows: 58
+    narration:
+      - "58 orders. A name, a colon, and then a document with the sign as a dollar word: the subtotal, less than 12."
+      - "Keep the orders whose subtotal is less than 12, show the subtotal, and the `_id` came along as it always does."
+      - ""
+    wrong:
+      - code: "db.orders.find({subtotal: {$gt: 12}}, {subtotal: 1})"
+        ask: "Those are the orders above 12. Which of the four dollar words means less than?"
+        why: "`$lt` is less than and `$gt` is greater than, the signs of maths in words."
+      - code: "db.orders.find({subtotal: {$lt: 12}})"
+        ask: "That shows every field of each order. Which second document chooses only the subtotal?"
+      - code: "db.orders.find({subtotal: {$lt: 12}}, {subtotal: 0})"
+        ask: "What does a 0 do to a field in the second document?"
+    walk:
+      - "Ask `orders` for the ones with a subtotal under 12: the name, a colon, and a document with `$lt` in it."
+      - "Now add the second document, to show only the subtotal."
+    return:
+      text: "From `orders`, show the `_id` and `actual_minutes` of each order whose `actual_minutes` is above 100."
+      model: "db.orders.find({actual_minutes: {$gt: 100}}, {actual_minutes: 1})"
+      rows: 4
+      result: [[101406, 105.9], [103690, 109.9], [103924, 103.5], [105624, 108.7]]
+      narration:
+        - "Four slow deliveries. The same shape, with greater than this time, and another field."
+        - "Keep the orders whose actual_minutes is greater than 100, and show that field."
+    note: "First typed use of an operator document, find with a projection so that MG-1 is needed too. The less-than direction is the bait: a learner who reads the sign backwards gets the big orders."
+
+  # 4
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "count-documents", "question-is-a-document", "two-names-both-hold", "operator-documents", "compare-signs", "two-questions"]
+    text: "How many orders in `orders` have a `promised_minutes` of at most 40 and a `subtotal` of at least 150?"
+    thinking_order: "From orders, keeping the ones whose promised_minutes is at most 40 and whose subtotal is at least 150, count the documents."
+    model: "db.orders.countDocuments({promised_minutes: {$lte: 40}, subtotal: {$gte: 150}})"
+    rows: 1
+    result: [[42]]
+    narration:
+      - "42. Two names in one document, so both must hold, and each name has its own sign: less than or equal for the promise, greater than or equal for the subtotal."
+      - "The comma joined the two questions as AND, the equal-or signs let 40 and 150 themselves stay in."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({promised_minutes: {$lt: 40}, subtotal: {$gt: 150}})"
+        ask: "Does an order with a promise of exactly 40 stay in, with your signs? Which signs mean 'or equal'?"
+        why: "`$lte` and `$gte` keep the value itself, `$lt` and `$gt` do not."
+      - code: "db.orders.countDocuments({promised_minutes: {$lte: 40}})"
+        ask: "That is only the first question. How does a second one join it?"
+      - code: "db.orders.countDocuments({promised_minutes: {$gte: 40}, subtotal: {$lte: 150}})"
+        ask: "Which way does each sign point? 'At most' means no more than."
+    walk:
+      - "Count the orders whose promised_minutes is at most 40."
+      - "Add the second name after a comma, with its own sign: the subtotal, at least 150."
+    return:
+      text: "How many orders in `orders` have an `actual_minutes` of at least 60 and a `delivery_fee` of at most 2?"
+      model: "db.orders.countDocuments({actual_minutes: {$gte: 60}, delivery_fee: {$lte: 2}})"
+      rows: 1
+      result: [[104]]
+      narration:
+        - "104 orders. Two names, each with its own dollar word, joined by the comma."
+        - "At least 60 is greater than or equal, at most 2 is less than or equal."
+    note: "Two operator documents inside one question, with the equal-or signs. The count differs from step 3 in the method and the question. 42 orders; the strict version gives a different number, which is the bait."
+
+  # 5
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["one-of"]
+    text: |-
+      Now a different question about a value: is it one of a few. In SQL you could write `OR` between two questions, or the shorter word `IN` with a list of values. MongoDB has the shorter way, `$in`, a dollar word like `$gt` whose value is a list in square brackets. Here are the names of the restaurants that serve pizza or japonesa, without their `_id`:
+
+      ```js
+      db.restaurants.find({cuisine: {$in: ["pizza", "japonesa"]}}, {name: 1, _id: 0})
+      ```
+
+      Run it.
+    shows:
+      - "db.restaurants.find({cuisine: {$in: [\"pizza\", \"japonesa\"]}}, {name: 1, _id: 0})"
+    after_run: "18 restaurants, the same 18 as in SQL: the pizza ones and the japonesa ones together. `$in` asks whether the value of the field is one of the list. The list is in square brackets with commas between, and the words in it wear quotes as they always do. A number in it would wear none."
+    note: "Echo: SQL-2 step 11 counted the same 18 with OR. IN is named aloud as the shorter SQL word; no SQL-IN thought is required (the map imports only two-questions)."
+
+  # 6
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "count-documents", "question-is-a-document", "one-of", "text-quotes"]
+    text: "How many couriers in `couriers` have a `vehicle` that is one of \"moto\", \"carro\"?"
+    thinking_order: "From couriers, keeping the ones whose vehicle is one of moto, carro, count the documents."
+    model: "db.couriers.countDocuments({vehicle: {$in: [\"moto\", \"carro\"]}})"
+    rows: 1
+    result: [[127]]
+    narration:
+      - "127: the 110 on a moto and the 17 in a carro, as in SQL. One name, and a list of the values it may have."
+      - "A different collection, and the value asked as one of a list."
+      - ""
+    wrong:
+      - code: "db.couriers.countDocuments({vehicle: {$in: [\"moto\"]}})"
+        ask: "That is only the motos. Which words belong in the list?"
+      - code: "db.couriers.countDocuments({vehicle: [\"moto\", \"carro\"]})"
+        ask: "That says 0. A list on its own asks for a vehicle that is the whole list. Which dollar word asks 'is it one of'?"
+        why: "without `$in` the list is itself the value being looked for, and no courier has a list for a vehicle."
+      - code: "db.couriers.countDocuments({vehicle: {$in: [moto, carro]}})"
+        ask: "Inside the list, are moto and carro words you are looking for, or the names of fields?"
+        why: "a word we are looking for wears quotes, as in SQL: a bare word is read as a name."
+    walk:
+      - "Count the documents of couriers."
+      - "Keep the ones whose vehicle is one of the two words: the name, a colon, `$in` and a list in square brackets."
+    return:
+      text: "How many orders in `orders` have a `promised_minutes` that is one of 30, 50?"
+      model: "db.orders.countDocuments({promised_minutes: {$in: [30, 50]}})"
+      rows: 1
+      result: [[3997]]
+      narration:
+        - "3,997 orders. The same word `$in`, with numbers in the list, and so no quotes."
+        - "One name, and the values it may have as a list."
+    note: "First typed `$in`. The couriers table gives 127 = 110 + 17, the number of SQL-2's OR step, echoed in the narration. The bare list (0) is the bait; its reason is real."
+
+  # 7
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["or-takes-a-list"]
+    text: |-
+      `$in` asks about one name. What if the two questions are about different names, and either may say yes? In SQL that was `OR`. A question document with two names means both, as you know: that was the comma, and in the second SQL lesson it gave 160 orders with a delivery_fee of 0 and a subtotal above 100. For either, MongoDB uses `$or`, a dollar word whose value is a list of questions, each one a document of its own:
+
+      ```js
+      db.orders.countDocuments({$or: [{delivery_fee: 0}, {subtotal: {$gt: 100}}]})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.countDocuments({$or: [{delivery_fee: 0}, {subtotal: {$gt: 100}}]})"
+    after_run: "1,983 orders, many more than the 160 that passed both questions. An order stays if any one question in the list holds. Why a list? A document with two names already means both, so questions that are kept apart must be kept apart in something. Separate things go in a list, in square brackets, with commas between."
+    note: "OR as the other join of two questions (SQL two-questions). The list has a real reason. 160 is the AND count of SQL-2 step 10, 1,983 the OR count, both run."
+
+  # 8
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "choose-fields", "operator-documents", "or-takes-a-list", "two-questions"]
+    text: "From `orders`, show the `_id` and `subtotal` of each order whose `subtotal` is below 10 or above 200."
+    thinking_order: "From orders, keeping the ones whose subtotal is below 10 or whose subtotal is above 200, show the subtotal."
+    model: "db.orders.find({$or: [{subtotal: {$lt: 10}}, {subtotal: {$gt: 200}}]}, {subtotal: 1})"
+    rows: 35
+    narration:
+      - "35 orders, the very small and the very big. Two questions in a list under `$or`, and an order stays if either holds."
+      - "Keep the orders that pass either question, show the subtotal."
+      - ""
+    wrong:
+      - code: "db.orders.find({subtotal: {$lt: 10, $gt: 200}}, {subtotal: 1})"
+        ask: "Both signs sit in one document, so both must hold. Can one subtotal be below 10 and above 200 at the same time?"
+        why: "two dollar words in one document mean both, as the comma does. For either, the two questions go in `$or`."
+      - code: "db.orders.find({$or: [{subtotal: {$lt: 10}}, {subtotal: {$gt: 150}}]}, {subtotal: 1})"
+        ask: "Check the number in the second question against the one I gave."
+      - code: "db.orders.find({$or: [{subtotal: {$lt: 10}}, {subtotal: {$gt: 200}}]})"
+        ask: "Which second document chooses only the subtotal?"
+    walk:
+      - "Write one question: the subtotal is below 10."
+      - "Write the other: the subtotal is above 200. Put both in a list under `$or`."
+    return:
+      text: "How many orders in `orders` have a `delivery_fee` of 0 or an `actual_minutes` above 100?"
+      model: "db.orders.countDocuments({$or: [{delivery_fee: 0}, {actual_minutes: {$gt: 100}}]})"
+      rows: 1
+      result: [[1512]]
+      narration:
+        - "1,512 orders. Two questions about two different names, in a list under `$or`."
+        - "Either question was enough to keep the order."
+    note: "The natural slip, two signs in one document, is among the wrong answers and gives 0 with a calm reason. The step differs from step 7 in method and projection."
+
+  # 9
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["document-inside-document"]
+    text: |-
+      Look at one whole order. This is order 100001. You can pick it by its `_id`, because `_id` is a name like any other:
+
+      ```js
+      db.orders.find({_id: 100001})
+      ```
+
+      Run it and look at the field called `delivery`.
+    shows:
+      - "db.orders.find({_id: 100001})"
+    after_run: "Look at `delivery`. Its value is not a number and not a word. It is a document, with names of its own inside it: `distance_km` 4.2, `rain` false and `bag_size` 1. A value can itself be a document. One more thing: `false` has no quotes, because it is not a word in your data. `true` and `false` are values of their own, like numbers, and they are written without quotes."
+    note: "A real find on orders, so that the learner sees `delivery` inside an order before dotted-name asks about it. Order 100001 is delivered in no rain, with a distance of 4.2 and a bag size of 1, the example the map quotes. `true` and `false` bare is stated here, with its reason (quotes mean text)."
+
+  # 10
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    new: ["dotted-name"]
+    requires: ["collection", "count-documents", "question-is-a-document", "document-inside-document"]
+    text: |-
+      Davi had just looked at order 100001 and its `delivery`. He was asked: how many orders have `rain` true inside their `delivery`? He wrote:
+
+      ```js
+      db.orders.countDocuments({delivery.rain: true})
+      ```
+
+      The answer was a message that it expected a colon, and the dot was where it stopped. Davi, where does a name in the braces end? ... At the colon. `delivery` is one name, and a dot has no place there. To reach a field inside a field, the two names are joined with a dot, and the joined name wears quotes so that it reads as one name: `"delivery.rain"`. What should he have written?
+    model: "db.orders.countDocuments({\"delivery.rain\": true})"
+    rows: 1
+    result: [[1089]]
+    broken: "db.orders.countDocuments({delivery.rain: true})"
+    narration:
+      - "1,089 orders were delivered in the rain. The two names joined with a dot, and the quotes made them one name."
+      - "Quotes around the dotted name: delivery, then rain inside it, equal to true."
+      - "1,089. Nothing to fix but the quotes."
+    wrong:
+      - code: "db.orders.countDocuments({delivery: {rain: true}})"
+        ask: "That one runs and says 0. It asks for a delivery that is exactly the document {rain: true}, with nothing else in it. Which one name reaches the rain inside delivery?"
+        why: "a document written as a value must match the whole document, and a delivery has three names, not one."
+      - code: "db.orders.countDocuments({rain: true})"
+        ask: "Is rain a name of the order itself, or of something inside it?"
+      - code: "db.orders.countDocuments({\"delivery.rain\": \"true\"})"
+        ask: "Is true a word in your data, as a city would be?"
+        why: "`true` is a value of its own, not text, so it wears no quotes."
+      - code: "db.orders.countDocuments({\"delivery.rain\": false})"
+        ask: "Which of the two did Davi ask for?"
+    walk:
+      - "Which two names do you need, the outer one first?"
+      - "Join them with a dot, put the joined name in quotes, and give it the value true."
+    return:
+      text: "How many orders in `orders` have a `bag_size` of 2 inside their `delivery`?"
+      model: "db.orders.countDocuments({\"delivery.bag_size\": 2})"
+      rows: 1
+      result: [[1778]]
+      narration:
+        - "1,778 orders. The name inside the name, joined with a dot and wearing quotes."
+        - "Delivery, a dot, bag_size, all in quotes, and the number 2 with none."
+    note: "Davi makes the slip before the learner can (rule E6). The mongo message is the real reason: a bare name ends at the colon. Quotes join the two names into one, which is a real reason and not a rule to memorise. The wrong answer `{delivery: {rain: true}}` runs and says 0, a plausible trap whose reason is real. 1,089 delivered in rain: the map's closing sentence uses it."
+
+  # 11
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "operator-documents", "document-inside-document", "dotted-name"]
+    text: "From `orders`, show the `_id` and `subtotal` of each order whose `delivery` has a `bag_size` of 3 and whose `subtotal` is below 15."
+    thinking_order: "From orders, keeping the ones with a bag_size of 3 inside delivery and a subtotal below 15, show the subtotal."
+    model: "db.orders.find({\"delivery.bag_size\": 3, subtotal: {$lt: 15}}, {subtotal: 1})"
+    rows: 3
+    result: [[101184, 12.03], [105159, 7.64], [105351, 11.73]]
+    narration:
+      - "Three orders, each with a big bag and a small subtotal. One dotted name in quotes, and one plain name with its sign."
+      - "Both questions in one document: the name inside delivery, and the subtotal below 15."
+      - ""
+    wrong:
+      - code: "db.orders.find({\"delivery.bag_size\": 3}, {subtotal: 1})"
+        ask: "That is every order with a bag of 3. Where is the question about the subtotal?"
+      - code: "db.orders.find({\"delivery.bag_size\": {$lt: 3}, subtotal: {$lt: 15}}, {subtotal: 1})"
+        ask: "Did the prompt ask for a bag_size below 3, or a bag_size of 3?"
+      - code: "db.orders.find({delivery: {bag_size: 3}, subtotal: {$lt: 15}}, {subtotal: 1})"
+        ask: "That asks for a delivery that is exactly {bag_size: 3}. How do you reach one name inside delivery?"
+    walk:
+      - "Ask for the orders with a bag_size of 3 inside delivery: the name joined with a dot, in quotes."
+      - "Add the second name after a comma: the subtotal below 15."
+      - "Choose the field to show, after the question."
+    return:
+      text: "From `orders`, show the `_id` and `subtotal` of each order whose `delivery` has a `bag_size` of 1 and whose `subtotal` is above 170."
+      model: "db.orders.find({\"delivery.bag_size\": 1, subtotal: {$gt: 170}}, {subtotal: 1})"
+      rows: 13
+      narration:
+        - "Thirteen orders with the small bag and a big subtotal."
+        - "A dotted name in quotes, a plain name with a sign, then the subtotal shown."
+    note: "Dotted name, a plain name with an operator, and a projection, in one question. Differs from step 10 in method, question and projection."
+
+  # 12
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "count-documents", "two-names-both-hold", "operator-documents", "document-inside-document", "dotted-name"]
+    text: "How many orders in `orders` have `rain` true inside their `delivery`, and a `distance_km`, also inside their `delivery`, above 8?"
+    thinking_order: "From orders, keeping the ones with rain true inside delivery and distance_km above 8 inside delivery, count the documents."
+    model: "db.orders.countDocuments({\"delivery.rain\": true, \"delivery.distance_km\": {$gt: 8}})"
+    rows: 1
+    result: [[83]]
+    narration:
+      - "83. Two dotted names in one document, both inside delivery, each wearing its own quotes, and the second with a sign."
+      - "Rain true and a long distance: both had to hold, so the comma, and each dotted name is written whole."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({\"delivery.rain\": true})"
+        ask: "That is every delivery in the rain. Where is the question about the distance?"
+      - code: "db.orders.countDocuments({\"delivery.rain\": true, \"delivery.distance_km\": {$lt: 8}})"
+        ask: "Which way does the sign point for above 8?"
+      - code: "db.orders.countDocuments({\"delivery.rain\": true, distance_km: {$gt: 8}})"
+        ask: "Is distance_km a name of the order itself, or of something inside it?"
+    walk:
+      - "Count the orders with rain true inside delivery."
+      - "Add the distance after a comma: its name is also inside delivery, joined with a dot, and it takes `$gt` with 8."
+    return:
+      text: "How many orders in `orders` have a `bag_size` of 3 inside `delivery` and a `distance_km`, also inside `delivery`, below 2?"
+      model: "db.orders.countDocuments({\"delivery.bag_size\": 3, \"delivery.distance_km\": {$lt: 2}})"
+      rows: 1
+      result: [[9]]
+      narration:
+        - "9 orders with the biggest bag and the shortest ride."
+        - "Two dotted names in quotes, the second one with its sign."
+    note: "Recombination: dotted names twice, an operator on one of them. 83 orders."
+
+  # 13
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    text: "Something interesting, with nothing in it to keep. Open a cancelled order and you will not find a `delivery` in it at all: nothing was delivered, so there is nothing to put there. The 399 cancelled orders also have no `courier_id` and no `actual_minutes`. A document holds only the names it has something to say about. A table cannot do that, because every row has every column, and where nothing is known there is an empty cell. A document has no cells, and a name with nothing to say is simply not there."
+    note: "Relief after the climb of three, and the setup for absent-field. It says only what is true of the data (399 cancelled orders lack delivery, courier_id, actual_minutes) and does not mention null."
+
+  # 14
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["absent-field"]
+    text: |-
+      In the third SQL lesson you met the empty cell and asked for it with IS NULL. Because a document has no cells, a missing value is not an empty cell: the name is not in the document. The question is whether the name exists, and it is written `$exists`, with true or false. Here are the orders with no coupon_code, counted:
+
+      ```js
+      db.orders.countDocuments({coupon_code: {$exists: false}})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.countDocuments({coupon_code: {$exists: false}})"
+    after_run: "4,116. In the third SQL lesson you found that 1,884 of the 6,000 orders had a coupon, so 4,116 had none. The same number, and `$exists: false` is the MongoDB way of asking for what IS NULL asked for. `$exists: true` asks the other way: the name is there."
+    note: "The empty cell of SQL-3, echoed: 6,000 - 1,884 = 4,116, run. The lesson does not mention null, so nothing is left to remember (map note, rule B5)."
+
+  # 15
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "absent-field", "text-quotes", "empty-cells"]
+    text: "From `orders`, show only the `_id` of each order whose `status` is \"delivered\" and that has no `subtotal` at all."
+    thinking_order: "From orders, keeping the delivered ones that have no subtotal, show the _id."
+    model: "db.orders.find({status: \"delivered\", subtotal: {$exists: false}}, {_id: 1})"
+    rows: 23
+    narration:
+      - "23 orders, the same 23 you counted in the third SQL lesson. One question about a word, one about a name that is absent."
+      - "Keep the delivered orders that lack a subtotal, and show their ids."
+      - ""
+    wrong:
+      - code: "db.orders.find({status: \"delivered\", subtotal: {$exists: true}}, {_id: 1})"
+        ask: "Those are the orders that have a subtotal. Which way does `$exists` go for 'has no'?"
+      - code: "db.orders.find({subtotal: {$exists: false}}, {_id: 1})"
+        ask: "That includes two cancelled orders. Where do we keep only the delivered ones?"
+      - code: "db.orders.find({status: \"delivered\", subtotal: {$exists: false}})"
+        ask: "That shows the whole order. Which second document chooses what to show?"
+    walk:
+      - "Keep the delivered orders: a name, a colon and a word in quotes."
+      - "Add the second question after a comma: the subtotal does not exist."
+      - "Choose to show only the `_id`."
+    return:
+      text: "How many orders in `orders` have no `actual_minutes`?"
+      model: "db.orders.countDocuments({actual_minutes: {$exists: false}})"
+      rows: 1
+      result: [[399]]
+      narration:
+        - "399: the cancelled orders, which never had a real time."
+        - "The name does not exist, so `$exists` is false."
+    note: "First typed absent field; 23 = SQL-3 step 5. The `$exists: true` slip gives the other piles."
+
+  # 16
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "count-documents", "two-names-both-hold", "absent-field", "document-inside-document", "dotted-name"]
+    text: "How many orders in `orders` have no `coupon_code` and have `rain` true inside their `delivery`?"
+    thinking_order: "From orders, keeping the ones with no coupon_code and rain true inside delivery, count the documents."
+    model: "db.orders.countDocuments({coupon_code: {$exists: false}, \"delivery.rain\": true})"
+    rows: 1
+    result: [[749]]
+    narration:
+      - "749. A name that is absent, and a dotted name that is true, both in one document."
+      - "No coupon and rain: both had to hold, so a comma between the two questions."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({coupon_code: {$exists: true}, \"delivery.rain\": true})"
+        ask: "Those orders do have a coupon. Which way does `$exists` go for 'no coupon_code'?"
+      - code: "db.orders.countDocuments({coupon_code: {$exists: false}})"
+        ask: "That is every order without a coupon. Where is the question about the rain?"
+      - code: "db.orders.countDocuments({coupon_code: {$exists: false}, delivery: {rain: true}})"
+        ask: "That asks for a delivery that is exactly {rain: true}. How do you reach a name inside delivery?"
+    walk:
+      - "Count the orders whose coupon_code does not exist."
+      - "Add rain after a comma: the dotted name, in quotes, equal to true."
+    return:
+      text: "How many orders in `orders` have a `courier_id` and have no `subtotal`?"
+      model: "db.orders.countDocuments({courier_id: {$exists: true}, subtotal: {$exists: false}})"
+      rows: 1
+      result: [[23]]
+      narration:
+        - "23 orders. One name that exists, and one that does not."
+        - "`$exists` true for the courier, `$exists` false for the subtotal."
+    note: "Recombination of the absent name with a dotted one. The return uses `$exists: true`, which the give names."
+
+  # 17
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["sort-spelling"]
+    text: |-
+      So far the documents have come out in whatever order they lay. SQL put them in order with ORDER BY, after the keeping, and DESC for the biggest first. MongoDB chains a word after the find: `.sort(...)`, with a document inside the brackets that names the field to sort by and a number. Here are the orders with a subtotal above 190, the biggest first:
+
+      ```js
+      db.orders.find({subtotal: {$gt: 190}}, {subtotal: 1}).sort({subtotal: -1})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.find({subtotal: {$gt: 190}}, {subtotal: 1}).sort({subtotal: -1})"
+    after_run: "281.15 first, then 233.44, down to 191.24. The `-1` puts the biggest first, as DESC did. A `1` puts the smallest first, which is what SQL did when you said nothing. Why a number and not the words? This just is. Notice that the document looks like the one that chose fields, a name and a number, but here the number is a direction, not show or hide. And the sort works on what came out, after the keeping."
+    note: "Echo of ORDER BY and DESC (SQL-2). `-1` and `1` have no reason beyond convention, which the text says. The likely confusion with the projection's 1 is addressed before it arises."
+
+  # 18
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "operator-documents", "sort-spelling", "sort", "sort-direction"]
+    ordered: true
+    text: "From `orders`, show the `_id` and `actual_minutes` of each order whose `promised_minutes` is 50 and whose `actual_minutes` is above 100, the smallest `actual_minutes` first."
+    thinking_order: "From orders, keeping the ones promised in 50 minutes with actual_minutes above 100, show the actual_minutes, the smallest first."
+    model: "db.orders.find({promised_minutes: 50, actual_minutes: {$gt: 100}}, {actual_minutes: 1}).sort({actual_minutes: 1})"
+    rows: 4
+    result: [[103924, 103.5], [101406, 105.9], [105624, 108.7], [103690, 109.9]]
+    narration:
+      - "103.5, 105.9, 108.7, 109.9: the smallest first. Keep, choose, then sort what came out."
+      - "A 1 where the biggest-first sort had a -1."
+      - ""
+    wrong:
+      - code: "db.orders.find({promised_minutes: 50, actual_minutes: {$gt: 100}}, {actual_minutes: 1}).sort({actual_minutes: -1})"
+        ask: "That puts the biggest first. Which number puts the smallest first?"
+      - code: "db.orders.find({promised_minutes: 50, actual_minutes: {$gt: 100}}, {actual_minutes: 1})"
+        ask: "The documents are all here, but in whatever order they lay. Which chained word puts them in order?"
+      - code: "db.orders.find({promised_minutes: 50, actual_minutes: {$gt: 100}}, {actual_minutes: 1}).sort({promised_minutes: 1})"
+        ask: "Every one of these orders has the same promised_minutes. Which field did the prompt say to sort by?"
+    walk:
+      - "Keep the orders promised in 50 minutes with an actual_minutes above 100, and show the actual_minutes."
+      - "Chain `.sort(...)` after it, with the name to sort by and the number for the smallest first."
+    return:
+      text: "From `orders`, show the `_id` and `actual_minutes` of each order whose `promised_minutes` is 40 and whose `actual_minutes` is above 80, the biggest `actual_minutes` first."
+      model: "db.orders.find({promised_minutes: 40, actual_minutes: {$gt: 80}}, {actual_minutes: 1}).sort({actual_minutes: -1})"
+      ordered: true
+      rows: 3
+      result: [[103319, 95.5], [100015, 87.4], [100418, 80.3]]
+      narration:
+        - "95.5, 87.4, 80.3: the biggest first, with a -1."
+        - "Keep, choose, then sort what came out."
+    note: "First typed sort, ascending, so that both directions have been run (the give shows -1). Four documents with no tie (103.5, 105.9, 108.7, 109.9): judged in order. Echo of SQL-2's 109.9, 108.7, 105.9."
+
+  # 19
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["limit-spelling"]
+    text: |-
+      SQL kept the first few rows of what was left with LIMIT, and it came last because it happens last. In MongoDB it is another chained word: `.limit(3)` keeps the first three. Here are the three cancelled orders with the biggest subtotal:
+
+      ```js
+      db.orders.find({status: "cancelled"}, {subtotal: 1}).sort({subtotal: -1}).limit(3)
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.find({status: \"cancelled\"}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+    after_run: "165.25, 163.27 and 157.5. The sentence is written in the order you think it: keep the cancelled orders, choose the subtotal, sort, and cut. Without the sort, the first three would be just any three, so the cut always follows a sort when you want the biggest or the smallest."
+    note: "Echo of LIMIT (SQL-2). The text writes the chain in thinking order and never asks the learner to choose between the order of the chained words (map note)."
+
+  # 20
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "choose-fields", "sort-spelling", "limit-spelling", "cut", "sort-direction"]
+    ordered: true
+    text: "Among the orders in `orders` with a `promised_minutes` of 30, show the `_id` and `subtotal` of the four with the biggest `subtotal`, the biggest first."
+    thinking_order: "From orders, keeping the ones promised in 30 minutes, show the subtotal, the biggest first, only the first four."
+    model: "db.orders.find({promised_minutes: 30}, {subtotal: 1}).sort({subtotal: -1}).limit(4)"
+    rows: 4
+    result: [[101347, 281.15], [105080, 201.3], [102460, 200.78], [101533, 184.98]]
+    narration:
+      - "281.15, 201.3, 200.78 and 184.98. Keep, choose, sort, cut: each part in the order it happens."
+      - "The first four of the sorted documents. The fifth is 182.47, so there was no tie at the cut."
+      - ""
+    wrong:
+      - code: "db.orders.find({promised_minutes: 30}, {subtotal: 1}).sort({subtotal: -1})"
+        ask: "Thousands of orders came back. Which chained word keeps only the first four?"
+      - code: "db.orders.find({promised_minutes: 30}, {subtotal: 1}).limit(4)"
+        ask: "These are just four orders, not the biggest. What did you forget to do before the cut?"
+      - code: "db.orders.find({promised_minutes: 30}, {subtotal: 1}).sort({subtotal: 1}).limit(4)"
+        ask: "Those are the smallest. Which number puts the biggest first?"
+    walk:
+      - "Keep the orders promised in 30 minutes, and show the subtotal."
+      - "Sort the biggest first."
+      - "Cut to the first four."
+    return:
+      text: "Among the orders in `orders` with a `promised_minutes` of 40, show the `_id` and `actual_minutes` of the four with the biggest `actual_minutes`, the biggest first."
+      model: "db.orders.find({promised_minutes: 40}, {actual_minutes: 1}).sort({actual_minutes: -1}).limit(4)"
+      ordered: true
+      rows: 4
+      result: [[103319, 95.5], [100015, 87.4], [100418, 80.3], [104616, 77.6]]
+      narration:
+        - "95.5, 87.4, 80.3 and 77.6. The same chain, on another name."
+        - "Keep, choose, sort, cut."
+    note: "First typed limit. 184.98 and 182.47 at the cut leave no tie, so the answer is judged in order. Echo of SQL-2's top-five query."
+
+  # 21
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "one-of", "absent-field", "sort-spelling", "limit-spelling", "sort-direction", "text-quotes"]
+    ordered: true
+    text: "Among the orders in `orders` whose `promised_minutes` is one of 30, 40 and that have no `coupon_code`, show the `_id` and `subtotal` of the three with the biggest `subtotal`, the biggest first."
+    thinking_order: "From orders, keeping the ones whose promised_minutes is one of 30, 40 and that have no coupon_code, show the subtotal, the biggest first, only the first three."
+    model: "db.orders.find({promised_minutes: {$in: [30, 40]}, coupon_code: {$exists: false}}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+    rows: 3
+    result: [[100169, 209.96], [105080, 201.3], [102460, 200.78]]
+    narration:
+      - "209.96, 201.3 and 200.78. A list of values, an absent name, then the sort and the cut: four of today's thoughts in one sentence."
+      - "Keep with two questions, choose, sort, cut. The fourth is 193.68, so the cut is clean."
+      - ""
+    wrong:
+      - code: "db.orders.find({promised_minutes: {$in: [30, 40]}}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+        ask: "Orders with a coupon are in there. Where is the question about the coupon_code?"
+      - code: "db.orders.find({promised_minutes: {$in: [30, 40]}, coupon_code: {$exists: true}}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+        ask: "Those are the orders that do have a coupon. Which way does `$exists` go?"
+      - code: "db.orders.find({promised_minutes: {$in: [30, 40]}, coupon_code: {$exists: false}}, {subtotal: 1}).sort({subtotal: 1}).limit(3)"
+        ask: "Those are the smallest three, and some orders have no subtotal at all. Which number puts the biggest first?"
+    walk:
+      - "Keep the orders whose promised_minutes is one of 30, 40, with `$in`."
+      - "Add the second question after a comma: the coupon_code does not exist."
+      - "Choose the subtotal, sort the biggest first, and keep the first three."
+    return:
+      text: "Among the orders in `orders` whose `promised_minutes` is one of 40, 50 and that have a `coupon_code`, show the `_id` and `subtotal` of the three with the biggest `subtotal`, the biggest first."
+      model: "db.orders.find({promised_minutes: {$in: [40, 50]}, coupon_code: {$exists: true}}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+      ordered: true
+      rows: 3
+      result: [[105582, 233.44], [101460, 182.86], [101787, 173.74]]
+      narration:
+        - "233.44, 182.86 and 173.74. A list of values, a name that exists, sort, cut."
+        - "Keep, choose, sort, cut, with `$exists` true this time."
+    note: "Weave: one-of, absent-field, sort, limit. 200.78 and 193.68 at the cut, no tie. Not marked friction: the learner has just had a walk-through step and the closing sentence is the friction step."
+
+  # 22
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "document-inside-document", "dotted-name", "sort-spelling", "limit-spelling", "sort-direction", "text-quotes"]
+    friction: true
+    ordered: true
+    text: "The last one, and I won't break it down. From `orders`, keep the orders whose `status` is \"delivered\" and whose `delivery` has `rain` true. Show the `_id` and `subtotal` of the five with the biggest `subtotal`, the biggest first."
+    model: "db.orders.find({status: \"delivered\", \"delivery.rain\": true}, {subtotal: 1}).sort({subtotal: -1}).limit(5)"
+    rows: 5
+    result: [[104550, 193.68], [102720, 173.98], [103319, 173.26], [100777, 168.78], [101339, 165.8]]
+    narration:
+      - "That is a real question, and you built it by thinking: from orders, keep the delivered ones with rain true inside delivery, show the subtotal, sort the biggest first, cut to five. Every part in the order it happens."
+      - "Order 104550 first with 193.68, down to 101339 with 165.80. The sixth is 162.82, so the cut is clean."
+      - "Five orders, each with its id and subtotal: a word, a dotted name in quotes, the choice of the field, the sort and the cut."
+    wrong:
+      - code: "db.orders.find({status: \"delivered\", \"delivery.rain\": true}, {subtotal: 1}).sort({subtotal: -1})"
+        ask: "More than a thousand documents came back. Which chained word keeps only five?"
+      - code: "db.orders.find({status: \"delivered\", \"delivery.rain\": true}, {subtotal: 1}).limit(5)"
+        ask: "Those five are not the biggest. What comes before the cut?"
+      - code: "db.orders.find({status: \"delivered\", \"delivery.rain\": false}, {subtotal: 1}).sort({subtotal: -1}).limit(5)"
+        ask: "Those were delivered with no rain. Which value did the prompt ask for?"
+      - code: "db.orders.find({status: \"delivered\", \"delivery.rain\": true}, {subtotal: 1}).sort({subtotal: 1}).limit(5)"
+        ask: "Those are the smallest. Which number puts the biggest first?"
+    walk:
+      - "Keep the delivered orders with rain true inside delivery, and show the subtotal."
+      - "Sort the biggest first."
+      - "Cut to the first five."
+    return:
+      text: "Among the orders in `orders` whose `delivery` has `rain` false and a `bag_size` of 3, show the `_id` and `subtotal` of the five with the biggest `subtotal`, the biggest first."
+      model: "db.orders.find({\"delivery.rain\": false, \"delivery.bag_size\": 3}, {subtotal: 1}).sort({subtotal: -1}).limit(5)"
+      ordered: true
+      rows: 5
+      result: [[105582, 233.44], [102211, 191.24], [105400, 170.85], [105945, 147.81], [105154, 142.98]]
+      narration:
+        - "233.44, 191.24, 170.85, 147.81 and 142.98. A dotted name twice, the sort and the cut."
+        - "Keep with two dotted names, choose, sort, cut."
+    note: "Closing sentence of the map, run on mongod: 104550 (193.68), 102720 (173.98), 103319 (173.26), 100777 (168.78), 101339 (165.80). The sixth is 104095 at 162.82, so there is no tie at the cut. Judged in order. The status question is redundant in the data (cancelled orders have no delivery), but it is in the map's sentence and in the prompt, so the learner writes it."
+
+  # 23
+  - kind: "recap"
+    lang: "mongo"
+    data: "mongo"
+    text: |-
+      Stop there. Today you met sharper questions: a sign becomes a dollar word, a value may be one of a list, either of two questions is a list under `$or`. You looked inside an order and reached a field inside a field with a dotted name in quotes. You asked for a name that is not there with `$exists`, and you put the answer in order and cut it, with a chain after the find.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out, in the order the things happen.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 24
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "count-documents", "two-names-both-hold", "operator-documents", "document-inside-document", "dotted-name", "absent-field"]
+    text: "How many orders in `orders` have a `distance_km` below 3 inside their `delivery` and no `coupon_code`?"
+    model: "db.orders.countDocuments({\"delivery.distance_km\": {$lt: 3}, coupon_code: {$exists: false}})"
+    rows: 1
+    result: [[970]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a dotted name with a sign, and an absent name, in a count on a combination never practised. Never scored."

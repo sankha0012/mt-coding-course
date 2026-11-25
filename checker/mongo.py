@@ -337,7 +337,7 @@ def run_mongo(server, dataset, text, scratch=False):
     except OperationFailure as e:
         msg = (e.details or {}).get("errmsg") or str(e)
         return MongoResult("That took too long, so it was stopped." if "time limit" in msg else msg)
-    except PyMongoError as e:
+    except (PyMongoError, ValueError, TypeError) as e:  # the driver's own words, e.g. an update without a $ operator
         return MongoResult(str(e))
     docs = value if isinstance(value, list) else ([] if value is None else [value])
     return MongoResult(None, to_rows(value), docs)

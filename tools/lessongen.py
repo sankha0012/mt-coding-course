@@ -4,18 +4,18 @@ A lesson is a list of step dicts. Use `emit(path, lesson, title, strand, steps, 
 The YAML file is the source of truth. This is only a convenience for writing it."""
 import json
 
-ORDER = ["kind", "lang", "data", "new", "imports", "requires", "supplies", "friction", "ordered", "any_column_order",
+ORDER = ["kind", "lang", "data", "scratch", "new", "imports", "requires", "supplies", "friction", "ordered", "any_column_order",
          "text", "thinking_order", "check", "model", "rows", "result", "output", "accepts", "shows", "broken",
          "after_run", "narration", "narration_ahead", "wrong", "walk", "return", "note"]
-RETURN_ORDER = ["text", "check", "model", "ordered", "any_column_order", "rows", "result", "output", "accepts",
+RETURN_ORDER = ["text", "scratch", "check", "model", "ordered", "any_column_order", "rows", "result", "output", "accepts",
                 "narration", "note"]
 WRONG_ORDER = ["sql", "code", "ask", "why", "tell"]
 BLOCK_KEYS = {"text", "after_run", "model", "check", "thinking_order"}
 
 
 def w(code, ask=None, why=None, tell=None, lang="sql"):
-    """A known wrong answer. `code` is SQL if lang is 'sql' and Python if 'python'."""
-    d = {("code" if lang == "python" else "sql"): code}
+    """A known wrong answer. `code` is SQL if lang is 'sql', Python if 'python' and a MongoDB sentence if 'mongo'."""
+    d = {("sql" if lang == "sql" else "code"): code}
     for k, v in (("ask", ask), ("why", why), ("tell", tell)):
         if v:
             d[k] = v

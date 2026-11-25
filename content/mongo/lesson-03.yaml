@@ -1,0 +1,596 @@
+lesson: mg-03
+title: "The pipeline"
+strand: mongo
+stage: 1
+thoughts:
+  pipeline-of-stages: "`aggregate` takes a list of stages, in the order things happen. Each stage takes the table the one before it made. A table goes in, a table comes out."
+  match-stage: "`{$match: {status: \"delivered\"}}` is a stage that keeps rows. It holds the same question document as `find`."
+  group-pile-name: "`{$group: {_id: ...}}` makes the piles. Whatever follows `_id` is the name every document is given, and one document comes out per pile."
+  field-value: "`\"$restaurant_id\"` in quotes means the value of that field in each document. Without the dollar it is only the word."
+  group-summaries: "What to say about each pile is written beside `_id`: `n: {$sum: 1}` counts, `avg: {$avg: \"$subtotal\"}` averages, `big: {$max: \"$subtotal\"}` takes the biggest."
+  sort-and-limit-stages: "`{$sort: {n: -1}}` and `{$limit: 5}` are stages too, in the same words as before. The order of the stages is the order things happen."
+  match-after-group: "A `$match` after a `$group` asks the piles, not the rows. It is `HAVING`, and it is the same word as `WHERE` in a different place."
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "operator-documents", "absent-field", "choose-fields", "id-comes-unless-off", "sort-spelling", "limit-spelling"]
+    ordered: true
+    text: "From orders, keep the orders that have no coupon_code and a subtotal above 100. Show the _id and subtotal of the 3 orders with the smallest subtotal, the smallest first."
+    model: "db.orders.find({coupon_code: {$exists: false}, subtotal: {$gt: 100}}, {subtotal: 1}).sort({subtotal: 1}).limit(3)"
+    rows: 3
+    result: [[102692, 100.02], [100798, 100.09], [102508, 100.19]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from MG-2: an absent field, a comparison, chosen fields, a sort and a cut, in a combination not practised before. 100.02, 100.09 and 100.19 are followed by 100.21, so there is no tie at the cut. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["pipeline-of-stages"]
+    text: |-
+      Now a new word, `aggregate`. It is where piles live, and much more besides. First its shape, before there are any piles.
+
+      Remember how SQL is written? The answer comes first, SELECT, but you think it table first: from the table, keep rows, make piles, say something about each pile, keep piles, sort, cut. `aggregate` is written in that thinking order. It takes a list in square brackets, and each thing in the list is one stage, one step of the thinking. Each stage takes the table the one before it made and hands a table on. A table goes in, a table comes out, at every stage. Here is the shortest list there is, with no stages at all:
+
+      ```js
+      db.orders.aggregate([])
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.aggregate([])"
+    after_run: "All 6,000 orders came out, as `find()` showed them. With no stage, nothing happened to the table. Every stage we add from here on is one step of the thinking, written in the order it happens, and each one takes the table that the one before it left."
+    note: "The shape first, with nothing else to learn (rule B3: use first). The empty list is the smallest legal pipeline and shows 'a table in, the same table out' without introducing $match early. The thinking order of SQL-2 is imported aloud."
+
+  # 3
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["match-stage"]
+    text: |-
+      The first stage to put in the list is the one that keeps rows. In SQL that was WHERE, and in `find` it was the question document. In a pipeline it is a stage called `$match`, and inside it goes the very same question document you already know. Its name starts with a dollar sign, as `$gt` did. Here it keeps the delivered orders:
+
+      ```js
+      db.orders.aggregate([{$match: {status: "delivered"}}])
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.aggregate([{$match: {status: \"delivered\"}}])"
+    after_run: "5,601 orders: the delivered ones, exactly what `find({status: \"delivered\"})` gave. Six thousand went in and 5,601 came out. `$match` is WHERE, keeping rows, and what sits in its braces is the question you have been writing since the first sitting of this strand."
+    note: "match-stage reuses the question document the learner owns, so only the stage's name is new (rule B7). 5,601 echoes MG-1 and SQL-1."
+
+  # 4
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "question-is-a-document", "two-names-both-hold", "operator-documents", "dotted-name", "pipeline-of-stages", "match-stage"]
+    text: "Write a pipeline with one stage on orders. The stage keeps the orders whose delivery.rain is true and whose subtotal is more than 165. Show those orders."
+    thinking_order: "From orders, one stage that keeps the orders delivered in the rain with a subtotal above 165."
+    model: "db.orders.aggregate([{$match: {\"delivery.rain\": true, subtotal: {$gt: 165}}}])"
+    rows: 5
+    narration:
+      - "Five orders. A list with one stage in it, and the stage is the question you know, with a dotted name and a comparison, joined by a comma."
+      - "From orders, keep the rain orders above 165: `$match` holding the same question document as `find`."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$match: {\"delivery.rain\": true}}])"
+        ask: "That keeps every order delivered in the rain, a lot more than five. Which second question is missing?"
+        why: "both names in the question must hold, and a comma between them says so, as it did in `find`."
+      - code: "db.orders.aggregate([{$match: {rain: true, subtotal: {$gt: 165}}}])"
+        ask: "Nothing came out. Is rain a field of the order itself, or is it inside another field? How was a field inside a field written?"
+        why: "rain lives inside delivery, so its name is the two joined by a dot, in quotes."
+      - code: "db.orders.aggregate([{$match: {\"delivery.rain\": true, subtotal: {$gt: 150}}}])"
+        ask: "Ten orders came back. Is the line at 150 or at 165?"
+    walk:
+      - "Start with the table and the list: `db.orders.aggregate(` and square brackets, with one stage inside."
+      - "The stage keeps rows, so it is `$match`, with the question document inside its braces. Ask about the rain first, with a dotted name in quotes."
+      - "Add the second question about the subtotal in the same braces, after a comma."
+    return:
+      text: "Write a pipeline with one stage on restaurants. The stage keeps the restaurants whose city is \"Curitiba\" and whose cuisine is \"pizza\". Show those restaurants."
+      model: "db.restaurants.aggregate([{$match: {city: \"Curitiba\", cuisine: \"pizza\"}}])"
+      rows: 2
+      result: [[23, "Rest 23", "Curitiba", "pizza", "2024-10-24T00:00:00Z"], [32, "Rest 32", "Curitiba", "pizza", "2025-03-06T00:00:00Z"]]
+      narration:
+        - "The pizza places of Curitiba. A list of one stage, and in it the two questions you know, joined by a comma."
+        - "`$match` on restaurants: both words in quotes, written exactly as the data has them."
+    note: "First typed stage. The echo is deliberate: it is the question document the learner already owns inside a new stage, so only the wrapper is new. The five orders are the five of MG-2's closing sentence. Not ordered: no sort."
+
+  # 5
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["group-pile-name"]
+    text: |-
+      Now piles. In SQL that was GROUP BY, and the pile's name had to be asked for. A `$group` stage makes piles too, and the name goes in a field called `_id`. It is the same `_id` as in a document: here it is the pile's name. Watch what happens when the name is just a word that I choose:
+
+      ```js
+      db.orders.aggregate([{$group: {_id: "all orders"}}])
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.aggregate([{$group: {_id: \"all orders\"}}])"
+    after_run: "One document came out, and it is one pile. Its `_id` is the name we wrote: all orders. This is what `$group` does: every document is given a name, whatever follows `_id`, and the documents that were given the same name go into the same pile. Here every order was given the same name, so there is one pile. One document comes out for each pile, as one row did in SQL, and the pile's name sits in `_id`."
+    note: "The pile name arrives with a constant so that field-value in the next step can be seen as a contrast: the same plain word gives one pile, and a dollar gives one pile per value. There is no typed step on a constant name on purpose: a pile of everything says nothing yet and would only bait."
+
+  # 6
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["field-value"]
+    text: |-
+      Now the real thing: one pile for each restaurant. Every order has a restaurant_id, so we want each order to be given its own restaurant_id as its name. Try the obvious way first, the field's name in quotes. Then the same with one character in front:
+
+      ```js
+      db.orders.aggregate([{$group: {_id: "restaurant_id"}}])
+      db.orders.aggregate([{$group: {_id: "$restaurant_id"}}])
+      ```
+
+      Run the first, then the second.
+    shows:
+      - "db.orders.aggregate([{$group: {_id: \"restaurant_id\"}}])"
+      - "db.orders.aggregate([{$group: {_id: \"$restaurant_id\"}}])"
+    after_run: "The first made one pile, named with the plain word restaurant_id, just as all orders did: in quotes, a word is only a word, so every order was given that same name. The second made sixty piles, one for each restaurant, named by their ids, such as 14, 4 and 27. The dollar sign in front said: not the word, but the value of that field in each order. Order 100001 is from restaurant 14, so it was given the name 14, and it went into the pile of the other orders from restaurant 14. It is the same dollar sign that begins `$match` and `$gt`, doing a second job here: it tells a field from a word. There is nothing to remember except what you just saw."
+    note: "The one place a character does two jobs (map note, rule B5). The reason is seen, not told: the plain word gives one pile and the dollar gives sixty. After_run says the two jobs of the character aloud."
+
+  # 7
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "piles", "one-row-per-pile", "pile-name", "pipeline-of-stages", "group-pile-name", "field-value"]
+    text: "Write a pipeline with one stage on restaurants. The stage makes one pile for each value of cuisine. Show the piles."
+    thinking_order: "From restaurants, a pile for each cuisine."
+    model: "db.restaurants.aggregate([{$group: {_id: \"$cuisine\"}}])"
+    rows: 6
+    result: [["arabe"], ["saudavel"], ["brasileira"], ["hamburguer"], ["japonesa"], ["pizza"]]
+    narration:
+      - "Six piles, one for each cuisine, named by the cuisine itself. Each restaurant was given its own cuisine as its name."
+      - "A `$group` with the field's value after `_id`: the dollar sign said it is the field and not the word."
+      - ""
+    wrong:
+      - code: "db.restaurants.aggregate([{$group: {_id: \"cuisine\"}}])"
+        ask: "One document came out, named cuisine. What did we put in front of a field's name to mean its value?"
+        why: "in quotes a word is only a word. The dollar sign says it is a field, and then each restaurant is given its own cuisine as its name."
+      - code: "db.restaurants.aggregate([{$group: {_id: \"$city\"}}])"
+        ask: "Those are four piles, named by the cities. Which field did the prompt say to pile by?"
+      - code: "db.orders.aggregate([{$group: {_id: \"$cuisine\"}}])"
+        ask: "One pile, named nothing, came out. Which collection holds the cuisine?"
+        why: "an order has no cuisine, so every order was given the same empty name. The restaurants hold the cuisine."
+    walk:
+      - "Start with the table and the list: `db.restaurants.aggregate(` and square brackets, with one stage inside."
+      - "The stage makes piles, so it is `$group`, and the pile's name goes after `_id`."
+      - "Each restaurant should be named by its own cuisine: the field's name in quotes, with the sign that means its value."
+    return:
+      text: "Write a pipeline with one stage on couriers. The stage makes one pile for each value of vehicle. Show the piles."
+      model: "db.couriers.aggregate([{$group: {_id: \"$vehicle\"}}])"
+      rows: 3
+      result: [["moto"], ["bike"], ["carro"]]
+      narration:
+        - "Three piles: bike, moto and carro. Each courier was given its own vehicle as its name."
+        - "The dollar sign made it the value of the field, and each value is one pile."
+    note: "First typed `$group`. The learner has just watched the plain word and the dollar side by side. Wrong answers cover the missing dollar (the one real slip of this thought), a wrong field, and a wrong collection, whose empty name is itself a lesson about absent fields. The cuisines are not ordered, so the answer is a set."
+
+  # 8
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "keep-before-piles", "two-names-both-hold", "operator-documents", "dotted-name", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value"]
+    text: "Write a pipeline with two stages on orders. The first stage keeps the orders whose delivery.rain is true and whose subtotal is more than 150. The second makes one pile for each value of restaurant_id. Show the piles."
+    thinking_order: "From orders, keep the rain orders above 150, then make a pile for each restaurant_id."
+    model: "db.orders.aggregate([{$match: {\"delivery.rain\": true, subtotal: {$gt: 150}}}, {$group: {_id: \"$restaurant_id\"}}])"
+    rows: 10
+    narration:
+      - "Ten piles: the ten restaurants that had a rain order above 150. The first stage kept the rows, and the second piled what it handed on."
+      - "Keep rows, then make piles: two stages in the order they happen, each taking the table the one before it made."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\"}}, {$match: {\"delivery.rain\": true, subtotal: {$gt: 150}}}])"
+        ask: "Nothing came out. After the $group stage, what does each document of the table hold: an order, or a pile?"
+        why: "each stage takes the table the one before made. After a $group the table is the piles, and a pile has no delivery and no subtotal."
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\"}}])"
+        ask: "That is all sixty restaurants. Where do we keep only the rain orders above 150?"
+      - code: "db.orders.aggregate([{$match: {\"delivery.rain\": true, subtotal: {$gt: 150}}}, {$group: {_id: \"restaurant_id\"}}])"
+        ask: "One pile, named with a word. What makes each restaurant its own pile?"
+    walk:
+      - "First stage: keep the orders delivered in the rain with a subtotal above 150, in a `$match`."
+      - "Second stage: a `$group` that makes one pile for each restaurant_id. Remember the sign for the value of a field."
+    return:
+      text: "Write a pipeline with two stages on orders. The first stage keeps the orders whose coupon_code is \"PIZZA20\" and whose subtotal is more than 120. The second makes one pile for each value of restaurant_id. Show the piles."
+      model: "db.orders.aggregate([{$match: {coupon_code: \"PIZZA20\", subtotal: {$gt: 120}}}, {$group: {_id: \"$restaurant_id\"}}])"
+      rows: 6
+      result: [[58], [55], [21], [19], [41], [13]]
+      narration:
+        - "Six restaurants had a PIZZA20 order above 120. Keep rows, then pile them."
+        - "A `$match` first, a `$group` after it: the order things happen."
+    note: "Two stages, match then group: the order of stages is the order of events (the first time it is asked). The wrong answer with the stages reversed gives an empty result without an error, which Ana's step later explains in full. The ten restaurants are a set."
+
+  # 9
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["group-summaries"]
+    text: |-
+      A pile with a name is only half of it. In SQL you also said something about each pile: COUNT(*), AVG(subtotal), MAX(subtotal). That is written here beside `_id`, in the same braces: a name you choose, a colon, and the summary. `{$sum: 1}` adds one for each document in the pile, which is exactly COUNT(*). `{$avg: ...}` and `{$max: ...}` take the value of a field, so the dollar sign comes in again, in quotes, as before. Two sentences. The first counts the restaurants of each cuisine. The second says the average and the biggest subtotal of each status:
+
+      ```js
+      db.restaurants.aggregate([{$group: {_id: "$cuisine", n: {$sum: 1}}}])
+      db.orders.aggregate([{$group: {_id: "$status", avg: {$avg: "$subtotal"}, big: {$max: "$subtotal"}}}])
+      ```
+
+      Run them one at a time.
+    shows:
+      - "db.restaurants.aggregate([{$group: {_id: \"$cuisine\", n: {$sum: 1}}}])"
+      - "db.orders.aggregate([{$group: {_id: \"$status\", avg: {$avg: \"$subtotal\"}, big: {$max: \"$subtotal\"}}}])"
+    after_run: "Six cuisines, each with its count: 13 hamburguer, 11 brasileira, 10 japonesa and 10 saudavel, 8 pizza and 8 arabe, the same counts SQL gave you. And two statuses, with the averages you met in the first sitting, 60.43 for delivered and 59.99 for cancelled, and the biggest subtotal of each. The names n, avg and big are mine, and you can choose any others. What follows each colon is the summary. `$min` and `$sum` of a field work in the same way, as MIN and SUM did, and as in SQL the average and the biggest skip the orders that have no subtotal."
+    note: "One thought, three spellings (the map's row 5). `$sum: 1` has a real reason (one for each document, which is COUNT(*)). The averages echo SQL-1 (59.99 and 60.43). The name of the summary is free, which is also stated, so nothing is left as a rule to remember."
+
+  # 10
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "piles", "one-row-per-pile", "pile-name", "count-rows", "summary-per-pile", "pipeline-of-stages", "group-pile-name", "field-value", "group-summaries"]
+    text: "Write a pipeline with one stage on couriers. The stage makes one pile for each value of city. Show each pile's name with the number of couriers in it."
+    thinking_order: "From couriers, a pile for each city, the name and how many couriers."
+    model: "db.couriers.aggregate([{$group: {_id: \"$city\", n: {$sum: 1}}}])"
+    rows: 4
+    result: [["Belo Horizonte", 32], ["Rio de Janeiro", 49], ["São Paulo", 89], ["Curitiba", 30]]
+    narration:
+      - "Four cities, each with its number of couriers: São Paulo 89, Rio de Janeiro 49, Belo Horizonte 32 and Curitiba 30."
+      - "The pile's name after `_id`, and beside it a name of your own with a sum of 1 for each courier."
+      - ""
+    wrong:
+      - code: "db.couriers.aggregate([{$group: {_id: \"$city\"}}])"
+        ask: "Four names, and no numbers. What is said about each pile, and where is it written?"
+      - code: "db.couriers.aggregate([{$group: {_id: \"$city\", n: {$sum: \"$city\"}}}])"
+        ask: "Every number is 0. What does $sum add up, and what should it add for each courier?"
+        why: "$sum adds whatever follows it, and the value of a text field adds nothing. To count, add 1 for each document."
+      - code: "db.couriers.aggregate([{$group: {_id: \"city\", n: {$sum: 1}}}])"
+        ask: "One pile of 200. What turns the word city into each courier's own city?"
+    walk:
+      - "Make the piles: a `$group` on couriers, with each courier named by its own city."
+      - "Beside `_id`, add a name of your own and say what to say about each pile."
+      - "Counting is a sum of 1 for each document."
+    return:
+      text: "Write a pipeline with one stage on orders. The stage makes one pile for each value of promised_minutes. Show each pile's name with the number of orders in it."
+      model: "db.orders.aggregate([{$group: {_id: \"$promised_minutes\", n: {$sum: 1}}}])"
+      rows: 3
+      result: [[40, 2003], [30, 2019], [50, 1978]]
+      narration:
+        - "Three piles: 30 with 2,019 orders, 40 with 2,003 and 50 with 1,978."
+        - "The same movement on a number field: its value names the pile, and a sum of 1 counts each one."
+    note: "Counting the piles: the thought, plainly and typed once. The `$sum: \"$city\"` slip gives a column of zeros and is a nice real reason. No ties matter: the answer is a set."
+
+  # 11
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "summary-column", "keep-before-piles", "dotted-name", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries"]
+    text: "Write a pipeline with two stages on orders. The first stage keeps the orders whose delivery.rain is true. The second makes one pile for each value of promised_minutes. Show each pile's name with the average subtotal of its orders."
+    thinking_order: "From orders, keep the rain orders, a pile for each promised_minutes, the name and the average subtotal."
+    model: "db.orders.aggregate([{$match: {\"delivery.rain\": true}}, {$group: {_id: \"$promised_minutes\", avg: {$avg: \"$subtotal\"}}}])"
+    rows: 3
+    result: [[30, 61.36], [50, 58.63], [40, 59.76]]
+    narration:
+      - "30 with about 61.36, 40 with about 59.76 and 50 with about 58.63. Keep the rain orders, pile them by promise, average each pile."
+      - "Two stages in the order they happen: the rows are kept first, and the piles are made from what is left."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$promised_minutes\", avg: {$avg: \"$subtotal\"}}}])"
+        ask: "Those averages are of every order. Where do we keep only the rain orders?"
+      - code: "db.orders.aggregate([{$group: {_id: \"$promised_minutes\", avg: {$avg: \"$subtotal\"}}}, {$match: {\"delivery.rain\": true}}])"
+        ask: "Nothing came out. After the $group, does each document of the table still hold a delivery?"
+        why: "after a $group the table is the piles. A pile has an _id and the summaries you named, and nothing else."
+      - code: "db.orders.aggregate([{$match: {\"delivery.rain\": true}}, {$group: {_id: \"$promised_minutes\", avg: {$avg: \"subtotal\"}}}])"
+        ask: "The averages are empty. What did we put in front of a field's name to mean its value?"
+        why: "without the dollar it is only the word subtotal, and a word has no average."
+    walk:
+      - "First stage: keep the orders delivered in the rain."
+      - "Second stage: a `$group` with each order named by its own promised_minutes."
+      - "Beside `_id`, name the summary and say the average of the subtotal, with a sign for the value of a field."
+    return:
+      text: "Write a pipeline with two stages on orders. The first stage keeps the orders whose status is \"cancelled\". The second makes one pile for each value of promised_minutes. Show each pile's name with the biggest subtotal in it."
+      model: "db.orders.aggregate([{$match: {status: \"cancelled\"}}, {$group: {_id: \"$promised_minutes\", big: {$max: \"$subtotal\"}}}])"
+      rows: 3
+      result: [[30, 154.09], [50, 149.44], [40, 165.25]]
+      narration:
+        - "The biggest cancelled subtotal for each promise: 165.25 for 40, 154.09 for 30 and 149.44 for 50."
+        - "Keep the cancelled orders, pile them by promise, take the biggest of each pile."
+    note: "Keep, pile, say: three movements in the order they happen, with an average (which skips absent subtotals, as the give of step 9 said). The two stages in reverse give an empty result: another view of 'a stage takes the table the one before made'."
+
+  # 12
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["sort-and-limit-stages"]
+    text: |-
+      Two more stages, and you know their words. After a `find` you wrote `.sort({...})` and `.limit(...)`. In a pipeline they are stages, with the same words in the braces: `{$sort: {n: -1}}` puts the table in order, the biggest n first, and `{$limit: 2}` keeps the first two of what is left. They come after the `$group` for the reason they came last in SQL: the piles have to exist before they can be put in order. A stage works on the table the one before it made, so the order of the stages is the order things happen. The two cuisines with the most restaurants:
+
+      ```js
+      db.restaurants.aggregate([{$group: {_id: "$cuisine", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 2}])
+      ```
+
+      Run it.
+    shows:
+      - "db.restaurants.aggregate([{$group: {_id: \"$cuisine\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 2}])"
+    after_run: "Hamburguer with 13 and brasileira with 11, the same two cuisines that ORDER BY and LIMIT gave you in SQL. The sort used the name n that we chose beside `_id`, as ORDER BY used the count. And the minus one is the one you know: biggest first. Three stages, and a table going in and coming out of each."
+    note: "Both words are owned already; only their place, as stages, is new. The same pair as the SQL-3 opening check (hamburguer 13, brasileira 11, no tie at the cut). The stage order is stated, and Ana's step shows it from the other side."
+
+  # 13
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "piles", "one-row-per-pile", "pile-name", "summary-per-pile", "sort", "sort-direction", "cut", "sort-by-summary", "pipeline-of-stages", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages"]
+    ordered: true
+    text: "Write a pipeline with three stages on couriers. The first makes one pile for each value of vehicle, with the number of couriers in it. The second puts the piles in order, the biggest number first. The third keeps the first 2 piles. Show each pile's name with its number."
+    thinking_order: "From couriers, a pile for each vehicle with how many, the biggest first, the first 2."
+    model: "db.couriers.aggregate([{$group: {_id: \"$vehicle\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 2}])"
+    rows: 2
+    result: [["moto", 110], ["bike", 73]]
+    narration:
+      - "Moto with 110, then bike with 73. Piles first, then the order, then the cut: each stage works on the table the one before left."
+      - "The piles were made and counted, put in order by the count, and the first two kept."
+      - ""
+    wrong:
+      - code: "db.couriers.aggregate([{$group: {_id: \"$vehicle\", n: {$sum: 1}}}, {$sort: {_id: -1}}, {$limit: 2}])"
+        ask: "Two piles, but are they the two biggest? What did the prompt say to put the piles in order by?"
+        why: "the sort key is the number we named beside _id. Sorting by _id puts the piles in order of their names."
+      - code: "db.couriers.aggregate([{$group: {_id: \"$vehicle\", n: {$sum: 1}}}, {$sort: {n: 1}}, {$limit: 2}])"
+        ask: "Those are the two smallest. Which way round does -1 put the table?"
+      - code: "db.couriers.aggregate([{$group: {_id: \"$vehicle\", n: {$sum: 1}}}, {$sort: {n: -1}}])"
+        ask: "All three piles are here, in order. Which stage keeps only the first two?"
+    walk:
+      - "Make the piles by vehicle and count each one."
+      - "Add a stage that puts the piles in order, the biggest number first."
+      - "Add a last stage that keeps the first 2."
+    return:
+      text: "Write a pipeline with three stages on restaurants. The first makes one pile for each value of city, with the number of restaurants in it. The second puts the piles in order, the biggest number first. The third keeps the first 3 piles. Show each pile's name with its number."
+      model: "db.restaurants.aggregate([{$group: {_id: \"$city\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 3}])"
+      ordered: true
+      rows: 3
+      result: [["São Paulo", 25], ["Belo Horizonte", 15], ["Rio de Janeiro", 14]]
+      narration:
+        - "São Paulo 25, Belo Horizonte 15 and Rio de Janeiro 14. Curitiba, with 6, is cut off."
+        - "Piles, the order, the cut: in the order they happen."
+    note: "First typed `$sort` and `$limit` stages. Moto 110, bike 73 and carro 17 leave no tie at the cut. The sort by _id is the likely slip of sorting by the wrong key. A limit placed before the sort is not used as a wrong answer, because $group has no fixed order and the result could come out right by luck."
+
+  # 14
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "summary-column", "sort", "sort-direction", "cut", "sort-by-summary", "keep-before-piles", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages"]
+    ordered: true
+    text: "Write a pipeline with four stages on orders. The first keeps the orders whose status is \"delivered\". The second makes one pile for each value of restaurant_id, with the average subtotal of its orders. The third puts the piles in order, the highest average first. The fourth keeps the first 3 piles. Show each pile's name with its average."
+    thinking_order: "From orders, keep the delivered ones, a pile for each restaurant_id with its average subtotal, the highest first, the first 3."
+    model: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}, {$sort: {avg: -1}}, {$limit: 3}])"
+    rows: 3
+    result: [[7, 67.29], [58, 67.12], [34, 66.68]]
+    narration:
+      - "Restaurant 7 with about 67.29, then 58 with 67.12 and 34 with 66.68. Four stages, each in the place where it happens."
+      - "Keep the delivered orders, pile them by restaurant, average each pile, sort the averages, cut to three."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}, {$sort: {avg: -1}}, {$limit: 3}])"
+        ask: "Those averages include the cancelled orders. Where do we keep only the delivered ones?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}, {$sort: {avg: 1}}, {$limit: 3}])"
+        ask: "Those are the three lowest averages. Which way round does -1 put the table?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}, {$sort: {avg: -1}}])"
+        ask: "All sixty restaurants, in order. Which stage keeps only the first three?"
+    walk:
+      - "Keep the delivered orders, then make a pile for each restaurant_id with the average subtotal of its orders."
+      - "Put the piles in order by that average, the highest first."
+      - "Keep only the first 3."
+    return:
+      text: "Write a pipeline with four stages on orders. The first keeps the orders whose status is \"cancelled\". The second makes one pile for each value of restaurant_id, with the average delivery_fee of its orders. The third puts the piles in order, the highest average first. The fourth keeps the first 3 piles. Show each pile's name with its average."
+      model: "db.orders.aggregate([{$match: {status: \"cancelled\"}}, {$group: {_id: \"$restaurant_id\", avg: {$avg: \"$delivery_fee\"}}}, {$sort: {avg: -1}}, {$limit: 3}])"
+      ordered: true
+      rows: 3
+      result: [[8, 8.32], [23, 8.19], [1, 7.79]]
+      narration:
+        - "Restaurant 8 with about 8.32, then 23 with 8.19 and 1 with 7.79."
+        - "Keep, pile, average, order, cut: the same four movements on other fields."
+    note: "Four stages, the whole thinking order except keeping piles. The prompt lists the stages, as the earlier ones do; the friction step comes last. Averages are floats with no tie at the cut (the fourth is 66.31)."
+
+  # 15
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    text: "Something that is only interesting, with nothing in it to keep. Because a table comes out of every stage, you can stop a pipeline after any stage and look at it. The sentence you just wrote has four stages. Cut it after the `$group` and you see the piles before they are sorted. Cut it after the `$match` and you see the rows that are about to be piled. People who write long pipelines build them one stage at a time, running the list after each stage, so that they never have to guess what the table looks like at that point."
+    note: "Relief after the climb (rule C8), and the real reason why a stage list is a good way to think: every stage's output can be looked at. Offered as interesting, not as a rule. No code is run."
+
+  # 16
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["match-after-group"]
+    text: |-
+      Now the last of the thinking order: keeping piles. In SQL that was HAVING, the same question as WHERE but asked of piles. Here there is no new word. A question about piles is a `$match` again, written after the `$group`, where the piles are the table. The table that comes out of `$group` has one document for each pile, holding its `_id` and the summaries you named, so the `$match` can ask about n as it asked about subtotal. The cuisines with more than 9 restaurants:
+
+      ```js
+      db.restaurants.aggregate([{$group: {_id: "$cuisine", n: {$sum: 1}}}, {$match: {n: {$gt: 9}}}])
+      ```
+
+      Run it.
+    shows:
+      - "db.restaurants.aggregate([{$group: {_id: \"$cuisine\", n: {$sum: 1}}}, {$match: {n: {$gt: 9}}}])"
+    after_run: "Four cuisines: hamburguer 13, brasileira 11, japonesa 10 and saudavel 10, the four that HAVING kept in SQL. The piles were made, then a `$match` asked each pile a question, and the piles that said no were dropped. It is the same stage as before, and its place decides what it asks. Before the `$group` it asks the orders. After the `$group` it asks the piles. That is the whole difference between WHERE and HAVING."
+    note: "The reframe of rule B8 as in SQL-3: HAVING is the keep-rows question asked of piles. Here the reframe is nearly literal, because the stage is the same word. It comes after piles have been comfortable for six steps (rule C6). Keeps the thought apart from the contrast, which comes in Ana's step."
+
+  # 17
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "piles", "one-row-per-pile", "pile-name", "summary-column", "keep-piles", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "match-after-group", "operator-documents"]
+    text: "Write a pipeline with two stages on orders. The first makes one pile for each value of restaurant_id, with the average subtotal of its orders. The second keeps only the piles whose average is more than 65. Show each pile's name with its average."
+    thinking_order: "From orders, a pile for each restaurant_id with its average subtotal, keeping only the piles above 65."
+    model: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}, {$match: {avg: {$gt: 65}}}])"
+    rows: 7
+    narration:
+      - "Seven restaurants average more than 65, the same seven that HAVING kept in SQL. The piles were made, averaged, and then asked."
+      - "A `$group` and then a `$match` about its average: the question is about the pile, so it comes after the piles."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}])"
+        ask: "All sixty restaurants are here. Which stage keeps only the ones above 65?"
+      - code: "db.orders.aggregate([{$match: {subtotal: {$gt: 65}}}, {$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}])"
+        ask: "That keeps the orders above 65 and then averages them. Is 'above 65' about one order, or about a restaurant's average?"
+        why: "the first $match asks each order. The question here is about each pile's average, which exists only after the $group."
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", avg: {$avg: \"$subtotal\"}}}, {$match: {subtotal: {$gt: 65}}}])"
+        ask: "Nothing came out. What does a pile hold after the $group: a subtotal, or the name you gave the average?"
+    walk:
+      - "Make the piles by restaurant_id and say the average subtotal of each."
+      - "Add a stage that keeps only the piles, asking about the name you gave the average."
+    return:
+      text: "Write a pipeline with two stages on orders. The first makes one pile for each value of promised_minutes, with the average actual_minutes of its orders. The second keeps only the piles whose average is more than 35. Show each pile's name with its average."
+      model: "db.orders.aggregate([{$group: {_id: \"$promised_minutes\", avg: {$avg: \"$actual_minutes\"}}}, {$match: {avg: {$gt: 35}}}])"
+      rows: 2
+      result: [[50, 49.44], [40, 39.61]]
+      narration:
+        - "The 40 and the 50 stay, with about 39.61 and 49.44, and the 30 goes, as in SQL."
+        - "Piles, an average, then a question about the piles."
+    note: "First typed keeping of piles, on the same question as SQL-3 step 16 (seven restaurants). The trap with a `$match` on subtotal before the group gives a different answer and no error, the likeliest real slip. The averages are floats with no tie."
+
+  # 18
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "keep-before-piles", "keep-piles", "rows-or-piles", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "match-after-group", "operator-documents"]
+    text: |-
+      Ana was asked: among the delivered orders, which restaurants had more than 110 orders? Show each restaurant's _id with its count. She called the count n, and put both questions in the first `$match`, the way she would have put both in WHERE:
+
+      ```js
+      db.orders.aggregate([{$match: {status: "delivered", n: {$gt: 110}}}, {$group: {_id: "$restaurant_id", n: {$sum: 1}}}])
+      ```
+
+      It came back with nothing. No error, no documents. Ana, at the moment of the first stage, what does the table hold? ... Orders. Does an order have a field called n? ... No. The name n is one we choose beside `_id`, and it exists only after the `$group`. So no order passed the question, and an empty table went on. Each stage works on the table the one before it made. A question about the orders goes in a `$match` before the `$group`. A question about the piles goes in a `$match` after it. And this sentence needs one of each. What should she have written?
+    model: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$match: {n: {$gt: 110}}}])"
+    rows: 2
+    result: [[2, 113], [24, 112]]
+    shows:
+      - "db.orders.aggregate([{$match: {status: \"delivered\", n: {$gt: 110}}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}])"
+    narration:
+      - "Restaurant 2 with 113 and 24 with 112. The delivered question went before the piles, because it is about orders. The size question went after them, because it is about piles."
+      - "Keep the delivered orders, pile them by restaurant, count each pile, keep the piles above 110: each question in the place that asks it of the right thing."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}])"
+        ask: "Every restaurant is here, with its count. Which question is about a pile, and where does it go?"
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$match: {n: {$gt: 110}}}])"
+        ask: "Those piles count every order, the cancelled ones too. Where do we keep only the delivered orders?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$match: {n: {$gt: 110}}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}])"
+        ask: "Empty again. At that second $match, is the table orders or piles? Where do the piles exist?"
+    walk:
+      - "Is 'delivered' a question about one order or about a pile? Put it in a `$match` where the rows are kept."
+      - "Make the piles by restaurant_id and count each one."
+      - "Is 'more than 110' about one order or about a pile? Put it in a `$match` after the piles are made."
+    return:
+      text: "Write a pipeline with three stages on orders. The first keeps the orders whose delivery.rain is true. The second makes one pile for each value of promised_minutes, with the number of orders in it. The third keeps only the piles with more than 100 orders. Show each pile's name with its number."
+      model: "db.orders.aggregate([{$match: {\"delivery.rain\": true}}, {$group: {_id: \"$promised_minutes\", n: {$sum: 1}}}, {$match: {n: {$gt: 100}}}])"
+      rows: 3
+      result: [[40, 373], [50, 363], [30, 353]]
+      narration:
+        - "The rain question went before the piles, and the size question after them."
+        - "Keep the rain orders, pile by promise, count, keep the piles above 100."
+    note: "Ana makes the predictable slip one step before the learner could (rule E6), as she did with WHERE COUNT(*) in SQL-3. Here there is no error, only an empty answer, because an absent field never passes a question. The real reason is the order of events. rows-or-piles is imported aloud from SQL-3. 113 and 112 are the first two of the closing sentence, so they are met once before."
+
+  # 19
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "count-rows", "keep-before-piles", "keep-piles", "rows-or-piles", "sort", "sort-direction", "sort-by-summary", "absent-field", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "match-after-group", "sort-and-limit-stages"]
+    ordered: true
+    text: "Write a pipeline with four stages on orders. The first keeps the orders that have no coupon_code. The second makes one pile for each value of restaurant_id, with the number of orders in it. The third keeps only the piles with more than 80 orders. The fourth puts them in order, the biggest number first. Show each pile's name with its number."
+    thinking_order: "From orders, keep the ones with no coupon_code, a pile for each restaurant_id with how many, keeping the piles above 80, the biggest first."
+    model: "db.orders.aggregate([{$match: {coupon_code: {$exists: false}}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$match: {n: {$gt: 80}}}, {$sort: {n: -1}}])"
+    rows: 4
+    result: [[1, 88], [24, 87], [59, 86], [22, 85]]
+    narration:
+      - "Restaurant 1 with 88, 24 with 87, 59 with 86 and 22 with 85. A question about the orders, the piles, a question about the piles, and the order."
+      - "Keep, pile, keep piles, sort: four stages in the order they happen, and each question where it asks the right thing."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$match: {n: {$gt: 80}}}, {$sort: {n: -1}}])"
+        ask: "Those piles count every order, the coupons too. Where do we keep only the orders with no coupon_code?"
+      - code: "db.orders.aggregate([{$match: {coupon_code: {$exists: false}}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: -1}}])"
+        ask: "Every restaurant is here, in order. Which stage keeps only the piles above 80?"
+      - code: "db.orders.aggregate([{$match: {coupon_code: {$exists: false}, n: {$gt: 80}}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: -1}}])"
+        ask: "Nothing came out. Is 'more than 80' about one order or about a pile? Does an order have an n?"
+    walk:
+      - "Keep the orders with no coupon_code, with the question that asks about an absent field."
+      - "Pile them by restaurant_id, and count each pile."
+      - "Keep the piles above 80, asking about the name you gave the count."
+      - "Put what is left in order, the biggest first."
+    return:
+      text: "Write a pipeline with four stages on orders. The first keeps the orders whose delivery.rain is true. The second makes one pile for each value of restaurant_id, with the number of orders in it. The third keeps only the piles with more than 24 orders. The fourth puts them in order, the biggest number first. Show each pile's name with its number."
+      model: "db.orders.aggregate([{$match: {\"delivery.rain\": true}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$match: {n: {$gt: 24}}}, {$sort: {n: -1}}])"
+      ordered: true
+      rows: 3
+      result: [[24, 27], [22, 26], [44, 25]]
+      narration:
+        - "Restaurant 24 with 27, then 22 with 26 and 44 with 25. The fourth, with 24, is dropped."
+        - "A question about rows, piles, a question about piles, the order."
+    note: "Rows or piles, with absent-field in the first stage, and a sort at the end: four stages. 88, 87, 86 and 85 leave no tie, so the step is judged in order. The return has no tie either (27, 26, 25, then 24 cut by `more than 24`)."
+
+  # 20
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "piles", "one-row-per-pile", "pile-name", "count-rows", "keep-before-piles", "sort", "sort-direction", "cut", "sort-by-summary", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages"]
+    friction: true
+    text: "The last one, and I won't break it down. From orders, show the 5 restaurant_ids with the most orders whose status is \"delivered\", each with how many such orders it has."
+    model: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 5}])"
+    rows: 5
+    result: [[2, 113], [24, 112], [3, 109], [59, 109], [22, 108]]
+    narration:
+      - "Restaurant 2 with 113, 24 with 112, then 3 and 59 with 109, and 22 with 108: the closing sentence of the second SQL sitting, with the same numbers. You wrote it as stages in the order you think it: keep, pile, count, sort, cut."
+      - "Five piles, the numbers you got in SQL, and nothing in the sentence you had to memorise: every stage was a thought you already had."
+      - "That is a real interview question, and you thought it out: from orders, keep the delivered ones, pile them by restaurant, say how many in each, put them in order, keep five."
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 5}])"
+        ask: "Those counts include the cancelled orders. Where do we drop them?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: -1}}])"
+        ask: "All sixty restaurants, in order. Which stage keeps only the first five?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {_id: -1}}, {$limit: 5}])"
+        ask: "Five piles, but are they the five with the most orders? What did the prompt say to put the piles in order by?"
+        why: "the sort key is the count we named beside _id. Sorting by _id puts the piles in order of the restaurants' ids."
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: 1}}, {$limit: 5}])"
+        ask: "Those are the five smallest. Which way round does -1 put the table?"
+    walk:
+      - "Keep the delivered orders, then make a pile for each restaurant_id and count each pile."
+      - "Put the piles in order, the biggest count first."
+      - "Keep only the first 5."
+    return:
+      text: "Show the 3 restaurant_ids with the most orders whose delivery.rain is true, each with how many such orders it has. I won't break it down."
+      model: "db.orders.aggregate([{$match: {\"delivery.rain\": true}}, {$group: {_id: \"$restaurant_id\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 3}])"
+      rows: 3
+      result: [[24, 27], [22, 26], [44, 25]]
+      narration:
+        - "Restaurant 24 with 27, then 22 with 26 and 44 with 25."
+        - "Keep the rain orders, pile by restaurant, count, put in order, keep three."
+    note: "The surprise sentence: the closing sentence of SQL-2 (113, 112, 109, 109, 108), the pass-bar task for the pipeline. IT TIES at 109 (restaurants 3 and 59), so it is judged as a SET: no ordered. The 5th and 6th do not tie (22 has 108, 35 has 105), so the five restaurants are stable. The return is also a set, and its third and fourth do not tie (25 and 24)."
+
+  # 21
+  - kind: "recap"
+    lang: "mongo"
+    data: "mongo"
+    text: |-
+      Stop there. Today you wrote down the thinking order as a list. From the table, `$match` to keep rows, which was WHERE. `$group` to make piles and say something about each one, which was GROUP BY with its COUNT and AVG and MAX. A second `$match` to keep piles, which was HAVING. `$sort` and `$limit`, which were ORDER BY and LIMIT. A table goes in and a table comes out at every stage, and the stages run in the order things happen.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3). The SQL clauses are said aloud for the last time, so that the pairing is the learner's own."
+
+  # 22
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "from-table", "keep-rows", "text-quotes", "piles", "one-row-per-pile", "pile-name", "count-rows", "keep-before-piles", "keep-piles", "pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "match-after-group"]
+    text: "From restaurants, keep the restaurants whose city is \"São Paulo\" (the tilde on the a is part of the word). Make one pile for each cuisine, with the number of restaurants in it, and keep only the piles with more than 3 restaurants. Show each pile's name with its number."
+    model: "db.restaurants.aggregate([{$match: {city: \"São Paulo\"}}, {$group: {_id: \"$cuisine\", n: {$sum: 1}}}, {$match: {n: {$gt: 3}}}])"
+    rows: 4
+    result: [["hamburguer", 5], ["arabe", 5], ["japonesa", 5], ["pizza", 6]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: keep rows, piles, a count and keeping piles, on a table not used for the same combination in the lesson. The same four cuisines as SQL-3's closing check (pizza 6, hamburguer, arabe and japonesa 5). Judged as a set, so the three-way tie at 5 does not matter. Never scored."

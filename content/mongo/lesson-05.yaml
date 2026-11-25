@@ -1,0 +1,1002 @@
+lesson: mg-05
+title: "Look things up in another collection"
+strand: mongo
+stage: 2
+thoughts:
+  lookup-stage: {text: "`$lookup` sticks the matching documents of another collection onto each document. It takes four names: `from`, `localField`, `foreignField` and `as`.", grade: shape}
+  lookup-gives-a-list: "What `$lookup` sticks on is always a list, even when only one document matches, because it cannot know in advance how many will. `$unwind` turns the list into plain documents."
+  mongo-pile-by-looked-up: "Once it is on the document, a field of the looked-up document can name the piles: `\"$restaurant.city\"`."
+  lookup-keeps-unmatched: "A document with no match keeps an empty list, and `$unwind` throws that document away. Those are the rows `LEFT JOIN` kept."
+  why-items-inside: {text: "Dishes sit inside the order because they belong to it alone. Restaurants live outside because many orders point to one.", grade: name-only}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "unwind-stage", "group-after-unwind", "group-pile-name", "field-value", "group-summaries", "dotted-through-list"]
+    text: "Show each dish name with the total of its `qty`, across the orders whose `restaurant_id` is 2."
+    model: |-
+      db.orders.aggregate([
+        {$match: {restaurant_id: 2}},
+        {$unwind: "$items"},
+        {$group: {_id: "$items.name", qty: {$sum: "$items.qty"}}}
+      ])
+    rows: 5
+    result: [["Quinoa", 47], ["Bowl de açaí", 49], ["Salada Caesar", 67], ["Suco verde", 69], ["Wrap de frango", 53]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from MG-4: match, unwind, pile by a dotted name, sum of a dotted name. Restaurant 2 has five dishes (49, 67, 69, 53, 47), no sort and no tie. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["lookup-stage"]
+    requires: ["pipeline-of-stages", "join", "join-on"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: |-
+      Here is a question we cannot answer yet: how many orders came from each city? Look at an order. It holds a `restaurant_id` and no city. The city is a fact about the restaurant, and it lives in the `restaurants` collection, where each restaurant's `_id` is that same number. In SQL you looked it up with a JOIN.
+
+      In MongoDB the stage is `$lookup`, and it sticks onto each order the documents of the other collection that match. It takes four names. `from` is the collection to look in. `localField` is the field of this order that holds the number. `foreignField` is the field of the other collection that must equal it, as `ON` said in SQL. `as` is the name the stuck-on part is given.
+
+      This one you would look up. The thought is: stick the matching documents of another collection onto each one. Here it is spelled `{$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}}`. I will always write it out for you. A limit keeps just two orders on the screen:
+
+      ```js
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$limit: 2}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$limit: 2}
+        ])
+    after_run: "Look at the end of each order. A new field called `restaurant` holds what the restaurants collection has for that order's restaurant_id: its name, city, cuisine and signup date. Two orders still, each one wider. A table went in, a wider table came out, as it did with JOIN."
+    note: "MG-5 thought 1, shape grade: the spelling is supplied and the teacher says it is one to look up. Opens on the need (the city is not on the order), as SQL-4 did. The list is visible in the output but is named in the next step, so that one thought arrives at a time."
+
+  # 3
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["lookup-gives-a-list"]
+    requires: ["lookup-stage", "unwind-stage", "join", "join-on"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: |-
+      Look again at the field `restaurant` on those orders. It sits inside square brackets: it is a list, with one document in it. Run these two sentences, one after the other. The second has an `$unwind` after the lookup, the stage you used on the dishes:
+
+      ```js
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$limit: 1}
+      ])
+      ```
+
+      ```js
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$limit: 1}
+      ])
+      ```
+
+      Run them.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$limit: 1}
+        ])
+      - |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$limit: 1}
+        ])
+    after_run: "In the first, `restaurant` is a list that holds one document. In the second, `$unwind` took the list apart, and `restaurant` is a plain document, so its fields are reached with a dot: `restaurant.city`. It was a list even though only one restaurant matches, because a lookup cannot know in advance how many documents it will find: none, one or many. So it always hands back a list. When you expect one, unwind it."
+    note: "The part of $lookup that is core. The reason for the list is real (none, one or many cannot be known in advance), so nothing is left as a rule to remember. It is the same stage as MG-4's unwind, now taking a list of one apart."
+
+  # 4
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "dotted-name"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: "The lookup is `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`, written out again, because it is a stage people look up. From `orders`, look up the restaurant of each order, unwind the `restaurant` list, keep the documents whose `restaurant.city` is \"Curitiba\", and make piles by the order's `restaurant_id`, with `n` counting the orders in each pile. Show each pile's `_id` and `n`."
+    model: |-
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$match: {"restaurant.city": "Curitiba"}},
+        {$group: {_id: "$restaurant_id", n: {$sum: 1}}}
+      ])
+    rows: 6
+    result: [[24, 120], [12, 103], [3, 114], [6, 93], [32, 106], [23, 103]]
+    narration:
+      - "Six restaurants, from 93 orders to 120. Look up, unwind, keep, pile, count, in the order they happen."
+      - "From orders, with the restaurant stuck on and taken out of its list, keeping the Curitiba ones, a pile for each restaurant_id."
+      - "Six piles. The city question was asked of the looked-up document with a dot, as you asked about `delivery.rain`."
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant_id", n: {$sum: 1}}}
+          ])
+        ask: "Sixty piles came back. Which stage keeps only the Curitiba restaurants' orders?"
+        why: "the lookup only attaches the restaurant. A question about it still needs its own match."
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$match: {"restaurant.city": "curitiba"}},
+            {$group: {_id: "$restaurant_id", n: {$sum: 1}}}
+          ])
+        ask: "No piles came back at all. Is the city written in your sentence exactly as the data writes it?"
+        why: "text inside quotes is matched letter for letter, capitals included."
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$match: {restaurant: {city: "Curitiba"}}},
+            {$group: {_id: "$restaurant_id", n: {$sum: 1}}}
+          ])
+        ask: "No piles came back. How do you reach a field inside a field?"
+        why: "a document inside a document is reached with a dotted name, in quotes."
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$match: {"restaurant.city": "Curitiba"}},
+            {$group: {_id: "$restaurant.city", n: {$sum: 1}}}
+          ])
+        ask: "That is one pile for the whole city. Which field of the order tells one restaurant from another?"
+    walk:
+      - "From orders, look up the restaurant of each order and unwind the list."
+      - "Keep only the documents whose restaurant.city is \"Curitiba\"."
+      - "Make piles by the order's restaurant_id and count the orders in each."
+    return:
+      text: "From `orders`, look up the restaurant with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`, unwind the `restaurant` list, keep the documents whose `restaurant.cuisine` is \"pizza\", and make piles by the order's `status`, with `n` counting the orders in each pile. Show each pile's `_id` and `n`."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$match: {"restaurant.cuisine": "pizza"}},
+          {$group: {_id: "$status", n: {$sum: 1}}}
+        ])
+      rows: 2
+      result: [["cancelled", 52], ["delivered", 793]]
+      narration:
+        - "Two piles, delivered and cancelled, of the orders that went to a pizza restaurant."
+        - "Look up, unwind, keep by a looked-up field, then pile and count."
+    note: "First typed lookup. The question about the looked-up document uses MG-2's dotted name. The pile is by the order's own restaurant_id so that pile-by-looked-up stays for the next step. Wrongs: no match, exact text, a whole-document match, a pile by city."
+
+  # 5
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["mongo-pile-by-looked-up"]
+    requires: ["lookup-stage", "lookup-gives-a-list", "unwind-stage", "group-pile-name", "field-value", "dotted-name", "pile-by-looked-up"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: |-
+      Back to the question we started with: how many orders came from each city? The lookup has put the city on every order, inside `restaurant`, and you know how to reach a field inside a field: with a dot. A pile's name can be any value, so it can be that field. And, as in the pipeline lesson, a dollar sign inside quotes means the value of that field, so the name is `"$restaurant.city"`. In SQL this was the pile by a looked-up column. Here it is:
+
+      ```js
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$group: {_id: "$restaurant.city", n: {$sum: 1}}}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.city", n: {$sum: 1}}}
+        ])
+    after_run: "Four piles: São Paulo 2,492, Rio de Janeiro 1,375, Belo Horizonte 1,494 and Curitiba 639. They add up to 6,000, one for each order, and they are the same four numbers SQL-4 gave you. The pile's name came from the other collection. It is the same question on the same data, and only the spelling is new."
+    note: "MG-5 thought 3. The learner has already used the pieces: the dot (MG-2), the dollar sign (MG-3). SQL-4's 639, 1,375, 1,494 and 2,492 are repeated here, so the echo is exact."
+
+  # 6
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: |-
+      Davi was asked: show each restaurant cuisine with the average `delivery_fee` of its orders. He looked up the restaurants, and made the piles by the cuisine, and wrote:
+
+      ```js
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$delivery_fee"}}}
+      ])
+      ```
+
+      Six piles came back and the averages look reasonable. But look at the pile names. Each one is in square brackets: ["pizza"], ["arabe"], not the plain word. Davi, what is `restaurant` after a lookup? ... A list. So `restaurant.cuisine` is a list that holds one cuisine, and each pile is named by a list. Nothing failed. The names are only odd, and a pile named by a list is no use to anyone who wants to read the cuisine. What should he have written?
+    model: |-
+      db.orders.aggregate([
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$delivery_fee"}}}
+      ])
+    rows: 6
+    result: [["saudavel", 5.061878], ["brasileira", 5.289885], ["hamburguer", 5.343543], ["arabe", 5.162219], ["japonesa", 5.137149], ["pizza", 5.218509]]
+    narration:
+      - "Six cuisines, from 5.06 to 5.34, named by plain words now. The unwind took the list apart before the piles were made."
+      - "Look up, unwind, then pile by the looked-up cuisine, and average the delivery fee."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$delivery_fee"}}}
+          ])
+        ask: "There is no restaurant on an order until something puts it there. What is missing?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant_id", avg: {$avg: "$delivery_fee"}}}
+          ])
+        ask: "Those are sixty piles named by number. Which field holds the cuisine, and where does it live?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "restaurant.cuisine", avg: {$avg: "$delivery_fee"}}}
+          ])
+        ask: "One pile, named with the plain words. What does a dollar sign in front of a field name do, inside quotes?"
+    walk:
+      - "Look up each order's restaurant and take the list apart."
+      - "Now make the piles by the cuisine on the restaurant, and say the average delivery_fee of each."
+    return:
+      text: "Show each restaurant city with the average `delivery_fee` of its orders. Look up the restaurant with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`, unwind the list, and make piles by the city."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.city", avg: {$avg: "$delivery_fee"}}}
+        ])
+      rows: 4
+      result: [["Rio de Janeiro", 5.159804], ["Belo Horizonte", 5.320428], ["São Paulo", 5.146685], ["Curitiba", 5.335086]]
+      narration:
+        - "Four cities, each with an average fee. The list was taken apart before the piles were made."
+        - "Look up, unwind, pile by the looked-up city, average."
+    note: "Davi makes the predictable slip one step before the learner could (rule E6): he forgets that the lookup brings a list. Nothing errors. The pile names are lists, which is the visible symptom, and the real reason (a lookup cannot know how many) was given in step 3. First use of the new pile."
+
+  # 7
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up", "sort-and-limit-stages"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    ordered: true
+    text: "Among the orders whose `status` is \"delivered\", show the two restaurant names with the most orders, each with its number of orders `n`, the biggest first. The name is the `name` of the restaurant, so look it up with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$group: {_id: "$restaurant.name", n: {$sum: 1}}},
+        {$sort: {n: -1}},
+        {$limit: 2}
+      ])
+    rows: 2
+    result: [["Rest 02", 113], ["Rest 24", 112]]
+    narration:
+      - "Rest 02 with 113 and Rest 24 with 112. The same two restaurants you met by number in the pipeline lesson, now by name, which only a lookup can give."
+      - "Keep the delivered orders, look up the restaurants, pile by the name, sort, cut: every part in the order it happens."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.name", n: {$sum: 1}}},
+            {$sort: {n: 1}},
+            {$limit: 2}
+          ])
+        ask: "Those are the two smallest. Which way does the sort put the biggest first?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.name", n: {$sum: 1}}},
+            {$sort: {n: -1}}
+          ])
+        ask: "Every restaurant is here. Which stage keeps only the first two?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$restaurant_id", n: {$sum: 1}}},
+            {$sort: {n: -1}},
+            {$limit: 2}
+          ])
+        ask: "Those are numbers. I asked for the names. Where does the name live, and what puts it on the order?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.name", n: {$sum: 1}}},
+            {$sort: {n: -1}},
+            {$limit: 2}
+          ])
+        ask: "Those counts include the cancelled orders. Which stage drops them?"
+    walk:
+      - "Keep the delivered orders, look up the restaurant and unwind the list."
+      - "Make piles by the restaurant's name and count the orders in each."
+      - "Sort, the biggest first, and keep two."
+    return:
+      text: "Among the orders whose `status` is \"delivered\", show the two restaurant cities with the most orders, each with its number of orders `n`, the biggest first. The city is on the restaurant, so look it up with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.city", n: {$sum: 1}}},
+          {$sort: {n: -1}},
+          {$limit: 2}
+        ])
+      ordered: true
+      rows: 2
+      result: [["São Paulo", 2332], ["Belo Horizonte", 1405]]
+      narration:
+        - "São Paulo with 2,332 and Belo Horizonte with 1,405, the two biggest piles."
+        - "Keep, look up, unwind, pile by the city, sort, cut."
+    note: "Echoes MG-3's closing sentence (restaurants 2 and 24, 113 and 112), now by name. The third is Rest 59 with 109, so no tie at the cut. Match first, as the thinking order goes, though match after the lookup gives the same piles."
+
+  # 8
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    new: ["why-items-inside"]
+    text: "Something that is only interesting, with nothing in it to keep. You have now met two ways to hold a fact next to an order. The dishes sit inside the order, as a list, and need only an unwind. The restaurant sits outside, in its own collection, and needs a lookup. Why the difference? A dish line belongs to its order alone: nobody else owns \"two Margheritas on order 100001\", and nobody asks about it apart from its order. A restaurant is the opposite. Hundreds of orders point to the same one. If every order carried its own copy, the city would be written a hundred times, and a restaurant that moved would need a hundred corrections. So it lives once, outside, and the orders point to it by `restaurant_id`. That is the reason for a lookup. People sometimes copy a little of it inside anyway, for speed, and that is a choice and not a law."
+    note: "Name-only aside (decision C10), never required and never asked. Relief after the first climb. The reason is the real one (a thing owned by one order versus a thing many orders share), so it is told as interesting and not as a rule."
+
+  # 9
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    new: ["lookup-keeps-unmatched"]
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on"]
+    supplies: ["{$lookup: {from: \"coupons\", localField: \"coupon_code\", foreignField: \"_id\", as: \"coupon\"}}"]
+    text: |-
+      Ana wanted to be sure that sticking each order's coupon on loses no order. So she looked up the coupon of every order, `{$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}}`, unwound it, and counted the orders in each status. She wrote:
+
+      ```js
+      db.orders.aggregate([
+        {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+        {$unwind: "$coupon"},
+        {$group: {_id: "$status", n: {$sum: 1}}}
+      ])
+      ```
+
+      It ran without a word. Delivered 1,769 and cancelled 115. Ana, add them up. ... 1,884. And how many orders are there? ... 6,000. Where did 4,116 orders go? Look at what `coupon_code` holds on those orders: nothing, the field is absent. An order with no coupon finds no match, so its `coupon` list is empty, and `$unwind` of an empty list produces nothing. The order is thrown away. The lookup alone keeps every order, with an empty list where nothing matched. To count the orders, she should leave the unwind out. What should she have written?
+    model: |-
+      db.orders.aggregate([
+        {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+        {$group: {_id: "$status", n: {$sum: 1}}}
+      ])
+    rows: 2
+    result: [["cancelled", 399], ["delivered", 5601]]
+    narration:
+      - "Delivered 5,601 and cancelled 399: 6,000 in all, and nobody lost. The lookup kept every order, and the unwind, which was not needed, is gone."
+      - "Look up, and pile by status without unwinding. An empty list is still a document that stays."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$match: {coupon: {$size: 0}}},
+            {$group: {_id: "$status", n: {$sum: 1}}}
+          ])
+        ask: "That counts only the orders with no coupon. Which orders did Ana want to count?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$unwind: "$coupon"},
+            {$group: {_id: "$status", n: {$sum: 1}}}
+          ])
+        ask: "That is Ana's sentence again. Which stage throws an order away when its list is empty?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$group: {_id: "$coupon_code", n: {$sum: 1}}}
+          ])
+        ask: "Those piles are named by the coupon code, with one for the orders that have none. Which field did she pile by?"
+    walk:
+      - "Look up the coupon of each order, and leave the list as it is."
+      - "Make piles by status and count the orders in each. Do the two counts add up to 6,000?"
+    return:
+      text: "Look up the courier of each order with `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`, and leave the list as it is. Make piles by `promised_minutes`, with `n` counting the orders in each pile. Show each pile's `_id` and `n`. The three counts must add up to 6,000."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+          {$group: {_id: "$promised_minutes", n: {$sum: 1}}}
+        ])
+      rows: 3
+      result: [[50, 1978], [30, 2019], [40, 2003]]
+      narration:
+        - "30, 40 and 50, and the three counts add up to 6,000: the lookup lost nobody."
+        - "A lookup with no unwind keeps every order, even the 399 with no courier."
+    note: "MG-5 thought 4, taught by a classmate as the map says. Ana's sentence runs and gives 1,769 + 115 = 1,884. The model is the lookup alone, 5,601 + 399 = 6,000. 'To count' is the honest reason to leave the unwind out: it is a check that nothing was lost. The return uses the courier lookup, so a lookup that matches nothing for 399 orders also appears."
+
+  # 10
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    text: "Does that sound familiar? In the SQL lesson on JOIN, the vehicles added up to 5,601 and not 6,000, because the 399 cancelled orders had no courier, and a JOIN keeps only the rows that find a partner. It is the same thing. A lookup followed by an unwind keeps only the documents that find a match, and a lookup by itself keeps them all, with an empty list where nothing matched. That is the kind of join I said was coming, the one that keeps the rows with no partner. When you do want the unwind and do not want to lose those orders, there is a word to put in it, `preserveNullAndEmptyArrays`. That one is for looking up, not for learning today."
+    note: "Says aloud that this is SQL-4's dropped rows (6,000 became 5,601) again, and names the fix once as something to look up, as the map asks. It is not taught and no step asks for it."
+
+  # 11
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "size-of-list", "lookup-keeps-unmatched"]
+    supplies: ["{$lookup: {from: \"coupons\", localField: \"coupon_code\", foreignField: \"_id\", as: \"coupon\"}}"]
+    text: "Use the lookup `{$lookup: {from: \"coupons\", localField: \"coupon_code\", foreignField: \"_id\", as: \"coupon\"}}` again, and do not unwind it. Keep the documents whose `coupon` list has size 0, make piles by `status`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+    model: |-
+      db.orders.aggregate([
+        {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+        {$match: {coupon: {$size: 0}}},
+        {$group: {_id: "$status", n: {$sum: 1}}}
+      ])
+    rows: 2
+    result: [["cancelled", 284], ["delivered", 3832]]
+    narration:
+      - "Delivered 3,832 and cancelled 284: together 4,116, the orders that used no coupon."
+      - "An empty list is how a lookup says nobody matched, and a size of 0 asks for it."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$match: {coupon: {$size: 1}}},
+            {$group: {_id: "$status", n: {$sum: 1}}}
+          ])
+        ask: "Those are the orders that did use a coupon. What size is an empty list?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$match: {coupon: {$exists: false}}},
+            {$group: {_id: "$status", n: {$sum: 1}}}
+          ])
+        ask: "Nothing came back. After a lookup, is the field `coupon` absent, or is it there with nothing inside?"
+        why: "the lookup always puts the field on, as a list, and an empty list is not an absent field."
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$group: {_id: "$status", n: {$sum: 1}}}
+          ])
+        ask: "Those are all the orders. Which stage keeps only the ones whose list is empty?"
+    walk:
+      - "Look up the coupon of each order, and keep the list as it is."
+      - "Keep the documents whose coupon list has size 0."
+      - "Make piles by status and count the orders in each."
+    return:
+      text: "Use the lookup `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`, and do not unwind it. Keep the documents whose `courier` list has size 0, make piles by `status`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+          {$match: {courier: {$size: 0}}},
+          {$group: {_id: "$status", n: {$sum: 1}}}
+        ])
+      rows: 1
+      result: [["cancelled", 399]]
+      narration:
+        - "One pile, cancelled, with 399: the orders that never had a courier."
+        - "An empty list again, asked with a size of 0."
+    note: "Uses the empty list from MG-4's $size on purpose: the list says no match. The $exists wrong is natural from MG-2 and gives nothing, because the field is always there after a lookup. 3,832 + 284 = 4,116. Differs from step 9 in the match stage and the missing group of the unwind; it is the other side of the same data."
+
+  # 12
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up", "lookup-keeps-unmatched"]
+    supplies: ["{$lookup: {from: \"coupons\", localField: \"coupon_code\", foreignField: \"_id\", as: \"coupon\"}}"]
+    text: "This time the unwind is what you want. Look up the coupon of each order with `{$lookup: {from: \"coupons\", localField: \"coupon_code\", foreignField: \"_id\", as: \"coupon\"}}`, and unwind the `coupon` list, so that only the orders that used a coupon stay. Make piles by the coupon's `discount_pct`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+    model: |-
+      db.orders.aggregate([
+        {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+        {$unwind: "$coupon"},
+        {$group: {_id: "$coupon.discount_pct", n: {$sum: 1}}}
+      ])
+    rows: 3
+    result: [[0, 932], [20, 321], [10, 631]]
+    narration:
+      - "Three piles: a discount of 0 with 932 (the free-delivery coupon), a discount of 10 with 631 and a discount of 20 with 321. They add up to 1,884."
+      - "The orders without a coupon dropped out, and this time that is just what the question asked for."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$group: {_id: "$coupon.discount_pct", n: {$sum: 1}}}
+          ])
+        ask: "The pile names are in square brackets, and one pile holds the orders with no coupon. What takes the list apart, and drops the empty ones?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$unwind: "$coupon"},
+            {$group: {_id: "$coupon_code", n: {$sum: 1}}}
+          ])
+        ask: "Those piles are named by the code. Which field of the coupon did I ask you to pile by?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+            {$unwind: "$coupon"},
+            {$group: {_id: "$discount_pct", n: {$sum: 1}}}
+          ])
+        ask: "One pile, named null. Does `discount_pct` live on the order, or inside the coupon?"
+    walk:
+      - "Look up the coupon of each order and take the list apart."
+      - "Make piles by the discount_pct of the coupon and count the orders."
+    return:
+      text: "Look up the courier of each order with `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`, and unwind the `courier` list, so that only the orders that have a courier stay. Make piles by the courier's `city`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+          {$unwind: "$courier"},
+          {$group: {_id: "$courier.city", n: {$sum: 1}}}
+        ])
+      rows: 4
+      result: [["São Paulo", 2538], ["Rio de Janeiro", 1347], ["Belo Horizonte", 881], ["Curitiba", 835]]
+      narration:
+        - "Four cities, from Curitiba with 835 to São Paulo with 2,538. They add up to 5,601, the orders that had a courier."
+        - "The unwind did the keeping: an order with no courier had an empty list and dropped out."
+    note: "The mirror of step 9: the unwind that lost orders by accident is now the question itself (an inner join). It also repeats lookup-keeps-unmatched from the other side. FRETEGRATIS has a discount_pct of 0, so a pile named 0 is a real value. The return's four numbers are SQL-4's step 13 return."
+
+  # 13
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up", "lookup-keeps-unmatched"]
+    supplies: ["{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}"]
+    text: "Look up the courier of each order with `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`, unwind the `courier` list, make piles by the courier's `vehicle`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+    model: |-
+      db.orders.aggregate([
+        {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+        {$unwind: "$courier"},
+        {$group: {_id: "$courier.vehicle", n: {$sum: 1}}}
+      ])
+    rows: 3
+    result: [["carro", 488], ["bike", 2038], ["moto", 3075]]
+    narration:
+      - "Moto 3,075, bike 2,038, carro 488. The same three numbers SQL-4 gave, and the same total of 5,601, not 6,000."
+      - "The couriers were looked up for each order and the vehicle made the piles. The 399 orders with no courier dropped out."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+            {$group: {_id: "$courier.vehicle", n: {$sum: 1}}}
+          ])
+        ask: "The pile names are in square brackets, and one pile has an empty list for a name. What takes each list apart?"
+      - code: |-
+          db.orders.aggregate([
+            {$unwind: "$courier"},
+            {$group: {_id: "$courier.vehicle", n: {$sum: 1}}}
+          ])
+        ask: "There is no courier on an order until something puts it there. What is missing?"
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+            {$unwind: "$courier"},
+            {$group: {_id: "$courier_id", n: {$sum: 1}}}
+          ])
+        ask: "Those are 200 piles, one for each courier. Which field of the courier did I ask you to pile by?"
+    walk:
+      - "Look up the courier of each order and take the list apart."
+      - "Make piles by the courier's vehicle and count the orders in each."
+    return:
+      text: "Look up the restaurant of each order with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`, unwind the `restaurant` list, make piles by the restaurant's `cuisine`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.cuisine", n: {$sum: 1}}}
+        ])
+      rows: 6
+      result: [["arabe", 802], ["hamburguer", 1290], ["brasileira", 1133], ["saudavel", 969], ["japonesa", 961], ["pizza", 845]]
+      narration:
+        - "Six cuisines, and the six counts add up to 6,000. This time no order was lost, because every order has a restaurant."
+        - "Look up, unwind, pile by a looked-up field, count."
+    note: "SQL-4's step 13 sentence (bike 2,038, carro 488, moto 3,075). The learner now sees the 5,601 in the answer it was first seen in. Differs from step 12 in the lookup, the piles and the match of the unwind. Hidden order: no tie."
+
+  # 14
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["lookup-stage", "lookup-gives-a-list", "unwind-stage", "match-stage", "join", "join-on"]
+    supplies: ["{$lookup: {from: \"orders\", localField: \"_id\", foreignField: \"coupon_code\", as: \"used\"}}"]
+    text: |-
+      So far every lookup began at `orders`. It can begin anywhere. Start at `coupons`, whose `_id` is the code that an order keeps in `coupon_code`. The lookup is `{$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}}`, written out because it is one to look up. Here it is for the coupon PIZZA20, with the list unwound and a limit so that only one order shows:
+
+      ```js
+      db.coupons.aggregate([
+        {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+        {$match: {_id: "PIZZA20"}},
+        {$unwind: "$used"},
+        {$limit: 1}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.coupons.aggregate([
+          {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+          {$match: {_id: "PIZZA20"}},
+          {$unwind: "$used"},
+          {$limit: 1}
+        ])
+    after_run: "One coupon document, with one order stuck onto it, in `used`. PIZZA20 was used by 321 orders, so before the unwind `used` was a list of 321 documents. This is what the list is for: from this side a lookup finds many, not one, and the list holds them all. The unwind made one document for each of them, and the limit kept the first."
+    note: "Shows the direction reversed, and the case where the list really holds many (321), so the reason given in step 3 is seen. No new thought: it is the same stage. Only one document is shown, so the output is short."
+
+  # 15
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "lookup-keeps-unmatched"]
+    supplies: ["{$lookup: {from: \"orders\", localField: \"_id\", foreignField: \"coupon_code\", as: \"used\"}}"]
+    text: "Start from `coupons`. Look up the orders of each coupon with `{$lookup: {from: \"orders\", localField: \"_id\", foreignField: \"coupon_code\", as: \"used\"}}`, unwind the `used` list, make piles by the coupon's `_id`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+    model: |-
+      db.coupons.aggregate([
+        {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+        {$unwind: "$used"},
+        {$group: {_id: "$_id", n: {$sum: 1}}}
+      ])
+    rows: 3
+    result: [["FRETEGRATIS", 932], ["BEMVINDO10", 631], ["PIZZA20", 321]]
+    narration:
+      - "Three coupons: FRETEGRATIS 932, BEMVINDO10 631 and PIZZA20 321. Those are the 1,884 orders again, now counted from the coupon's side."
+      - "A fourth coupon is missing from the answer. It had no orders, so its list was empty, and the unwind threw it away. Keep that in mind."
+      - ""
+    wrong:
+      - code: |-
+          db.coupons.aggregate([
+            {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+            {$group: {_id: "$_id", n: {$sum: 1}}}
+          ])
+        ask: "Each pile holds one coupon, so every count is 1. What turns the list of orders into one document per order?"
+      - code: |-
+          db.coupons.aggregate([
+            {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+            {$unwind: "$used"},
+            {$group: {_id: "$discount_pct", n: {$sum: 1}}}
+          ])
+        ask: "Those piles are named by the discount. I asked for the pile named by the coupon's _id."
+      - code: |-
+          db.coupons.aggregate([
+            {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+            {$unwind: "$used"},
+            {$group: {_id: "$used.status", n: {$sum: 1}}}
+          ])
+        ask: "Those piles are named by the status of the orders. Which field names the pile I asked for?"
+    walk:
+      - "From coupons, look up the orders of each coupon and take the list apart."
+      - "Make piles by the coupon's _id and count the orders in each."
+    return:
+      text: "Start from `restaurants`. Look up the orders of each restaurant with `{$lookup: {from: \"orders\", localField: \"_id\", foreignField: \"restaurant_id\", as: \"ordered\"}}`, unwind the `ordered` list, make piles by the restaurant's `cuisine`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+      model: |-
+        db.restaurants.aggregate([
+          {$lookup: {from: "orders", localField: "_id", foreignField: "restaurant_id", as: "ordered"}},
+          {$unwind: "$ordered"},
+          {$group: {_id: "$cuisine", n: {$sum: 1}}}
+        ])
+      rows: 6
+      result: [["arabe", 802], ["saudavel", 969], ["brasileira", 1133], ["hamburguer", 1290], ["japonesa", 961], ["pizza", 845]]
+      narration:
+        - "Six cuisines, and the counts add up to 6,000. Every restaurant has orders, so none of them dropped out."
+        - "The lookup began at restaurants this time, and the orders came out of a list."
+    note: "The first typed lookup from the other side, with a list of many (321, 631 and 932 orders). VOLTA15 is missing from the result, which is the setup for the closing sentence (steps 18 and 19), and is not announced beyond the narration."
+
+  # 16
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up", "dotted-name"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: "Keep the orders whose `delivery.rain` is true. Look up the restaurant of each with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`, unwind the `restaurant` list, make piles by the restaurant's `cuisine`, with `avg` the average `actual_minutes` of each pile, and show each pile's `_id` and `avg`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {"delivery.rain": true}},
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$actual_minutes"}}}
+      ])
+    rows: 6
+    result: [["japonesa", 45.920904], ["brasileira", 45.071782], ["arabe", 45.626623], ["saudavel", 45.035152], ["pizza", 44.751592], ["hamburguer", 47.733333]]
+    narration:
+      - "Six cuisines, each with the average minutes of its rainy deliveries. A question about a field inside a field, then a lookup, then piles by a looked-up field."
+      - "Keep the rainy orders, stick the restaurant on, pile by its cuisine, average the minutes."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$actual_minutes"}}}
+          ])
+        ask: "Those averages are of every order, rainy or not. Which stage keeps only the rainy ones?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {"delivery.rain": true}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$actual_minutes"}}}
+          ])
+        ask: "The pile names are in square brackets. What takes the restaurant's list apart?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {"delivery.rain": "true"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$actual_minutes"}}}
+          ])
+        ask: "Nothing came back. Is true, without quotes, a word or a value of its own?"
+    walk:
+      - "Keep the orders whose delivery.rain is true."
+      - "Look up the restaurant of each and take the list apart."
+      - "Make piles by the restaurant's cuisine and average the actual_minutes."
+    return:
+      text: "Keep the orders whose `delivery.rain` is false. Look up the restaurant of each with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`, unwind the `restaurant` list, make piles by the restaurant's `city`, with `avg` the average `actual_minutes` of each pile, and show each pile's `_id` and `avg`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {"delivery.rain": false}},
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.city", avg: {$avg: "$actual_minutes"}}}
+        ])
+      rows: 4
+      result: [["São Paulo", 37.741586], ["Belo Horizonte", 37.938889], ["Rio de Janeiro", 37.54124], ["Curitiba", 38.232845]]
+      narration:
+        - "Four cities, each with the average minutes of its dry deliveries."
+        - "Keep by a dotted name, look up, unwind, pile by the looked-up city, average."
+    note: "A dotted-name match (MG-2) in front of a lookup, piles by a looked-up field, and an average of a field that exists only on delivered orders. Only delivered orders carry a delivery document, so the rainy ones are all delivered and have actual_minutes."
+
+  # 17
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up", "match-after-group"]
+    supplies: ["{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}"]
+    friction: true
+    text: "This one I won't break down. Among the orders whose `status` is \"delivered\", show each courier city with `n`, the number of its orders, and `avg`, the average `actual_minutes` of those orders, but only the cities with more than 1000 orders. The city is on the courier, so look it up with `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+        {$unwind: "$courier"},
+        {$group: {_id: "$courier.city", n: {$sum: 1}, avg: {$avg: "$actual_minutes"}}},
+        {$match: {n: {$gt: 1000}}}
+      ])
+    rows: 2
+    result: [["São Paulo", 2538, 39.556304], ["Rio de Janeiro", 1347, 39.376095]]
+    narration:
+      - "Rio de Janeiro and São Paulo, each with its count and its average minutes. A real interview question, and you built it by thinking: keep, look up, unwind, pile, keep the piles."
+      - "Keep the delivered orders, stick the courier on, pile by its city with a count and an average, then keep the big piles: every part in the order it happens."
+      - "Two rows. The question about rows went first, and the question about piles went last, after the piles existed."
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+            {$unwind: "$courier"},
+            {$group: {_id: "$courier.city", n: {$sum: 1}, avg: {$avg: "$actual_minutes"}}}
+          ])
+        ask: "All four cities are here. Which stage keeps only the piles above 1000?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+            {$group: {_id: "$courier.city", n: {$sum: 1}, avg: {$avg: "$actual_minutes"}}},
+            {$match: {n: {$gt: 1000}}}
+          ])
+        ask: "The two piles that came back are named inside square brackets. What takes the courier's list apart?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+            {$unwind: "$courier"},
+            {$match: {n: {$gt: 1000}}},
+            {$group: {_id: "$courier.city", n: {$sum: 1}, avg: {$avg: "$actual_minutes"}}}
+          ])
+        ask: "Nothing came back. Does `n` exist yet when that match runs?"
+        why: "a question about a pile can only be asked after the piles are made."
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+            {$unwind: "$courier"},
+            {$group: {_id: "$courier.city", n: {$sum: 1}, avg: {$avg: "$actual_minutes"}}},
+            {$match: {n: {$gt: 1500}}}
+          ])
+        ask: "Only São Paulo is left. Is the line at 1000 or at 1500?"
+    walk:
+      - "Keep the delivered orders, look up the courier and take the list apart."
+      - "Make piles by the courier's city, with a count and the average actual_minutes."
+      - "Keep only the piles with a count above 1000."
+    return:
+      text: "Among the orders whose `status` is \"delivered\", show each restaurant cuisine with `n`, the number of its orders, and `avg`, the average `delivery_fee` of those orders, but only the cuisines with more than 1000 orders. The cuisine is on the restaurant, so look it up with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.cuisine", n: {$sum: 1}, avg: {$avg: "$delivery_fee"}}},
+          {$match: {n: {$gt: 1000}}}
+        ])
+      rows: 2
+      result: [["brasileira", 1053, 5.282089], ["hamburguer", 1206, 5.322438]]
+      narration:
+        - "Two cuisines have more than 1000 delivered orders, each with its count and its average fee."
+        - "Keep, look up, unwind, pile by a looked-up field, then keep the big piles."
+    note: "Friction: not broken down. Keep rows, look up, unwind, pile by a looked-up field, summaries, keep piles (MG-3's match after group). Delivered orders by courier city: BH 881, Curitiba 835, Rio 1,347, SP 2,538, so a line at 1000 leaves Rio and SP, and 1500 leaves SP only."
+
+  # 18
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: "Now the last two. First: among the orders whose `status` is \"delivered\", show each restaurant city with `avg`, the average `subtotal` of its orders. The city is on the restaurant, so look it up with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$group: {_id: "$restaurant.city", avg: {$avg: "$subtotal"}}}
+      ])
+    rows: 4
+    result: [["São Paulo", 60.249449], ["Belo Horizonte", 59.831036], ["Rio de Janeiro", 60.975496], ["Curitiba", 61.373966]]
+    narration:
+      - "Belo Horizonte 59.83, Curitiba 61.37, Rio de Janeiro 60.98 and São Paulo 60.25. The same four numbers that closed the SQL lesson on JOIN, to the last digit."
+      - "Keep the delivered orders, stick the restaurant on, take it out of its list, pile by its city, average the subtotal. That is a sentence from the SQL interview, said in another language."
+      - "The numbers did not change, and only the spelling did."
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.city", avg: {$avg: "$subtotal"}}}
+          ])
+        ask: "Those averages include the cancelled orders. Which stage drops them?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$group: {_id: "$restaurant.city", avg: {$avg: "$subtotal"}}}
+          ])
+        ask: "The pile names are in square brackets. What takes the restaurant's list apart?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.city", avg: {$sum: "$subtotal"}}}
+          ])
+        ask: "Those are totals, and I asked for averages. Which summary says the average?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$subtotal"}}}
+          ])
+        ask: "Those piles are cuisines. I asked for the city."
+    walk:
+      - "Keep the delivered orders, look up the restaurant and take its list apart."
+      - "Make piles by the restaurant's city and average the subtotal of each."
+    return:
+      text: "Among the orders whose `status` is \"delivered\", show each restaurant cuisine with `avg`, the average `delivery_fee` of its orders. The cuisine is on the restaurant, so look it up with `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.cuisine", avg: {$avg: "$delivery_fee"}}}
+        ])
+      rows: 6
+      result: [["arabe", 5.157099], ["brasileira", 5.282089], ["hamburguer", 5.322438], ["pizza", 5.213165], ["japonesa", 5.10964], ["saudavel", 5.067218]]
+      narration:
+        - "Six cuisines, each with the average fee of its delivered orders."
+        - "Keep, look up, unwind, pile by the looked-up cuisine, average."
+    note: "Closing sentence 1, from the map: the closing sentence of SQL-4, identical to the last digit (59.8310, 61.3740, 60.9755, 60.2494). The prompt states the question, not the stages. The values are compared to two places. The 25 orders with no subtotal are skipped by $avg as they were in SQL."
+
+  # 19
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "size-of-list", "lookup-keeps-unmatched"]
+    supplies: ["{$lookup: {from: \"orders\", localField: \"_id\", foreignField: \"coupon_code\", as: \"used\"}}"]
+    text: "Second: which coupons has nobody used? Start from `coupons`, look up the orders of each coupon with `{$lookup: {from: \"orders\", localField: \"_id\", foreignField: \"coupon_code\", as: \"used\"}}`, and keep the coupons whose `used` list has size 0. Show the coupon documents that are left, as they come."
+    model: |-
+      db.coupons.aggregate([
+        {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+        {$match: {used: {$size: 0}}}
+      ])
+    rows: 1
+    narration:
+      - "One coupon: VOLTA15, with a discount of 15, and an empty list of orders. Nobody used it."
+      - "That is the coupon the unwind threw away a few minutes ago. This time you wanted the empty list, so you kept it, and asked for it with a size of 0."
+      - "The same question in SQL was the rows with no match, and in Mongo it is the lists with nothing in them."
+    wrong:
+      - code: |-
+          db.coupons.aggregate([
+            {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+            {$unwind: "$used"},
+            {$group: {_id: "$_id", n: {$sum: 1}}}
+          ])
+        ask: "That is the coupons that were used, with their counts. Which stage keeps the ones with nothing in the list?"
+      - code: |-
+          db.coupons.aggregate([
+            {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}},
+            {$match: {used: {$size: 1}}}
+          ])
+        ask: "Nothing came back. What size is a list that holds nothing?"
+      - code: |-
+          db.coupons.aggregate([
+            {$lookup: {from: "orders", localField: "_id", foreignField: "coupon_code", as: "used"}}
+          ])
+        ask: "All four coupons are here. Which stage keeps only the ones with an empty list?"
+      - code: |-
+          db.coupons.aggregate([
+            {$match: {used: {$size: 0}}}
+          ])
+        ask: "Nothing came back. Is there a list called `used` before the lookup has put it on?"
+    walk:
+      - "From coupons, look up the orders of each coupon."
+      - "Keep the coupons whose used list has size 0."
+    return:
+      text: "Look up the coupon of each order with `{$lookup: {from: \"coupons\", localField: \"coupon_code\", foreignField: \"_id\", as: \"coupon\"}}`, and do not unwind it. Keep the documents whose `coupon` list has size 1, make piles by `status`, with `n` counting the orders in each pile, and show each pile's `_id` and `n`."
+      model: |-
+        db.orders.aggregate([
+          {$lookup: {from: "coupons", localField: "coupon_code", foreignField: "_id", as: "coupon"}},
+          {$match: {coupon: {$size: 1}}},
+          {$group: {_id: "$status", n: {$sum: 1}}}
+        ])
+      rows: 2
+      result: [["cancelled", 115], ["delivered", 1769]]
+      narration:
+        - "Delivered 1,769 and cancelled 115, the orders whose coupon was found. These add up to 1,884."
+        - "A size of 1 is the other side of a size of 0: a list with a coupon in it."
+    note: "Closing sentence 2, from the map (the sentence of SQL-8). DEVIATION: the map ends it with {$project: {discount_pct: 1}}, but no thought in MG-1 to MG-5 teaches $project as a stage (find has choose-fields; aggregate has no such stage), so it would be asked without the means to build it. The model stops after the match and the answer is the whole coupon document, VOLTA15 with 15 and an empty used list, the same coupon the map names. The prompt says 'as they come'."
+
+  # 20
+  - kind: "recap"
+    lang: "mongo"
+    data: "mongo"
+    text: |-
+      Stop there. Today you stuck one collection onto another with `$lookup`, took the list it brings apart with `$unwind`, made piles by a field that lives in the other collection, and saw what an empty list does when it meets an unwind. That is the SQL join again, in the order you think it, and it gave the same numbers.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 21
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "unwind-stage", "join", "join-on", "mongo-pile-by-looked-up", "dotted-name"]
+    supplies: ["{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}"]
+    text: "Among the orders whose `delivery.rain` is true, show each courier city with `avg`, the average `actual_minutes` of its orders. The city is on the courier, so look it up with `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {"delivery.rain": true}},
+        {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+        {$unwind: "$courier"},
+        {$group: {_id: "$courier.city", avg: {$avg: "$actual_minutes"}}}
+      ])
+    rows: 4
+    result: [["Rio de Janeiro", 45.875812], ["São Paulo", 45.31501], ["Belo Horizonte", 45.759236], ["Curitiba", 47.514085]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a dotted-name match, a lookup, an unwind and a pile by a looked-up field, on a combination never practised (the courier, with the rain, and an average). Never scored."

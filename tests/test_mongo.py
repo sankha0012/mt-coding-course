@@ -228,3 +228,17 @@ def test_a_program_that_is_killed_leaves_no_server_and_no_folder(tmp_path):
             break
         time.sleep(0.1)
     assert not Path(folder).exists()
+
+
+@needs_mongod
+@pytest.mark.parametrize("text", [
+    'db.orders.updateOne({_id: 1}, {status: "x"})',
+    'db.orders.find({_id: {$in: 5}})',
+    'db.orders.distinct(5)',
+    'db.orders.aggregate({$match: {}})',
+    'db.orders.find({}, 5)',
+    'db.orders.find().limit("a")',
+])
+def test_a_sentence_of_the_wrong_shape_is_an_error_not_a_crash(server, text):
+    r = run(server, text, scratch=True)
+    assert r.error and r.full == []

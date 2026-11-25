@@ -1,0 +1,934 @@
+lesson: mg-06
+title: "Top of each pile, dates, and changing things"
+strand: mongo
+stage: 2
+thoughts:
+  first-in-pile: "Sort first, then group: `$first` takes each pile's first document, so after a sort it is the newest, or the biggest. The sort stage comes before the piles are made."
+  mongo-top-n-per-pile: {text: "`{$topN: {n: 2, sortBy: {subtotal: -1}, output: \"$subtotal\"}}` keeps the best few of each pile, in one stage. This one you would look up.", grade: shape}
+  mongo-date-to-month: {text: "A date cut down to its month: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`. This one you would look up.", grade: shape}
+  comparison-in-a-stage: "Inside a stage, a comparison is written as a list of the two things: `{$gt: [\"$actual_minutes\", \"$promised_minutes\"]}` gives true or false for each document."
+  conditional-sum: "`{$cond: [question, 1, 0]}` gives 1 where the question is true and 0 where it is not, and `$sum` of that counts."
+  update-one: {text: "`updateOne({_id: 100001}, {$set: {status: \"cancelled\"}})` changes a field of one document and reports how many it found and changed. This one you would look up.", grade: shape}
+  upsert-index-explain: {text: "Names only: an `upsert` inserts when nothing matches, an index makes a question faster, and `explain` shows how a question was answered.", grade: name-only}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "mongo-pile-by-looked-up"]
+    supplies: ["{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}"]
+    text: "Show each courier `vehicle` with the number of delivered orders carried by couriers with that vehicle. An order's `courier_id` is the `_id` of its courier. The lookup is one to look up: `{$lookup: {from: \"couriers\", localField: \"courier_id\", foreignField: \"_id\", as: \"courier\"}}`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$lookup: {from: "couriers", localField: "courier_id", foreignField: "_id", as: "courier"}},
+        {$unwind: "$courier"},
+        {$group: {_id: "$courier.vehicle", n: {$sum: 1}}}
+      ])
+    rows: 3
+    result: [["bike", 2038], ["carro", 488], ["moto", 3075]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from MG-5: a lookup, an unwind and a pile named by a looked-up field, on couriers and not restaurants as in MG-5's closing sentence. The lookup is a shape thought, so the text carries its spelling and `supplies` lists it. Every delivered order has a courier (the 399 without one are the cancelled ones). Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["first-in-pile"]
+    text: |-
+      Now the questions interviewers love. The first: which order is the biggest of each restaurant? A pile collects its documents in the order they reach it, and `$first` is a summary, like `$sum`, that takes the first document to arrive. So the sort goes before the piles are made, with the biggest subtotal at the top, and the first of each pile is its biggest:
+
+      ```js
+      db.orders.aggregate([
+        {$sort: {subtotal: -1}},
+        {$group: {_id: "$restaurant_id", order: {$first: "$_id"}, subtotal: {$first: "$subtotal"}}}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$sort: {subtotal: -1}},
+          {$group: {_id: "$restaurant_id", order: {$first: "$_id"}, subtotal: {$first: "$subtotal"}}}
+        ])
+    after_run: "Sixty documents, one for each restaurant. Restaurant 33's biggest order is 102270, with a subtotal of 158.5. The sort stage had to come first, because stages happen in the order they are written, so the documents reached the piles already in order. SQL has this idea too, the first row of each pile, in the interview part of its course. If you have met it, this is the same thought in a new spelling. If you have not, nothing here needs it."
+    note: "`first-in-pile`. The reason is the one the learner already has: stages happen in the order written. `$first` is introduced as one more summary beside `$sum` (`group-summaries`). The SQL echo is said aloud and required nowhere. Restaurant 33 gives 102270 at 158.5, from a real run."
+
+  # 3
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "first-in-pile", "keep-before-piles"]
+    text: "Among the delivered orders, show each `restaurant_id` with the `_id` of its earliest order, the one with the smallest `created_at`."
+    thinking_order: "From orders, keep the delivered ones, sort them with the oldest first, make a pile for each restaurant, and from each pile take the first `_id`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$sort: {created_at: 1}},
+        {$group: {_id: "$restaurant_id", first: {$first: "$_id"}}}
+      ])
+    rows: 60
+    narration:
+      - "Sixty restaurants, each with its earliest delivered order. Keep, sort, pile, and `$first` takes the top of each pile."
+      - "Oldest first came from the sort, and the sort came before the piles because that is when it has to happen."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$restaurant_id", first: {$first: "$_id"}}}
+          ])
+        ask: "Which order reaches each pile first when nobody has put the orders in order?"
+        why: "a pile keeps its documents in the order they arrived, so without a sort `$first` takes whichever came first."
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$sort: {created_at: -1}},
+            {$group: {_id: "$restaurant_id", first: {$first: "$_id"}}}
+          ])
+        ask: "Look at the sort direction. Which end of the sort puts the oldest order at the top?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$restaurant_id", first: {$first: "$_id"}}},
+            {$sort: {created_at: 1}}
+          ])
+        ask: "The sort is there, but is it there before the piles are made, or after? Which stage decides what arrives first in a pile?"
+    walk:
+      - "From orders, keep only the delivered ones."
+      - "Sort them with the oldest first. A `1` puts the smallest first."
+      - "Now make a pile for each `restaurant_id`, and from each pile take the first `_id` with `$first`."
+    return:
+      text: "Among the delivered orders, show each `courier_id` with the `_id` of its latest order, the one with the largest `created_at`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$sort: {created_at: -1}},
+          {$group: {_id: "$courier_id", last: {$first: "$_id"}}}
+        ])
+      rows: 200
+      narration:
+        - "Two hundred couriers, each with the order they delivered last. Sort first, newest at the top, then `$first` of each pile."
+        - "Newest first this time, and a pile for each courier. The sort still came before the piles."
+      note: "Return for step 3. Other pile, other end of the sort. No courier has two orders at the same minute."
+    note: "First typed `$first`. The prompt says which end of the sort. The delivered orders all have a `courier_id`, so the courier return has no null pile. No restaurant has two orders at the same minute, so the answer is the same on every run."
+
+  # 4
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "first-in-pile"]
+    text: |-
+      Davi was asked: for each `customer_id`, show the `_id` of that customer's order with the biggest `subtotal`. He remembered `$first`, and he wrote this:
+
+      ```js
+      db.orders.aggregate([
+        {$group: {_id: "$customer_id", order: {$first: "$_id"}}}
+      ])
+      ```
+
+      It runs without a word of complaint, and 1,475 documents come back, one for each customer. Davi, is each of those orders the customer's biggest? ... He has no way to know, and neither do we. A pile keeps its documents in the order they arrived, nobody put them in order, so `$first` took whichever came first. It is `LIMIT` with no `ORDER BY` again: you get something, and nothing says which. What should he have written?
+    model: |-
+      db.orders.aggregate([
+        {$sort: {subtotal: -1}},
+        {$group: {_id: "$customer_id", order: {$first: "$_id"}}}
+      ])
+    rows: 1475
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$group: {_id: "$customer_id", order: {$first: "$_id"}}}
+        ])
+    narration:
+      - "1,475 documents again, and this time each order is the customer's biggest. One stage went in, in front of the piles."
+      - "The sort goes first, biggest subtotal at the top, and then each pile's first is its biggest."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$sort: {subtotal: 1}},
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}}}
+          ])
+        ask: "The sort is there now. Which end of it puts the biggest subtotal at the top?"
+      - code: |-
+          db.orders.aggregate([
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}}},
+            {$sort: {subtotal: -1}}
+          ])
+        ask: "The sort is there, but is it before the piles are made, or after them?"
+      - code: |-
+          db.orders.aggregate([
+            {$sort: {_id: -1}},
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}}}
+          ])
+        ask: "That puts the highest order number first. Is the highest order number the biggest order? Which field holds the size?"
+    walk:
+      - "Davi's group stage is right. What has to happen to the orders before they reach it, so that the biggest of each customer arrives first?"
+      - "Put a stage in front that sorts by `subtotal`, with the biggest first."
+    return:
+      text: "Show each `restaurant_id` with the `_id` of its order with the smallest `created_at`, among all the orders."
+      model: |-
+        db.orders.aggregate([
+          {$sort: {created_at: 1}},
+          {$group: {_id: "$restaurant_id", first: {$first: "$_id"}}}
+        ])
+      rows: 60
+      narration:
+        - "Sixty restaurants, each with its oldest order. Oldest first from the sort, then the first of each pile."
+        - "The sort goes in front of the piles, with the smallest time first."
+      note: "Return for step 4. No restaurant has two orders at the same minute."
+    note: "Davi makes the slip before the learner could (rule E6): the same trap as LIMIT without ORDER BY. The broken sentence runs without error, so it is shown (`shows`) and not marked `broken`. It gives for most customers an order that is not their biggest, but the teacher names no number, because without a sort the order a pile sees is not promised. No customer has two orders with the same top subtotal, and none has only orders without one, so the model is the same on every run."
+
+  # 5
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["mongo-top-n-per-pile"]
+    text: |-
+      `$first` takes one document from each pile. Often you want the best few. For that there is a summary that does the sorting and the taking inside the pile, so no sort stage is needed in front: `$topN`. It is one to look up. It is spelled `{$topN: {n: 2, sortBy: {subtotal: -1}, output: "$subtotal"}}`. The `n` is how many to keep, the `sortBy` is the sort, and the `output` is what to keep from each document. Here are the two biggest subtotals of each restaurant:
+
+      ```js
+      db.orders.aggregate([
+        {$group: {_id: "$restaurant_id", best: {$topN: {n: 2, sortBy: {subtotal: -1}, output: "$subtotal"}}}}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$group: {_id: "$restaurant_id", best: {$topN: {n: 2, sortBy: {subtotal: -1}, output: "$subtotal"}}}}
+        ])
+    after_run: "Sixty documents again, and each holds a list of two numbers. Restaurant 1 has 158.13 and 154.34. The sort and the taking happened inside each pile, which is why there is no sort stage. It is the same idea as the sort and `$first`, for the best few and not only the best one. The spelling is exactly as written, and it is one to look up."
+    note: "`mongo-top-n-per-pile`, shape grade: the spelling is supplied every time and the teacher says it is one to look up. Restaurant 1 gives 158.13 and 154.34, as in the map."
+
+  # 6
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "mongo-top-n-per-pile"]
+    supplies: ["{$topN: {n: 3, sortBy: {created_at: -1}, output: \"$created_at\"}}"]
+    text: "Among the delivered orders, show each `courier_id` with the `created_at` of its 3 latest orders. The summary is one to look up: `{$topN: {n: 3, sortBy: {created_at: -1}, output: \"$created_at\"}}`."
+    thinking_order: "From orders, keep the delivered ones, make a pile for each courier, and in each pile keep the 3 largest `created_at`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: "$courier_id", latest: {$topN: {n: 3, sortBy: {created_at: -1}, output: "$created_at"}}}}
+      ])
+    rows: 200
+    narration:
+      - "Two hundred couriers, each with a list of their last three delivery times. The sorting happened inside the pile."
+      - "Keep the delivered orders, a pile for each courier, and `$topN` keeps the three newest times of each."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$group: {_id: "$courier_id", latest: {$topN: {n: 3, sortBy: {created_at: -1}, output: "$created_at"}}}}
+          ])
+        ask: "You have 201 piles. One has no name at all. Which orders have no `courier_id`, and how do we leave them out?"
+        why: "the cancelled orders were never carried by anyone, so they have no courier, and they make a pile of their own."
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$courier_id", latest: {$topN: {n: 3, sortBy: {created_at: 1}, output: "$created_at"}}}}
+          ])
+        ask: "Which end of the sort puts the latest time first?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$courier_id", latest: {$topN: {n: 3, sortBy: {created_at: -1}, output: "$_id"}}}}
+          ])
+        ask: "Those are the order numbers. What did I ask you to show of each order?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$courier_id", latest: {$topN: {n: 2, sortBy: {created_at: -1}, output: "$created_at"}}}}
+          ])
+        ask: "How many times did I ask for in each pile?"
+    walk:
+      - "Keep only the delivered orders, and make a pile for each `courier_id`."
+      - "Beside the pile's name, add the summary with `n` as 3, sorted by `created_at` with the latest first, keeping `$created_at`."
+    return:
+      text: "Show each `restaurant_id` with the `created_at` of its 2 earliest orders, among all the orders. The summary is one to look up: `{$topN: {n: 2, sortBy: {created_at: 1}, output: \"$created_at\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$group: {_id: "$restaurant_id", earliest: {$topN: {n: 2, sortBy: {created_at: 1}, output: "$created_at"}}}}
+        ])
+      rows: 60
+      narration:
+        - "Sixty restaurants, each with its two oldest times. `n` is 2 and the sort puts the smallest first."
+        - "A list of two times in each pile, with no sort stage in front."
+      note: "Return for step 6. Other pile, other sort direction, no match."
+    note: "First typed `$topN`. The text carries the exact spelling and `supplies` lists it. Only times are shown, so a tie between two orders at the same minute could not change the answer (there is none)."
+
+  # 7
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    text: "Something to carry into the interview room, with nothing to memorise. The top few overall is easy: sort, then cut. The top few in each group is the one people slip on, in any language, because the sort has to happen before the piles, or inside them. You have written it two ways now, and in both the sort was there. If you ever leave it out, you will not get an error. You will get a plausible answer, as Davi did."
+    note: "Relief after two thoughts, and the real reason the question is asked in interviews. Offered as interesting, not as a rule."
+
+  # 8
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["mongo-date-to-month"]
+    text: |-
+      Now time. The field `created_at` holds a date and a time, so a pile named by it would be a pile for every minute. To pile by month, cut the date down to its month. This one you would look up. It is spelled `{$dateToString: {format: "%Y-%m", date: "$created_at"}}`: `%Y` is the year with four digits and `%m` is the month with two. It goes where a pile's name goes, in `_id`, because a pile's name can be worked out and not only copied from a field:
+
+      ```js
+      db.orders.aggregate([
+        {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}}}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}}}
+        ])
+    after_run: "Three piles: 2026-08 with 2,068 orders, 2026-09 with 1,946 and 2026-10 with 1,986. The name of each pile is text, with the year first and the month after it, and that is why the names sort in date order as text. SQL cut a date down to its month too, with its own spelling. If you have met that, this is the same thought again."
+    note: "`mongo-date-to-month`, shape grade. It also shows that a pile's name can be an expression, which the next give uses again for a comparison. The echo of SQL-9's month is said aloud, not required."
+
+  # 9
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "mongo-date-to-month"]
+    supplies: ["{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}"]
+    ordered: true
+    text: "Among the delivered orders, show each month of `created_at` with the average `subtotal` of that month's orders, the earliest month first. The month is one to look up: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`."
+    thinking_order: "From orders, keep the delivered ones, make a pile for each month of `created_at`, say the average `subtotal` of each, and sort the piles by their name, the smallest first."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, avg: {$avg: "$subtotal"}}},
+        {$sort: {_id: 1}}
+      ])
+    rows: 3
+    result: [["2026-08", 60.16], ["2026-09", 60.76], ["2026-10", 60.39]]
+    narration:
+      - "Three months, in date order, each with its average subtotal. The pile's name was worked out from the date."
+      - "Keep, pile by month, average, then sort the piles by their name. The text sorts in date order because the year comes first."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, avg: {$avg: "$subtotal"}}},
+            {$sort: {_id: -1}}
+          ])
+        ask: "Which month is at the top? Which direction puts the earliest first?"
+      - code: |-
+          db.orders.aggregate([
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, avg: {$avg: "$subtotal"}}},
+            {$sort: {_id: 1}}
+          ])
+        ask: "Those averages are of all the orders. Which orders did I ask about?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y", date: "$created_at"}}, avg: {$avg: "$subtotal"}}},
+            {$sort: {_id: 1}}
+          ])
+        ask: "How many piles came out? Which letters of the format say the month?"
+    walk:
+      - "Keep only the delivered orders."
+      - "Make a pile for each month of `created_at`, and say the average `subtotal` of each."
+      - "Sort the piles by their name, with the smallest first."
+    return:
+      text: "Among the cancelled orders, show each month of `created_at` with how many cancelled orders it had, the earliest month first. The month is one to look up: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "cancelled"}},
+          {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}}},
+          {$sort: {_id: 1}}
+        ])
+      ordered: true
+      rows: 3
+      result: [["2026-08", 139], ["2026-09", 133], ["2026-10", 127]]
+      narration:
+        - "139, 133 and 127 cancelled orders, month by month. A pile for each month, counted, in date order."
+        - "Keep the cancelled orders, pile by month, count, sort the piles by name."
+      note: "Return for step 9. Other match, other summary."
+    note: "First typed month. Months have no ties, so the answer is judged in order. The averages are 60.1586, 60.7580 and 60.3861, rounded to two places by the checker."
+
+  # 10
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "first-in-pile", "mongo-date-to-month"]
+    supplies: ["{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}"]
+    text: "Among the delivered orders, show each month of `created_at` with the `_id` of that month's order with the biggest `subtotal`. The month is one to look up: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`."
+    thinking_order: "From orders, keep the delivered ones, sort them with the biggest subtotal first, make a pile for each month, and from each pile take the first `_id`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$sort: {subtotal: -1}},
+        {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, biggest: {$first: "$_id"}}}
+      ])
+    rows: 3
+    result: [["2026-08", 105080], ["2026-09", 104550], ["2026-10", 101347]]
+    narration:
+      - "Three months, each with its biggest order: 105080, 104550 and 101347. The sort came first, then the piles by month, then `$first`."
+      - "The two thoughts met in one sentence: a pile named by a month, and the first of each pile after a sort."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, biggest: {$first: "$_id"}}}
+          ])
+        ask: "Which order reaches each pile first when nobody has sorted the orders?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$sort: {subtotal: 1}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, biggest: {$first: "$_id"}}}
+          ])
+        ask: "Which end of the sort puts the biggest subtotal at the top?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, biggest: {$first: "$_id"}}},
+            {$sort: {subtotal: -1}}
+          ])
+        ask: "Is your sort before the piles are made, or after them?"
+    walk:
+      - "Keep the delivered orders, and sort them with the biggest subtotal first."
+      - "Make a pile for each month of `created_at`, and from each pile take the first `_id`."
+    return:
+      text: "Among the delivered orders, show each month of `created_at` with the `_id` of that month's earliest order, the one with the smallest `created_at`. The month is one to look up: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$sort: {created_at: 1}},
+          {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, first: {$first: "$_id"}}}
+        ])
+      rows: 3
+      result: [["2026-08", 104843], ["2026-09", 103587], ["2026-10", 102002]]
+      narration:
+        - "The first delivered order of each month: 104843, 103587 and 102002. Oldest first, then the piles by month."
+        - "Sort in front, month as the pile's name, `$first` of each pile."
+      note: "Return for step 10. Other sort field and direction."
+    note: "Recombination: `first-in-pile` returns inside a pile named by a month. Both thoughts are used at once, so the load is high but nothing is new. No ties at the top of any month."
+
+  # 11
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["comparison-in-a-stage"]
+    text: |-
+      Here is another kind of name for a pile. In a question, a comparison puts the field on the left: `{subtotal: {$gt: 100}}`. Inside a stage there is no left, because both sides can be fields, so a comparison is a list of the two things: `{$gt: ["$actual_minutes", "$promised_minutes"]}`. It reads as: the first is greater than the second. For each document it works out true or false. Did the delivery take longer than promised? Used as the pile's name, there are two piles:
+
+      ```js
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: {$gt: ["$actual_minutes", "$promised_minutes"]}, n: {$sum: 1}}}
+      ])
+      ```
+
+      Run it.
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$group: {_id: {$gt: ["$actual_minutes", "$promised_minutes"]}, n: {$sum: 1}}}
+        ])
+    after_run: "Two piles. True: 2,386 delivered orders took longer than promised. False: 3,215 did not. A comparison inside a stage works out true or false for every document, and here true and false are the pile names. In a question the field names the left side, and here both sides are fields, so both go in a list."
+    note: "`comparison-in-a-stage`. The pile name is again an expression, as for the month. The reason for the list is real: there is no left side to put a field on."
+
+  # 12
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "comparison-in-a-stage", "operator-documents"]
+    ordered: true
+    text: "Among the delivered orders, make a pile for each answer, `true` or `false`, to the question: is `actual_minutes` below `promised_minutes`? Show each answer with the number of orders in its pile, the bigger pile first."
+    thinking_order: "From orders, keep the delivered ones, make a pile for each answer to the comparison, count each pile, and sort the piles with the biggest count first."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: {$lt: ["$actual_minutes", "$promised_minutes"]}, n: {$sum: 1}}},
+        {$sort: {n: -1}}
+      ])
+    rows: 2
+    result: [[true, 3188], [false, 2413]]
+    narration:
+      - "3,188 delivered orders took less time than promised, and 2,413 did not. The pile's name was the comparison itself."
+      - "Below is `$lt`, and the two fields went in a list, the one that should be smaller first."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$gt: ["$actual_minutes", "$promised_minutes"]}, n: {$sum: 1}}},
+            {$sort: {n: -1}}
+          ])
+        ask: "That asks whether it was above. Which sign says below?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$lt: ["$promised_minutes", "$actual_minutes"]}, n: {$sum: 1}}},
+            {$sort: {n: -1}}
+          ])
+        ask: "Read your list aloud: is the first one below the second? Which one should come first?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$lte: ["$actual_minutes", "$promised_minutes"]}, n: {$sum: 1}}},
+            {$sort: {n: -1}}
+          ])
+        ask: "Would an order that took exactly the promised time count as below? Which sign leaves that out?"
+    walk:
+      - "Keep only the delivered orders."
+      - "Make the piles with the comparison as the name: `$lt`, with the two fields in a list, the first one below the second."
+      - "Count each pile, and sort with the bigger pile first."
+    return:
+      text: "Among the delivered orders, make a pile for each answer, `true` or `false`, to the question: is `delivery_fee` above 5? Show each answer with the number of orders in its pile, the bigger pile first."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$group: {_id: {$gt: ["$delivery_fee", 5]}, n: {$sum: 1}}},
+          {$sort: {n: -1}}
+        ])
+      ordered: true
+      rows: 2
+      result: [[false, 2840], [true, 2761]]
+      narration:
+        - "2,840 orders had a fee of 5 or less and 2,761 had more. A field and a number in the list, instead of two fields."
+        - "The comparison is a list of the two things, whatever they are, and it works out true or false for each order."
+      note: "Return for step 12. A field and a number instead of two fields."
+    note: "First typed comparison. A `$sort` stage is added so that it differs from Ana's sentence in step 13 in more than the group stage. 3,188 and 2,413 do not tie."
+
+  # 13
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    new: ["conditional-sum"]
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "comparison-in-a-stage", "conditional-sum"]
+    text: |-
+      Ana was asked: for each `promised_minutes`, how many delivered orders were late, meaning `actual_minutes` above `promised_minutes`? She had just seen that a comparison gives true or false, and she thought: add them up. She wrote:
+
+      ```js
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: "$promised_minutes", late: {$sum: {$gt: ["$actual_minutes", "$promised_minutes"]}}}}
+      ])
+      ```
+
+      Every pile says 0, and there is no error. Ana, is `true` a number? ... No. `$sum` adds numbers and skips everything else, so it skipped all of them. What she needs is a 1 for each late order and a 0 for each of the others, because 1s add up to a count. That is `$cond`: an if, written as a list of three things. The question, what to give when it is true, and what to give when it is not: `{$cond: [question, 1, 0]}`. The question is the comparison. SQL called this the conditional count, if you have met it. What should she have written?
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: "$promised_minutes", late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+      ])
+    rows: 3
+    result: [[30, 788], [40, 804], [50, 794]]
+    shows:
+      - |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$group: {_id: "$promised_minutes", late: {$sum: {$gt: ["$actual_minutes", "$promised_minutes"]}}}}
+        ])
+    narration:
+      - "788, 804 and 794 late orders, one for each promised time. A 1 for each late order, a 0 for each of the others, and the sum counts the 1s."
+      - "The comparison went inside `$cond` as the question, with 1 for true and 0 for false."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$promised_minutes", late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 0, 1]}}}}
+          ])
+        ask: "Which number is given when the question is true, the first or the second? Which orders did you give the 1 to?"
+        why: "the first value is what the `$cond` gives when the question is true, the second when it is not."
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$promised_minutes", late: {$sum: {$cond: [{$lt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+          ])
+        ask: "That counts the orders that were early. Which sign says late?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$promised_minutes", late: {$sum: {$gt: ["$actual_minutes", "$promised_minutes"]}}}}
+          ])
+        ask: "Is `true` a number? What does `$sum` do with something that is not a number?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$promised_minutes", late: {$sum: 1}}}
+          ])
+        ask: "That counts every order in the pile. Where does the question about late go?"
+    walk:
+      - "Keep the delivered orders, and make a pile for each `promised_minutes`, as Ana did."
+      - "For `late`, sum a `$cond` whose question is the comparison, giving 1 when true and 0 when not."
+    return:
+      text: "Among the delivered orders, show each `delivery.bag_size` with how many orders were late, meaning `actual_minutes` above `promised_minutes`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$group: {_id: "$delivery.bag_size", late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+        ])
+      rows: 3
+      result: [[1, 1246], [2, 923], [3, 217]]
+      narration:
+        - "1,246 late orders with a bag of size 1, 923 with size 2 and 217 with size 3. The same count of the late ones, in other piles."
+        - "A 1 for each late order and a 0 for the others, summed in each pile."
+      note: "Return for step 13. Other pile, a dotted name."
+    note: "Ana makes the slip before the learner could: `$sum` of true and false gives 0, quietly, because `$sum` skips what is not a number (this was run: 0 for all three piles). `$cond` is an if with a real reason, and the order of its two values is said in the same breath (first for true, second for false). The echo of SQL-9's conditional count is said aloud, not required."
+
+  # 14
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "comparison-in-a-stage", "conditional-sum", "dotted-name"]
+    ordered: true
+    text: "Among the delivered orders, show each value of `delivery.rain` with how many orders have it and how many of them were late, meaning `actual_minutes` above `promised_minutes`, the pile with more late orders first."
+    thinking_order: "From orders, keep the delivered ones, make a pile for each value of `delivery.rain`, count each pile and count the late ones in it, and sort with the most late orders first."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: "$delivery.rain", n: {$sum: 1}, late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+        {$sort: {late: -1}}
+      ])
+    rows: 2
+    result: [[false, 4512, 1691], [true, 1089, 695]]
+    narration:
+      - "In the dry, 1,691 of 4,512 orders were late, about 37 in a hundred. In the rain, 695 of 1,089, about 64 in a hundred."
+      - "Two summaries in one pile: the count of the orders, and the count of the late ones, a 1 or a 0 for each."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "delivery.rain", n: {$sum: 1}, late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+            {$sort: {late: -1}}
+          ])
+        ask: "How many piles came out, and what is the name of the pile? What does the name need in front of it to mean the value of a field?"
+        why: "a name in quotes without the dollar sign is only the word, so every order falls into one pile with that word as its name."
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$delivery.rain", n: {$sum: 1}, late: {$sum: {$gt: ["$actual_minutes", "$promised_minutes"]}}}},
+            {$sort: {late: -1}}
+          ])
+        ask: "Is `true` a number? What does `$sum` do with it?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: "$delivery.rain", n: {$sum: 1}, late: {$sum: {$cond: [{$lt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+            {$sort: {late: -1}}
+          ])
+        ask: "That counts the early ones. Which sign says late?"
+    walk:
+      - "Keep the delivered orders, and make a pile for each value of `delivery.rain`. The dotted name wears quotes and a dollar sign."
+      - "Say `n`, a count of the orders, and `late`, a sum of a `$cond` that gives 1 for a late order and 0 for the others."
+      - "Sort with the pile with more late orders first."
+    return:
+      text: "Among the delivered orders, show each `promised_minutes` value with how many orders have it and how many of them were early, meaning `actual_minutes` below `promised_minutes`, the pile with more early orders first."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$group: {_id: "$promised_minutes", n: {$sum: 1}, early: {$sum: {$cond: [{$lt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+          {$sort: {early: -1}}
+        ])
+      ordered: true
+      rows: 3
+      result: [[30, 1902, 1102], [40, 1863, 1053], [50, 1836, 1033]]
+      narration:
+        - "1,102 early orders among the 30-minute promises, 1,053 among the 40s and 1,033 among the 50s."
+        - "A count and a conditional count in each pile, with the comparison the other way round."
+      note: "Return for step 14. Other pile, the other comparison, so a different result."
+    note: "Two summaries in a pile, one of them the conditional sum. The delivered orders in the rain are late far more often (695 of 1,089 against 1,691 of 4,512), which is a real finding in this data. A sort stage is added so that the step differs from step 13 in more than the group stage. 1,691 and 695 do not tie."
+
+  # 15
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "lookup-stage", "lookup-gives-a-list", "mongo-pile-by-looked-up", "comparison-in-a-stage", "conditional-sum"]
+    supplies: ["{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}"]
+    text: "Among the delivered orders, show each restaurant `cuisine` with how many of its orders were late, meaning `actual_minutes` above `promised_minutes`. The cuisine lives in the restaurants collection, so you need the lookup, which is one to look up: `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+    thinking_order: "From orders, keep the delivered ones, look up each order's restaurant, unwind it, make a pile for each restaurant cuisine, and count the late orders in each pile."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+        {$unwind: "$restaurant"},
+        {$group: {_id: "$restaurant.cuisine", late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+      ])
+    rows: 6
+    result: [["japonesa", 392], ["pizza", 332], ["hamburguer", 519], ["brasileira", 430], ["arabe", 326], ["saudavel", 387]]
+    narration:
+      - "Six cuisines, hamburguer with the most late orders at 519. Last time's lookup and today's conditional count in one pipeline."
+      - "Keep, look up, unwind the list that the lookup always sticks on, pile by the looked-up field, count the late ones."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$group: {_id: "$restaurant.cuisine", late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+          ])
+        ask: "Look at the pile names. What does a lookup always stick onto each order, a document or a list? What stage turns it into one?"
+        why: "the lookup puts a list on every order, so without an unwind the pile's name is a list."
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.cuisine", late: {$sum: 1}}}
+          ])
+        ask: "That counts every order of the cuisine. Where does the question about late go?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+            {$unwind: "$restaurant"},
+            {$group: {_id: "$restaurant.cuisine", late: {$sum: {$cond: [{$lt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+          ])
+        ask: "That counts the early ones. Which sign says late?"
+    walk:
+      - "Keep the delivered orders, look up the restaurant of each, and unwind it."
+      - "Make a pile for each `restaurant.cuisine`, and sum a `$cond` that gives 1 for a late order and 0 for the others."
+    return:
+      text: "Among the delivered orders, show each restaurant `city` with how many of its orders were late, meaning `actual_minutes` above `promised_minutes`. The lookup is one to look up: `{$lookup: {from: \"restaurants\", localField: \"restaurant_id\", foreignField: \"_id\", as: \"restaurant\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$lookup: {from: "restaurants", localField: "restaurant_id", foreignField: "_id", as: "restaurant"}},
+          {$unwind: "$restaurant"},
+          {$group: {_id: "$restaurant.city", late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+        ])
+      rows: 4
+      result: [["Curitiba", 262], ["São Paulo", 1009], ["Belo Horizonte", 586], ["Rio de Janeiro", 529]]
+      narration:
+        - "São Paulo has the most late orders at 1,009, and it has the most restaurants too."
+        - "Look up, unwind, pile by the looked-up city, count the late ones."
+      note: "Return for step 15. Other looked-up field."
+    note: "A long recombination of MG-5 and this lesson: five stages, no new thought. The lookup is a shape thought, so its spelling is supplied. A cancelled order has no `actual_minutes`, and a comparison with an absent field gives false, so leaving out the `$match` would give the same numbers, which is why no such answer is listed as a mistake. Not marked as friction: it has a walk."
+
+  # 16
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["update-one"]
+    scratch: true
+    text: |-
+      Everything so far only read the data. Now one sentence that changes it. Suppose order 100001 turned out to be cancelled. `updateOne` takes two documents. The first says which document to change, and it is a question as in `find`: `{_id: 100001}`. The second says the change: `{$set: {status: "cancelled"}}`, where `$set` names the field and the value to put in it. It changes one document, the first that answers the question. This one you would look up. The whole sentence is:
+
+      ```js
+      db.orders.updateOne({_id: 100001}, {$set: {status: "cancelled"}})
+      ```
+
+      It runs on a private copy of the data, made for this one sentence and thrown away after it, so the course data stays as it is. Run it.
+    shows:
+      - "db.orders.updateOne({_id: 100001}, {$set: {status: \"cancelled\"}})"
+    after_run: "Four things come back. True, which means the server accepted it. Then 1: one document answered the question. Then 1: one document was changed. Then 0: none were created. So the order was found, and its `status`, which was \"delivered\", is now \"cancelled\". The change was made on the copy only. Each sentence gets its own copy, so a question you type next sees the original data again."
+    note: "`update-one`, shape grade. It is the only step that changes anything, and it runs on a scratch copy. Each sentence gets its OWN copy, so a later `find` cannot see the change: the answer is judged by what `updateOne` reports, and the teacher says in words what the change did. Run on a real `mongod`: reports true, 1, 1, 0. Order 100001 is delivered in the data."
+
+  # 17
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["update-one", "question-is-a-document"]
+    supplies: ["updateOne({_id: 100001}, {$set: {status: \"cancelled\"}})"]
+    scratch: true
+    text: "The delivery fee of order 100002 was waived. Set the `delivery_fee` of the order with `_id` 100002 to 0. The spelling is the one from before, one to look up: `updateOne({_id: 100001}, {$set: {status: \"cancelled\"}})`. Change what has to change."
+    thinking_order: "From orders, find the document with `_id` 100002, and set its `delivery_fee` to 0."
+    model: "db.orders.updateOne({_id: 100002}, {$set: {delivery_fee: 0}})"
+    rows: 1
+    result: [[true, 1, 1, 0]]
+    narration:
+      - "True, 1, 1, 0: one order found and one changed. Its delivery fee is 0 on the copy, and the course data is untouched."
+      - "The question said which order, the `$set` said which field and what value. One found, one changed."
+      - ""
+    wrong:
+      - code: "db.orders.updateOne({_id: 2}, {$set: {delivery_fee: 0}})"
+        ask: "It reports 0 found. Which `_id` did I give you?"
+        why: "when the question finds nothing, nothing is changed, and the report says so with a 0 in the first place."
+      - code: "db.orders.updateOne({_id: 100002}, {$set: {delivery_fee: 4.99}})"
+        ask: "It found the order and changed nothing. What was its fee before, and what did you set it to?"
+        why: "setting a field to the value it already has changes nothing, and the report says 0 changed."
+      - code: "db.orders.updateOne({_id: 1000002}, {$set: {delivery_fee: 0}})"
+        ask: "It reports 0 found again. Count the digits of the `_id` in my prompt and in your sentence."
+    walk:
+      - "Say which order to change: a question document with `_id` 100002."
+      - "Say the change: `$set`, the field `delivery_fee`, and the value 0."
+    return:
+      scratch: true
+      text: "Order 100003 is cancelled in the data already. Set the `status` of the order with `_id` 100003 to \"cancelled\", and read what the report says."
+      model: "db.orders.updateOne({_id: 100003}, {$set: {status: \"cancelled\"}})"
+      rows: 1
+      result: [[true, 1, 0, 0]]
+      narration:
+        - "True, 1, 0, 0: one order found and none changed. It was cancelled already, so there was nothing to change."
+        - "Found and changed are two different numbers. The order was found, and the `$set` had nothing left to do."
+      note: "Return for step 17. The result must differ from the step's, and it does: found 1, changed 0, because order 100003 is cancelled already."
+    note: "First typed `updateOne`. The text carries the exact spelling and `supplies` lists it, and the learner changes the order, the field and the value. Judged by the report: true, 1, 1, 0 (order 100002 has a fee of 4.99). The wrong answers cover an order that is not there (two ways) and a value that is already in place. A sentence with no `$set` operator is not offered as a mistake: the runner raises an uncaught error on it (see the report)."
+
+  # 18
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    new: ["upsert-index-explain"]
+    text: "Three names, to have heard them, and nothing to keep. The first is `upsert`. An update that finds nothing does nothing, as you saw. With `upsert` it creates the document instead: update it, or insert it if it is not there. The second is an index: a sorted list that MongoDB keeps beside a collection, so that a question about that field does not have to read all 6,000 orders. It makes a question faster and never changes its answer. The third is `explain`, which shows how MongoDB answered a question, whether it read everything or used an index. Interviewers like to ask what an index is, and when `explain` helps. That is all they are for today."
+    note: "`upsert-index-explain`, name only: one aside, nothing asked, nothing required later. It is here because these three names are asked in interviews."
+
+  # 19
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "first-in-pile"]
+    text: "Show each customer's latest order: for each `customer_id`, show the `_id` of its order with the largest `created_at`, and that `created_at`."
+    thinking_order: "From orders, sort them with the latest first, make a pile for each customer, and from each pile take the first `_id` and the first `created_at`."
+    model: |-
+      db.orders.aggregate([
+        {$sort: {created_at: -1}},
+        {$group: {_id: "$customer_id", order: {$first: "$_id"}, at: {$first: "$created_at"}}}
+      ])
+    rows: 1475
+    narration:
+      - "1,475 documents, one for each customer, each with its latest order and the time. The sort went in front of the piles, and `$first` was said twice, once for each thing shown."
+      - "Latest first from the sort, then the first of each pile. Customer 1's latest order is 100766, on 24 October at 17:41."
+      - ""
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}, at: {$first: "$created_at"}}}
+          ])
+        ask: "Which order reaches each pile first when nobody has sorted? Is it the latest?"
+      - code: |-
+          db.orders.aggregate([
+            {$sort: {created_at: 1}},
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}, at: {$first: "$created_at"}}}
+          ])
+        ask: "Which end of the sort puts the latest time at the top?"
+      - code: |-
+          db.orders.aggregate([
+            {$sort: {_id: -1}},
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}, at: {$first: "$created_at"}}}
+          ])
+        ask: "Is the order with the highest `_id` the latest one here? Which field holds the time?"
+        why: "in this data the order numbers do not follow the clock, so only `created_at` says which is latest."
+      - code: |-
+          db.orders.aggregate([
+            {$group: {_id: "$customer_id", order: {$first: "$_id"}, at: {$first: "$created_at"}}},
+            {$sort: {created_at: -1}}
+          ])
+        ask: "Is your sort before the piles are made, or after them?"
+    walk:
+      - "Sort the orders with the latest `created_at` first."
+      - "Make a pile for each `customer_id`, and from each pile take the first `_id` and the first `created_at`."
+    return:
+      text: "Show each restaurant's latest order: for each `restaurant_id`, show the `_id` of its order with the largest `created_at`, and that `created_at`."
+      model: |-
+        db.orders.aggregate([
+          {$sort: {created_at: -1}},
+          {$group: {_id: "$restaurant_id", order: {$first: "$_id"}, at: {$first: "$created_at"}}}
+        ])
+      rows: 60
+      narration:
+        - "Sixty restaurants, each with its latest order and the time. Newest first, then the first of each pile, twice."
+        - "The same sentence as for the customers, with the restaurants as the piles."
+      note: "Return for step 19. Other pile."
+    note: "Closing sentence 1, the sentence of SQL-7 (map: each customer's latest order). 1,475 documents, judged as a set: no customer has two orders at the same minute. Customer 1: 100766 at 2026-10-24 17:41, from a real run. Not an edit of Davi's sentence in one slot: it has two summaries."
+
+  # 20
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "sort-spelling", "mongo-date-to-month", "comparison-in-a-stage", "conditional-sum"]
+    supplies: ["{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}"]
+    friction: true
+    ordered: true
+    text: "The last one, and I won't break it down. Among the delivered orders, show each month of `created_at` with how many orders it has and how many of them were late, meaning `actual_minutes` above `promised_minutes`, the earliest month first. The month is one to look up: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}, late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+        {$sort: {_id: 1}}
+      ])
+    rows: 3
+    result: [["2026-08", 1929, 802], ["2026-09", 1813, 776], ["2026-10", 1859, 808]]
+    narration:
+      - "That is a real interview question, and you built it by thinking. 802 of 1,929 in August, 776 of 1,813 in September, 808 of 1,859 in October."
+      - "Keep the delivered orders, pile by month, count each pile and its late orders, sort the piles by name. Every stage in the order it happens."
+      - "Three months, each with a count and a count of the late ones. The month, the comparison and the conditional sum came from three different steps."
+    wrong:
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}, late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+            {$sort: {_id: -1}}
+          ])
+        ask: "Which month is at the top? Which direction puts the earliest month first?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}, late: {$sum: {$gt: ["$actual_minutes", "$promised_minutes"]}}}},
+            {$sort: {_id: 1}}
+          ])
+        ask: "Is `true` a number? What does `$sum` do with it?"
+      - code: |-
+          db.orders.aggregate([
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}, late: {$sum: {$cond: [{$gt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+            {$sort: {_id: 1}}
+          ])
+        ask: "Those counts include the cancelled orders. Where do we leave them out?"
+      - code: |-
+          db.orders.aggregate([
+            {$match: {status: "delivered"}},
+            {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}, late: {$sum: {$cond: [{$lt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+            {$sort: {_id: 1}}
+          ])
+        ask: "That counts the early ones. Which sign says late?"
+    walk:
+      - "Keep the delivered orders, and make a pile for each month of `created_at`."
+      - "Say `n`, a count of the orders, and `late`, a sum of a `$cond` with the comparison as its question."
+      - "Sort the piles by their name, the smallest first."
+    return:
+      text: "Among the delivered orders, show each month of `created_at` with how many orders it has and how many of them were early, meaning `actual_minutes` below `promised_minutes`, the earliest month first. The month is one to look up: `{$dateToString: {format: \"%Y-%m\", date: \"$created_at\"}}`."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "delivered"}},
+          {$group: {_id: {$dateToString: {format: "%Y-%m", date: "$created_at"}}, n: {$sum: 1}, early: {$sum: {$cond: [{$lt: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}},
+          {$sort: {_id: 1}}
+        ])
+      ordered: true
+      rows: 3
+      result: [["2026-08", 1929, 1117], ["2026-09", 1813, 1029], ["2026-10", 1859, 1042]]
+      narration:
+        - "1,117 early orders in August, 1,029 in September and 1,042 in October. The comparison the other way round."
+        - "Piles by month, a count, and a conditional count, in date order."
+      note: "Return for step 20. Not broken down, like the step."
+    note: "Closing sentence 2 (map): the delivered orders per month and how many were late. 2026-08: 1,929 and 802. 2026-09: 1,813 and 776. 2026-10: 1,859 and 808, all from a real run. Months have no ties. Friction: not broken down."
+
+  # 21
+  - kind: "recap"
+    lang: "mongo"
+    data: "mongo"
+    text: |-
+      Stop there. Today you wrote the questions interviewers love: the top of each pile, a month cut out of a date, a count of the late ones, and one sentence that changes a document, on a copy. Each was a pipeline you could already read, with one new word in it. You are still not fast, and you are not meant to be. This is acquisition, not speed.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "comparison-in-a-stage", "conditional-sum"]
+    text: "Among the delivered orders, show each `promised_minutes` value with how many of its orders were on time, meaning `actual_minutes` at most `promised_minutes`."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: "$promised_minutes", ontime: {$sum: {$cond: [{$lte: ["$actual_minutes", "$promised_minutes"]}, 1, 0]}}}}
+      ])
+    rows: 3
+    result: [[30, 1114], [40, 1059], [50, 1042]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a comparison and a conditional sum, with the sign that includes equality, on a combination not practised in the lesson. Never scored."

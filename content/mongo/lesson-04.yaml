@@ -1,0 +1,687 @@
+lesson: mg-04
+title: "Lists inside documents"
+strand: mongo
+stage: 2
+thoughts:
+  list-inside-document: "A value can be a list. An order holds its dishes as `items`, a list with one document for each dish: `items: [{name, qty, price}, ...]`."
+  dotted-through-list: "A dotted name reaches through a list. `{\"items.name\": \"Margherita\"}` keeps the orders in which any dish has that name."
+  size-of-list: "`{items: {$size: 3}}` keeps the orders whose list has exactly three dishes."
+  elem-match: "`$elemMatch` asks a list one dish at a time, so that all its questions are about the same dish. Two dotted names may be answered by two different dishes."
+  unwind-stage: "`{$unwind: \"$items\"}` makes one document of each dish, the rest of the order copied beside it. A list comes out as rows."
+  group-after-unwind: "After an unwind a pile counts dishes, not orders. The dish's name is `\"$items.name\"`."
+  computed-value: {text: "A value can be worked out from fields and used where a field stood: `{$multiply: [\"$items.qty\", \"$items.price\"]}` is a dish's quantity times its price.", grade: shape}
+steps:
+  # 1
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "group-pile-name", "field-value", "group-summaries", "match-after-group"]
+    text: "Using aggregate on orders, keep the orders whose status is \"delivered\", make a pile per promised_minutes, give each pile avg, the average of actual_minutes, and then keep only the piles whose avg is above 35. Show each pile's _id and avg."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$group: {_id: "$promised_minutes", avg: {$avg: "$actual_minutes"}}},
+        {$match: {avg: {$gt: 35}}}
+      ])
+    rows: 2
+    result: [[40, 39.61], [50, 49.44]]
+    after_run: "That is where we stopped last time. On we go."
+    note: "Opening cold check from MG-3: match, group with an average, then a match after the group (HAVING). It is the same question as the return of SQL-3 step 16, 39.61 and 49.44. Never scored."
+
+  # 2
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["list-inside-document"]
+    text: |-
+      Today the documents get a new shape. Last time you opened a document inside a document: the delivery sat inside the order. Now a value can be a list, in square brackets. Each order holds the dishes it was made of, in a list called items, with one small document for each dish: its name, how many were ordered (qty) and the price of one. Look at order 100002:
+
+      ```js
+      db.orders.find({_id: 100002}, {items: 1})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.find({_id: 100002}, {items: 1})"
+    after_run: "Two dishes: two Pastel at 10.0 each, and one Feijoada at 51.12. The list sits inside the order, in square brackets, with a document for each dish. If the dishes were rows of a second table, you would tie them to their order with a JOIN. Here they live inside the order they belong to. Twenty-five orders have no list at all, because they have no subtotal either."
+    note: "The new shape of the document. The list is shown, not explained, then named. The 25 orders without items are mentioned once, here, so that the unwind step can say they vanish (5,975 orders hold a list)."
+
+  # 3
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "choose-fields", "id-comes-unless-off", "list-inside-document"]
+    text: "Show the items of the order in orders whose _id is 100003, and nothing else, not even its _id."
+    model: "db.orders.find({_id: 100003}, {items: 1, _id: 0})"
+    rows: 1
+    narration:
+      - "One document, and its only field is the list: three dishes, Esfiha, Homus and Shawarma."
+      - "The question named the order by its _id, the second document chose items, and _id: 0 kept the id out, as always."
+      - ""
+    wrong:
+      - code: "db.orders.find({_id: 100003}, {items: 1})"
+        ask: "The list is there, but something else came along that you did not ask for. What comes along unless it is turned off?"
+      - code: "db.orders.find({_id: 100003})"
+        ask: "That is the whole order. Which second document chooses the fields to show?"
+      - code: "db.orders.find({_id: 100003}, {_id: 0})"
+        ask: "That turns the _id off but shows everything else. Which field did I ask for?"
+      - code: "db.orders.find({items: 1}, {_id: 0})"
+        ask: "Which document is the question, and which chooses the fields? Which of them names the order?"
+    walk:
+      - "Find the order whose _id is 100003."
+      - "Show only its items, and turn the _id off."
+    return:
+      text: "Show the items of the order in orders whose _id is 100008, and nothing else, not even its _id."
+      model: "db.orders.find({_id: 100008}, {items: 1, _id: 0})"
+      rows: 1
+      narration:
+        - "The three dishes of order 100008, in one list, in one document."
+        - "The order by its _id, the list chosen, the _id turned off."
+      note: "Return for step 3. Another order, same thoughts."
+    note: "First typed use of a list as a value: only reading it. The model answer differs from step 1 in method and every argument."
+
+  # 4
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["dotted-through-list"]
+    text: |-
+      The owner of a pizza place asks: in how many orders did somebody have a Margherita? The dish names live inside the list, one in each dish. You know the dot already: "delivery.rain" went into a document. The same dot goes through a list. "items.name" reaches the name of every dish in the order, and the order stays if any one of its dishes has that name:
+
+      ```js
+      db.orders.countDocuments({"items.name": "Margherita"})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.countDocuments({\"items.name\": \"Margherita\"})"
+    after_run: "314 orders have a Margherita among their dishes. It is a question like any other: a name, a colon, the value it must have, and the dotted name wears quotes, as before. One dish saying yes is enough, so an order with a Margherita and a Calabresa stays. This is the WHERE of SQL, with a list in the way."
+    note: "The dot of MG-2 reaches through a list. No new spelling at all, only a new reach. 'Any dish' is the meaning, said once, because step 9 depends on it."
+
+  # 5
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-documents", "question-is-a-document", "two-names-both-hold", "dotted-name", "dotted-through-list", "list-inside-document", "text-is-exact"]
+    text: "How many orders have status \"delivered\" and have a dish in items whose name is \"Milkshake\"? Count them."
+    model: "db.orders.countDocuments({status: \"delivered\", \"items.name\": \"Milkshake\"})"
+    rows: 1
+    result: [[531]]
+    narration:
+      - "531. One question about a word, one about a name inside the list, joined by the comma."
+      - "From orders, keep the delivered ones with a Milkshake among their dishes, count them: 531."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({\"items.name\": \"Milkshake\"})"
+        ask: "That counts the cancelled orders too. Where is the other question?"
+      - code: "db.orders.countDocuments({status: \"delivered\", items: \"Milkshake\"})"
+        ask: "The list holds dishes, which are documents, and none of them is the bare word. Which name reaches the name inside each dish?"
+      - code: "db.orders.countDocuments({status: \"delivered\", \"items.name\": \"milkshake\"})"
+        ask: "Is the dish written in your sentence exactly as the prompt writes it, letter for letter?"
+        why: "text inside quotes is data, matched letter for letter, as in SQL."
+      - code: "db.orders.find({status: \"delivered\", \"items.name\": \"Milkshake\"})"
+        ask: "That shows the orders. I asked how many. What counts documents?"
+    walk:
+      - "Count the orders whose status is \"delivered\"."
+      - "Add the second question, with the dotted name that reaches the name of each dish."
+    return:
+      text: "How many orders have status \"cancelled\" and have a dish in items whose name is \"Moqueca\"? Count them."
+      model: "db.orders.countDocuments({status: \"cancelled\", \"items.name\": \"Moqueca\"})"
+      rows: 1
+      result: [[39]]
+      narration:
+        - "39 cancelled orders with a Moqueca in them."
+        - "One word about the order, one dotted name through the list, joined by the comma."
+      note: "Return for step 5."
+    note: "Dotted through the list, with a second name, as in MG-1. Exactly one dotted name on items, so that no two questions can be answered by two dishes yet (that is step 9)."
+
+  # 6
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["size-of-list"]
+    text: |-
+      Another thing you can ask of a list is how long it is. How many orders were made of exactly three dishes? The question goes to items itself, not to a name inside it, and it uses a dollar word, as $gt did:
+
+      ```js
+      db.orders.countDocuments({items: {$size: 3}})
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.countDocuments({items: {$size: 3}})"
+    after_run: "1,160 orders have exactly three dishes. $size asks the list how long it is, and it means exactly this many. If the dishes were rows of their own table, you would have made a pile per order and kept the piles of three, with HAVING. Here the list already knows its length."
+    note: "The shape is the one of $gt: a name, then a document with a dollar word. The learner has the means for it from MG-2."
+
+  # 7
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "operator-documents", "choose-fields", "id-comes-unless-off", "size-of-list", "list-inside-document", "text-is-exact"]
+    text: "Show the _id and subtotal of each order that has status \"cancelled\" and exactly 4 dishes in items."
+    model: "db.orders.find({status: \"cancelled\", items: {$size: 4}}, {subtotal: 1})"
+    rows: 45
+    narration:
+      - "45 cancelled orders with four dishes. The length question went to the list itself, beside the question about the word."
+      - "Two questions joined by the comma, and a second document that chose the subtotal, with the _id coming along."
+      - ""
+    wrong:
+      - code: "db.orders.find({status: \"cancelled\", items: 4}, {subtotal: 1})"
+        ask: "No orders came back. The list is not the number 4. What asks a list how long it is?"
+      - code: "db.orders.find({status: \"cancelled\", items: {$gt: 3}}, {subtotal: 1})"
+        ask: "No orders came back. $gt compares a value with a number. What asks the list itself for its length?"
+      - code: "db.orders.find({status: \"cancelled\", \"items.size\": 4}, {subtotal: 1})"
+        ask: "No orders came back. Is size the name of something inside each dish, or something asked of the list?"
+      - code: "db.orders.find({items: {$size: 4}}, {subtotal: 1})"
+        ask: "Those include the delivered orders. Where is the other question?"
+      - code: "db.orders.find({status: \"cancelled\", items: {$size: 4}})"
+        ask: "Every field of each order is here. Which second document chooses what to show?"
+    walk:
+      - "Find the orders whose status is \"cancelled\"."
+      - "Add the question about the length of items, with the dollar word."
+      - "Choose the subtotal to show."
+    return:
+      text: "Show the _id and subtotal of each order that has status \"cancelled\" and exactly 3 dishes in items."
+      model: "db.orders.find({status: \"cancelled\", items: {$size: 3}}, {subtotal: 1})"
+      rows: 72
+      narration:
+        - "72 cancelled orders with three dishes."
+        - "The word about the order, the length of the list with $size, and the subtotal chosen."
+      note: "Return for step 7."
+    note: "Find, not count, so that two consecutive typed answers cannot differ in one slot only. 45 cancelled orders with four dishes."
+
+  # 8
+  - kind: "aside"
+    lang: "mongo"
+    data: "mongo"
+    text: "Something that is only interesting, with nothing in it to keep. Why would a database keep the dishes inside the order instead of in a table of their own? Because an order and its dishes are nearly always wanted together, like a receipt, and one look finds both, with no JOIN at all. The price comes now: a question about the dishes alone, such as how many Margherita were sold in all, is no longer a plain question about documents. The second half of today is the answer to that."
+    note: "Relief after two new thoughts (rule C8), and a real reason for lists. It plants the unwind without naming it."
+
+  # 9
+  - kind: "classmate"
+    lang: "mongo"
+    data: "mongo"
+    new: ["elem-match"]
+    requires: ["count-documents", "question-is-a-document", "two-names-both-hold", "dotted-name", "dotted-through-list", "list-inside-document", "text-is-exact"]
+    text: |-
+      Davi was asked how many orders contain a Margherita of quantity 2: a Margherita that was ordered twice. A dish has a name and a qty, so he joined two dotted names with a comma, as you did with two names before:
+
+      ```js
+      db.orders.countDocuments({"items.name": "Margherita", "items.qty": 2})
+      ```
+
+      It answered 105. Davi, does that count the orders where the Margherita itself was ordered twice? ... Not quite. Each dotted name asks the whole list on its own. One asks: is some dish a Margherita? The other asks: does some dish have a qty of 2? Those can be two different dishes, a Margherita once and a Calabresa twice, and the order stays. Davi wants both questions answered by one dish. For that you ask the list one dish at a time, with the word $elemMatch. Inside it, a dish is the document being asked, so its names are bare, with no items. in front. Here is the shape, for a Pastel of quantity 1:
+
+      ```js
+      db.orders.countDocuments({items: {$elemMatch: {name: "Pastel", qty: 1}}})
+      ```
+
+      Run both. Then write what Davi should have asked, for a Margherita of quantity 2.
+    model: "db.orders.countDocuments({items: {$elemMatch: {name: \"Margherita\", qty: 2}}})"
+    rows: 1
+    result: [[50]]
+    shows:
+      - "db.orders.countDocuments({\"items.name\": \"Margherita\", \"items.qty\": 2})"
+      - "db.orders.countDocuments({items: {$elemMatch: {name: \"Pastel\", qty: 1}}})"
+    narration:
+      - "50, against Davi's 105. The other 55 had a Margherita once and some other dish twice."
+      - "$elemMatch asked each dish the whole question, name and quantity together, before moving on to the next dish."
+      - "50 orders in which one and the same dish is a Margherita with a quantity of 2."
+    wrong:
+      - code: "db.orders.countDocuments({\"items.name\": \"Margherita\", \"items.qty\": 2})"
+        ask: "That is Davi's sentence, and it gives 105. Do its two questions have to be about the same dish?"
+      - code: "db.orders.countDocuments({items: {$elemMatch: {name: \"Margherita\"}}})"
+        ask: "That is every order with a Margherita, 314 of them. Where is the quantity?"
+      - code: "db.orders.countDocuments({items: {$elemMatch: {name: \"Margherita\", qty: \"2\"}}})"
+        ask: "No orders came back. Does a number wear quotes?"
+      - code: "db.orders.countDocuments({items: {$elemMatch: {\"items.name\": \"Margherita\", \"items.qty\": 2}}})"
+        ask: "No orders came back. Inside $elemMatch you are already looking at one dish. Does its name need items. in front?"
+        why: "inside $elemMatch the dish is the document being asked, so its fields are plain names."
+      - code: "db.orders.countDocuments({\"items.name\": \"Margherita\", items: {$elemMatch: {qty: 2}}})"
+        ask: "Is the Margherita in that sentence tied to the dish that has the quantity?"
+    walk:
+      - "Ask the list one dish at a time: the word that does it goes around the questions, on items."
+      - "Inside it, put the two questions as one document: the name, then the quantity."
+    return:
+      text: "How many orders have one dish in items with name \"Calabresa\" and qty 2? Count them."
+      model: "db.orders.countDocuments({items: {$elemMatch: {name: \"Calabresa\", qty: 2}}})"
+      rows: 1
+      result: [[40]]
+      narration:
+        - "40. Both questions were asked of one dish at a time."
+        - "Two dotted names would have said 107, because the Calabresa and the quantity of 2 could be two different dishes."
+      note: "Return for step 9."
+    note: "Davi's slip is the one the map names: 105 with two dotted names, 50 with $elemMatch (both re-measured). The real reason is that each dotted name is its own question to the whole list. The spelling of $elemMatch is built from a worked example (Pastel, qty 1) that the learner runs, then changed in two slots. 55 of the 105 are orders with the Margherita once and another dish twice (dish names do not repeat within an order, and qty is only 1 or 2)."
+
+  # 10
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["collection", "question-is-a-document", "two-names-both-hold", "choose-fields", "sort-spelling", "limit-spelling", "elem-match", "dotted-through-list", "list-inside-document"]
+    ordered: true
+    text: "Show the _id and subtotal of the 3 orders with the biggest subtotal among those that have status \"delivered\" and one dish in items with name \"Moqueca\" and qty 2. Put the biggest subtotal first."
+    model: "db.orders.find({status: \"delivered\", items: {$elemMatch: {name: \"Moqueca\", qty: 2}}}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+    rows: 3
+    result: [[100619, 169.68], [101913, 168.01], [103915, 146.93]]
+    narration:
+      - "Orders 100619, 101913 and 103915. No tie at the cut: the fourth, 101705, has 145.04."
+      - "Keep the delivered orders with a Moqueca ordered twice, show the subtotal, sort the biggest first, keep three."
+      - ""
+    wrong:
+      - code: "db.orders.find({status: \"delivered\", \"items.name\": \"Moqueca\", \"items.qty\": 2}, {subtotal: 1}).sort({subtotal: -1}).limit(3)"
+        ask: "The three subtotals are different. Are the Moqueca and the quantity of 2 sure to be about the same dish? Which word asks one dish at a time?"
+      - code: "db.orders.find({status: \"delivered\", items: {$elemMatch: {name: \"Moqueca\", qty: 2}}}, {subtotal: 1}).sort({subtotal: 1}).limit(3)"
+        ask: "Those are the smallest three. Which number puts the biggest first?"
+      - code: "db.orders.find({status: \"delivered\", items: {$elemMatch: {name: \"Moqueca\", qty: 2}}}, {subtotal: 1}).sort({subtotal: -1})"
+        ask: "Every matching order is here. Which chained word keeps only the first few?"
+      - code: "db.orders.find({status: \"delivered\", items: {$elemMatch: {name: \"Moqueca\", qty: 2}}}).sort({subtotal: -1}).limit(3)"
+        ask: "The whole order comes out. Which second document chooses the fields to show?"
+    walk:
+      - "Keep the orders with status \"delivered\"."
+      - "Add the dish questions, about one dish at a time."
+      - "Show the subtotal, sort the biggest first, and keep three."
+    return:
+      text: "Show the _id and subtotal of the 2 orders with the biggest subtotal among those that have status \"cancelled\" and one dish in items with name \"Clássico\" and qty 2. Put the biggest subtotal first."
+      model: "db.orders.find({status: \"cancelled\", items: {$elemMatch: {name: \"Clássico\", qty: 2}}}, {subtotal: 1}).sort({subtotal: -1}).limit(2)"
+      ordered: true
+      rows: 2
+      result: [[104355, 149.76], [105073, 113.53]]
+      narration:
+        - "Orders 104355 and 105073, with 149.76 and 113.53. The third is 91.68, so there is no tie at the cut."
+        - "One dish at a time for the name and the quantity, then the subtotal, the sort and the cut."
+      note: "Return for step 10."
+    note: "$elemMatch in a find with the chained words of MG-2. Subtotals 169.68, 168.01, 146.93 then 145.04: no tie at the cut."
+
+  # 11
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-documents", "question-is-a-document", "two-names-both-hold", "elem-match", "dotted-through-list", "list-inside-document"]
+    text: "How many orders have status \"delivered\" and one dish in items with name \"Milkshake\" and qty 2? Count them."
+    model: "db.orders.countDocuments({status: \"delivered\", items: {$elemMatch: {name: \"Milkshake\", qty: 2}}})"
+    rows: 1
+    result: [[166]]
+    narration:
+      - "166. Two dotted names would have said 318, a long way off."
+      - "One question about the order, one about a single dish, asked together."
+      - ""
+    wrong:
+      - code: "db.orders.countDocuments({status: \"delivered\", \"items.name\": \"Milkshake\", \"items.qty\": 2})"
+        ask: "That says 318. Must the Milkshake and the quantity of 2 belong to the same dish? Which word makes them?"
+      - code: "db.orders.countDocuments({items: {$elemMatch: {name: \"Milkshake\", qty: 2}}})"
+        ask: "That includes the cancelled orders. Where is the question about the order itself?"
+      - code: "db.orders.countDocuments({status: \"delivered\", items: {$elemMatch: {name: \"Milkshake\"}}})"
+        ask: "That is every delivered order with a Milkshake. Where is the quantity?"
+    walk:
+      - "Count the orders with status \"delivered\"."
+      - "Add one question asked of one dish at a time: the name, with the quantity beside it."
+    return:
+      text: "How many orders have status \"cancelled\" and one dish in items with name \"Batata frita\" and qty 2? Count them."
+      model: "db.orders.countDocuments({status: \"cancelled\", items: {$elemMatch: {name: \"Batata frita\", qty: 2}}})"
+      rows: 1
+      result: [[13]]
+      narration:
+        - "13 cancelled orders with a Batata frita ordered twice."
+        - "The word about the order, then the name and the quantity asked of one dish at a time."
+      note: "Return for step 11."
+    note: "The same thought a second time, in a count, with a difference of 166 against 318 that the learner can see if the wrong answer is tried."
+
+  # 12
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["unwind-stage"]
+    text: |-
+      There is a second way to read a list: turn it into rows. Remember what a join without ON did in SQL-4: 6,000 orders stuck to 60 restaurants made 360,000 rows, because every row met every row. $unwind is a stage that multiplies on purpose, and exactly. It takes a list and makes one document of each dish in it, with the rest of the order copied beside it. The dollar sign is the one you know, the value of that field. Order 100003 has three dishes:
+
+      ```js
+      db.orders.aggregate([{$match: {_id: 100003}}, {$unwind: "$items"}])
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.aggregate([{$match: {_id: 100003}}, {$unwind: \"$items\"}])"
+    after_run: "Three documents, one for each dish. Each carries the order's other fields, copied, and its items is now one dish and not a list. A table went in, a table came out, and the table now has a row per dish. The multiplying is the same as in the join, but this time it is exact: each order multiplies by its number of dishes and by nothing else."
+    note: "Fan-out echo of SQL-4 (360,000 rows). The $match is the stage the learner knows, so that a single order is read before the whole collection is."
+
+  # 13
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "unwind-stage", "sort-and-limit-stages", "dotted-name", "field-value", "list-inside-document"]
+    ordered: true
+    text: "Using aggregate on orders, make one document of each dish in items, sort those documents by items.price from the highest, and keep the first 3. Show the documents as they come."
+    model: |-
+      db.orders.aggregate([
+        {$unwind: "$items"},
+        {$sort: {"items.price": -1}},
+        {$limit: 3}
+      ])
+    rows: 3
+    narration:
+      - "The three dearest dish lines: a Suco verde at 200.01, an Esfiha at 130.91 and a Cheese bacon at 125.49. The fourth is 124.71, so no tie at the cut."
+      - "Unwind first, so a document is a dish, then sort those dishes by price, then cut."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$sort: {\"items.price\": -1}}, {$limit: 3}])"
+        ask: "Those documents still hold the whole list. Which stage makes one document of each dish?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$sort: {\"items.price\": 1}}, {$limit: 3}])"
+        ask: "Those are the cheapest. Which number puts the highest first?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$limit: 3}, {$sort: {\"items.price\": -1}}])"
+        ask: "The order of the stages is the order things happen. Do you cut before or after you sort?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$sort: {\"items.price\": -1}}])"
+        ask: "Every dish is here. Which stage keeps only the first few?"
+    walk:
+      - "Unwind items, so that every dish is a document."
+      - "Sort those by \"items.price\" from the highest, and keep three."
+    return:
+      text: "Using aggregate on orders, keep the orders whose status is \"cancelled\", make one document of each dish in items, sort those documents by items.price from the highest, and keep the first 3. Show the documents as they come."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "cancelled"}},
+          {$unwind: "$items"},
+          {$sort: {"items.price": -1}},
+          {$limit: 3}
+        ])
+      ordered: true
+      rows: 3
+      narration:
+        - "Keep, unwind, sort, cut: a stage per thought, in the order they happen."
+        - "Two Moquecas and a Combo sushi: the three dearest dishes of the cancelled orders."
+      note: "Return for step 13."
+    note: "Unwind, then the stages of MG-3 on dishes. The sort key is a dotted name, quoted, which the learner has by MG-2. Prices 200.01, 130.91, 125.49, then 124.71."
+
+  # 14
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["group-after-unwind"]
+    text: |-
+      Now the part that matters. After an unwind, a document is a dish, so a pile counts dishes and not orders. Run these two. The first you know: a pile per status, counting documents. The second has an unwind in front:
+
+      ```js
+      db.orders.aggregate([{$group: {_id: "$status", n: {$sum: 1}}}])
+      db.orders.aggregate([{$unwind: "$items"}, {$group: {_id: "$status", n: {$sum: 1}}}])
+      ```
+
+      Run them.
+    shows:
+      - "db.orders.aggregate([{$group: {_id: \"$status\", n: {$sum: 1}}}])"
+      - "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$status\", n: {$sum: 1}}}])"
+    after_run: "First 5,601 delivered and 399 cancelled: orders. Then 11,853 and 847: dishes. The same pile names, the same $sum: 1, but a different thing counted, because after the unwind a document is a dish. The 25 orders with no list make no dishes at all, and the other 5,975 orders became 12,700 dishes. It happened in SQL-4 as well: after a JOIN a row was no longer a plain order, so counting rows counted something else. Always ask what one document is at the moment you count."
+    note: "The thought of the lesson: what one document is. 6,000 orders become 12,700 dishes (5,975 with a list, 25 without). 11,853 + 847 = 12,700."
+
+  # 15
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "unwind-stage", "group-pile-name", "field-value", "group-summaries", "group-after-unwind"]
+    text: "Using aggregate on orders, make one document of each dish in items, make a pile per promised_minutes, and show each pile's _id with n, the number of dishes in the pile."
+    model: |-
+      db.orders.aggregate([
+        {$unwind: "$items"},
+        {$group: {_id: "$promised_minutes", n: {$sum: 1}}}
+      ])
+    rows: 3
+    result: [[30, 4247], [40, 4252], [50, 4201]]
+    narration:
+      - "About 4,200 dishes under each promise. Orders under the same promises were about 2,000 each, so a dish count is twice an order count."
+      - "Unwind first, then pile, and the pile counted dishes."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$promised_minutes\", n: {$sum: 1}}}])"
+        ask: "Those are 2,019, 2,003 and 1,978. Are they dishes or orders? What makes the dishes documents?"
+      - code: "db.orders.aggregate([{$group: {_id: \"$promised_minutes\", n: {$sum: 1}}}, {$unwind: \"$items\"}])"
+        ask: "Nothing came back. Which comes first, making one document of each dish, or making the piles?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$items.promised_minutes\", n: {$sum: 1}}}])"
+        ask: "There is one pile only. Is promised_minutes inside a dish, or beside it, on the order?"
+    walk:
+      - "Make one document of each dish."
+      - "Pile them by promised_minutes, and count the documents in each pile."
+    return:
+      text: "Using aggregate on orders, keep the orders whose status is \"cancelled\", make one document of each dish in items, make a pile per promised_minutes, and show each pile's _id with n, the number of dishes in the pile."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "cancelled"}},
+          {$unwind: "$items"},
+          {$group: {_id: "$promised_minutes", n: {$sum: 1}}}
+        ])
+      rows: 3
+      result: [[30, 240], [40, 308], [50, 299]]
+      narration:
+        - "Dishes in the cancelled orders: 240, 308 and 299."
+        - "Keep, unwind, pile, count, in the order they happen."
+      note: "Return for step 15."
+    note: "First typed pile after an unwind. The wrong answer that groups orders gives 2,019, 2,003 and 1,978, which is exactly the difference the give showed."
+
+  # 16
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "unwind-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "group-after-unwind", "dotted-name"]
+    ordered: true
+    text: "Now a pile per dish. The pile's name is the name inside each dish. It is written with the dollar sign and the dotted name together, in quotes: \"$items.name\". Using aggregate on orders, make one document of each dish in items, make a pile per \"$items.name\", show each pile's _id with n, the number of dishes in the pile, sort by n from the biggest, and keep the first 3."
+    model: |-
+      db.orders.aggregate([
+        {$unwind: "$items"},
+        {$group: {_id: "$items.name", n: {$sum: 1}}},
+        {$sort: {n: -1}},
+        {$limit: 3}
+      ])
+    rows: 3
+    result: [["Cheese bacon", 655], ["Clássico", 653], ["Batata frita", 574]]
+    narration:
+      - "Cheese bacon 655, Clássico 653 and Batata frita 574. The fourth, Milkshake, has 569."
+      - "The dollar sign is the value, the dot reaches inside the dish, and the quotes are there for both."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"items.name\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 3}])"
+        ask: "There is one pile, named with the plain word. What makes it the value of the field in each document?"
+        why: "without the dollar sign it is only a word, as in the lesson on piles."
+      - code: "db.orders.aggregate([{$group: {_id: \"$items.name\", n: {$sum: 1}}}, {$sort: {n: -1}}, {$limit: 3}])"
+        ask: "Each pile is named by a whole list of names. Which stage makes a document of each dish first?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$items.name\", n: {$sum: 1}}}, {$sort: {n: 1}}, {$limit: 3}])"
+        ask: "Those are the smallest piles. Which number puts the biggest first?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$items.name\", n: {$sum: 1}}}])"
+        ask: "All the dishes are here. Which stages sort the piles and keep the first few?"
+    walk:
+      - "Make one document of each dish."
+      - "Make a pile per \"$items.name\", counting the documents in each."
+      - "Sort the piles by n, the biggest first, and keep three."
+    return:
+      text: "Using aggregate on orders, keep the orders whose status is \"cancelled\", make one document of each dish in items, make a pile per \"$items.name\", show each pile's _id with n, the number of dishes in the pile, sort by n from the biggest, and keep the first 3."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "cancelled"}},
+          {$unwind: "$items"},
+          {$group: {_id: "$items.name", n: {$sum: 1}}},
+          {$sort: {n: -1}},
+          {$limit: 3}
+        ])
+      ordered: true
+      rows: 3
+      result: [["Clássico", 46], ["Cheese bacon", 41], ["Moqueca", 39]]
+      narration:
+        - "Among the cancelled orders: Clássico 46, Cheese bacon 41 and Moqueca 39."
+        - "Keep, unwind, pile by dish, sort, cut: five stages in the order they happen."
+      note: "Return for step 16. The fourth, Milkshake, has 38: no tie at the cut."
+    note: "The spelling \"$items.name\" is given in the prompt, as a combination of field-value and dotted-name, both known. Top three by lines: Cheese bacon 655, Clássico 653, Batata frita 574, then Milkshake 569."
+
+  # 17
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "unwind-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "group-after-unwind", "more-summaries"]
+    ordered: true
+    text: "How many were ordered, which is not the same as how many lines. $sum: 1 adds a 1 for each dish, so it counts dishes. To add up quantities, $sum is given the value of the field in place of the 1, as SUM(qty) was in SQL: qty: {$sum: \"$items.qty\"}. Using aggregate on orders, keep the orders whose status is \"delivered\", make one document of each dish in items, make a pile per restaurant_id, show each pile's _id with qty, the total of items.qty in the pile, sort by qty from the biggest, and keep the first 3."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$unwind: "$items"},
+        {$group: {_id: "$restaurant_id", qty: {$sum: "$items.qty"}}},
+        {$sort: {qty: -1}},
+        {$limit: 3}
+      ])
+    rows: 3
+    result: [[59, 359], [3, 344], [21, 327]]
+    narration:
+      - "Restaurant 59 with 359 dishes ordered, then 3 with 344 and 21 with 327. The fourth has 305."
+      - "Restaurants 59 and 3 were at the top of SQL-2's list of orders too."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$unwind: \"$items\"}, {$group: {_id: \"$restaurant_id\", qty: {$sum: 1}}}, {$sort: {qty: -1}}, {$limit: 3}])"
+        ask: "That counts dishes, one for each document. What adds up the quantities instead?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$unwind: \"$items\"}, {$group: {_id: \"$restaurant_id\", qty: {$sum: \"$qty\"}}}, {$sort: {qty: -1}}, {$limit: 3}])"
+        ask: "Every total is 0. Is qty beside the dish, or inside it?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$restaurant_id\", qty: {$sum: \"$items.qty\"}}}, {$sort: {qty: -1}}, {$limit: 3}])"
+        ask: "Those totals include the cancelled orders. Where do we drop them?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$unwind: \"$items\"}, {$group: {_id: \"$restaurant_id\", qty: {$sum: \"$items.qty\"}}}, {$sort: {qty: 1}}, {$limit: 3}])"
+        ask: "Those are the smallest totals. Which number puts the biggest first?"
+    walk:
+      - "Keep the delivered orders and make one document of each dish."
+      - "Pile them by restaurant_id, adding up items.qty in each pile."
+      - "Sort the totals, the biggest first, and keep three."
+    return:
+      text: "Using aggregate on orders, make one document of each dish in items, make a pile per status, show each pile's _id with qty, the total of items.qty in the pile, and sort by qty from the biggest."
+      model: |-
+        db.orders.aggregate([
+          {$unwind: "$items"},
+          {$group: {_id: "$status", qty: {$sum: "$items.qty"}}},
+          {$sort: {qty: -1}}
+        ])
+      ordered: true
+      rows: 2
+      result: [["delivered", 14432], ["cancelled", 1024]]
+      narration:
+        - "14,432 dishes ordered in the delivered orders, 1,024 in the cancelled ones."
+        - "Unwind, pile by status, add up the quantities, sort."
+      note: "Return for step 17."
+    note: "$sum of a field's value, said aloud as SUM(qty), is the one extension of group-summaries here: the spelling is supplied in the prompt. 359, 344, 327 then 305: no tie at the cut."
+
+  # 18
+  - kind: "give"
+    lang: "mongo"
+    data: "mongo"
+    new: ["computed-value"]
+    text: |-
+      One last thing, and it is one you would look up. A line of an order earns its quantity times its price, and neither of those is a field on its own. A value can be worked out from fields and put where a field stood. The spelling, which I will always give you, is `{$multiply: ["$items.qty", "$items.price"]}`: the multiplying word, with the two values to multiply in a list. Inside a pile it is added up like any value. In SQL this was SUM(qty * price):
+
+      ```js
+      db.orders.aggregate([{$unwind: "$items"}, {$group: {_id: "$status", earned: {$sum: {$multiply: ["$items.qty", "$items.price"]}}}}])
+      ```
+
+      Run it.
+    shows:
+      - "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$status\", earned: {$sum: {$multiply: [\"$items.qty\", \"$items.price\"]}}}}])"
+    after_run: "337,069.25 for the delivered orders and 23,816.10 for the cancelled ones. Together they make 360,885.35, which is the sum of all the subtotals: the dishes add up to the orders. What you carry away is the idea: a value can be worked out, and put where a field name stood. The spelling of $multiply is one to look up when you need it, and I will always give it to you."
+    note: "Shape grade (decision C10): the teacher supplies the spelling every time and says it is one to look up. The floating sums are compared to six places by the checker, so the order they are added in cannot fail an answer."
+
+  # 19
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "match-stage", "unwind-stage", "group-pile-name", "field-value", "group-summaries", "group-after-unwind", "computed-value"]
+    supplies: ["{$multiply: [\"$items.qty\", \"$items.price\"]}"]
+    text: "What the dishes earned. The value of a dish line is `{$multiply: [\"$items.qty\", \"$items.price\"]}`, a spelling you would look up, so here it is. Using aggregate on orders, keep the orders whose status is \"delivered\", make one document of each dish in items, make a pile per promised_minutes, and show each pile's _id with earned, the total of {$multiply: [\"$items.qty\", \"$items.price\"]} over the pile."
+    model: |-
+      db.orders.aggregate([
+        {$match: {status: "delivered"}},
+        {$unwind: "$items"},
+        {$group: {_id: "$promised_minutes", earned: {$sum: {$multiply: ["$items.qty", "$items.price"]}}}}
+      ])
+    rows: 3
+    result: [[30, 114782.97], [40, 111158.15], [50, 111128.13]]
+    narration:
+      - "About 111,000 to 115,000 for each promise. The multiplying was worked out inside the pile, line by line, and added."
+      - "A value worked out from two fields, where a summary expected a field."
+      - ""
+    wrong:
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$unwind: \"$items\"}, {$group: {_id: \"$promised_minutes\", earned: {$sum: \"$items.price\"}}}])"
+        ask: "That adds up the prices and ignores how many of each. What do you need to multiply the price by?"
+      - code: "db.orders.aggregate([{$match: {status: \"delivered\"}}, {$unwind: \"$items\"}, {$group: {_id: \"$promised_minutes\", earned: {$sum: \"$items.qty\"}}}])"
+        ask: "That adds up the quantities and ignores the price. What do you need to multiply the quantity by?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$promised_minutes\", earned: {$sum: {$multiply: [\"$items.qty\", \"$items.price\"]}}}}])"
+        ask: "Those include the cancelled orders. Where do we drop them?"
+    walk:
+      - "Keep the delivered orders and make one document of each dish."
+      - "Pile them by promised_minutes."
+      - "Add up the multiplying, quantity by price, inside each pile."
+    return:
+      text: "What the dishes earned. The value of a dish line is `{$multiply: [\"$items.qty\", \"$items.price\"]}`, a spelling you would look up, so here it is. Using aggregate on orders, keep the orders whose status is \"cancelled\", make one document of each dish in items, make a pile per promised_minutes, and show each pile's _id with earned, the total of {$multiply: [\"$items.qty\", \"$items.price\"]} over the pile."
+      model: |-
+        db.orders.aggregate([
+          {$match: {status: "cancelled"}},
+          {$unwind: "$items"},
+          {$group: {_id: "$promised_minutes", earned: {$sum: {$multiply: ["$items.qty", "$items.price"]}}}}
+        ])
+      rows: 3
+      result: [[30, 6611.45], [40, 8561.17], [50, 8643.48]]
+      narration:
+        - "The cancelled orders held 6,611.45, 8,561.17 and 8,643.48 of dishes."
+        - "Keep, unwind, pile, and a worked-out value added up in each pile."
+      note: "Return for step 19."
+    note: "The only typed use of computed-value before the close. The spelling is supplied in the text, as the shape grade requires."
+
+  # 20
+  - kind: "ask"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["pipeline-of-stages", "unwind-stage", "group-pile-name", "field-value", "group-summaries", "sort-and-limit-stages", "group-after-unwind", "more-summaries", "computed-value"]
+    supplies: ["{$multiply: [\"$items.qty\", \"$items.price\"]}"]
+    friction: true
+    ordered: true
+    text: "The last one, and I won't break it down. Using aggregate on orders, make one document of each dish in items, make a pile per \"$items.name\", and show each pile's _id with qty, the total of items.qty, and earned, the total of {$multiply: [\"$items.qty\", \"$items.price\"]} (that spelling is one you would look up, so it is given). Sort by qty from the biggest and keep the first 5."
+    model: |-
+      db.orders.aggregate([
+        {$unwind: "$items"},
+        {$group: {_id: "$items.name",
+                  qty: {$sum: "$items.qty"},
+                  earned: {$sum: {$multiply: ["$items.qty", "$items.price"]}}}},
+        {$sort: {qty: -1}},
+        {$limit: 5}
+      ])
+    rows: 5
+    result: [["Clássico", 753, 20833.41], ["Batata frita", 748, 12239.23], ["Milkshake", 744, 13755.87], ["Cheese bacon", 723, 23296.24], ["Refrigerante", 695, 5411.34]]
+    narration:
+      - "Clássico sold 753 and earned 20,833.41. Cheese bacon sold fewer, 723, but earned the most, 23,296.24, because it costs more. The sixth dish, Pastel, sold 565."
+      - "That is a real interview question, and you built it by thinking: one document per dish, a pile per dish name, two totals, sort, cut. Every part in the order it happens."
+      - "Five dishes, each with a quantity and what it earned. The list became rows, the rows became piles, and the piles were sorted and cut."
+    wrong:
+      - code: "db.orders.aggregate([{$group: {_id: \"$items.name\", qty: {$sum: \"$items.qty\"}, earned: {$sum: {$multiply: [\"$items.qty\", \"$items.price\"]}}}}, {$sort: {qty: -1}}, {$limit: 5}])"
+        ask: "Each pile is named by a whole list of names. Which stage makes one document of each dish first?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$items.name\", qty: {$sum: 1}, earned: {$sum: {$multiply: [\"$items.qty\", \"$items.price\"]}}}}, {$sort: {qty: -1}}, {$limit: 5}])"
+        ask: "That counts lines and not quantities. What adds up items.qty?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$items.name\", qty: {$sum: \"$items.qty\"}, earned: {$sum: \"$items.price\"}}}, {$sort: {qty: -1}}, {$limit: 5}])"
+        ask: "The earnings leave out the quantity. What do you multiply the price by?"
+      - code: "db.orders.aggregate([{$unwind: \"$items\"}, {$group: {_id: \"$items.name\", qty: {$sum: \"$items.qty\"}, earned: {$sum: {$multiply: [\"$items.qty\", \"$items.price\"]}}}}, {$sort: {earned: -1}}, {$limit: 5}])"
+        ask: "That sorts by what was earned. Which total did I ask you to sort by?"
+    walk:
+      - "Make one document of each dish."
+      - "Pile them by \"$items.name\"."
+      - "Say two totals about each pile: the quantity, and what it earned."
+      - "Sort by qty from the biggest, and keep five."
+    note: "Closing sentence of the map (MG-4). Quantities 753, 748, 744, 723, 695 then Pastel 565: no tie at the cut, and no tie among the five, so ordered is true. Earned 20,833.41, 12,239.23, 13,755.87, 23,296.24, 5,411.34. Friction: not broken down."
+
+  # 21
+  - kind: "recap"
+    lang: "mongo"
+    data: "mongo"
+    text: |-
+      Stop there. Today the documents got lists inside them, and you met the two ways to ask about a list: with a question that reaches into it, and with an unwind that turns it into rows. And you saw why $elemMatch exists: two questions about a list may be answered by two different dishes, unless you ask one dish at a time.
+
+      You are still not fast, and you are not meant to be. For now the aim is the same: think a sentence out.
+
+      Don't go over any of this before next time. One more question, cold, and then we stop.
+    note: "States the limit (rule F2) and tells the learner not to revise (rule A3)."
+
+  # 22
+  - kind: "cold-check"
+    lang: "mongo"
+    data: "mongo"
+    requires: ["count-documents", "question-is-a-document", "two-names-both-hold", "dotted-through-list", "size-of-list", "list-inside-document", "text-is-exact"]
+    text: "How many orders have status \"cancelled\", exactly 2 dishes in items, and a dish in items whose name is \"Refrigerante\"? Count them."
+    model: "db.orders.countDocuments({status: \"cancelled\", items: {$size: 2}, \"items.name\": \"Refrigerante\"})"
+    rows: 1
+    result: [[8]]
+    after_run: "That's the sitting. We pick up from here next time."
+    note: "Closing cold check: a word about the order, the length of the list and a name reached through the list, in one question. Never scored."
