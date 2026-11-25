@@ -39,7 +39,7 @@ class Engine:
     def pending(self, st):
         phase, step = st["phase"], st["playing"]["step"]
         if phase == "run":
-            out = {"mode": "run", "sql": self.steps[step]["shows"][-1]}
+            out = {"mode": "run", "sql": self.steps[step]["shows"][st.get("ran", 0)]}
         elif phase == "answer":
             out = {"mode": "answer", "step": step + 1, "variant": st["playing"]["variant"]}
         else:
@@ -52,11 +52,14 @@ class Engine:
         st, items = copy.deepcopy(state), []
         cur = self.steps[st["playing"]["step"]]
         if st["phase"] == "run":
-            code = cur["shows"][-1]
+            ran = st.get("ran", 0)
+            code = cur["shows"][ran]
             items += [self._learner(cur, code), self.runner.run(cur, code, check=False).item()]
-            if cur.get("after_run"):
-                items.append(_teacher(cur["after_run"].strip()))
-            st["phase"] = "continue"
+            st["ran"] = ran + 1
+            if st["ran"] == len(cur["shows"]):  # a step may show several sentences, one Run for each
+                if cur.get("after_run"):
+                    items.append(_teacher(cur["after_run"].strip()))
+                st["phase"] = "continue"
         elif st["phase"] == "continue":
             if st["playing"]["variant"] == "main":
                 st["pos"] = st["playing"]["step"] + 1
@@ -127,7 +130,7 @@ class Engine:
         if "model" in s:
             st["phase"] = "answer"
         elif s.get("shows"):
-            st["phase"] = "run"
+            st["phase"], st["ran"] = "run", 0
         else:
             st["phase"] = "continue"
 

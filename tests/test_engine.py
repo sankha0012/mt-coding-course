@@ -17,6 +17,28 @@ def test_a_lesson_opens_with_the_first_step(make_engine):
     assert events == []
 
 
+def test_a_give_step_with_two_sentences_runs_them_one_after_the_other(make_engine, play_steps):
+    play_steps[0]["shows"] = ["SELECT COUNT(*) FROM orders", "SELECT COUNT(*) FROM couriers"]
+    e = make_engine(play_steps)
+    st, items, _ = e.start()
+    assert e.pending(st) == {"mode": "run", "sql": "SELECT COUNT(*) FROM orders"}
+    st, items, _ = e.advance(st)
+    assert kinds(items) == ["learner", "result"] and items[1]["rows"] == [[6000]]
+    assert e.pending(st) == {"mode": "run", "sql": "SELECT COUNT(*) FROM couriers"}
+    st, items, _ = e.advance(st)
+    assert kinds(items) == ["learner", "result", "teacher"] and items[1]["rows"] == [[200]]
+    assert texts(items) == ["6,000 orders."]
+    assert e.pending(st) == {"mode": "continue"}
+
+
+def test_a_progress_file_from_before_the_change_still_runs_a_give_step(make_engine):
+    e = make_engine()
+    st, _, _ = e.start()
+    st.pop("ran", None)
+    st, items, _ = e.advance(st)
+    assert kinds(items) == ["learner", "result", "teacher"] and e.pending(st) == {"mode": "continue"}
+
+
 def test_running_the_shown_sentence_then_continuing(make_engine):
     e = make_engine()
     st, _, _ = e.start()
