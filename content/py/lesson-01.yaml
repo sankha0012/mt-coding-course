@@ -305,7 +305,7 @@ steps:
     lang: "python"
     new: ["text-in-list"]
     requires: ["list", "show", "text-quotes", "text-in-list"]
-    text: "A list can hold words too, and words wear quotes here as well, just as they did in SQL. A list called statuses holding delivered, cancelled and delivered. Show it."
+    text: "A list can hold words too, and words wear quotes here as well, just as they did in SQL. A list called statuses holding three words, in this order: delivered, cancelled, delivered. Yes, delivered comes twice, because two of the three orders were delivered. Show it."
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered']
       print(statuses)
@@ -347,7 +347,7 @@ steps:
   - kind: "ask"
     lang: "python"
     requires: ["list", "show", "text-in-list", "how-many"]
-    text: "The list of statuses again: delivered, cancelled, delivered, delivered. Show how many orders are in it."
+    text: "The list of statuses again, four words in this order: delivered, cancelled, delivered, delivered. Delivered repeats on purpose, one word for each order. Show how many orders are in it."
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered', 'delivered']
       print(len(statuses))
@@ -408,7 +408,7 @@ steps:
     lang: "python"
     new: ["block"]
     requires: ["list", "text-in-list", "show", "for-each", "block"]
-    text: "Look again at what you ran. The line with for ends in a colon, and the line under it is pushed in. The colon opens what is to be done for each item, and the lines pushed in underneath are inside it. Python needs that push, so it knows where the loop ends. The statuses are delivered, cancelled and delivered. Show me each status, one at a time."
+    text: "Look again at what you ran. The line with for ends in a colon, and the line under it is pushed in. The colon opens what is to be done for each item, and the lines pushed in underneath are inside it. Python needs that push, so it knows where the loop ends. The three statuses, in order, are delivered, cancelled and delivered. Show me each status, one at a time."
     model: |-
       statuses = ['delivered', 'cancelled', 'delivered']
       for status in statuses:
