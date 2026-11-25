@@ -589,6 +589,19 @@ function initCourse() {
   setOpen(keep.get('course-open') === '1');
 }
 
+function initTheme() {
+  const root = document.documentElement;
+  const toggle = button('', () => {
+    const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next; keep.set('theme', next); label();
+  }, 'tab');
+  toggle.id = 'theme-toggle';
+  const label = () => { toggle.textContent = root.dataset.theme === 'dark' ? 'Light mode' : 'Dark mode'; };
+  label();
+  document.body.appendChild(toggle);
+}
+
+initTheme();
 initPlay();
 initCourse();
 Promise.all([api('/api/providers'), api('/api/run'), api('/api/features')]).then(([p, view, f]) => { providers = p.providers; features = f; render(view); });
