@@ -120,7 +120,9 @@ class Engine:
             st["phase"] = "done"
             return
         cold = self.steps[j].get("kind") == "cold-check"
-        due = [q for q in st["queue"] if q["due"] <= j or cold]
+        # the step before a closing cold check says "one more question", so every waiting return plays before it
+        closing = j == len(self.steps) - 2 and self.steps[-1].get("kind") == "cold-check"
+        due = [q for q in st["queue"] if q["due"] <= j or cold or closing]
         if due:
             st["queue"].remove(due[0])
             return self._begin_return(st, items, due[0]["step"])

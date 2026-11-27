@@ -442,3 +442,18 @@ def test_solves_does_not_change_the_state(make_engine, reach):
     before = copy.deepcopy(st)
     e.solves(st, "SELECT COUNT(*) FROM restaurants")
     assert st == before
+
+
+def test_queued_returns_play_before_the_line_that_promises_one_more_question(make_engine, reach, play_steps):
+    steps = play_steps[:6] + [{"kind": "recap", "text": "One more question."}, play_steps[6]]
+    e = make_engine(steps)
+    st = reach(e, 6)
+    st, _, _ = miss(e, st)
+    st, _, _ = finish_step(e, st, "SELECT COUNT(*) FROM orders")
+    st, items, _ = e.advance(st)
+    assert texts(items) == ["Count customers rows."]
+    st, _, _ = finish_step(e, st, "SELECT COUNT(*) FROM restaurants WHERE 1 = 1")
+    st, items, _ = e.advance(st)
+    assert texts(items) == ["One more question."]
+    st, items, _ = e.advance(st)
+    assert texts(items) == ["Cold."]
